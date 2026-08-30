@@ -28,7 +28,7 @@ plugins:
 
 theme:
   name: material
-  custom_dir: docs/assets/theme-overrides
+  #custom_dir: docs/assets/theme-overrides
   features:
     - navigation.footer
     - header.autohide
