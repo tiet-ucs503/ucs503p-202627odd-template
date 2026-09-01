@@ -1,0 +1,626 @@
+{% extends "base.html" %}
+
+{% block title %}Home — BharatAssist{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ================================
+       HOME PAGE
+       Clean + Professional + Indian
+       ================================ */
+
+    .home-page {
+        padding: 42px 0 60px;
+    }
+
+    /* Hero */
+    .hero-card {
+        position: relative;
+        background: #ffffff;
+        border: 1px solid rgba(255, 153, 51, 0.22);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow:
+            0 20px 45px rgba(15, 23, 42, 0.07),
+            0 3px 10px rgba(15, 23, 42, 0.03);
+    }
+
+    .hero-content {
+        padding: 52px;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: rgba(19, 136, 8, 0.08);
+        color: var(--green);
+        border: 1px solid rgba(19, 136, 8, 0.20);
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 8px 13px;
+        border-radius: 999px;
+        margin-bottom: 20px;
+    }
+
+    .hero-title {
+        color: var(--navy);
+        font-weight: 800;
+        font-size: clamp(2.3rem, 4.5vw, 4rem);
+        line-height: 1.08;
+        letter-spacing: -1.8px;
+        margin-bottom: 20px;
+    }
+
+    .hero-title .highlight {
+        color: var(--saffron-dark);
+    }
+
+    .hero-description {
+        color: var(--slate-500);
+        font-size: 1.02rem;
+        line-height: 1.8;
+        max-width: 720px;
+        margin-bottom: 28px;
+    }
+
+    .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .hero-secondary-btn {
+        border: 1px solid #CBD5E1;
+        color: var(--slate-700);
+        background: #ffffff;
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 10px 20px;
+        transition: all 0.2s ease;
+    }
+
+    .hero-secondary-btn:hover {
+        color: var(--navy);
+        border-color: rgba(0, 0, 128, 0.35);
+        background: rgba(0, 0, 128, 0.03);
+        transform: translateY(-1px);
+    }
+
+    /* Right Hero Visual */
+    .hero-visual {
+        min-height: 320px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 35px;
+        background:
+            radial-gradient(
+                circle at 50% 40%,
+                rgba(255, 153, 51, 0.14),
+                rgba(255, 255, 255, 0) 58%
+            );
+    }
+
+    .india-card {
+        width: 245px;
+        min-height: 235px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.90);
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 28px;
+    }
+
+    .india-icon {
+        width: 76px;
+        height: 76px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(
+            135deg,
+            rgba(255, 153, 51, 0.14),
+            rgba(19, 136, 8, 0.10)
+        );
+        border: 1px solid rgba(255, 153, 51, 0.22);
+        margin-bottom: 18px;
+    }
+
+    .india-icon i {
+        font-size: 2rem;
+        color: var(--navy);
+    }
+
+    .india-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--navy);
+        margin-bottom: 5px;
+    }
+
+    .india-subtitle {
+        color: var(--slate-500);
+        font-size: 0.78rem;
+        line-height: 1.5;
+        font-weight: 600;
+    }
+
+    .trust-points {
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+    }
+
+    .trust-point {
+        color: var(--slate-500);
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .trust-point i {
+        color: var(--green);
+        margin-right: 5px;
+    }
+
+    /* Section Header */
+    .section-heading {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+
+    .section-heading h2 {
+        color: var(--navy);
+        font-weight: 800;
+        font-size: 1.65rem;
+        margin-bottom: 7px;
+    }
+
+    .section-heading p {
+        color: var(--slate-500);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    /* Feature Cards */
+    .feature-card {
+        height: 100%;
+        background: #ffffff;
+        border: 1px solid #E2E8F0;
+        border-radius: 18px;
+        padding: 26px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+        transition:
+            transform 0.25s ease,
+            box-shadow 0.25s ease,
+            border-color 0.25s ease;
+    }
+
+    .feature-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: transparent;
+        transition: background 0.25s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(255, 153, 51, 0.30);
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07);
+    }
+
+    .feature-card:hover::before {
+        background: linear-gradient(
+            90deg,
+            var(--saffron) 0%,
+            #ffffff 50%,
+            var(--green) 100%
+        );
+    }
+
+    .feature-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-bottom: 18px;
+    }
+
+    .feature-icon.orange {
+        color: var(--saffron-dark);
+        background: rgba(255, 153, 51, 0.10);
+    }
+
+    .feature-icon.green {
+        color: var(--green);
+        background: rgba(19, 136, 8, 0.10);
+    }
+
+    .feature-icon.navy {
+        color: var(--navy);
+        background: rgba(0, 0, 128, 0.08);
+    }
+
+    .feature-card h4 {
+        color: var(--slate-900);
+        font-weight: 800;
+        font-size: 1.12rem;
+        margin-bottom: 10px;
+    }
+
+    .feature-card p {
+        color: var(--slate-500);
+        font-size: 0.88rem;
+        line-height: 1.7;
+        margin-bottom: 22px;
+    }
+
+    .feature-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 9px 14px;
+        border-radius: 9px;
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 700;
+        transition: all 0.2s ease;
+    }
+
+    .feature-link.orange {
+        color: var(--saffron-dark);
+        border: 1px solid rgba(255, 153, 51, 0.35);
+        background: rgba(255, 153, 51, 0.04);
+    }
+
+    .feature-link.orange:hover {
+        color: #ffffff;
+        background: var(--saffron-dark);
+    }
+
+    .feature-link.green {
+        color: var(--green-dark);
+        border: 1px solid rgba(19, 136, 8, 0.30);
+        background: rgba(19, 136, 8, 0.04);
+    }
+
+    .feature-link.green:hover {
+        color: #ffffff;
+        background: var(--green);
+    }
+
+    .feature-link.navy {
+        color: var(--navy);
+        border: 1px solid rgba(0, 0, 128, 0.25);
+        background: rgba(0, 0, 128, 0.03);
+    }
+
+    .feature-link.navy:hover {
+        color: #ffffff;
+        background: var(--navy);
+    }
+
+    /* Mobile */
+    @media (max-width: 991px) {
+        .hero-content {
+            padding: 38px 30px;
+        }
+
+        .hero-visual {
+            min-height: 250px;
+            padding: 25px;
+        }
+
+        .hero-title {
+            font-size: 2.4rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .home-page {
+            padding: 25px 0 45px;
+        }
+
+        .hero-content {
+            padding: 28px 22px;
+        }
+
+        .hero-title {
+            font-size: 2rem;
+            letter-spacing: -0.8px;
+        }
+
+        .hero-description {
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        .hero-actions {
+            flex-direction: column;
+        }
+
+        .hero-actions a {
+            width: 100%;
+            text-align: center;
+        }
+
+        .india-card {
+            width: 215px;
+            min-height: 210px;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container home-page">
+
+    <!-- ================================
+         HERO
+         ================================ -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-xl-11">
+
+            <div class="hero-card">
+
+                <!-- Tricolour Ribbon -->
+                <div class="tricolor-ribbon"></div>
+
+                <div class="row align-items-stretch">
+
+                    <!-- Left Content -->
+                    <div class="col-lg-8">
+                        <div class="hero-content">
+
+                            <div class="hero-badge">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                Verified Government Information
+                            </div>
+
+                            <h1 class="hero-title">
+                                Simple access to
+                                <span class="highlight">public services</span>
+                                and guidance.
+                            </h1>
+
+                            <p class="hero-description">
+                                Find eligibility, required documents, application
+                                procedures and official portals in one place.
+                                BharatAssist makes government information easier
+                                to understand and easier to use.
+                            </p>
+
+                            <div class="hero-actions">
+
+                                <a href="{{ url_for('services') }}"
+                                   class="btn btn-tricolor px-4 py-2">
+                                    <i class="fa-solid fa-folder-open me-2"></i>
+                                    Explore Services
+                                    <i class="fa-solid fa-arrow-right ms-2"></i>
+                                </a>
+
+                                <a href="{{ url_for('assistant') }}"
+                                   class="hero-secondary-btn">
+                                    <i class="fa-solid fa-headset me-2"></i>
+                                    Ask Assistant
+                                </a>
+
+                            </div>
+
+                            <div class="trust-points">
+
+                                <span class="trust-point">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    Official sources
+                                </span>
+
+                                <span class="trust-point">
+                                    <i class="fa-solid fa-lock"></i>
+                                    Privacy focused
+                                </span>
+
+                                <span class="trust-point">
+                                    <i class="fa-solid fa-language"></i>
+                                    Clear guidance
+                                </span>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <!-- Right Visual -->
+                    <div class="col-lg-4">
+
+                        <div class="hero-visual">
+
+                            <div class="india-card">
+
+                                <div class="india-icon">
+                                    <i class="fa-solid fa-building-columns"></i>
+                                </div>
+
+                                <div class="india-title">
+                                    BharatAssist
+                                </div>
+
+                                <div class="india-subtitle">
+                                    Public Services<br>
+                                    & Citizen Guidance
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ================================
+         FEATURES
+         ================================ -->
+
+    <div class="section-heading">
+        <h2>Everything you need, in one place</h2>
+        <p>
+            Explore services, understand documents, and get step-by-step guidance.
+        </p>
+    </div>
+
+
+    <div class="row g-4 justify-content-center">
+
+        <!-- Services -->
+        <div class="col-md-6 col-lg-4">
+
+            <div class="feature-card">
+
+                <div>
+
+                    <div class="feature-icon orange">
+                        <i class="fa-solid fa-folder-tree"></i>
+                    </div>
+
+                    <h4>
+                        Services Directory
+                    </h4>
+
+                    <p>
+                        Browse public services with eligibility requirements,
+                        required documents, application steps, fees and
+                        official portal information.
+                    </p>
+
+                </div>
+
+                <div>
+
+                    <a href="{{ url_for('services') }}"
+                       class="feature-link orange">
+
+                        Explore Services
+                        <i class="fa-solid fa-arrow-right ms-2"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Document Simplifier -->
+        <div class="col-md-6 col-lg-4">
+
+            <div class="feature-card">
+
+                <div>
+
+                    <div class="feature-icon green">
+                        <i class="fa-solid fa-file-lines"></i>
+                    </div>
+
+                    <h4>
+                        Document Simplifier
+                    </h4>
+
+                    <p>
+                        Turn complicated government notifications and
+                        policy text into concise, easy-to-understand
+                        information.
+                    </p>
+
+                </div>
+
+                <div>
+
+                    <a href="{{ url_for('simplify') }}"
+                       class="feature-link green">
+
+                        Simplify Document
+                        <i class="fa-solid fa-arrow-right ms-2"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- AI Assistant -->
+        <div class="col-md-6 col-lg-4">
+
+            <div class="feature-card">
+
+                <div>
+
+                    <div class="feature-icon navy">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+
+                    <h4>
+                        AI Civic Assistant
+                    </h4>
+
+                    <p>
+                        Ask questions about government services and receive
+                        clear guidance about eligibility, documents,
+                        procedures and application requirements.
+                    </p>
+
+                </div>
+
+                <div>
+
+                    <a href="{{ url_for('assistant') }}"
+                       class="feature-link navy">
+
+                        Start Assistant
+                        <i class="fa-solid fa-arrow-right ms-2"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

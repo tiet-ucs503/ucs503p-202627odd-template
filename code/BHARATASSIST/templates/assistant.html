@@ -1,0 +1,1062 @@
+{% extends "base.html" %}
+
+{% block title %}AI Civic Assistant — BharatAssist{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ================================
+       AI ASSISTANT PAGE
+       ================================ */
+
+    .assistant-page {
+        padding-top: 28px;
+        padding-bottom: 40px;
+    }
+
+    .assistant-card {
+        background: #ffffff;
+        border: 1px solid #E2E8F0;
+        border-radius: 18px;
+        box-shadow:
+            0 18px 45px rgba(15, 23, 42, 0.07),
+            0 3px 10px rgba(15, 23, 42, 0.03);
+        overflow: hidden;
+        height: 76vh;
+        min-height: 600px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Header */
+    .assistant-header {
+        background: #ffffff;
+        border-bottom: 1px solid #E2E8F0;
+        padding: 16px 20px;
+    }
+
+    .assistant-brand-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: rgba(255, 153, 51, 0.10);
+        border: 1px solid rgba(255, 153, 51, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .assistant-title {
+        color: var(--navy);
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .assistant-subtitle {
+        color: var(--slate-500);
+        font-size: 0.75rem;
+        margin-top: 2px;
+    }
+
+    .source-badge {
+        background: rgba(19, 136, 8, 0.07);
+        color: var(--green);
+        border: 1px solid rgba(19, 136, 8, 0.20);
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 7px 11px;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    /* Chat area */
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        background:
+            radial-gradient(
+                circle at top right,
+                rgba(255, 153, 51, 0.035),
+                transparent 35%
+            ),
+            #F8FAFC;
+
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+
+        scrollbar-width: thin;
+        scrollbar-color: #CBD5E1 transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+        width: 7px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: #CBD5E1;
+        border-radius: 10px;
+    }
+
+    /* Welcome message */
+    .welcome-message {
+        align-self: flex-start;
+        max-width: 82%;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid var(--green);
+        border-radius: 14px;
+        padding: 16px 18px;
+        color: var(--slate-700);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    }
+
+    .welcome-title {
+        color: var(--navy);
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .welcome-text {
+        font-size: 0.88rem;
+        line-height: 1.65;
+        margin-bottom: 0;
+    }
+
+    /* User message */
+    .msg-user {
+        align-self: flex-end;
+        max-width: 76%;
+        background: linear-gradient(
+            135deg,
+            var(--saffron) 0%,
+            var(--saffron-dark) 100%
+        );
+        color: #FFFFFF;
+        border-radius: 16px 16px 4px 16px;
+        padding: 11px 16px;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        box-shadow: 0 5px 14px rgba(230, 115, 0, 0.18);
+        word-break: break-word;
+    }
+
+    /* AI message */
+    .msg-ai {
+        align-self: flex-start;
+        max-width: 82%;
+        background: #FFFFFF;
+        color: var(--slate-900);
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid var(--green);
+        border-radius: 16px 16px 16px 4px;
+        padding: 15px 17px;
+        font-size: 0.9rem;
+        line-height: 1.65;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+        word-break: break-word;
+    }
+
+    .ai-label {
+        color: var(--green);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 5px;
+    }
+
+    /* Source links */
+    .sources-container {
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px solid #E2E8F0;
+    }
+
+    .sources-title {
+        color: var(--slate-500);
+        font-size: 0.72rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .source-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        color: var(--navy);
+        text-decoration: none;
+        font-size: 0.72rem;
+        padding: 5px 8px;
+        border-radius: 6px;
+        margin: 2px 3px 2px 0;
+        transition: all 0.15s ease;
+    }
+
+    .source-link:hover {
+        background: rgba(255, 153, 51, 0.07);
+        border-color: rgba(255, 153, 51, 0.35);
+        color: var(--saffron-dark);
+    }
+
+    /* Input section */
+    .assistant-input-area {
+        background: #FFFFFF;
+        border-top: 1px solid #E2E8F0;
+        padding: 14px 16px 16px;
+    }
+
+    .assistant-form {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .question-input {
+        border: 1px solid #CBD5E1;
+        background: #F8FAFC;
+        min-height: 48px;
+        font-size: 0.88rem;
+    }
+
+    .question-input:focus {
+        background: #FFFFFF;
+        border-color: var(--saffron);
+        box-shadow: 0 0 0 3px rgba(255, 153, 51, 0.13);
+    }
+
+    .send-button {
+        min-height: 48px;
+        min-width: 100px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .input-help {
+        font-size: 0.7rem;
+        color: var(--slate-500);
+        margin-top: 7px;
+        padding-left: 2px;
+    }
+
+    /* Loading indicator */
+    .typing-indicator {
+        align-self: flex-start;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid var(--green);
+        border-radius: 16px 16px 16px 4px;
+        padding: 13px 16px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .typing-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #94A3B8;
+        animation: typing 1.2s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) {
+        animation-delay: 0.15s;
+    }
+
+    .typing-dot:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+    @keyframes typing {
+        0%, 60%, 100% {
+            transform: translateY(0);
+            opacity: 0.45;
+        }
+
+        30% {
+            transform: translateY(-4px);
+            opacity: 1;
+        }
+    }
+
+    /* Suggested questions */
+    .suggestion-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 12px;
+    }
+
+    .suggestion-btn {
+        border: 1px solid #E2E8F0;
+        background: #FFFFFF;
+        color: var(--slate-700);
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.72rem;
+        transition: all 0.15s ease;
+    }
+
+    .suggestion-btn:hover {
+        border-color: rgba(255, 153, 51, 0.45);
+        color: var(--saffron-dark);
+        background: rgba(255, 153, 51, 0.05);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+        .assistant-page {
+            padding-top: 16px;
+        }
+
+        .assistant-card {
+            height: calc(100vh - 120px);
+            min-height: 520px;
+            border-radius: 14px;
+        }
+
+        .assistant-header {
+            padding: 13px 14px;
+        }
+
+        .source-badge {
+            display: none;
+        }
+
+        .chat-messages {
+            padding: 16px 13px;
+        }
+
+        .msg-user,
+        .msg-ai,
+        .welcome-message {
+            max-width: 92%;
+        }
+
+        .assistant-form {
+            gap: 7px;
+        }
+
+        .send-button {
+            min-width: 48px;
+            width: 48px;
+            padding: 0;
+        }
+
+        .send-button span {
+            display: none;
+        }
+
+        .suggestion-row {
+            display: none;
+        }
+    }
+            /* Clear conversation button */
+        .clear-conversation-btn {
+            border: 1px solid #dc3545;
+            background: transparent;
+            color: #dc3545;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .clear-conversation-btn:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .clear-conversation-btn:active {
+            transform: scale(0.97);
+        }
+
+        .clear-conversation-btn i {
+            font-size: 0.85rem;
+        }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container assistant-page">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-9 col-xl-8">
+
+            <div class="assistant-card">
+
+                <!-- Indian tricolour accent -->
+                <div class="tricolor-ribbon"></div>
+
+
+                <!-- ============================
+                     ASSISTANT HEADER
+                     ============================ -->
+
+                <div class="assistant-header">
+
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+
+                        <div class="d-flex align-items-center gap-3">
+
+                            <div class="assistant-brand-icon">
+                                <i
+                                    class="fa-solid fa-comments"
+                                    style="color: var(--navy); font-size: 1.15rem;"
+                                ></i>
+                            </div>
+
+                            <div>
+                                <h1 class="assistant-title">
+                                    BharatAssist Civic Assistant
+                                </h1>
+
+                                <div class="assistant-subtitle">
+                                    Clear guidance for government services and procedures
+                                </div>
+                            </div>
+
+                        </div>
+
+
+                        <div class="source-badge">
+                            <i class="fa-solid fa-circle-check me-1"></i>
+                            Source-backed guidance
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ============================
+                     CHAT MESSAGES
+                     ============================ -->
+
+                <div id="chatMessages" class="chat-messages">
+
+                    <!-- Welcome message -->
+
+                    <div class="welcome-message">
+
+                        <div class="welcome-title">
+                            Namaste! How can I help you?
+                        </div>
+
+                        <p class="welcome-text">
+                            Ask about government services, application procedures,
+                            required documents, eligibility, fees, or other civic
+                            information. I’ll provide the clearest guidance available
+                            from the information connected to BharatAssist.
+                        </p>
+
+                    </div>
+
+
+                    <!-- Suggested questions -->
+
+                    <div class="suggestion-row">
+
+                        <button
+                            type="button"
+                            class="suggestion-btn"
+                            data-question="What documents are required for a driving licence?"
+                        >
+                            <i class="fa-solid fa-id-card me-1"></i>
+                            Driving Licence
+                        </button>
+
+                        <button
+                            type="button"
+                            class="suggestion-btn"
+                            data-question="How can I apply for an income certificate?"
+                        >
+                            <i class="fa-solid fa-file-lines me-1"></i>
+                            Income Certificate
+                        </button>
+
+                        <button
+                            type="button"
+                            class="suggestion-btn"
+                            data-question="What documents are usually required for government services?"
+                        >
+                            <i class="fa-solid fa-folder-open me-1"></i>
+                            Required Documents
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ============================
+                     INPUT AREA
+                     ============================ -->
+
+                <div class="assistant-input-area">
+                    <div
+                        id="contextIndicator"
+                        style="
+                            font-size: 0.72rem;
+                            color: var(--slate-500);
+                            margin-bottom: 8px;
+                            padding-left: 2px;
+                        "
+                        >
+                        No active service context
+                    </div>
+                    <form id="assistantForm" class="assistant-form">
+
+                        <input
+                            type="text"
+                            id="questionInput"
+                            class="form-control question-input rounded-3"
+                            placeholder="Ask about a government service..."
+                            autocomplete="off"
+                            maxlength="1000"
+                        >
+
+                        <button
+                            type="submit"
+                            id="sendBtn"
+                            class="btn btn-tricolor send-button"
+                        >
+                            <span>Send</span>
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                        <button
+                    type="button"
+                    id="clearConversationBtn"
+                    class="clear-conversation-btn"
+                    title="Clear conversation"
+                 >
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Clear</span>
+                    </button>
+
+                    </form>
+
+                    <div class="input-help">
+                        <i class="fa-solid fa-circle-info me-1"></i>
+                        For the best answer, mention the service and your state when relevant.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+    const assistantForm = document.getElementById("assistantForm");
+    const questionInput = document.getElementById("questionInput");
+    const chatMessages = document.getElementById("chatMessages");
+    const sendBtn = document.getElementById("sendBtn");
+
+
+    /* ==========================================
+       HTML ESCAPE
+       Prevents user input from becoming HTML
+       ========================================== */
+
+    function escapeHtml(value) {
+
+        const div = document.createElement("div");
+        div.textContent = value ?? "";
+
+        return div.innerHTML;
+    }
+
+
+    /* ==========================================
+       SOURCE URL VALIDATION
+       ========================================== */
+
+    function createSourceLink(source) {
+
+        if (!source || !source.source_url) {
+            return "";
+        }
+
+        const name = escapeHtml(
+            source.name || "Official source"
+        );
+
+        const url = source.source_url;
+
+        /*
+         * Only allow normal HTTP/HTTPS links.
+         */
+        if (
+            !url.startsWith("https://") &&
+            !url.startsWith("http://")
+        ) {
+            return "";
+        }
+
+        const safeUrl = escapeHtml(url);
+
+        return `
+            <a
+                href="${safeUrl}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="source-link"
+            >
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                ${name}
+            </a>
+        `;
+    }
+
+
+    /* ==========================================
+       SCROLL TO BOTTOM
+       ========================================== */
+
+    function scrollChatToBottom() {
+
+        chatMessages.scrollTop =
+            chatMessages.scrollHeight;
+    }
+
+
+    /* ==========================================
+       ADD USER MESSAGE
+       ========================================== */
+
+    function addUserMessage(question) {
+
+        const message = document.createElement("div");
+
+        message.className = "msg-user";
+
+        message.textContent = question;
+
+        chatMessages.appendChild(message);
+
+        scrollChatToBottom();
+    }
+
+
+    /* ==========================================
+       ADD AI MESSAGE
+       ========================================== */
+
+    function addAiMessage(answer, sources = []) {
+
+        const message = document.createElement("div");
+
+        message.className = "msg-ai";
+
+        /*
+         * Backend may return basic HTML formatting.
+         * If your backend returns plain text only,
+         * this will still display correctly.
+         */
+        const answerDiv = document.createElement("div");
+
+        answerDiv.innerHTML =
+            answer || "No answer was returned.";
+
+        message.appendChild(answerDiv);
+
+
+        /* Sources */
+
+        if (Array.isArray(sources) && sources.length > 0) {
+
+            const validSources = sources
+                .map(createSourceLink)
+                .filter(Boolean);
+
+            if (validSources.length > 0) {
+
+                const sourcesDiv =
+                    document.createElement("div");
+
+                sourcesDiv.className =
+                    "sources-container";
+
+                sourcesDiv.innerHTML = `
+                    <div class="sources-title">
+                        <i class="fa-solid fa-link me-1"></i>
+                        References
+                    </div>
+
+                    ${validSources.join("")}
+                `;
+
+                message.appendChild(sourcesDiv);
+            }
+        }
+
+
+        chatMessages.appendChild(message);
+
+        scrollChatToBottom();
+    }
+
+
+    /* ==========================================
+       LOADING INDICATOR
+       ========================================== */
+
+    function showTypingIndicator() {
+
+        const typing = document.createElement("div");
+
+        typing.id = "typingIndicator";
+
+        typing.className = "typing-indicator";
+
+        typing.innerHTML = `
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+        `;
+
+        chatMessages.appendChild(typing);
+
+        scrollChatToBottom();
+    }
+
+
+    function removeTypingIndicator() {
+
+        const typing =
+            document.getElementById("typingIndicator");
+
+        if (typing) {
+            typing.remove();
+        }
+    }
+
+
+    /* ==========================================
+       SUBMIT QUESTION
+       ========================================== */
+
+    assistantForm.addEventListener(
+        "submit",
+        async function(e) {
+
+            e.preventDefault();
+
+            const question =
+                questionInput.value.trim();
+
+            if (!question) {
+                questionInput.focus();
+                return;
+            }
+
+
+            /* Add user message */
+
+            addUserMessage(question);
+
+            questionInput.value = "";
+
+            sendBtn.disabled = true;
+
+            questionInput.disabled = true;
+
+            showTypingIndicator();
+
+
+            try {
+
+                const response = await fetch(
+                    "/api/assistant",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            question: question
+                        })
+                    }
+                );
+
+
+                let data = {};
+
+                try {
+                    data = await response.json();
+                }
+                catch (jsonError) {
+                    data = {
+                        error:
+                            "The server returned an invalid response."
+                    };
+                }
+
+
+                removeTypingIndicator();
+
+
+                if (response.ok) {
+
+                    addAiMessage(
+                        data.answer ||
+                        "I could not generate an answer for that question.",
+                        data.sources || []
+                    );
+
+                    // Update conversation context indicator
+                    if (contextIndicator) {
+
+                        if (data.context_service) {
+
+                            contextIndicator.textContent =
+                                "Current service: " +
+                                data.context_service;
+
+                        }
+                        else {
+
+                            contextIndicator.textContent =
+                                "No active service context";
+
+                        }
+                    }
+
+                }
+                                else {
+
+                    addAiMessage(
+                        `<span class="text-danger">${
+                            escapeHtml(
+                                data.error ||
+                                "Unable to retrieve information."
+                            )
+                        }</span>`
+                    );
+                }
+
+
+            }
+            catch (error) {
+
+                removeTypingIndicator();
+
+                addAiMessage(
+                    `<span class="text-danger">
+                        Connection error. Please check that the BharatAssist
+                        server is running and try again.
+                    </span>`
+                );
+
+                console.error(
+                    "Assistant error:",
+                    error
+                );
+
+            }
+            finally {
+
+                sendBtn.disabled = false;
+
+                questionInput.disabled = false;
+
+                questionInput.focus();
+
+                scrollChatToBottom();
+            }
+
+        }
+    );
+
+
+    /* ==========================================
+       SUGGESTED QUESTION BUTTONS
+       ========================================== */
+
+    document
+        .querySelectorAll(".suggestion-btn")
+        .forEach(function(button) {
+
+            button.addEventListener(
+                "click",
+                function() {
+
+                    const question =
+                        button.dataset.question;
+
+                    questionInput.value =
+                        question;
+
+                    questionInput.focus();
+
+                }
+            );
+
+        });
+
+
+    /* ==========================================
+       ENTER KEY
+       ========================================== */
+
+    questionInput.addEventListener(
+        "keydown",
+        function(e) {
+
+            if (
+                e.key === "Enter" &&
+                !e.shiftKey
+            ) {
+
+                e.preventDefault();
+
+                assistantForm.requestSubmit();
+            }
+
+        }
+    );
+    // ============================================================
+// CLEAR CONVERSATION
+// ============================================================
+
+const clearConversationBtn =
+    document.getElementById(
+        "clearConversationBtn"
+    );
+
+if (clearConversationBtn) {
+
+    clearConversationBtn.addEventListener(
+        "click",
+        async function () {
+
+            const confirmed = window.confirm(
+                "Clear the current conversation context?"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+
+                const response = await fetch(
+                    "/api/assistant/clear",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        }
+                    }
+                );
+
+                const result =
+                    await response.json();
+
+                if (
+                    response.ok &&
+                    result.success
+                ) {
+
+                    // Remove displayed chat messages
+                    // if your page uses this container.
+                    const messages =
+                        document.querySelector(
+                            "#chatMessages"
+                        );
+
+                    if (messages) {
+                        messages.innerHTML = "";
+                    }
+
+                    // Optional context indicator
+                    const contextIndicator =
+                        document.querySelector(
+                            "#contextIndicator"
+                        );
+
+                    if (contextIndicator) {
+                        contextIndicator.textContent =
+                            "No active service context";
+                    }
+
+                    // Add a fresh assistant message
+                    if (messages) {
+
+                        const message =
+                            document.createElement(
+                                "div"
+                            );
+
+                        message.className =
+                            "assistant-message";
+
+                        message.textContent =
+                            "Conversation cleared. " +
+                            "How can I help you?";
+
+                        messages.appendChild(
+                            message
+                        );
+                    }
+
+                } else {
+
+                    window.alert(
+                        result.error ||
+                        "Could not clear conversation."
+                    );
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Clear conversation error:",
+                    error
+                );
+
+                window.alert(
+                    "Could not connect to the server."
+                );
+            }
+        }
+    );
+}
+
+</script>
+
+{% endblock %}

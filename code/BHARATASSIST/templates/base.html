@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}
+        BharatAssist — Trusted Government Services Guide
+        {% endblock %}
+    </title>
+
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Font Awesome -->
+    <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --saffron: #FF9933;
+            --saffron-dark: #E67300;
+
+            --navy: #000080;
+            --navy-dark: #00005c;
+
+            --green: #138808;
+            --green-dark: #0f6b06;
+
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-700: #334155;
+            --slate-600: #475569;
+            --slate-500: #64748b;
+            --slate-400: #94a3b8;
+            --slate-300: #cbd5e1;
+            --slate-200: #e2e8f0;
+            --slate-100: #f1f5f9;
+
+            --white: #ffffff;
+
+            --page-bg:
+                radial-gradient(
+                    circle at 0% 0%,
+                    rgba(255, 153, 51, 0.045) 0%,
+                    transparent 35%
+                ),
+                radial-gradient(
+                    circle at 100% 100%,
+                    rgba(19, 136, 8, 0.045) 0%,
+                    transparent 35%
+                ),
+                #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family:
+                'Plus Jakarta Sans',
+                -apple-system,
+                BlinkMacSystemFont,
+                'Segoe UI',
+                sans-serif;
+
+            background: var(--page-bg);
+            color: var(--slate-700);
+
+            min-height: 100vh;
+
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* =========================================================
+           TOP TRICOLOUR LINE
+        ========================================================= */
+
+        .top-tricolor-stripe {
+            height: 4px;
+            width: 100%;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    var(--saffron) 0%,
+                    var(--saffron) 33.33%,
+                    #ffffff 33.33%,
+                    #ffffff 66.66%,
+                    var(--green) 66.66%,
+                    var(--green) 100%
+                );
+        }
+
+
+        /* =========================================================
+           CIVIC UTILITY BAR
+        ========================================================= */
+
+        .civic-topbar {
+            background: var(--navy);
+            color: #ffffff;
+
+            font-size: 0.76rem;
+            font-weight: 600;
+
+            padding: 6px 0;
+
+            letter-spacing: 0.1px;
+        }
+
+        .civic-topbar i {
+            opacity: 0.85;
+        }
+
+        .civic-topbar .topbar-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+
+        /* =========================================================
+           NAVBAR
+        ========================================================= */
+
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.97);
+
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+
+            border-bottom: 1px solid var(--slate-200);
+
+            box-shadow:
+                0 1px 2px rgba(15, 23, 42, 0.02);
+
+            padding: 0.85rem 0;
+
+            position: relative;
+            z-index: 1000;
+        }
+
+
+        /* =========================================================
+           BRAND
+        ========================================================= */
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+
+            gap: 10px;
+
+            color: var(--navy);
+            text-decoration: none;
+
+            line-height: 1;
+        }
+
+        .brand-logo:hover {
+            color: var(--navy);
+        }
+
+        .brand-icon-box {
+            width: 46px;
+            height: 46px;
+
+            border-radius: 13px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(255, 153, 51, 0.13),
+                    rgba(19, 136, 8, 0.10)
+                );
+
+            border: 1px solid rgba(255, 153, 51, 0.30);
+
+            box-shadow:
+                0 2px 6px rgba(15, 23, 42, 0.05);
+
+            flex-shrink: 0;
+        }
+
+        .brand-icon-box i {
+            color: var(--navy);
+            font-size: 1.3rem;
+        }
+
+        .brand-name {
+            font-size: 1.42rem;
+            font-weight: 800;
+
+            letter-spacing: -0.5px;
+
+            color: var(--navy);
+        }
+
+        .brand-name .highlight {
+            color: var(--green);
+        }
+
+        .brand-tagline {
+            margin-top: 3px;
+
+            font-size: 0.66rem;
+            font-weight: 700;
+
+            color: var(--slate-500);
+
+            text-transform: uppercase;
+            letter-spacing: 0.55px;
+        }
+
+
+        /* =========================================================
+           NAVIGATION LINKS
+        ========================================================= */
+
+        .nav-link-custom {
+            color: var(--slate-700) !important;
+
+            font-size: 0.88rem;
+            font-weight: 650;
+
+            padding: 10px 14px !important;
+
+            border-radius: 9px;
+
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            position: relative;
+
+            transition:
+                background-color 0.2s ease,
+                color 0.2s ease,
+                transform 0.2s ease;
+        }
+
+        .nav-link-custom:hover {
+            color: var(--navy) !important;
+
+            background: rgba(0, 0, 128, 0.045);
+
+            transform: translateY(-1px);
+        }
+
+        .nav-link-custom.active {
+            color: var(--navy) !important;
+
+            background:
+                rgba(255, 153, 51, 0.10);
+        }
+
+        .nav-link-custom.active::after {
+            content: "";
+
+            position: absolute;
+
+            bottom: -10px;
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            width: 22px;
+            height: 3px;
+
+            border-radius: 5px;
+
+            background: var(--saffron);
+        }
+
+        .nav-link-custom i {
+            font-size: 0.82rem;
+            opacity: 0.72;
+        }
+
+
+        /* =========================================================
+           MOBILE NAVBAR
+        ========================================================= */
+
+        .navbar-toggler {
+            border: 1px solid var(--slate-200) !important;
+
+            border-radius: 8px;
+
+            padding: 8px 10px;
+
+            background: #ffffff;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow:
+                0 0 0 3px rgba(255, 153, 51, 0.15);
+        }
+
+
+        /* =========================================================
+           BUTTONS
+        ========================================================= */
+
+        .btn-tricolor {
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--saffron),
+                    var(--saffron-dark)
+                );
+
+            color: #ffffff;
+
+            font-weight: 700;
+
+            font-size: 0.9rem;
+
+            border: none;
+
+            border-radius: 10px;
+
+            padding: 10px 20px;
+
+            box-shadow:
+                0 3px 8px rgba(230, 115, 0, 0.20);
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                background 0.2s ease;
+        }
+
+        .btn-tricolor:hover {
+            color: #ffffff;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--saffron-dark),
+                    #cc6600
+                );
+
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 5px 14px rgba(230, 115, 0, 0.28);
+        }
+
+
+        /* =========================================================
+           OUTLINE BUTTON
+        ========================================================= */
+
+        .btn-outline-navy {
+            color: var(--navy);
+
+            background: #ffffff;
+
+            border: 1px solid rgba(0, 0, 128, 0.25);
+
+            border-radius: 10px;
+
+            font-weight: 650;
+
+            padding: 10px 20px;
+
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-navy:hover {
+            color: #ffffff;
+
+            background: var(--navy);
+
+            border-color: var(--navy);
+        }
+
+
+        /* =========================================================
+           TRICOLOUR RIBBON
+        ========================================================= */
+
+        .tricolor-ribbon {
+            height: 4px;
+            width: 100%;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    var(--saffron) 0%,
+                    var(--saffron) 33.33%,
+                    #ffffff 33.33%,
+                    #ffffff 66.66%,
+                    var(--green) 66.66%,
+                    var(--green) 100%
+                );
+        }
+
+
+        /* =========================================================
+           FORM INPUTS
+        ========================================================= */
+
+        .input-tricolor-focus:focus {
+            border-color: var(--saffron) !important;
+
+            box-shadow:
+                0 0 0 0.22rem rgba(255, 153, 51, 0.15) !important;
+
+            background: #ffffff !important;
+        }
+
+        .form-control,
+        .form-select {
+            border-color: var(--slate-300);
+
+            color: var(--slate-700);
+
+            border-radius: 9px;
+        }
+
+        .form-control::placeholder {
+            color: var(--slate-400);
+        }
+
+
+        /* =========================================================
+           CARDS
+        ========================================================= */
+
+        .bharat-card {
+            background: #ffffff;
+
+            border: 1px solid var(--slate-200);
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 6px 20px rgba(15, 23, 42, 0.045);
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .bharat-card:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 10px 28px rgba(15, 23, 42, 0.07);
+        }
+
+
+        /* =========================================================
+           BADGES
+        ========================================================= */
+
+        .badge-saffron {
+            background: rgba(255, 153, 51, 0.12);
+
+            color: var(--saffron-dark);
+
+            font-weight: 700;
+
+            border: 1px solid rgba(255, 153, 51, 0.20);
+        }
+
+        .badge-green {
+            background: rgba(19, 136, 8, 0.10);
+
+            color: var(--green-dark);
+
+            font-weight: 700;
+
+            border: 1px solid rgba(19, 136, 8, 0.18);
+        }
+
+        .badge-navy {
+            background: rgba(0, 0, 128, 0.08);
+
+            color: var(--navy);
+
+            font-weight: 700;
+
+            border: 1px solid rgba(0, 0, 128, 0.12);
+        }
+
+
+        /* =========================================================
+           PAGE CONTAINER
+        ========================================================= */
+
+        main {
+            width: 100%;
+        }
+
+
+        /* =========================================================
+           FOOTER
+        ========================================================= */
+
+        .footer-bharat {
+            background: #ffffff;
+
+            border-top: 1px solid var(--slate-200);
+
+            margin-top: auto;
+
+            font-size: 0.82rem;
+        }
+
+        .footer-heading {
+            font-size: 0.75rem;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.65px;
+
+            color: var(--navy);
+
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-link {
+            color: var(--slate-500);
+
+            text-decoration: none;
+
+            transition: color 0.15s ease;
+        }
+
+        .footer-link:hover {
+            color: var(--saffron-dark);
+        }
+
+        .footer-brand {
+            font-weight: 800;
+
+            font-size: 1rem;
+
+            color: var(--navy);
+        }
+
+
+        /* =========================================================
+           SMALL UTILITIES
+        ========================================================= */
+
+        .text-navy {
+            color: var(--navy) !important;
+        }
+
+        .text-saffron {
+            color: var(--saffron-dark) !important;
+        }
+
+        .text-green {
+            color: var(--green) !important;
+        }
+
+
+        /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+
+        @media (max-width: 991px) {
+
+            .navbar-custom {
+                padding: 0.7rem 0;
+            }
+
+            .navbar-nav {
+                padding-top: 12px;
+                padding-bottom: 6px;
+            }
+
+            .nav-link-custom {
+                padding: 11px 13px !important;
+            }
+
+            .nav-link-custom.active::after {
+                display: none;
+            }
+
+            .brand-name {
+                font-size: 1.25rem;
+            }
+
+            .brand-tagline {
+                font-size: 0.58rem;
+            }
+        }
+
+        @media (max-width: 575px) {
+
+            .brand-icon-box {
+                width: 42px;
+                height: 42px;
+            }
+
+            .brand-name {
+                font-size: 1.18rem;
+            }
+
+            .brand-tagline {
+                font-size: 0.54rem;
+                letter-spacing: 0.35px;
+            }
+
+            .civic-topbar {
+                display: none;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- =========================================================
+         TRICOLOUR TOP STRIPE
+    ========================================================== -->
+
+    <div class="top-tricolor-stripe"></div>
+
+
+    <!-- =========================================================
+         GOVERNMENT / CIVIC UTILITY BAR
+    ========================================================== -->
+
+    <div class="civic-topbar d-none d-md-block">
+
+        <div class="container">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <div class="topbar-item">
+                    <i class="fa-solid fa-landmark"></i>
+                    <span>Government Services Guidance Platform</span>
+                </div>
+
+                <div class="d-flex gap-4">
+
+                    <span class="topbar-item">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        Secure &amp; Privacy-Aware
+                    </span>
+
+                    <span class="topbar-item">
+                        <i class="fa-solid fa-circle-check"></i>
+                        Verified Information
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         MAIN NAVIGATION
+    ========================================================== -->
+
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+
+        <div class="container">
+
+            <!-- BRAND -->
+
+            <a
+                class="navbar-brand brand-logo"
+                href="{{ url_for('index') }}"
+            >
+
+                <div class="brand-icon-box">
+                    <i class="fa-solid fa-landmark-dome"></i>
+                </div>
+
+                <div>
+
+                    <div class="brand-name">
+                        Bharat<span class="highlight">Assist</span>
+                    </div>
+
+                    <div class="brand-tagline">
+                        Trusted Government Services Guide
+                    </div>
+
+                </div>
+
+            </a>
+
+
+            <!-- MOBILE TOGGLE -->
+
+            <button
+                class="navbar-toggler shadow-none"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+
+                <i class="fa-solid fa-bars text-navy"></i>
+
+            </button>
+
+
+            <!-- NAVIGATION -->
+
+            <div
+                class="collapse navbar-collapse"
+                id="navbarNav"
+            >
+
+                <ul
+                    class="navbar-nav ms-auto align-items-lg-center gap-lg-1 mt-3 mt-lg-0"
+                >
+
+                    <!-- HOME -->
+
+                    <li class="nav-item">
+
+                        <a
+                            class="nav-link nav-link-custom
+                            {% if request.endpoint == 'index' %}active{% endif %}"
+                            href="{{ url_for('index') }}"
+                        >
+
+                            <i class="fa-solid fa-house"></i>
+
+                            <span>Home</span>
+
+                        </a>
+
+                    </li>
+
+
+                    <!-- SERVICES -->
+
+                    <li class="nav-item">
+
+                        <a
+                            class="nav-link nav-link-custom
+                            {% if request.endpoint == 'services' or request.endpoint == 'service_details_page' %}active{% endif %}"
+                            href="{{ url_for('services') }}"
+                        >
+
+                            <i class="fa-solid fa-folder-open"></i>
+
+                            <span>Services Directory</span>
+
+                        </a>
+
+                    </li>
+
+
+                    <!-- DOCUMENT SIMPLIFIER -->
+
+                    <li class="nav-item">
+
+                        <a
+                            class="nav-link nav-link-custom
+                            {% if request.endpoint == 'simplify' %}active{% endif %}"
+                            href="{{ url_for('simplify') }}"
+                        >
+
+                            <i class="fa-solid fa-file-lines"></i>
+
+                            <span>Doc Simplifier</span>
+
+                        </a>
+
+                    </li>
+
+
+                    <!-- AI ASSISTANT -->
+
+                    <li class="nav-item">
+
+                        <a
+                            class="nav-link nav-link-custom
+                            {% if request.endpoint == 'assistant' %}active{% endif %}"
+                            href="{{ url_for('assistant') }}"
+                        >
+
+                            <i class="fa-solid fa-robot"></i>
+
+                            <span>AI Assistant</span>
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =========================================================
+         PAGE CONTENT
+    ========================================================== -->
+
+    <main class="flex-grow-1">
+
+        {% block content %}{% endblock %}
+
+    </main>
+
+
+    <!-- =========================================================
+         FOOTER
+    ========================================================== -->
+
+    <footer class="footer-bharat py-4">
+
+        <div class="container">
+
+            <div class="row g-4 mb-3">
+
+                <!-- BRAND -->
+
+                <div class="col-md-5">
+
+                    <div class="d-flex align-items-center gap-2 mb-2">
+
+                        <div class="brand-icon-box"
+                             style="width:36px;height:36px;border-radius:10px;">
+
+                            <i
+                                class="fa-solid fa-landmark-dome"
+                                style="font-size:1rem;"
+                            ></i>
+
+                        </div>
+
+                        <span class="footer-brand">
+                            Bharat<span style="color:var(--green);">Assist</span>
+                        </span>
+
+                    </div>
+
+                    <p
+                        class="text-muted mb-0"
+                        style="max-width:400px; line-height:1.7;"
+                    >
+                        A citizen-focused platform that helps people understand
+                        government services, eligibility requirements,
+                        documents, procedures and official application channels.
+                    </p>
+
+                </div>
+
+
+                <!-- PLATFORM -->
+
+                <div class="col-md-3 col-6 ms-md-auto">
+
+                    <div class="footer-heading">
+                        Platform
+                    </div>
+
+                    <ul
+                        class="list-unstyled mb-0 d-flex flex-column gap-2"
+                    >
+
+                        <li>
+                            <a
+                                href="{{ url_for('services') }}"
+                                class="footer-link"
+                            >
+                                <i class="fa-solid fa-chevron-right me-1"
+                                   style="font-size:9px;"></i>
+                                Services Directory
+                            </a>
+                        </li>
+
+                        <li>
+                            <a
+                                href="{{ url_for('simplify') }}"
+                                class="footer-link"
+                            >
+                                <i class="fa-solid fa-chevron-right me-1"
+                                   style="font-size:9px;"></i>
+                                Document Simplifier
+                            </a>
+                        </li>
+
+                        <li>
+                            <a
+                                href="{{ url_for('assistant') }}"
+                                class="footer-link"
+                            >
+                                <i class="fa-solid fa-chevron-right me-1"
+                                   style="font-size:9px;"></i>
+                                AI Assistant
+                            </a>
+                        </li>
+
+                    </ul>
+
+                </div>
+
+
+                <!-- TRUST -->
+
+                <div class="col-md-3 col-6">
+
+                    <div class="footer-heading">
+                        Trust &amp; Privacy
+                    </div>
+
+                    <ul
+                        class="list-unstyled mb-0 d-flex flex-column gap-2"
+                    >
+
+                        <li class="text-muted">
+
+                            <i
+                                class="fa-solid fa-shield-halved text-success me-1"
+                            ></i>
+
+                            Privacy-aware processing
+
+                        </li>
+
+                        <li class="text-muted">
+
+                            <i
+                                class="fa-solid fa-building-columns text-primary me-1"
+                            ></i>
+
+                            Official portal guidance
+
+                        </li>
+
+                        <li class="text-muted">
+
+                            <i
+                                class="fa-solid fa-circle-check text-success me-1"
+                            ></i>
+
+                            Procedure-focused information
+
+                        </li>
+
+                    </ul>
+
+                </div>
+
+            </div>
+
+
+            <hr class="my-3 opacity-25">
+
+
+            <div
+                class="d-flex flex-column flex-md-row
+                       justify-content-between
+                       align-items-center
+                       gap-2
+                       text-muted"
+                style="font-size:0.75rem;"
+            >
+
+                <div>
+                    © 2026 BharatAssist
+                </div>
+
+                <div>
+                    Trusted Government Services Guide
+                </div>
+
+            </div>
+
+        </div>
+
+    </footer>
+
+
+    <!-- =========================================================
+         BOOTSTRAP JS
+    ========================================================== -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+    ></script>
+
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

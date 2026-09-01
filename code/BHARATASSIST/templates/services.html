@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}Services Directory — BharatAssist{% endblock %}
+
+{% block extra_css %}
+<style>
+    .directory-card {
+        background: #FFFFFF;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 153, 51, 0.25);
+        box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.07);
+        overflow: hidden;
+    }
+
+    .service-item-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 16px;
+        padding: 20px;
+        transition: all 0.25s ease;
+        border-left: 5px solid #FF9933;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .service-item-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+        border-left-color: #138808;
+    }
+
+    .badge-category {
+        background: rgba(0, 0, 128, 0.08);
+        color: #000080;
+        font-weight: 600;
+    }
+
+    .service-description {
+        min-height: 70px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-11">
+
+            <div class="directory-card">
+
+                <div class="tricolor-ribbon"></div>
+
+                <!-- HEADER -->
+
+                <div class="p-4 border-bottom bg-white">
+
+                    <div class="d-flex flex-column flex-md-row
+                                justify-content-between
+                                align-items-md-center gap-3">
+
+                        <div>
+
+                            <h3 class="fw-bold mb-1"
+                                style="color:#000080;">
+
+                                Civic Services Directory
+
+                            </h3>
+
+                            <p class="text-muted mb-0">
+
+                                Browse verified government services,
+                                eligibility, documents, fees and procedures.
+
+                            </p>
+
+                        </div>
+
+                        <div>
+
+                            <input
+                                type="text"
+                                id="serviceSearch"
+                                class="form-control bg-light p-2 rounded-3"
+                                placeholder="Search services..."
+                                autocomplete="off"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SERVICES -->
+
+                <div class="p-4 bg-light">
+
+                    <div
+                        class="row g-4"
+                        id="servicesGrid"
+                    >
+
+                        {% if services %}
+
+                            {% for service in services %}
+
+                            <div
+                                class="col-md-6 service-column"
+                                data-search="
+                                    {{ service.name }}
+                                    {{ service.category }}
+                                    {{ service.eligibility }}
+                                "
+                            >
+
+                                <div class="service-item-card">
+
+                                    <div>
+
+                                        <div class="d-flex
+                                                    justify-content-between
+                                                    align-items-center
+                                                    mb-2">
+
+                                            <span class="badge
+                                                         badge-category
+                                                         px-3 py-1
+                                                         rounded-pill">
+
+                                                {{ service.category }}
+
+                                            </span>
+
+                                            <i class="fa-solid
+                                                      fa-landmark
+                                                      fs-5"
+                                               style="color:#FF9933;">
+                                            </i>
+
+                                        </div>
+
+
+                                        <h5 class="fw-bold text-dark">
+
+                                            {{ service.name }}
+
+                                        </h5>
+
+
+                                        <p class="text-muted
+                                                  fs-6
+                                                  service-description">
+
+                                            {{ service.eligibility }}
+
+                                        </p>
+
+
+                                        {% if service.state %}
+
+                                        <small class="text-muted">
+
+                                            <i class="fa-solid
+                                                      fa-location-dot
+                                                      me-1">
+                                            </i>
+
+                                            {{ service.state }}
+
+                                        </small>
+
+                                        {% endif %}
+
+                                    </div>
+
+
+                                    <div class="pt-3
+                                                border-top
+                                                mt-3
+                                                d-flex
+                                                justify-content-between
+                                                align-items-center">
+
+                                        <span class="text-success
+                                                     fw-semibold
+                                                     small">
+
+                                            <i class="fa-solid
+                                                      fa-circle-check
+                                                      me-1">
+                                            </i>
+
+                                            Verified Service
+
+                                        </span>
+
+
+                                        <a
+                                            href="{{ url_for('service_details', service_id=service.id) }}"
+                                            class="btn btn-sm
+                                                   btn-outline-warning
+                                                   fw-semibold
+                                                   text-dark"
+                                        >
+
+                                            View Details
+
+                                            <i class="fa-solid
+                                                      fa-arrow-right
+                                                      ms-1">
+                                            </i>
+
+                                        </a>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            {% endfor %}
+
+                        {% else %}
+
+                            <div class="col-12">
+
+                                <div class="alert alert-warning">
+
+                                    No services found in the database.
+
+                                </div>
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchBox =
+        document.getElementById("serviceSearch");
+
+    const serviceCards =
+        document.querySelectorAll(".service-column");
+
+
+    searchBox.addEventListener("input", function () {
+
+        const query =
+            searchBox.value.toLowerCase().trim();
+
+
+        serviceCards.forEach(function (card) {
+
+            const text =
+                card
+                .getAttribute("data-search")
+                .toLowerCase();
+
+
+            if (text.includes(query)) {
+
+                card.style.display = "";
+
+            } else {
+
+                card.style.display = "none";
+
+            }
+
+        });
+
+    });
+
+});
+
+</script>
+
+{% endblock %}
