@@ -38,6 +38,34 @@ command:
 make docs
 ```
 
+# Student Learning Platform
+
+A web-based Student Learning Platform designed to help students learn through interactive quizzes and track their progress.
+
+## Tech Stack
+
+### Frontend
+- React
+- Tailwind CSS
+
+### Backend
+- Node.js
+- Express.js
+
+### Database
+- PostgreSQL
+
+## Current Module
+
+We are currently developing the Quiz Module.
+
+## Team
+
+- Member 1
+- Member 2
+- Member 3
+- Member 4
+
 ### Local `env` for `docs`
 
 ``` shell
