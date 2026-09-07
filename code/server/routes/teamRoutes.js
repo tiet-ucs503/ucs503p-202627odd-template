@@ -1,0 +1,10 @@
+import { Router } from "express";
+import { create,mine,one,joinRequest,updateRequest } from "../controllers/teamController.js";
+import { protect } from "../middleware/authMiddleware.js";
+const router=Router();
+router.post("/",protect,create);
+router.get("/my",protect,mine);
+router.get("/:id",protect,one);
+router.post("/:id/request",protect,joinRequest);
+router.put("/requests/:requestId",protect,updateRequest);
+export default router;
