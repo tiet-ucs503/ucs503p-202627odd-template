@@ -1,0 +1,20 @@
+import express from "express";
+import cors from "cors";
+import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import projectRoutes from "./routes/projectRoutes.js";
+import teamRoutes from "./routes/teamRoutes.js";
+import { config } from "./config/config.js";
+import { notFound,errorHandler } from "./middleware/errorMiddleware.js";
+
+const app=express();
+app.use(cors({origin:config.clientUrl}));
+app.use(express.json());
+app.get("/api/health",(req,res)=>res.json({status:"ok",app:"TeamUp"}));
+app.use("/api/auth",authRoutes);
+app.use("/api/users",userRoutes);
+app.use("/api/projects",projectRoutes);
+app.use("/api/teams",teamRoutes);
+app.use(notFound);
+app.use(errorHandler);
+export default app;

@@ -1,0 +1,10 @@
+import { Router } from "express";
+import { getProjects,getOneProject,createProject,updateProject,deleteProject } from "../controllers/projectController.js";
+import { protect } from "../middleware/authMiddleware.js";
+const router=Router();
+router.get("/",protect,getProjects);
+router.get("/:id",getOneProject);
+router.post("/",protect,createProject);
+router.put("/:id",protect,updateProject);
+router.delete("/:id",protect,deleteProject);
+export default router;
