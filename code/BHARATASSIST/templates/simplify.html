@@ -1,0 +1,1079 @@
+{% extends "base.html" %}
+
+{% block title %}Document Guide — BharatAssist{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* =========================================================
+       DOCUMENT GUIDE
+       Clean, professional BharatAssist visual language
+       ========================================================= */
+
+    .document-shell {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 22px;
+        overflow: hidden;
+        box-shadow:
+            0 18px 45px rgba(15, 23, 42, 0.06),
+            0 2px 8px rgba(15, 23, 42, 0.03);
+    }
+
+    .document-header {
+        padding: 28px 30px;
+        background:
+            linear-gradient(
+                135deg,
+                rgba(255, 153, 51, 0.055),
+                rgba(255, 255, 255, 0.95) 45%,
+                rgba(19, 136, 8, 0.035)
+            );
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .document-header-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        border: 1px solid rgba(255, 153, 51, 0.25);
+        box-shadow: 0 5px 14px rgba(15, 23, 42, 0.05);
+        color: var(--navy);
+        flex-shrink: 0;
+    }
+
+    .document-eyebrow {
+        color: var(--saffron-dark);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+
+    .document-title {
+        color: var(--navy);
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        margin-bottom: 6px;
+    }
+
+    .document-subtitle {
+        color: #64748b;
+        max-width: 720px;
+        line-height: 1.65;
+        margin-bottom: 0;
+    }
+
+    /* Workspace */
+
+    .document-workspace {
+        background: #f8fafc;
+        padding: 28px 30px 32px;
+    }
+
+    .workspace-label {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: #334155;
+        text-transform: uppercase;
+        letter-spacing: 0.055em;
+        margin-bottom: 10px;
+    }
+
+    /* Input selector */
+
+    .input-switcher {
+        display: inline-flex;
+        padding: 4px;
+        background: #eef2f7;
+        border: 1px solid #e2e8f0;
+        border-radius: 11px;
+        margin-bottom: 24px;
+    }
+
+    .input-switcher .nav-link {
+        color: #64748b;
+        font-size: 0.86rem;
+        font-weight: 700;
+        border: 0;
+        border-radius: 8px;
+        padding: 9px 16px;
+        transition: all 0.2s ease;
+    }
+
+    .input-switcher .nav-link:hover {
+        color: var(--navy);
+    }
+
+    .input-switcher .nav-link.active {
+        color: var(--navy);
+        background: #ffffff;
+        box-shadow:
+            0 2px 7px rgba(15, 23, 42, 0.08);
+    }
+
+    /* Text input */
+
+    .document-textarea {
+        min-height: 245px;
+        resize: vertical;
+        border: 1px solid #dbe2ea;
+        background: #ffffff;
+        color: #0f172a;
+        line-height: 1.7;
+        border-radius: 13px;
+        padding: 16px 17px;
+        box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02);
+    }
+
+    .document-textarea::placeholder {
+        color: #94a3b8;
+    }
+
+    .document-textarea:focus {
+        border-color: var(--saffron) !important;
+        box-shadow:
+            0 0 0 3px rgba(255, 153, 51, 0.12),
+            inset 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+    }
+
+    .input-hint {
+        color: #94a3b8;
+        font-size: 0.76rem;
+        margin-top: 8px;
+    }
+
+    /* Upload */
+
+    .upload-zone {
+        min-height: 245px;
+        border: 1.5px dashed #cbd5e1;
+        border-radius: 15px;
+        background: #ffffff;
+        padding: 35px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        cursor: pointer;
+        transition:
+            border-color 0.2s ease,
+            background 0.2s ease,
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+        border-color: var(--saffron);
+        background: rgba(255, 153, 51, 0.035);
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
+        transform: translateY(-1px);
+    }
+
+    .upload-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 153, 51, 0.10);
+        color: var(--saffron-dark);
+        font-size: 1.45rem;
+        margin-bottom: 14px;
+    }
+
+    .upload-title {
+        color: #0f172a;
+        font-weight: 750;
+        margin-bottom: 5px;
+    }
+
+    .upload-description {
+        color: #64748b;
+        font-size: 0.82rem;
+        margin-bottom: 14px;
+    }
+
+    .selected-file {
+        max-width: 90%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+        font-size: 0.76rem;
+        font-weight: 600;
+    }
+
+    .selected-file.file-selected {
+        background: rgba(19, 136, 8, 0.08);
+        color: var(--green);
+        border-color: rgba(19, 136, 8, 0.20);
+    }
+
+    /* Action area */
+
+    .action-row {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .privacy-note {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #64748b;
+        font-size: 0.77rem;
+    }
+
+    .privacy-note i {
+        color: var(--green);
+    }
+
+    .simplify-action {
+        min-width: 190px;
+        justify-content: center;
+    }
+
+    /* Loading */
+
+    .loading-state {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Result */
+
+    .result-container {
+        margin-top: 30px;
+        padding-top: 28px;
+        border-top: 1px solid #dbe2ea;
+    }
+
+    .result-heading {
+        color: var(--navy);
+        font-weight: 800;
+        letter-spacing: -0.015em;
+    }
+
+    .result-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(19, 136, 8, 0.08);
+        border: 1px solid rgba(19, 136, 8, 0.18);
+        color: var(--green);
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
+    .output-box {
+        margin-top: 12px;
+        background: #ffffff;
+        border: 1px solid #dbe2ea;
+        border-left: 4px solid var(--green);
+        border-radius: 14px;
+        padding: 22px 24px;
+        color: #1e293b;
+        line-height: 1.75;
+        box-shadow: 0 5px 16px rgba(15, 23, 42, 0.04);
+    }
+
+    .output-box ul {
+        padding-left: 1.2rem;
+        margin-bottom: 0;
+    }
+
+    .output-box li::marker {
+        color: var(--green);
+    }
+
+    .error-output {
+        color: #b91c1c;
+        background: #fff7f7;
+        border-left-color: #dc2626;
+    }
+
+    /* Responsive */
+
+    @media (max-width: 767.98px) {
+        .document-header,
+        .document-workspace {
+            padding-left: 18px;
+            padding-right: 18px;
+        }
+
+        .document-header {
+            padding-top: 22px;
+            padding-bottom: 22px;
+        }
+
+        .document-title {
+            font-size: 1.45rem;
+        }
+
+        .input-switcher {
+            width: 100%;
+        }
+
+        .input-switcher .nav-item {
+            flex: 1;
+        }
+
+        .input-switcher .nav-link {
+            width: 100%;
+        }
+
+        .action-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .simplify-action {
+            width: 100%;
+        }
+
+        .privacy-note {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container py-4 py-md-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-xl-10 col-lg-11">
+
+            <div class="document-shell">
+
+                <!-- Tricolour accent -->
+                <div class="tricolor-ribbon"></div>
+
+                <!-- Header -->
+                <div class="document-header">
+
+                    <div class="d-flex align-items-center gap-3">
+
+                        <div class="document-header-icon">
+                            <i class="fa-solid fa-file-lines fs-5"></i>
+                        </div>
+
+                        <div>
+
+                            <div class="document-eyebrow">
+                                BharatAssist Document Guide
+                            </div>
+
+                            <h1 class="document-title h3">
+                                Understand Government Documents
+                            </h1>
+
+                            <p class="document-subtitle">
+                                Paste a notice, circular or policy document, or upload a file.
+                                BharatAssist will turn the important information into a clearer,
+                                easier-to-read summary.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Workspace -->
+                <div class="document-workspace">
+
+                    <div class="workspace-label">
+                        Choose how you want to provide the document
+                    </div>
+
+
+                    <!-- Input Switcher -->
+                    <ul
+                        class="nav input-switcher"
+                        id="inputTabs"
+                        role="tablist"
+                    >
+
+                        <li class="nav-item" role="presentation">
+
+                            <button
+                                class="nav-link active"
+                                id="text-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#text-input-panel"
+                                type="button"
+                                role="tab"
+                            >
+
+                                <i class="fa-solid fa-align-left me-2"></i>
+                                Paste Text
+
+                            </button>
+
+                        </li>
+
+                        <li class="nav-item" role="presentation">
+
+                            <button
+                                class="nav-link"
+                                id="file-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#file-input-panel"
+                                type="button"
+                                role="tab"
+                            >
+
+                                <i class="fa-solid fa-arrow-up-from-bracket me-2"></i>
+                                Upload File
+
+                            </button>
+
+                        </li>
+
+                    </ul>
+
+
+                    <form
+                        id="simplifyForm"
+                        enctype="multipart/form-data"
+                    >
+
+                        <div
+                            class="tab-content"
+                            id="inputTabsContent"
+                        >
+
+                            <!-- =================================================
+                                 TEXT INPUT
+                                 ================================================= -->
+
+                            <div
+                                class="tab-pane fade show active"
+                                id="text-input-panel"
+                                role="tabpanel"
+                            >
+
+                                <label
+                                    for="documentText"
+                                    class="workspace-label"
+                                >
+                                    Document text
+                                </label>
+
+                                <textarea
+                                    id="documentText"
+                                    name="text"
+                                    class="form-control document-textarea"
+                                    placeholder="Paste the text from a government notification, circular, letter, policy or instruction here..."
+                                ></textarea>
+
+                                <div class="input-hint">
+                                    <i class="fa-regular fa-lightbulb me-1"></i>
+                                    Include the full section you want explained for better results.
+                                </div>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 FILE UPLOAD
+                                 ================================================= -->
+
+                            <div
+                                class="tab-pane fade"
+                                id="file-input-panel"
+                                role="tabpanel"
+                            >
+
+                                <label class="workspace-label">
+                                    Document file
+                                </label>
+
+                                <div
+                                    class="upload-zone"
+                                    id="uploadZone"
+                                    role="button"
+                                    tabindex="0"
+                                >
+
+                                    <div class="upload-icon">
+
+                                        <i class="fa-solid fa-file-arrow-up"></i>
+
+                                    </div>
+
+                                    <div class="upload-title">
+                                        Select a document to simplify
+                                    </div>
+
+                                    <div class="upload-description">
+                                        Drag and drop here or click to browse
+                                        <br>
+                                        PDF, DOCX or TXT · Maximum 10 MB
+                                    </div>
+
+                                    <span
+                                        id="fileNameDisplay"
+                                        class="badge rounded-pill selected-file px-3 py-2"
+                                    >
+                                        No file selected
+                                    </span>
+
+                                </div>
+
+                                <input
+                                    type="file"
+                                    id="fileInput"
+                                    name="file"
+                                    class="d-none"
+                                    accept=".pdf,.docx,.txt"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Action -->
+                        <div class="action-row">
+
+                            <div class="privacy-note">
+
+                                <i class="fa-solid fa-shield-halved"></i>
+
+                                <span>
+                                    Personal identifiers are automatically redacted before processing.
+                                </span>
+
+                            </div>
+
+                            <button
+                                type="submit"
+                                id="simplifyBtn"
+                                class="btn btn-tricolor simplify-action d-flex align-items-center gap-2 px-4 py-2"
+                            >
+
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+
+                                <span>Simplify Document</span>
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+
+                    <!-- =====================================================
+                         RESULT
+                         ===================================================== -->
+
+                    <div
+                        id="resultContainer"
+                        class="result-container d-none"
+                    >
+
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+
+                            <div>
+
+                                <div class="document-eyebrow mb-1">
+                                    BharatAssist Result
+                                </div>
+
+                                <h4 class="result-heading mb-0">
+                                    Simplified Summary
+                                </h4>
+
+                            </div>
+
+                            <span class="result-meta">
+
+                                <i class="fa-solid fa-circle-check"></i>
+
+                                Easier to understand
+
+                            </span>
+
+                        </div>
+
+
+                        <div
+                            id="simplifiedOutput"
+                            class="output-box"
+                        >
+                            <!-- Result rendered here -->
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const fileInput =
+        document.getElementById("fileInput");
+
+    const fileNameDisplay =
+        document.getElementById("fileNameDisplay");
+
+    const uploadZone =
+        document.getElementById("uploadZone");
+
+    const simplifyForm =
+        document.getElementById("simplifyForm");
+
+    const simplifyBtn =
+        document.getElementById("simplifyBtn");
+
+    const resultContainer =
+        document.getElementById("resultContainer");
+
+    const simplifiedOutput =
+        document.getElementById("simplifiedOutput");
+
+
+    /* =========================================================
+       FILE SELECTION
+       ========================================================= */
+
+    function updateFileDisplay() {
+
+        if (fileInput.files.length > 0) {
+
+            const file =
+                fileInput.files[0];
+
+            fileNameDisplay.textContent =
+                file.name;
+
+            fileNameDisplay.classList.add(
+                "file-selected"
+            );
+
+        } else {
+
+            fileNameDisplay.textContent =
+                "No file selected";
+
+            fileNameDisplay.classList.remove(
+                "file-selected"
+            );
+        }
+    }
+
+
+    fileInput.addEventListener(
+        "change",
+        updateFileDisplay
+    );
+
+
+    /* =========================================================
+       UPLOAD ZONE
+       ========================================================= */
+
+    uploadZone.addEventListener(
+        "click",
+        function () {
+            fileInput.click();
+        }
+    );
+
+
+    uploadZone.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === "Enter" ||
+                event.key === " "
+            ) {
+
+                event.preventDefault();
+
+                fileInput.click();
+
+            }
+
+        }
+    );
+
+
+    [
+        "dragenter",
+        "dragover"
+    ].forEach(function (eventName) {
+
+        uploadZone.addEventListener(
+            eventName,
+            function (event) {
+
+                event.preventDefault();
+
+                uploadZone.classList.add(
+                    "dragover"
+                );
+
+            }
+        );
+
+    });
+
+
+    [
+        "dragleave",
+        "drop"
+    ].forEach(function (eventName) {
+
+        uploadZone.addEventListener(
+            eventName,
+            function (event) {
+
+                event.preventDefault();
+
+                uploadZone.classList.remove(
+                    "dragover"
+                );
+
+            }
+        );
+
+    });
+
+
+    uploadZone.addEventListener(
+        "drop",
+        function (event) {
+
+            const files =
+                event.dataTransfer.files;
+
+            if (!files.length) {
+                return;
+            }
+
+            const file =
+                files[0];
+
+            const allowedTypes = [
+                ".pdf",
+                ".docx",
+                ".txt"
+            ];
+
+            const fileName =
+                file.name.toLowerCase();
+
+            const valid =
+                allowedTypes.some(
+                    function (extension) {
+                        return fileName.endsWith(
+                            extension
+                        );
+                    }
+                );
+
+            if (!valid) {
+
+                alert(
+                    "Please select a PDF, DOCX or TXT file."
+                );
+
+                return;
+            }
+
+            if (
+                file.size >
+                10 * 1024 * 1024
+            ) {
+
+                alert(
+                    "File is larger than 10MB."
+                );
+
+                return;
+            }
+
+            /*
+             * DataTransfer allows us to place the
+             * dropped file into the real file input,
+             * so the existing Flask API remains unchanged.
+             */
+
+            const dataTransfer =
+                new DataTransfer();
+
+            dataTransfer.items.add(file);
+
+            fileInput.files =
+                dataTransfer.files;
+
+            updateFileDisplay();
+
+        }
+    );
+
+
+    /* =========================================================
+       FORM SUBMISSION
+       ========================================================= */
+
+    simplifyForm.addEventListener(
+        "submit",
+        async function (event) {
+
+            event.preventDefault();
+
+
+            const activeTab =
+                document.querySelector(
+                    "#inputTabs .nav-link.active"
+                );
+
+
+            const formData =
+                new FormData();
+
+
+            /* ---------------------------------------------
+               TEXT MODE
+               --------------------------------------------- */
+
+            if (
+                activeTab &&
+                activeTab.id === "text-tab"
+            ) {
+
+                const text =
+                    document
+                    .getElementById("documentText")
+                    .value
+                    .trim();
+
+
+                if (!text) {
+
+                    alert(
+                        "Please paste some document text first."
+                    );
+
+                    return;
+                }
+
+
+                formData.append(
+                    "text",
+                    text
+                );
+
+            }
+
+
+            /* ---------------------------------------------
+               FILE MODE
+               --------------------------------------------- */
+
+            else {
+
+                if (!fileInput.files.length) {
+
+                    alert(
+                        "Please select a document file first."
+                    );
+
+                    return;
+                }
+
+
+                formData.append(
+                    "file",
+                    fileInput.files[0]
+                );
+
+            }
+
+
+            /* ---------------------------------------------
+               LOADING STATE
+               --------------------------------------------- */
+
+            simplifyBtn.disabled = true;
+
+            simplifyBtn.innerHTML = `
+                <span class="loading-state">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    Processing document...
+                </span>
+            `;
+
+
+            resultContainer.classList.add(
+                "d-none"
+            );
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/simplify",
+                        {
+                            method: "POST",
+                            body: formData
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                /* -----------------------------------------
+                   SUCCESS
+                   ----------------------------------------- */
+
+                if (response.ok) {
+
+                    simplifiedOutput.classList.remove(
+                        "error-output"
+                    );
+
+
+                    simplifiedOutput.innerHTML =
+                        data.simplified_text ||
+                        "Document simplified successfully.";
+
+
+                    resultContainer.classList.remove(
+                        "d-none"
+                    );
+
+
+                    /*
+                     * Bring the result into view without
+                     * jumping the user to the top.
+                     */
+
+                    resultContainer.scrollIntoView({
+                        behavior: "smooth",
+                        block: "nearest"
+                    });
+
+                }
+
+
+                /* -----------------------------------------
+                   SERVER ERROR
+                   ----------------------------------------- */
+
+                else {
+
+                    simplifiedOutput.classList.add(
+                        "error-output"
+                    );
+
+
+                    simplifiedOutput.innerHTML = `
+                        <strong>Unable to simplify the document.</strong>
+                        <br>
+                        ${data.error || "Please try again."}
+                    `;
+
+
+                    resultContainer.classList.remove(
+                        "d-none"
+                    );
+
+                }
+
+            }
+
+
+            /* ---------------------------------------------
+               CONNECTION ERROR
+               --------------------------------------------- */
+
+            catch (error) {
+
+                simplifiedOutput.classList.add(
+                    "error-output"
+                );
+
+
+                simplifiedOutput.innerHTML = `
+                    <strong>Connection error.</strong>
+                    <br>
+                    Please check that BharatAssist is running
+                    and try again.
+                `;
+
+
+                resultContainer.classList.remove(
+                    "d-none"
+                );
+
+            }
+
+
+            /* ---------------------------------------------
+               RESTORE BUTTON
+               --------------------------------------------- */
+
+            finally {
+
+                simplifyBtn.disabled = false;
+
+                simplifyBtn.innerHTML = `
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Simplify Document</span>
+                `;
+
+            }
+
+        }
+    );
+
+});
+
+</script>
+
+{% endblock %}

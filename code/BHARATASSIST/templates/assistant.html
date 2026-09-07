@@ -1,0 +1,2399 @@
+{% extends "base.html" %}
+
+{% block title %}AI Civic Assistant — BharatAssist{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ================================
+       AI ASSISTANT PAGE
+       ================================ */
+
+    .assistant-page {
+        padding-top: 28px;
+        padding-bottom: 40px;
+    }
+
+    .assistant-card {
+        background: #ffffff;
+        border: 1px solid #E2E8F0;
+        border-radius: 18px;
+        box-shadow:
+            0 18px 45px rgba(15, 23, 42, 0.07),
+            0 3px 10px rgba(15, 23, 42, 0.03);
+        overflow: hidden;
+        height: 76vh;
+        min-height: 600px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Header */
+    .assistant-header {
+        background: #ffffff;
+        border-bottom: 1px solid #E2E8F0;
+        padding: 16px 20px;
+    }
+
+    .assistant-brand-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: rgba(255, 153, 51, 0.10);
+        border: 1px solid rgba(255, 153, 51, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .assistant-title {
+        color: var(--navy);
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .assistant-subtitle {
+        color: var(--slate-500);
+        font-size: 0.75rem;
+        margin-top: 2px;
+    }
+
+    .source-badge {
+        background: rgba(19, 136, 8, 0.07);
+        color: var(--green);
+        border: 1px solid rgba(19, 136, 8, 0.20);
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 7px 11px;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    /* Chat area */
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        background:
+            radial-gradient(
+                circle at top right,
+                rgba(255, 153, 51, 0.035),
+                transparent 35%
+            ),
+            #F8FAFC;
+
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+
+        scrollbar-width: thin;
+        scrollbar-color: #CBD5E1 transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+        width: 7px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: #CBD5E1;
+        border-radius: 10px;
+    }
+
+    /* Welcome message */
+    .welcome-message {
+        align-self: flex-start;
+        max-width: 82%;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid var(--green);
+        border-radius: 14px;
+        padding: 16px 18px;
+        color: var(--slate-700);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    }
+
+    .welcome-title {
+        color: var(--navy);
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .welcome-text {
+        font-size: 0.88rem;
+        line-height: 1.65;
+        margin-bottom: 0;
+    }
+
+    /* User message */
+    .msg-user {
+        align-self: flex-end;
+        max-width: 76%;
+        background: linear-gradient(
+            135deg,
+            var(--saffron) 0%,
+            var(--saffron-dark) 100%
+        );
+        color: #FFFFFF;
+        border-radius: 16px 16px 4px 16px;
+        padding: 11px 16px;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        box-shadow: 0 5px 14px rgba(230, 115, 0, 0.18);
+        word-break: break-word;
+    }
+
+    /* AI message */
+    .msg-ai {
+        align-self: flex-start;
+        max-width: 82%;
+        background: #FFFFFF;
+        color: var(--slate-900);
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid var(--green);
+        border-radius: 16px 16px 16px 4px;
+        padding: 15px 17px;
+        font-size: 0.9rem;
+        line-height: 1.65;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+        word-break: break-word;
+    }
+
+    .ai-label {
+        color: var(--green);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 5px;
+    }
+
+    /* Source links */
+    .sources-container {
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px solid #E2E8F0;
+    }
+
+    .sources-title {
+        color: var(--slate-500);
+        font-size: 0.72rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .source-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        color: var(--navy);
+        text-decoration: none;
+        font-size: 0.72rem;
+        padding: 5px 8px;
+        border-radius: 6px;
+        margin: 2px 3px 2px 0;
+        transition: all 0.15s ease;
+    }
+
+    .source-link:hover {
+        background: rgba(255, 153, 51, 0.07);
+        border-color: rgba(255, 153, 51, 0.35);
+        color: var(--saffron-dark);
+    }
+    
+    .language-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+    .language-selector label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--slate-700);
+}
+
+    .language-selector select {
+    width: auto;
+    min-width: 140px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    background: #F8FAFC;
+}
+
+    /* Auto-read toggle */
+    .voice-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--slate-700);
+        margin-left: auto;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .voice-toggle input {
+        cursor: pointer;
+    }
+
+    .voice-toggle i {
+        color: var(--green);
+        font-size: 0.85rem;
+    }
+
+    /* Mic button */
+    .mic-button {
+        min-height: 48px;
+        min-width: 48px;
+        width: 48px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid #CBD5E1;
+        background: #F8FAFC;
+        color: var(--navy);
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .mic-button:hover {
+        border-color: var(--saffron);
+        color: var(--saffron-dark);
+    }
+
+    .mic-button.listening {
+        background: #dc3545;
+        border-color: #dc3545;
+        color: #ffffff;
+        animation: micPulse 1.1s infinite ease-in-out;
+    }
+
+    .mic-button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    @keyframes micPulse {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.45);
+        }
+        50% {
+            box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
+        }
+    }
+
+    /* Speak (listen to answer) button on AI messages */
+    .speak-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        color: var(--navy);
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 4px 9px;
+        border-radius: 999px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .speak-btn:hover {
+        border-color: rgba(255, 153, 51, 0.45);
+        color: var(--saffron-dark);
+        background: rgba(255, 153, 51, 0.06);
+    }
+
+    .speak-btn.speaking {
+        background: rgba(19, 136, 8, 0.08);
+        border-color: rgba(19, 136, 8, 0.3);
+        color: var(--green);
+    }
+    /* Input section */
+    .assistant-input-area {
+        background: #FFFFFF;
+        border-top: 1px solid #E2E8F0;
+        padding: 14px 16px 16px;
+    }
+
+    .assistant-form {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .question-input {
+        border: 1px solid #CBD5E1;
+        background: #F8FAFC;
+        min-height: 48px;
+        font-size: 0.88rem;
+    }
+
+    .question-input:focus {
+        background: #FFFFFF;
+        border-color: var(--saffron);
+        box-shadow: 0 0 0 3px rgba(255, 153, 51, 0.13);
+    }
+
+    .send-button {
+        min-height: 48px;
+        min-width: 100px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .input-help {
+        font-size: 0.7rem;
+        color: var(--slate-500);
+        margin-top: 7px;
+        padding-left: 2px;
+    }
+
+    /* Loading indicator */
+    .typing-indicator {
+        align-self: flex-start;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid var(--green);
+        border-radius: 16px 16px 16px 4px;
+        padding: 13px 16px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .typing-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #94A3B8;
+        animation: typing 1.2s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) {
+        animation-delay: 0.15s;
+    }
+
+    .typing-dot:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+    @keyframes typing {
+        0%, 60%, 100% {
+            transform: translateY(0);
+            opacity: 0.45;
+        }
+
+        30% {
+            transform: translateY(-4px);
+            opacity: 1;
+        }
+    }
+
+    /* Suggested questions */
+    .suggestion-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 12px;
+    }
+
+    .suggestion-btn {
+        border: 1px solid #E2E8F0;
+        background: #FFFFFF;
+        color: var(--slate-700);
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.72rem;
+        transition: all 0.15s ease;
+    }
+
+    .suggestion-btn:hover {
+        border-color: rgba(255, 153, 51, 0.45);
+        color: var(--saffron-dark);
+        background: rgba(255, 153, 51, 0.05);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+        .assistant-page {
+            padding-top: 16px;
+        }
+
+        .assistant-card {
+            height: calc(100vh - 120px);
+            min-height: 520px;
+            border-radius: 14px;
+        }
+
+        .assistant-header {
+            padding: 13px 14px;
+        }
+
+        .source-badge {
+            display: none;
+        }
+
+        .chat-messages {
+            padding: 16px 13px;
+        }
+
+        .msg-user,
+        .msg-ai,
+        .welcome-message {
+            max-width: 92%;
+        }
+
+        .assistant-form {
+            gap: 7px;
+        }
+
+        .send-button {
+            min-width: 48px;
+            width: 48px;
+            padding: 0;
+        }
+
+        .send-button span {
+            display: none;
+        }
+
+        .suggestion-row {
+            display: none;
+        }
+    }
+            /* Clear conversation button */
+        .clear-conversation-btn {
+            border: 1px solid #dc3545;
+            background: transparent;
+            color: #dc3545;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .clear-conversation-btn:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .clear-conversation-btn:active {
+            transform: scale(0.97);
+        }
+
+        .clear-conversation-btn i {
+            font-size: 0.85rem;
+        }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container assistant-page">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-9 col-xl-8">
+
+            <div class="assistant-card">
+
+                <!-- Indian tricolour accent -->
+                <div class="tricolor-ribbon"></div>
+
+
+                <!-- ============================
+                     ASSISTANT HEADER
+                     ============================ -->
+
+                <div class="assistant-header">
+
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+
+                        <div class="d-flex align-items-center gap-3">
+
+                            <div class="assistant-brand-icon">
+                                <i
+                                    class="fa-solid fa-comments"
+                                    style="color: var(--navy); font-size: 1.15rem;"
+                                ></i>
+                            </div>
+
+                            <div>
+                                <h1 class="assistant-title">
+                                    BharatAssist Civic Assistant
+                                </h1>
+
+                                <div class="assistant-subtitle">
+                                    Clear guidance for government services and procedures
+                                </div>
+                            </div>
+
+                        </div>
+
+
+                        <div class="d-flex align-items-center gap-2">
+                            {% if current_user and current_user.name %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill small fw-semibold">
+                                <i class="fa-solid fa-user-check me-1"></i> Namaste, {{ current_user.name }}!
+                            </span>
+                            <button type="button" id="btnOpenHistory" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 small" data-bs-toggle="offcanvas" data-bs-target="#historyOffcanvas" title="View Saved History">
+                                <i class="fa-solid fa-clock-rotate-left me-1"></i> History
+                            </button>
+                            {% endif %}
+                            <div class="source-badge">
+                                <i class="fa-solid fa-circle-check me-1"></i>
+                                Source-backed guidance
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ============================
+                     CHAT MESSAGES
+                     ============================ -->
+
+                <div id="chatMessages" class="chat-messages">
+
+                    <!-- Welcome message -->
+
+                    <div class="welcome-message">
+
+                        <div class="welcome-title">
+                            {% if current_user and current_user.name %}
+                            Namaste, {{ current_user.name }}! How can I help you?
+                            {% else %}
+                            Namaste! How can I help you?
+                            {% endif %}
+                        </div>
+
+                        <p class="welcome-text">
+                            Ask about government services, application procedures,
+                            required documents, eligibility, fees, or other civic
+                            information. I’ll provide the clearest guidance available
+                            from the information connected to BharatAssist.
+                        </p>
+
+                    </div>
+
+
+                    <!-- Suggested questions -->
+
+                    <div class="suggestion-row">
+
+                        <button
+                            type="button"
+                            class="suggestion-btn"
+                            data-question="What documents are required for a driving licence?"
+                        >
+                            <i class="fa-solid fa-id-card me-1"></i>
+                            Driving Licence
+                        </button>
+
+                        <button
+                            type="button"
+                            class="suggestion-btn"
+                            data-question="How can I apply for an income certificate?"
+                        >
+                            <i class="fa-solid fa-file-lines me-1"></i>
+                            Income Certificate
+                        </button>
+
+                        <button
+                            type="button"
+                            class="suggestion-btn"
+                            data-question="What documents are usually required for government services?"
+                        >
+                            <i class="fa-solid fa-folder-open me-1"></i>
+                            Required Documents
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ============================
+                     INPUT AREA
+                     ============================ -->
+
+                <div class="assistant-input-area">
+                    <div
+                        id="contextIndicator"
+                        style="
+                            font-size: 0.72rem;
+                            color: var(--slate-500);
+                            margin-bottom: 8px;
+                            padding-left: 2px;
+                        "
+                        >
+                        No active service context
+                    </div>
+                    <div class="language-selector">
+                        <label for="languageSelect">Language:</label>
+                        <select id="languageSelect" class="form-select">
+                            <option value="English">English</option>
+                            <option value="Hindi">हिन्दी</option>
+                            <option value="Punjabi">ਪੰਜਾਬੀ</option>
+                            <option value="Bengali">বাংলা</option>
+                            <option value="Marathi">मराठी</option>
+                            <option value="Gujarati">ગુજરાતી</option>
+                            <option value="Tamil">தமிழ்</option>
+                            <option value="Telugu">తెలుగు</option>
+                            <option value="Kannada">ಕನ್ನಡ</option>
+                            <option value="Malayalam">മലയാളം</option>
+                            <option value="Urdu">اردو</option>
+                            <option value="Odia">ଓଡ଼ିଆ</option>
+                         </select>
+
+                        <label class="voice-toggle" for="autoSpeakToggle" title="Read answers aloud automatically">
+                            <input type="checkbox" id="autoSpeakToggle">
+                            <i class="fa-solid fa-volume-high"></i>
+                            <span>Auto-read replies</span>
+                        </label>
+                    </div>
+                    <form id="assistantForm" class="assistant-form">
+
+
+                        <input
+                            type="text"
+                            id="questionInput"
+                            class="form-control question-input rounded-3"
+                            placeholder="Ask about a government service..."
+                            autocomplete="off"
+                            maxlength="1000"
+                        >
+
+                        <button
+                            type="button"
+                            id="micBtn"
+                            class="mic-button"
+                            title="Ask by voice"
+                        >
+                            <i class="fa-solid fa-microphone"></i>
+                        </button>
+
+                        <button
+                            type="submit"
+                            id="sendBtn"
+                            class="btn btn-tricolor send-button"
+                        >
+                            <span>Send</span>
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                        <button
+                    type="button"
+                    id="clearConversationBtn"
+                    class="clear-conversation-btn"
+                    title="Clear conversation"
+                 >
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Clear</span>
+                    </button>
+
+                    </form>
+
+                    <div class="input-help">
+                        <i class="fa-solid fa-circle-info me-1"></i>
+                        For the best answer, mention the service and your state when relevant.
+                        Tap the mic to speak. Gemini converts speech to text and reads replies aloud.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- OFF-CANVAS CHAT HISTORY DRAWER -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="historyOffcanvas" aria-labelledby="historyOffcanvasLabel" style="width: 380px;">
+  <div class="offcanvas-header border-bottom">
+    <h6 class="offcanvas-title fw-bold text-navy mb-0" id="historyOffcanvasLabel">
+      <i class="fa-solid fa-clock-rotate-left me-2 text-saffron"></i> Saved Chat History
+    </h6>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body p-3">
+    <div id="historyListContainer">
+      <div class="text-center py-4 text-muted small">
+        <i class="fa-solid fa-spinner fa-spin me-1"></i> Loading conversation history...
+      </div>
+    </div>
+  </div>
+  <div class="offcanvas-footer p-3 border-top bg-light d-flex justify-content-between align-items-center">
+    <button type="button" id="btnClearSavedHistoryBtn" class="btn btn-sm btn-outline-danger">
+      <i class="fa-solid fa-trash me-1"></i> Clear Saved History
+    </button>
+    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="offcanvas">
+      Close
+    </button>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+    const assistantForm = document.getElementById("assistantForm");
+    const questionInput = document.getElementById("questionInput");
+    const chatMessages = document.getElementById("chatMessages");
+    const sendBtn = document.getElementById("sendBtn");
+    const micBtn = document.getElementById("micBtn");
+    const autoSpeakToggle = document.getElementById("autoSpeakToggle");
+    const languageSelect =
+        document.getElementById("languageSelect");
+
+    const contextIndicator =
+        document.getElementById("contextIndicator");
+
+    let activeServiceName = null;
+
+    /* ==========================================
+       INTERNATIONALIZATION (i18n) DICTIONARY
+       ========================================== */
+    const TRANSLATIONS = {
+        "English": {
+            subtitle: "Clear guidance for government services and procedures",
+            sourceBadge: '<i class="fa-solid fa-circle-check me-1"></i> Source-backed guidance',
+            welcomeTitle: "Namaste! How can I help you?",
+            welcomeText: "Ask about government services, application procedures, required documents, eligibility, fees, or other civic information. I’ll provide the clearest guidance available from the information connected to BharatAssist.",
+            suggestions: [
+                { icon: "fa-id-card", label: "Driving Licence", q: "What documents are required for a driving licence?" },
+                { icon: "fa-file-lines", label: "Income Certificate", q: "How can I apply for an income certificate?" },
+                { icon: "fa-folder-open", label: "Required Documents", q: "What documents are usually required for government services?" }
+            ],
+            contextNone: "No active service context",
+            contextPrefix: "Current service: ",
+            langLabel: "Language:",
+            autoRead: "Auto-read replies",
+            placeholder: "Ask about a government service...",
+            micTitle: "Ask by voice",
+            sendText: "Send",
+            clearText: "Clear",
+            clearConfirm: "Clear the current conversation context?",
+            clearedMsg: "Conversation cleared. How can I help you?",
+            inputHelp: '<i class="fa-solid fa-circle-info me-1"></i> For the best answer, mention the service and your state when relevant. Tap the mic to speak. Gemini converts speech to text and reads replies aloud.'
+        },
+        "Hindi": {
+            subtitle: "सरकारी सेवाओं और प्रक्रियाओं के लिए स्पष्ट मार्गदर्शन",
+            sourceBadge: '<i class="fa-solid fa-circle-check me-1"></i> सत्यापित स्रोतों पर आधारित मार्गदर्शन',
+            welcomeTitle: "नमस्ते! मैं आपकी क्या सहायता कर सकता हूँ?",
+            welcomeText: "सरकारी सेवाओं, आवेदन प्रक्रियाओं, आवश्यक दस्तावेजों, पात्रता, शुल्क या अन्य नागरिक जानकारी के बारे में पूछें। मैं BharatAssist से जुड़ी सबसे सटीक जानकारी प्रदान करूँगा।",
+            suggestions: [
+                { icon: "fa-id-card", label: "ड्राइविंग लाइसेंस", q: "ड्राइविंग लाइसेंस के लिए कौन से दस्तावेज आवश्यक हैं?" },
+                { icon: "fa-file-lines", label: "आय प्रमाण पत्र", q: "आय प्रमाण पत्र के लिए कैसे आवेदन करें?" },
+                { icon: "fa-folder-open", label: "आवश्यक दस्तावेज", q: "सरकारी सेवाओं के लिए आमतौर पर कौन से दस्तावेज आवश्यक हैं?" }
+            ],
+            contextNone: "कोई सक्रिय सेवा संदर्भ नहीं",
+            contextPrefix: "वर्तमान सेवा: ",
+            langLabel: "भाषा:",
+            autoRead: "उत्तर बोलकर सुनाएं",
+            placeholder: "सरकारी सेवा के बारे में पूछें...",
+            micTitle: "बोलकर पूछें",
+            sendText: "भेजें",
+            clearText: "साफ़ करें",
+            clearConfirm: "क्या आप बातचीत का संदर्भ हटाना चाहते हैं?",
+            clearedMsg: "बातचीत साफ़ कर दी गई। मैं आपकी क्या मदद कर सकता हूँ?",
+            inputHelp: '<i class="fa-solid fa-circle-info me-1"></i> सटीक उत्तर के लिए, संबंधित सेवा और अपने राज्य का नाम अवश्य बताएं। माइक दबाकर बोलें।'
+        },
+        "Punjabi": {
+            subtitle: "ਸਰਕਾਰੀ ਸੇਵਾਵਾਂ ਅਤੇ ਪ੍ਰਕਿਰਿਆਵਾਂ ਲਈ ਸਪਸ਼ਟ ਮਾਰਗਦਰਸ਼ਨ",
+            sourceBadge: '<i class="fa-solid fa-circle-check me-1"></i> ਪ੍ਰਮਾਣਿਤ ਸਰੋਤਾਂ ਅਧਾਰਿਤ ਮਾਰਗਦਰਸ਼ਨ',
+            welcomeTitle: "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ਜੀ! ਮੈਂ ਤੁਹਾਡੀ ਕਿਵੇਂ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ?",
+            welcomeText: "ਸਰਕਾਰੀ ਸੇਵਾਵਾਂ, ਅਰਜ਼ੀ ਪ੍ਰਕਿਰਿਆਵਾਂ, ਲੋੜੀਂਦੇ ਦਸਤਾਵੇਜ਼ਾਂ, ਯੋਗਤਾ, ਫੀਸਾਂ ਜਾਂ ਹੋਰ ਨਾਗਰਿਕ ਜਾਣਕਾਰੀ ਬਾਰੇ ਪੁੱਛੋ। ਮੈਂ ਭਾਰਤ ਅਸਿਸਟ ਤੋਂ ਸਭ ਤੋਂ ਸਪਸ਼ਟ ਜਾਣਕਾਰੀ ਪ੍ਰਦਾਨ ਕਰਾਂਗਾ।",
+            suggestions: [
+                { icon: "fa-id-card", label: "ਡਰਾਈਵਿੰਗ ਲਾਇਸੈਂਸ", q: "ਡਰਾਈਵਿੰਗ ਲਾਇਸੈਂਸ ਲਈ ਕਿਹੜੇ ਦਸਤਾਵੇਜ਼ ਚਾਹੀਦੇ ਹਨ?" },
+                { icon: "fa-file-lines", label: "ਆਮਦਨ ਸਰਟੀਫਿਕੇਟ", q: "ਆਮਦਨ ਸਰਟੀਫਿਕੇਟ ਲਈ ਕਿਵੇਂ ਅਰਜ਼ੀ ਦੇਣੀ ਹੈ?" },
+                { icon: "fa-folder-open", label: "ਲੋੜੀਂਦੇ ਦਸਤਾਵੇਜ਼", q: "ਸਰਕਾਰੀ ਸੇਵਾਵਾਂ ਲਈ ਆਮ ਤੌਰ 'ਤੇ ਕਿਹੜੇ ਦਸਤਾਵੇਜ਼ ਲੋੜੀਂਦੇ ਹਨ?" }
+            ],
+            contextNone: "ਕੋਈ ਸਰਗਰਮ ਸੇਵਾ ਸੰਦਰਭ ਨਹੀਂ",
+            contextPrefix: "ਮੌਜੂਦਾ ਸੇਵਾ: ",
+            langLabel: "ਭਾਸ਼ਾ:",
+            autoRead: "ਜਵਾਬ ਸੁਣੋ",
+            placeholder: "ਸਰਕਾਰੀ ਸੇਵਾ ਬਾਰੇ ਪੁੱਛੋ...",
+            micTitle: "ਬੋਲ ਕੇ ਪੁੱਛੋ",
+            sendText: "ਭੇਜੋ",
+            clearText: "ਸਾਫ਼ ਕਰੋ",
+            clearConfirm: "ਕੀ ਤੁਸੀਂ ਗੱਲਬਾਤ ਦਾ ਸੰਦਰਭ ਸਾਫ਼ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?",
+            clearedMsg: "ਗੱਲਬਾਤ ਸਾਫ਼ ਹੋ ਗਈ ਹੈ। ਮੈਂ ਤੁਹਾਡੀ ਕਿਵੇਂ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ?",
+            inputHelp: '<i class="fa-solid fa-circle-info me-1"></i> ਵਧੀਆ ਜਵਾਬ ਲਈ, ਸੇਵਾ ਅਤੇ ਆਪਣੇ ਰਾਜ ਦਾ ਨਾਮ ਜ਼ਰੂਰ ਦੱਸੋ। ਬੋਲਣ ਲਈ ਮਾਈਕ ਦਬਾਓ।'
+        },
+        "Bengali": {
+            subtitle: "সরকারি সেবা এবং প্রক্রিয়ার স্পষ্ট নির্দেশিকা",
+            sourceBadge: '<i class="fa-solid fa-circle-check me-1"></i> যাচাইকৃত তথ্যের নির্দেশিকা',
+            welcomeTitle: "নমস্কার! আমি আপনাকে কীভাবে সাহায্য করতে পারি?",
+            welcomeText: "সরকারি পরিষেবা, আবেদন প্রক্রিয়া, প্রয়োজনীয় নথি, যোগ্যতা, ফি বা অন্যান্য নাগরিক তথ্য সম্পর্কে জিজ্ঞাসা করুন।",
+            suggestions: [
+                { icon: "fa-id-card", label: "ড্রাইভিং লাইসেন্স", q: "ড্রাইভিং লাইসেন্সের জন্য কী কী নথি প্রয়োজন?" },
+                { icon: "fa-file-lines", label: "আয়ের সার্টিফিকেট", q: "আয়ের সার্টিফিকেটের জন্য কীভাবে আবেদন করবেন?" },
+                { icon: "fa-folder-open", label: "প্রয়োজনীয় নথি", q: "সরকারি পরিষেবার জন্য সাধারণত কী কী নথি লাগে?" }
+            ],
+            contextNone: "কোনো সক্রিয় পরিষেবা প্রসঙ্গ নেই",
+            contextPrefix: "বর্তমান পরিষেবা: ",
+            langLabel: "ভাষা:",
+            autoRead: "উত্তর শুনুন",
+            placeholder: "সরকারি সেবা সম্পর্কে জিজ্ঞাসা করুন...",
+            micTitle: "ভয়েস দিয়ে জিজ্ঞাসা করুন",
+            sendText: "পাঠান",
+            clearText: "মুছুন",
+            clearConfirm: "কথোপকথনের প্রসঙ্গ মুছতে চান?",
+            clearedMsg: "কথোপকথন সাফ করা হয়েছে। আপনাকে কীভাবে সাহায্য করতে পারি?",
+            inputHelp: '<i class="fa-solid fa-circle-info me-1"></i> সঠিক উত্তরের জন্য সেবা এবং রাজ্যের নাম উল্লেখ করুন।'
+        },
+        "Marathi": {
+            subtitle: "शासकीय सेवा आणि प्रक्रियेसाठी स्पष्ट मार्गदर्शन",
+            sourceBadge: '<i class="fa-solid fa-circle-check me-1"></i> अधिकृत माहितीवर आधारित मार्गदर्शन',
+            welcomeTitle: "नमस्कार! मी आपल्याला कशी मदत करू शकतो?",
+            welcomeText: "शासकीय सेवा, अर्ज प्रक्रिया, आवश्यक कागदपत्रे, पात्रता, शुल्क किंवा इतर नागरी माहितीबद्दल विचारा.",
+            suggestions: [
+                { icon: "fa-id-card", label: "ड्रायव्हिंग लायसन्स", q: "ड्रायव्हिंग लायसन्ससाठी कोणती कागदपत्रे लागतात?" },
+                { icon: "fa-file-lines", label: "उत्पन्नाचा दाखला", q: "उत्पन्नाच्या दाखल्यासाठी कसा अर्ज करावा?" },
+                { icon: "fa-folder-open", label: "आवश्यक कागदपत्रे", q: "शासकीय सेवांसाठी कोणती कागदपत्रे आवश्यक आहेत?" }
+            ],
+            contextNone: "कोणताही सक्रिय सेवा संदर्भ नाही",
+            contextPrefix: "सध्याची सेवा: ",
+            langLabel: "भाषा:",
+            autoRead: "उत्तर ऐका",
+            placeholder: "शासकीय सेवेबद्दल विचारा...",
+            micTitle: "आवाजाने विचारा",
+            sendText: "पाठवा",
+            clearText: "हटवा",
+            clearConfirm: "संभाषण संदर्भ हटवायचा आहे का?",
+            clearedMsg: "संभाषण संदर्भ हटवला गेला आहे. मी आपल्याला कशी मदत करू शकतो?",
+            inputHelp: '<i class="fa-solid fa-circle-info me-1"></i> अचूक उत्तरासाठी सेवा आणि राज्याचे नाव नमूद करा.'
+        },
+        "Gujarati": {
+            subtitle: "સરકારી સેવાઓ અને પ્રક્રિયાઓ માટે સ્પષ્ટ માર્ગદર્શન",
+            sourceBadge: '<i class="fa-solid fa-circle-check me-1"></i> પ્રમાણિત સ્ત્રોતો પર આધારિત માર્ગદર્શન',
+            welcomeTitle: "નમસ્તે! હું તમને કેવી રીતે મદદ કરી શકું?",
+            welcomeText: "સરકારી સેવાઓ, અરજી પ્રક્રિયાઓ, જરૂરી દસ્તાવેજો, પાત્રતા, ફી અથવા અન્ય નાગરિક માહિતી વિશે પૂછો.",
+            suggestions: [
+                { icon: "fa-id-card", label: "ડ્રાઇવિંગ લાયસન્સ", q: "ડ્રાઇવિંગ લાયસન્સ માટે કયા દસ્તાવેજો જરૂરી છે?" },
+                { icon: "fa-file-lines", label: "આવકનો દાખલો", q: "આવકના દાખલા માટે કેવી રીતે અરજી કરવી?" },
+                { icon: "fa-folder-open", label: "જરૂરી દસ્તાવેજો", q: "સરકારી સેવાઓ માટે સામાન્ય રીતે કયા દસ્તાવેજો જરૂરી છે?" }
+            ],
+            contextNone: "કોઈ સક્રિય સેવા સંદર્ભ નથી",
+            contextPrefix: "વર્તમાન સેવા: ",
+            langLabel: "ભાષા:",
+            autoRead: "જવાબ સાંભળો",
+            placeholder: "સરકારી સેવા વિશે પૂછો...",
+            micTitle: "અવાજ દ્વારા પૂછો",
+            sendText: "મોકલો",
+            clearText: "સાફ કરો",
+            clearConfirm: "સંદર્ભ સાફ કરવો છે?",
+            clearedMsg: "વાતચીત સાફ થઈ ગઈ છે. હું તમને કેવી રીતે મદદ કરી શકું?",
+            inputHelp: '<i class="fa-solid fa-circle-info me-1"></i> શ્રેષ્ઠ જવાબ માટે સેવા અને રાજ્ય જણાવો.'
+        },
+        "Tamil": {
+            subtitle: "அரசு சேவைகள் மற்றும் நடைமுறைகளுக்கான தெளிவான வழிகாட்டுதல்",
+            sourceBadge: '<i class="fa-solid fa-circle-check me-1"></i> சரிபார்க்கப்பட்ட வழிகாட்டுதல்',
+            welcomeTitle: "வணக்கம்! நான் உங்களுக்கு எவ்வாறு உதவ முடியும்?",
+            welcomeText: "அரசு சேவைகள், விண்ணப்ப நடைமுறைகள், தேவையான ஆவணங்கள், தகுதி, கட்டணம் பற்றி கேளுங்கள்.",
+            suggestions: [
+                { icon: "fa-id-card", label: "ஓட்டுநர் உரிமம்", q: "ஓட்டுநர் உரிமத்திற்கு என்ன ஆவணங்கள் தேவை?" },
+                { icon: "fa-file-lines", label: "வருமானச் சான்றிதழ்", q: "வருமானச் சான்றிதழுக்கு எவ்வாறு விண்ணப்பிப்பது?" },
+                { icon: "fa-folder-open", label: "தேவையான ஆவணங்கள்", q: "அரசு சேவைகளுக்கு என்னென்ன ஆவணங்கள் தேவை?" }
+            ],
+            contextNone: "செயலில் உள்ள சேவை சூழல் இல்லை",
+            contextPrefix: "தற்போதைய சேவை: ",
+            langLabel: "மொழி:",
+            autoRead: "பதிலைக் கேளுங்கள்",
+            placeholder: "அரசு சேவை பற்றி கேளுங்கள்...",
+            micTitle: "குரல் மூலம் கேளுங்கள்",
+            sendText: "அனுப்பு",
+            clearText: "அழி",
+            clearConfirm: "உரையாடலை அழிக்க விரும்புகிறீர்களா?",
+            clearedMsg: "உரையாடல் அழிக்கப்பட்டது. நான் எவ்வாறு உதவ முடியும்?",
+            inputHelp: '<i class="fa-solid fa-circle-info me-1"></i> சிறந்த பதிலுக்கு சேவையையும் உங்கள் மாநிலத்தையும் குறிப்பிடவும்.'
+        },
+        "Telugu": {
+            subtitle: "ప్రభుత్వ సేవలు మరియు ప్రక్రియల కోసం స్పష్టమైన మార్గదర్శకత్వం",
+            sourceBadge: '<i class="fa-solid fa-circle-check me-1"></i> ధృవీకరించబడిన మార్గదర్శకత్వం',
+            welcomeTitle: "నమస్కారం! నేను మీకు ఎలా సహాయపడగలను?",
+            welcomeText: "ప్రభుత్వ సేవలు, దరఖాస్తు విధానాలు, అవసరమైన పత్రాలు, అర్హత, ఫీజుల గురించి అడగండి.",
+            suggestions: [
+                { icon: "fa-id-card", label: "డ్రైవింగ్ లైసెన్స్", q: "డ్రైవింగ్ లైసెన్స్ కోసం ఏ పత్రాలు అవసరం?" },
+                { icon: "fa-file-lines", label: "ఆదాయ ధృవీకరణ పత్రం", q: "ఆదాయ ధృవీకరణ పత్రం కోసం ఎలా దరఖాస్తు చేయాలి?" },
+                { icon: "fa-folder-open", label: "అవసరమైన పత్రాలు", q: "ప్రభుత్వ సేవల కోసం సాధారణంగా ఏ పత్రాలు అవసరం?" }
+            ],
+            contextNone: "క్రియాశీల సేవా సందర్భం లేదు",
+            contextPrefix: "ప్రస్తుత సేవ: ",
+            langLabel: "భాష:",
+            autoRead: "సమాధానం వినండి",
+            placeholder: "ప్రభుత్వ సేవ గురించి అడగండి...",
+            micTitle: "వాయిస్ ద్వారా అడగండి",
+            sendText: "పంపు",
+            clearText: "క్లియర్",
+            clearConfirm: "సంభాషణను క్లియర్ చేయాలా?",
+            clearedMsg: "సంభాషణ క్లియర్ చేయబడింది. నేను మీకు ఎలా సహాయపడగలను?",
+            inputHelp: '<i class="fa-solid fa-circle-info me-1"></i> ఖచ్చితమైన సమాధానం కోసం సేవ మరియు రాష్ట్రాన్ని పేర్కొనండి.'
+        },
+        "Kannada": {
+            subtitle: "ಸರ್ಕಾರಿ ಸೇವೆಗಳು ಮತ್ತು ಕಾರ್ಯವಿಧಾನಗಳಿಗೆ ಸ್ಪಷ್ಟ ಮಾರ್ಗದರ್ಶನ",
+            sourceBadge: '<i class="fa-solid fa-circle-check me-1"></i> ಪರಿಶೀಲಿಸಿದ ಮಾರ್ಗದರ್ಶನ',
+            welcomeTitle: "ನಮಸ್ಕಾರ! ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?",
+            welcomeText: "ಸರ್ಕಾರಿ ಸೇವೆಗಳು, ಅರ್ಜಿ ಪ್ರಕ್ರಿಯೆ, ಅಗತ್ಯ ದಾಖಲೆಗಳು, ಅರ್ಹತೆ, ಶುಲ್ಕದ ಬಗ್ಗೆ ಕೇಳಿ.",
+            suggestions: [
+                { icon: "fa-id-card", label: "ಚಾಲನಾ ಪರವಾನಗಿ", q: "ಡ್ರೈವಿಂಗ್ ಲೈಸೆನ್ಸ್‌ಗೆ ಯಾವ ದಾಖಲೆಗಳು ಬೇಕು?" },
+                { icon: "fa-file-lines", label: "ಆದಾಯ ಪ್ರಮಾಣಪತ್ರ", q: "ಆದಾಯ ಪ್ರಮಾಣಪತ್ರಕ್ಕೆ ಹೇಗೆ ಅರ್ಜಿ ಸಲ್ಲಿಸಬೇಕು?" },
+                { icon: "fa-folder-open", label: "ಅಗತ್ಯ ದಾಖಲೆಗಳು", q: "ಸರ್ಕಾರಿ ಸೇವೆಗಳಿಗೆ ಸಾಮಾನ್ಯವಾಗಿ ಯಾವ ದಾಖಲೆಗಳು ಬೇಕು?" }
+            ],
+            contextNone: "ಸಕ್ರಿಯ ಸೇವಾ ಸಂದರ್ಭವಿಲ್ಲ",
+            contextPrefix: "ಪ್ರಸ್ತುತ ಸೇವೆ: ",
+            langLabel: "ಭಾಷೆ:",
+            autoRead: "ಉತ್ತರ ಆಲಿಸಿ",
+            placeholder: "ಸರ್ಕಾರಿ ಸೇವೆಯ ಬಗ್ಗೆ ಕೇಳಿ...",
+            micTitle: "ಧ್ವನಿ ಮೂಲಕ ಕೇಳಿ",
+            sendText: "ಕಳುಹಿಸಿ",
+            clearText: "ತೆರವು",
+            clearConfirm: "ಸಂಭಾಷಣೆ ತೆರವುಗೊಳಿಸಬೇಕೆ?",
+            clearedMsg: "ಸಂಭಾಷಣೆ ತೆರವುಗೊಳಿಸಲಾಗಿದೆ. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?",
+            inputHelp: '<i class="fa-solid fa-circle-info me-1"></i> ನಿಖರ ಉತ್ತರಕ್ಕಾಗಿ ಸೇವೆ ಮತ್ತು ರಾಜ್ಯವನ್ನು ತಿಳಿಸಿ.'
+        },
+        "Malayalam": {
+            subtitle: "സർക്കാർ സേവനങ്ങൾക്കും നടപടിക്രമങ്ങൾക്കുമുള്ള വ്യക്തമായ മാർഗ്ഗനിർദ്ദേശം",
+            sourceBadge: '<i class="fa-solid fa-circle-check me-1"></i> പരിശോധിച്ച വിവരങ്ങൾ',
+            welcomeTitle: "നമസ്കാരം! ഞാൻ നിങ്ങളെ എങ്ങനെ സഹായിക്കണം?",
+            welcomeText: "സർക്കാർ സേവനങ്ങൾ, അപേക്ഷാ നടപടിക്രമങ്ങൾ, ആവശ്യമായ രേഖകൾ, യോഗ്യത എന്നിവയെക്കുറിച്ച് ചോദിക്കുക.",
+            suggestions: [
+                { icon: "fa-id-card", label: "ഡ്രൈവിംഗ് ലൈസൻസ്", q: "ഡ്രൈവിംഗ് ലൈസൻസിന് എന്തൊക്കെ രേഖകൾ വേണം?" },
+                { icon: "fa-file-lines", label: "വരുമാന സർട്ടിഫിക്കറ്റ്", q: "വരുമാന സർട്ടിഫിക്കറ്റിനായി എങ്ങനെ അപേക്ഷിക്കാം?" },
+                { icon: "fa-folder-open", label: "ആവശ്യമായ രേഖകൾ", q: "സർക്കാർ സേവനങ്ങൾക്കായി സാധാരണയായി എന്തൊക്കെ രേഖകൾ വേണം?" }
+            ],
+            contextNone: "സജീവ സേവന പശ്ചാത്തലമില്ല",
+            contextPrefix: "നിലവിലെ സേവനം: ",
+            langLabel: "ഭാഷ:",
+            autoRead: "ഉത്തരം കേൾക്കുക",
+            placeholder: "സർക്കാർ സേവനത്തെക്കുറിച്ച് ചോദിക്കുക...",
+            micTitle: "ശബ്ദത്തിലൂടെ ചോദിക്കുക",
+            sendText: "അയക്കുക",
+            clearText: "മായ്ക്കുക",
+            clearConfirm: "സംഭാഷണം മായ്‌ക്കണോ?",
+            clearedMsg: "സംഭാഷണം മായ്‌ച്ചു. ഞാൻ നിങ്ങളെ എങ്ങനെ സഹായിക്കണം?",
+            inputHelp: '<i class="fa-solid fa-circle-info me-1"></i> കൃത്യമായ ഉത്തരത്തിനായി സേവനവും സംസ്ഥാനവും വ്യക്തമാക്കുക.'
+        },
+        "Urdu": {
+            subtitle: "سرکاری خدمات اور طریقہ کار کے لیے واضح رہنمائی",
+            sourceBadge: '<i class="fa-solid fa-circle-check me-1"></i> تصدیق شدہ رہنمائی',
+            welcomeTitle: "السلام علیکم! میں آپ کی کیا مدد کر سکتا ہوں؟",
+            welcomeText: "سرکاری خدمات، درخواست کے طریقہ کار، مطلوبہ دستاویزات، اہلیت اور فیس کے بارے میں پوچھیں۔",
+            suggestions: [
+                { icon: "fa-id-card", label: "ڈرائیونگ لائسنس", q: "ڈرائیونگ لائسنس کے لیے کن دستاویزات کی ضرورت ہے؟" },
+                { icon: "fa-file-lines", label: "آمدنی کا سرٹیفکیٹ", q: "آمدنی کے سرٹیفکیٹ کے لیے کیسے درخواست دیں؟" },
+                { icon: "fa-folder-open", label: "مطلوبہ دستاویزات", q: "سرکاری خدمات کے لیے عام طور پر کن دستاویزات کی ضرورت ہوتی ہے؟" }
+            ],
+            contextNone: "کوئی فعال سروس سیاق و سباق نہیں",
+            contextPrefix: "موجودہ سروس: ",
+            langLabel: "زبان:",
+            autoRead: "جواب سنیں",
+            placeholder: "سرکاری سروس کے بارے میں پوچھیں...",
+            micTitle: "آواز کے ذریعے پوچھیں",
+            sendText: "بھیجیں",
+            clearText: "صاف کریں",
+            clearConfirm: "کیا آپ گفتگو کو صاف کرنا چاہتے ہیں؟",
+            clearedMsg: "گفتگو صاف ہو گئی۔ میں آپ کی کیا مدد کر سکتا ہوں؟",
+            inputHelp: '<i class="fa-solid fa-circle-info me-1"></i> درست جواب کے لیے سروس اور اپنی ریاست کا نام بتائیں۔'
+        },
+        "Odia": {
+            subtitle: "ସରକାରୀ ସେବା ଏବଂ ପ୍ରକ୍ରିୟା ପାଇଁ ସ୍ପଷ୍ଟ ମାର୍ଗଦର୍ଶନ",
+            sourceBadge: '<i class="fa-solid fa-circle-check me-1"></i> ପ୍ରମାଣିତ ତଥ୍ୟ ଆଧାରିତ ମାର୍ଗଦର୍ଶନ',
+            welcomeTitle: "ନମସ୍କାର! ମୁଁ ଆପଣଙ୍କୁ କିପରି ସାହାଯ୍ୟ କରିପାରିବି?",
+            welcomeText: "ସରକାରୀ ସେବା, ଆବେଦନ ପ୍ରକ୍ରିୟା, ଆବଶ୍ୟକୀୟ କାଗଜପତ୍ର, ଯୋଗ୍ୟତା, ଫି ସମ୍ପର୍କରେ ପଚାରନ୍ତୁ।",
+            suggestions: [
+                { icon: "fa-id-card", label: "ଡ୍ରାଇଭିଂ ଲାଇସେନ୍ସ", q: "ଡ୍ରାଇଭିଂ ଲାଇସେନ୍ସ ପାଇଁ କେଉଁ କାଗଜପତ୍ର ଆବଶ୍ୟକ?" },
+                { icon: "fa-file-lines", label: "ଆୟ ପ୍ରମାଣପତ୍ର", q: "ଆୟ ପ୍ରମାଣପତ୍ର ପାଇଁ କିପରି ଆବେଦନ କରିବେ?" },
+                { icon: "fa-folder-open", label: "ଆବଶ୍ୟକ କାଗଜପତ୍ର", q: "ସରକାରୀ ସେବା ପାଇଁ ସାଧାରଣତଃ କେଉଁ କାଗଜପତ୍ର ଆବଶ୍ୟକ?" }
+            ],
+            contextNone: "କୌଣସି ସକ୍ରିୟ ସେବା ପ୍ରସଙ୍ଗ ନାହିଁ",
+            contextPrefix: "ବର୍ତ୍ତମାନର ସେବା: ",
+            langLabel: "ଭାଷା:",
+            autoRead: "ଉତ୍ତର ଶୁଣନ୍ତୁ",
+            placeholder: "ସରକାରୀ ସେବା ବିଷୟରେ ପଚାରନ୍ତୁ...",
+            micTitle: "ଭଏସ୍ ଦ୍ୱାରା ପଚାରନ୍ତୁ",
+            sendText: "ପଠାନ୍ତୁ",
+            clearText: "ସଫା କରନ୍ତୁ",
+            clearConfirm: "ସମ୍ପର୍କ ସଫା କରିବାକୁ ଚାହାଁନ୍ତି କି?",
+            clearedMsg: "ସମ୍ପର୍କ ସଫା ହୋଇଗଲା। ମୁଁ ଆପଣଙ୍କୁ କିପରି ସାହାଯ୍ୟ କରିପାରିବି?",
+            inputHelp: '<i class="fa-solid fa-circle-info me-1"></i> ସଠିକ୍ ଉତ୍ତର ପାଇଁ ସେବା ଏବଂ ରାଜ୍ୟର ନାମ ଉଲ୍ଲେଖ କରନ୍ତୁ।'
+        }
+    };
+
+    function applyLanguage(lang) {
+        const t = TRANSLATIONS[lang] || TRANSLATIONS["English"];
+
+        // 1. Header Subtitle & Source Badge
+        const subtitleEl = document.querySelector(".assistant-subtitle");
+        if (subtitleEl) subtitleEl.textContent = t.subtitle;
+
+        const badgeEl = document.querySelector(".source-badge");
+        if (badgeEl) badgeEl.innerHTML = t.sourceBadge;
+
+        // 2. Welcome Card (if present)
+        const welcomeTitleEl = document.querySelector(".welcome-title");
+        if (welcomeTitleEl) welcomeTitleEl.textContent = t.welcomeTitle;
+
+        const welcomeTextEl = document.querySelector(".welcome-text");
+        if (welcomeTextEl) welcomeTextEl.textContent = t.welcomeText;
+
+        // 3. Suggestion Buttons (labels and data-questions)
+        const suggestionBtns = document.querySelectorAll(".suggestion-btn");
+        if (suggestionBtns && suggestionBtns.length >= 3 && t.suggestions) {
+            suggestionBtns.forEach((btn, idx) => {
+                const s = t.suggestions[idx];
+                if (s) {
+                    btn.innerHTML = `<i class="fa-solid ${s.icon} me-1"></i> ${s.label}`;
+                    btn.dataset.question = s.q;
+                }
+            });
+        }
+
+        // 4. Context indicator
+        if (contextIndicator) {
+            if (!activeServiceName) {
+                contextIndicator.textContent = t.contextNone;
+            } else {
+                contextIndicator.textContent = t.contextPrefix + activeServiceName;
+            }
+        }
+
+        // 5. Language selector label & Auto-read toggle label
+        const langLabelEl = document.querySelector(".language-selector label");
+        if (langLabelEl) langLabelEl.textContent = t.langLabel;
+
+        const autoReadSpan = document.querySelector(".voice-toggle span");
+        if (autoReadSpan) autoReadSpan.textContent = t.autoRead;
+
+        // 6. Question Input placeholder
+        if (questionInput) {
+            questionInput.placeholder = t.placeholder;
+        }
+
+        // 7. Mic button tooltip
+        if (micBtn && !isRecording) {
+            micBtn.title = t.micTitle;
+        }
+
+        // 8. Send Button
+        if (sendBtn) {
+            sendBtn.innerHTML = `<span>${t.sendText}</span> <i class="fa-solid fa-paper-plane"></i>`;
+        }
+
+        // 9. Clear Button
+        if (clearConversationBtn) {
+            clearConversationBtn.innerHTML = `<i class="fa-solid fa-trash-can"></i> <span>${t.clearText}</span>`;
+        }
+
+        // 10. Input help footer
+        const inputHelpEl = document.querySelector(".input-help");
+        if (inputHelpEl) inputHelpEl.innerHTML = t.inputHelp;
+
+        // Save preference in localStorage
+        try {
+            localStorage.setItem("bharatassist_lang", lang);
+        } catch (_) {}
+    }
+
+    if (languageSelect) {
+        languageSelect.addEventListener("change", function () {
+            applyLanguage(this.value);
+        });
+    }
+
+    /* ==========================================
+       VOICE INPUT / OUTPUT (SPEECH & TTS)
+       ========================================== */
+
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let isRecording = false;
+    let currentAudio = null;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let webSpeechRecognizer = null;
+
+    function stripHtmlForSpeech(html) {
+        if (!html) return "";
+        const div = document.createElement("div");
+        div.innerHTML = html;
+        let text = div.textContent || div.innerText || "";
+        // Clean markdown syntax (asterisks, hashtags, backticks, tildes)
+        text = text.replace(/[*_#`~>]/g, " ");
+        // Strip parenthetical English jargon when reading Indian regional languages
+        if (/[\u0900-\u0D7F]/.test(text)) {
+            text = text.replace(/\([A-Za-z\s,.\-\/&]+\)/g, " ");
+        }
+        // Clean markdown links [text](url) -> text
+        text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+        // Clean URLs
+        text = text.replace(/https?:\/\/\S+/g, "");
+        // Clean bullets to brief pauses
+        text = text.replace(/[•\u2022\u25CF]|[-–—]\s+/g, ". ");
+        text = text.replace(/[\r\n]+/g, ". ");
+        text = text.replace(/\s+/g, " ").trim();
+        return text;
+    }
+
+    function stopSpeech() {
+        if (currentAudio) {
+            try {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            } catch (err) {
+                console.warn("Could not stop audio:", err);
+            }
+            currentAudio = null;
+        }
+
+        if (window.speechSynthesis) {
+            try {
+                window.speechSynthesis.cancel();
+            } catch (err) {
+                console.warn("Could not cancel speech synthesis:", err);
+            }
+        }
+
+        document
+            .querySelectorAll(".speak-btn.speaking")
+            .forEach(function (button) {
+                button.classList.remove("speaking");
+                button.innerHTML =
+                    '<i class="fa-solid fa-volume-high"></i> Listen';
+            });
+    }
+
+    function playBrowserSpeech(cleanText, language, buttonEl = null) {
+        if (!("speechSynthesis" in window)) {
+            return false;
+        }
+
+        try {
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            const langCodes = {
+                "Hindi": "hi-IN",
+                "English": "en-IN",
+                "Punjabi": "pa-IN",
+                "Bengali": "bn-IN",
+                "Marathi": "mr-IN",
+                "Gujarati": "gu-IN",
+                "Tamil": "ta-IN",
+                "Telugu": "te-IN",
+                "Kannada": "kn-IN",
+                "Malayalam": "ml-IN",
+                "Urdu": "ur-IN",
+                "Odia": "or-IN"
+            };
+            const targetLang = langCodes[language] || "en-IN";
+            utterance.lang = targetLang;
+            utterance.rate = 1.05;
+            utterance.pitch = 1.0;
+
+            const voices = window.speechSynthesis.getVoices();
+            if (voices && voices.length > 0) {
+                const match = voices.find(v => v.lang === targetLang || v.lang.startsWith(targetLang.split("-")[0]));
+                if (match) {
+                    utterance.voice = match;
+                }
+            }
+
+            if (buttonEl) {
+                buttonEl.classList.add("speaking");
+                buttonEl.innerHTML = '<i class="fa-solid fa-stop"></i> Stop';
+            }
+
+            utterance.onstart = function () {
+                if (buttonEl) {
+                    buttonEl.classList.add("speaking");
+                    buttonEl.innerHTML = '<i class="fa-solid fa-stop"></i> Stop';
+                }
+            };
+
+            utterance.onend = utterance.onerror = function () {
+                if (buttonEl) {
+                    buttonEl.classList.remove("speaking");
+                    buttonEl.innerHTML = '<i class="fa-solid fa-volume-high"></i> Listen';
+                }
+            };
+
+            window.speechSynthesis.speak(utterance);
+            return true;
+        } catch (e) {
+            console.warn("Browser speech synthesis error, trying server TTS:", e);
+            return false;
+        }
+    }
+
+    function detectScriptLanguage(text, fallbackLang = "English") {
+        if (/[\u0A00-\u0A7F]/.test(text)) return "Punjabi";
+        if (/[\u0980-\u09FF]/.test(text)) return "Bengali";
+        if (/[\u0A80-\u0AFF]/.test(text)) return "Gujarati";
+        if (/[\u0B80-\u0BFF]/.test(text)) return "Tamil";
+        if (/[\u0C00-\u0C7F]/.test(text)) return "Telugu";
+        if (/[\u0C80-\u0CFF]/.test(text)) return "Kannada";
+        if (/[\u0D00-\u0D7F]/.test(text)) return "Malayalam";
+        if (/[\u0600-\u06FF]/.test(text)) return "Urdu";
+        if (/[\u0900-\u097F]/.test(text)) {
+            return fallbackLang === "Marathi" ? "Marathi" : "Hindi";
+        }
+        return fallbackLang || "English";
+    }
+
+    async function playServerSpeech(cleanText, language, buttonEl = null) {
+        if (buttonEl) {
+            buttonEl.classList.add("speaking");
+            buttonEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Speaking...';
+        }
+
+        try {
+            const effectiveLang = detectScriptLanguage(cleanText, language);
+
+            // Clean sentence boundary cutoff for speech so it never cuts off mid-word
+            let textToSend = cleanText;
+            if (textToSend.length > 550) {
+                const slice = textToSend.slice(0, 550);
+                const lastBreak = Math.max(
+                    slice.lastIndexOf("।"),
+                    slice.lastIndexOf("."),
+                    slice.lastIndexOf("?"),
+                    slice.lastIndexOf("!")
+                );
+                textToSend = (lastBreak > 200) ? slice.slice(0, lastBreak + 1) : slice;
+            }
+
+            const response = await fetch(
+                "/api/text-to-speech",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        text: textToSend,
+                        language: effectiveLang
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                if (buttonEl) {
+                    buttonEl.classList.remove("speaking");
+                    buttonEl.innerHTML = '<i class="fa-solid fa-volume-high"></i> Listen';
+                }
+                return;
+            }
+
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+
+            currentAudio = new Audio(audioUrl);
+
+            currentAudio.addEventListener("ended", function () {
+                URL.revokeObjectURL(audioUrl);
+                currentAudio = null;
+                if (buttonEl) {
+                    buttonEl.classList.remove("speaking");
+                    buttonEl.innerHTML = '<i class="fa-solid fa-volume-high"></i> Listen';
+                }
+            });
+
+            currentAudio.addEventListener("error", function () {
+                URL.revokeObjectURL(audioUrl);
+                currentAudio = null;
+                if (buttonEl) {
+                    buttonEl.classList.remove("speaking");
+                    buttonEl.innerHTML = '<i class="fa-solid fa-volume-high"></i> Listen';
+                }
+            });
+
+            if (buttonEl) {
+                buttonEl.classList.remove("speaking");
+                buttonEl.classList.add("speaking");
+                buttonEl.innerHTML = '<i class="fa-solid fa-stop"></i> Stop';
+            }
+
+            await currentAudio.play();
+
+        } catch (error) {
+            console.warn("Neural TTS error:", error);
+            if (buttonEl) {
+                buttonEl.classList.remove("speaking");
+                buttonEl.innerHTML = '<i class="fa-solid fa-volume-high"></i> Listen';
+            }
+        }
+    }
+
+    async function speakText(text, language, buttonEl = null) {
+        const cleanText = stripHtmlForSpeech(text);
+
+        if (!cleanText.trim()) {
+            return;
+        }
+
+        stopSpeech();
+
+        const langToUse = language || (languageSelect ? languageSelect.value : "English");
+        // Directly use high-quality neural voice (never rely on computer's default English voice)
+        await playServerSpeech(cleanText, langToUse, buttonEl);
+    }
+
+    async function startGeminiRecording() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            window.alert(
+                "Microphone recording is not supported in this browser."
+            );
+            return;
+        }
+
+        if (isRecording) {
+            return;
+        }
+
+        try {
+            const stream =
+                await navigator.mediaDevices.getUserMedia({
+                    audio: true
+                });
+
+            recordedChunks = [];
+
+            const preferredMimeTypes = [
+                "audio/webm;codecs=opus",
+                "audio/webm",
+                "audio/ogg;codecs=opus",
+                "audio/ogg"
+            ];
+
+            let selectedMimeType = "";
+
+            for (const mimeType of preferredMimeTypes) {
+                if (
+                    window.MediaRecorder &&
+                    MediaRecorder.isTypeSupported &&
+                    MediaRecorder.isTypeSupported(mimeType)
+                ) {
+                    selectedMimeType = mimeType;
+                    break;
+                }
+            }
+
+            mediaRecorder = selectedMimeType
+                ? new MediaRecorder(
+                    stream,
+                    { mimeType: selectedMimeType }
+                )
+                : new MediaRecorder(stream);
+
+            mediaRecorder.addEventListener(
+                "dataavailable",
+                function (event) {
+                    if (event.data && event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                }
+            );
+
+            mediaRecorder.addEventListener(
+                "stop",
+                async function () {
+                    const mimeType =
+                        mediaRecorder.mimeType ||
+                        selectedMimeType ||
+                        "audio/webm";
+
+                    const audioBlob =
+                        new Blob(
+                            recordedChunks,
+                            { type: mimeType }
+                        );
+
+                    stream.getTracks().forEach(
+                        function (track) {
+                            track.stop();
+                        }
+                    );
+
+                    await transcribeWithGemini(
+                        audioBlob,
+                        mimeType
+                    );
+                }
+            );
+
+            mediaRecorder.start();
+            isRecording = true;
+
+            micBtn.classList.add("listening");
+            micBtn.innerHTML =
+                '<i class="fa-solid fa-stop"></i>';
+            micBtn.title =
+                "Stop recording";
+
+        } catch (error) {
+            console.error(
+                "Microphone error:",
+                error
+            );
+
+            window.alert(
+                "Microphone access was blocked or could not be started. " +
+                "Please allow microphone access and try again."
+            );
+        }
+    }
+
+    function stopGeminiRecording() {
+        if (
+            mediaRecorder &&
+            mediaRecorder.state !== "inactive"
+        ) {
+            mediaRecorder.stop();
+        }
+
+        isRecording = false;
+
+        micBtn.classList.remove("listening");
+        micBtn.innerHTML =
+            '<i class="fa-solid fa-microphone"></i>';
+        micBtn.title =
+            "Ask by voice";
+    }
+
+    async function transcribeWithGemini(
+        audioBlob,
+        mimeType
+    ) {
+        if (!audioBlob || audioBlob.size === 0) {
+            window.alert("The recording was empty.");
+            return;
+        }
+
+        micBtn.disabled = true;
+        questionInput.disabled = true;
+
+        try {
+            const formData = new FormData();
+
+            formData.append(
+                "audio",
+                audioBlob,
+                "bharatassist-recording.webm"
+            );
+
+            formData.append(
+                "language",
+                languageSelect.value
+            );
+
+            const response = await fetch(
+                "/api/speech-to-text",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+            let data = {};
+
+            try {
+                data = await response.json();
+            } catch (_) {
+                data = {};
+            }
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error ||
+                    "Gemini speech-to-text failed."
+                );
+            }
+
+            const transcript =
+                (data.transcript || "").trim();
+
+            if (!transcript) {
+                throw new Error(
+                    "Gemini could not detect speech."
+                );
+            }
+
+            questionInput.value = transcript;
+            questionInput.focus();
+
+            // Submit the transcribed question automatically.
+            assistantForm.requestSubmit();
+
+        } catch (error) {
+            console.error(
+                "Gemini STT error:",
+                error
+            );
+
+            window.alert(
+                error.message ||
+                "Gemini speech-to-text could not process the recording."
+            );
+
+        } finally {
+            micBtn.disabled = false;
+            questionInput.disabled = false;
+        }
+    }
+
+    function startListening() {
+        stopSpeech();
+        if (isRecording) {
+            stopListening();
+            return;
+        }
+
+        const langCodes = {
+            "Hindi": "hi-IN",
+            "English": "en-IN",
+            "Punjabi": "pa-IN",
+            "Bengali": "bn-IN",
+            "Marathi": "mr-IN",
+            "Gujarati": "gu-IN",
+            "Tamil": "ta-IN",
+            "Telugu": "te-IN",
+            "Kannada": "kn-IN",
+            "Malayalam": "ml-IN",
+            "Urdu": "ur-IN",
+            "Odia": "or-IN"
+        };
+        const selectedLang = languageSelect ? languageSelect.value : "English";
+
+        // Try Web Speech API for instantaneous recognition if available
+        if (SpeechRecognition) {
+            try {
+                webSpeechRecognizer = new SpeechRecognition();
+                webSpeechRecognizer.lang = langCodes[selectedLang] || "en-IN";
+                webSpeechRecognizer.interimResults = true;
+                webSpeechRecognizer.continuous = false;
+
+                webSpeechRecognizer.onstart = function () {
+                    isRecording = true;
+                    micBtn.classList.add("listening");
+                    micBtn.innerHTML = '<i class="fa-solid fa-stop"></i>';
+                    micBtn.title = "Listening... click to stop";
+                };
+
+                webSpeechRecognizer.onresult = function (event) {
+                    let transcript = "";
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                    if (transcript) {
+                        questionInput.value = transcript;
+                    }
+                };
+
+                webSpeechRecognizer.onend = function () {
+                    isRecording = false;
+                    micBtn.classList.remove("listening");
+                    micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+                    micBtn.title = "Ask by voice";
+                    if (questionInput.value.trim()) {
+                        assistantForm.requestSubmit();
+                    }
+                };
+
+                webSpeechRecognizer.onerror = function (err) {
+                    console.warn("Web Speech error, switching to MediaRecorder:", err);
+                    isRecording = false;
+                    micBtn.classList.remove("listening");
+                    micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+                    if (err.error !== "no-speech" && err.error !== "aborted") {
+                        startGeminiRecording();
+                    }
+                };
+
+                webSpeechRecognizer.start();
+                return;
+            } catch (e) {
+                console.warn("Could not start Web Speech Recognition:", e);
+            }
+        }
+
+        // Fallback: MediaRecorder + Gemini /api/speech-to-text
+        startGeminiRecording();
+    }
+
+    function stopListening() {
+        if (webSpeechRecognizer) {
+            try {
+                webSpeechRecognizer.stop();
+            } catch (_) {}
+            webSpeechRecognizer = null;
+        }
+        stopGeminiRecording();
+    }
+
+    if (micBtn) {
+        if (!window.MediaRecorder && !SpeechRecognition) {
+            micBtn.disabled = true;
+            micBtn.title =
+                "Audio recording is not supported in this browser";
+        } else {
+            micBtn.addEventListener(
+                "click",
+                function () {
+                    if (isRecording) {
+                        stopListening();
+                    } else {
+                        startListening();
+                    }
+                }
+            );
+        }
+    }
+
+    /* ==========================================
+       HTML ESCAPE
+       Prevents user input from becoming HTML
+       ========================================== */
+
+    function escapeHtml(value) {
+
+        const div = document.createElement("div");
+        div.textContent = value ?? "";
+
+        return div.innerHTML;
+    }
+
+
+    /* ==========================================
+       SOURCE URL VALIDATION
+       ========================================== */
+
+    function createSourceLink(source) {
+
+        if (!source || !source.source_url) {
+            return "";
+        }
+
+        const name = escapeHtml(
+            source.name || "Official source"
+        );
+
+        const url = source.source_url;
+
+        /*
+         * Only allow normal HTTP/HTTPS links.
+         */
+        if (
+            !url.startsWith("https://") &&
+            !url.startsWith("http://")
+        ) {
+            return "";
+        }
+
+        const safeUrl = escapeHtml(url);
+
+        return `
+            <a
+                href="${safeUrl}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="source-link"
+            >
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                ${name}
+            </a>
+        `;
+    }
+
+
+    /* ==========================================
+       SCROLL TO BOTTOM
+       ========================================== */
+
+    function scrollChatToBottom() {
+
+        chatMessages.scrollTop =
+            chatMessages.scrollHeight;
+    }
+
+
+    /* ==========================================
+       ADD USER MESSAGE
+       ========================================== */
+
+    function addUserMessage(question) {
+
+        const message = document.createElement("div");
+
+        message.className = "msg-user";
+
+        message.textContent = question;
+
+        chatMessages.appendChild(message);
+
+        scrollChatToBottom();
+    }
+
+
+    /* ==========================================
+       ADD AI MESSAGE
+       ========================================== */
+
+    function formatAiAnswer(raw) {
+        if (!raw) return "No answer was returned.";
+
+        let text = raw.trim();
+
+        // 1. Headings: ### Heading or ## Heading
+        text = text.replace(/^###\s*(.+)$/gm, '<div class="fw-bold fs-6 mt-3 mb-1 text-primary"><i class="fa-solid fa-circle-chevron-right me-1"></i>$1</div>');
+        text = text.replace(/^##\s*(.+)$/gm, '<div class="fw-bold fs-6 mt-3 mb-1 text-primary"><i class="fa-solid fa-circle-chevron-right me-1"></i>$1</div>');
+
+        // 2. Bold text: **text** -> <strong>text</strong>
+        text = text.replace(/\*\*([^*]+)\*\*/g, '<strong class="fw-semibold text-dark">$1</strong>');
+
+        // 3. Numbered steps: lines starting with 1. 2. etc.
+        text = text.replace(/(?:^|\n)(\d+)\.\s+([^\n]+)/g, '\n<li class="ai-step-item mb-1"><span class="badge bg-light text-dark border me-1">$1</span> $2</li>');
+
+        // 4. Bullet points: lines starting with * or -
+        text = text.replace(/(?:^|\n)[*-]\s+([^\n]+)/g, '\n<li class="ai-bullet-item mb-1">$1</li>');
+
+        // 5. Wrap consecutive <li> into <ul class="ai-list ps-3 my-2">
+        text = text.replace(/((?:<li class="ai-[^"]+"[^>]*>[\s\S]*?<\/li>\s*)+)/g, '<ul class="ai-list ps-3 my-2" style="list-style-type: none;">$1</ul>');
+
+        // 6. Styled Note / Callout: *(Note: ...)* or *(ਸੁਝਾਅ: ...)* or *(Tip: ...)*
+        text = text.replace(/\*\(([^)]+)\)\*/g, '<div class="alert alert-light border py-1 px-2 my-2 rounded-2 small text-muted"><i class="fa-solid fa-lightbulb text-warning me-1"></i>$1</div>');
+
+        // 7. Paragraph line breaks: double newlines
+        const blocks = text.split(/\n\n+/);
+        text = blocks.map(b => {
+            b = b.trim();
+            if (!b) return "";
+            if (b.startsWith("<div") || b.startsWith("<ul") || b.startsWith("<ol") || b.startsWith("<p")) {
+                return b;
+            }
+            return `<p class="mb-2">${b.replace(/\n/g, "<br>")}</p>`;
+        }).join("");
+
+        return text;
+    }
+
+    function addAiMessage(answer, sources = []) {
+
+        const message = document.createElement("div");
+
+        message.className = "msg-ai";
+
+        const answerText = answer || "No answer was returned.";
+
+        /* "Listen" button - generated by Neural TTS */
+
+        const speakBtn = document.createElement("button");
+
+        speakBtn.type = "button";
+        speakBtn.className = "speak-btn";
+        speakBtn.innerHTML =
+            '<i class="fa-solid fa-volume-high"></i> Listen';
+
+        speakBtn.addEventListener("click", function () {
+            if (speakBtn.classList.contains("speaking")) {
+                stopSpeech();
+                return;
+            }
+
+            speakText(
+                answerText,
+                languageSelect ? languageSelect.value : "English",
+                speakBtn
+            );
+        });
+
+        message.appendChild(speakBtn);
+
+        const answerDiv = document.createElement("div");
+        answerDiv.className = "ai-answer-body";
+        answerDiv.innerHTML = formatAiAnswer(answerText);
+
+        message.appendChild(answerDiv);
+
+
+        /* Sources */
+
+        if (Array.isArray(sources) && sources.length > 0) {
+
+            const validSources = sources
+                .map(createSourceLink)
+                .filter(Boolean);
+
+            if (validSources.length > 0) {
+
+                const sourcesDiv =
+                    document.createElement("div");
+
+                sourcesDiv.className =
+                    "sources-container";
+
+                sourcesDiv.innerHTML = `
+                    <div class="sources-title">
+                        <i class="fa-solid fa-link me-1"></i>
+                        References
+                    </div>
+
+                    ${validSources.join("")}
+                `;
+
+                message.appendChild(sourcesDiv);
+            }
+        }
+
+
+        chatMessages.appendChild(message);
+
+        scrollChatToBottom();
+    }
+
+
+    /* ==========================================
+       LOADING INDICATOR
+       ========================================== */
+
+    function showTypingIndicator() {
+
+        const typing = document.createElement("div");
+
+        typing.id = "typingIndicator";
+
+        typing.className = "typing-indicator";
+
+        typing.innerHTML = `
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+        `;
+
+        chatMessages.appendChild(typing);
+
+        scrollChatToBottom();
+    }
+
+
+    function removeTypingIndicator() {
+
+        const typing =
+            document.getElementById("typingIndicator");
+
+        if (typing) {
+            typing.remove();
+        }
+    }
+
+
+    /* ==========================================
+       SUBMIT QUESTION
+       ========================================== */
+
+    assistantForm.addEventListener(
+        "submit",
+        async function(e) {
+
+            e.preventDefault();
+
+            const question =
+                questionInput.value.trim();
+
+            if (!question) {
+                questionInput.focus();
+                return;
+            }
+
+
+            /* Stop any answer currently being read aloud */
+            stopSpeech();
+
+            /* Add user message */
+
+            addUserMessage(question);
+
+            questionInput.value = "";
+
+            sendBtn.disabled = true;
+
+            questionInput.disabled = true;
+
+            showTypingIndicator();
+
+
+            try {
+
+                const response = await fetch(
+                    "/api/assistant",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            question: question,
+                            language: languageSelect.value
+                        })
+                    }
+                );
+
+
+                let data = {};
+
+                try {
+                    data = await response.json();
+                }
+                catch (jsonError) {
+                    data = {
+                        error:
+                            "The server returned an invalid response."
+                    };
+                }
+
+
+                removeTypingIndicator();
+
+
+                if (response.ok) {
+
+                    const answerText =
+                        data.answer ||
+                        "I could not generate an answer for that question.";
+
+                    addAiMessage(
+                        answerText,
+                        data.sources || []
+                    );
+
+                    // Read the answer aloud automatically if enabled
+                    if (autoSpeakToggle && autoSpeakToggle.checked) {
+                        speakText(
+                            answerText,
+                            languageSelect.value
+                        );
+                    }
+
+                    // Update conversation context indicator
+                    if (data.context_service) {
+                        activeServiceName = data.context_service;
+                    } else {
+                        activeServiceName = null;
+                    }
+                    const currentT = TRANSLATIONS[languageSelect.value] || TRANSLATIONS["English"];
+                    if (contextIndicator) {
+                        if (activeServiceName) {
+                            contextIndicator.textContent = currentT.contextPrefix + activeServiceName;
+                        } else {
+                            contextIndicator.textContent = currentT.contextNone;
+                        }
+                    }
+
+                    if (typeof loadChatHistory === "function" && IS_AUTHENTICATED) {
+                        loadChatHistory();
+                    }
+
+                }
+                                else {
+
+                    addAiMessage(
+                        `<span class="text-danger">${
+                            escapeHtml(
+                                data.error ||
+                                "Unable to retrieve information."
+                            )
+                        }</span>`
+                    );
+                }
+
+
+            }
+            catch (error) {
+
+                removeTypingIndicator();
+
+                addAiMessage(
+                    `<span class="text-danger">
+                        Connection error. Please check that the BharatAssist
+                        server is running and try again.
+                    </span>`
+                );
+
+                console.error(
+                    "Assistant error:",
+                    error
+                );
+
+            }
+            finally {
+
+                sendBtn.disabled = false;
+
+                questionInput.disabled = false;
+
+                questionInput.focus();
+
+                scrollChatToBottom();
+            }
+
+        }
+    );
+
+
+    /* ==========================================
+       SUGGESTED QUESTION BUTTONS
+       ========================================== */
+
+    document
+        .querySelectorAll(".suggestion-btn")
+        .forEach(function(button) {
+
+            button.addEventListener(
+                "click",
+                function() {
+
+                    const question =
+                        button.dataset.question;
+
+                    questionInput.value =
+                        question;
+
+                    questionInput.focus();
+
+                }
+            );
+
+        });
+
+
+    /* ==========================================
+       ENTER KEY
+       ========================================== */
+
+    questionInput.addEventListener(
+        "keydown",
+        function(e) {
+
+            if (
+                e.key === "Enter" &&
+                !e.shiftKey
+            ) {
+
+                e.preventDefault();
+
+                assistantForm.requestSubmit();
+            }
+
+        }
+    );
+    // ============================================================
+// CLEAR CONVERSATION
+// ============================================================
+
+const clearConversationBtn =
+    document.getElementById(
+        "clearConversationBtn"
+    );
+
+if (clearConversationBtn) {
+
+    clearConversationBtn.addEventListener(
+        "click",
+        async function () {
+
+            const currentT = TRANSLATIONS[languageSelect ? languageSelect.value : "English"] || TRANSLATIONS["English"];
+            const confirmed = window.confirm(
+                currentT.clearConfirm
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            stopSpeech();
+
+            if (isRecording) {
+                stopGeminiRecording();
+            }
+
+            try {
+
+                const response = await fetch(
+                    "/api/assistant/clear",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        }
+                    }
+                );
+
+                const result =
+                    await response.json();
+
+                if (
+                    response.ok &&
+                    result.success
+                ) {
+
+                    const messages =
+                        document.querySelector(
+                            "#chatMessages"
+                        );
+
+                    if (messages) {
+                        messages.innerHTML = "";
+                    }
+
+                    activeServiceName = null;
+                    const contextIndicator =
+                        document.querySelector(
+                            "#contextIndicator"
+                        );
+
+                    if (contextIndicator) {
+                        contextIndicator.textContent =
+                            currentT.contextNone;
+                    }
+
+                    // Add a fresh localized assistant message
+                    if (messages) {
+
+                        const message =
+                            document.createElement(
+                                "div"
+                            );
+
+                        message.className =
+                            "msg-ai";
+
+                        message.innerHTML =
+                            currentT.clearedMsg;
+
+                        messages.appendChild(
+                            message
+                        );
+                    }
+
+                } else {
+
+                    window.alert(
+                        result.error ||
+                        "Could not clear conversation."
+                    );
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Clear conversation error:",
+                    error
+                );
+
+                window.alert(
+                    "Could not connect to the server."
+                );
+            }
+            if (IS_AUTHENTICATED) {
+                try {
+                    await fetch("/api/assistant/history/clear", { method: "POST" });
+                    const historyContainer = document.getElementById("historyListContainer");
+                    if (historyContainer) {
+                        historyContainer.innerHTML = `
+                            <div class="text-center py-5 text-muted small">
+                                <i class="fa-regular fa-comment-dots fs-3 mb-2 text-secondary d-block"></i>
+                                Saved chat history cleared.
+                            </div>
+                        `;
+                    }
+                } catch (e) {
+                    console.warn("Could not clear persistent history:", e);
+                }
+            }
+        }
+    );
+}
+
+    // ============================================================
+    // PERSISTENT CHAT HISTORY FOR AUTHENTICATED CITIZENS
+    // ============================================================
+    const IS_AUTHENTICATED = {% if current_user %}true{% else %}false{% endif %};
+    const CURRENT_USER_NAME = {% if current_user and current_user.name %}{{ current_user.name|tojson }}{% else %}""{% endif %};
+
+    async function loadChatHistory() {
+        if (!IS_AUTHENTICATED) return;
+
+        try {
+            const res = await fetch("/api/assistant/history");
+            const data = await res.json();
+
+            const historyContainer = document.getElementById("historyListContainer");
+
+            if (data.success && Array.isArray(data.history) && data.history.length > 0) {
+                // Store in memory for on-demand inspection without cluttering fresh chat view
+                window.savedCitizenHistory = data.history;
+
+                // Populate drawer list
+                if (historyContainer) {
+                    historyContainer.innerHTML = data.history.map((item, idx) => `
+                        <div class="card border mb-2 shadow-sm history-item-card" style="border-radius: 10px; cursor: pointer; transition: all 0.2s ease;" onclick="restoreHistoryItem(${idx})" title="Click to view in chat">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="fw-bold small text-navy text-truncate me-2" style="max-width: 220px;">
+                                        <i class="fa-solid fa-circle-question text-saffron me-1"></i> ${escapeHtml(item.question)}
+                                    </div>
+                                    <span class="badge bg-light text-primary border" style="font-size: 0.65rem;">
+                                        <i class="fa-solid fa-eye me-1"></i> View
+                                    </span>
+                                </div>
+                                <div class="text-muted small text-truncate" style="font-size: 0.74rem;">
+                                    ${escapeHtml(item.answer.slice(0, 80))}...
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-1 pt-1 border-top" style="font-size: 0.68rem; color: #94A3B8;">
+                                    <span>${item.created_at || ""}</span>
+                                    <span class="badge bg-light text-dark">${escapeHtml(item.language || "English")}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).reverse().join("");
+                }
+            } else {
+                if (historyContainer) {
+                    historyContainer.innerHTML = `
+                        <div class="text-center py-5 text-muted small">
+                            <i class="fa-regular fa-comment-dots fs-3 mb-2 text-secondary d-block"></i>
+                            No past questions yet.<br>Ask any civic question and your conversation will be saved here.
+                        </div>
+                    `;
+                }
+            }
+        } catch (err) {
+            console.warn("Failed to load chat history:", err);
+            const historyContainer = document.getElementById("historyListContainer");
+            if (historyContainer) {
+                historyContainer.innerHTML = `<div class="text-danger small text-center py-3">Could not load chat history.</div>`;
+            }
+        }
+    }
+
+    window.restoreHistoryItem = function (idx) {
+        if (!window.savedCitizenHistory || !window.savedCitizenHistory[idx]) return;
+        const item = window.savedCitizenHistory[idx];
+
+        // Close offcanvas drawer if bootstrap is present
+        const offcanvasEl = document.getElementById("historyOffcanvas");
+        if (offcanvasEl && typeof bootstrap !== "undefined" && bootstrap.Offcanvas) {
+            const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl) || new bootstrap.Offcanvas(offcanvasEl);
+            if (bsOffcanvas) bsOffcanvas.hide();
+        }
+
+        // Add this specific past conversation to the chat window
+        addUserMessage(item.question);
+        addAiMessage(item.answer, item.sources || []);
+        scrollChatToBottom();
+    };
+
+    const btnClearSavedHistoryBtn = document.getElementById("btnClearSavedHistoryBtn");
+    if (btnClearSavedHistoryBtn) {
+        btnClearSavedHistoryBtn.addEventListener("click", async function () {
+            if (!confirm("Are you sure you want to permanently delete your saved chat history?")) return;
+
+            try {
+                const res = await fetch("/api/assistant/history/clear", { method: "POST" });
+                const data = await res.json();
+                if (data.success) {
+                    const historyContainer = document.getElementById("historyListContainer");
+                    if (historyContainer) {
+                        historyContainer.innerHTML = `
+                            <div class="text-center py-5 text-muted small">
+                                <i class="fa-solid fa-check text-success fs-3 mb-2 d-block"></i>
+                                Saved chat history cleared.
+                            </div>
+                        `;
+                    }
+                    window.savedCitizenHistory = [];
+                    const msgArea = document.getElementById("chatMessages");
+                    if (msgArea) {
+                        const welcome = msgArea.querySelector(".welcome-message");
+                        const suggestions = msgArea.querySelector(".suggestion-row");
+                        msgArea.innerHTML = "";
+                        if (welcome) msgArea.appendChild(welcome);
+                        if (suggestions) msgArea.appendChild(suggestions);
+                    }
+                }
+            } catch (err) {
+                alert("Failed to clear history: " + err.message);
+            }
+        });
+    }
+
+    // ============================================================
+    // INITIALIZE LANGUAGE & HISTORY ON PAGE LOAD
+    // ============================================================
+    document.addEventListener("DOMContentLoaded", function () {
+        let initialLang = "English";
+        try {
+            const stored = localStorage.getItem("bharatassist_lang");
+            if (stored && TRANSLATIONS[stored]) {
+                initialLang = stored;
+            }
+        } catch (_) {}
+
+        if (languageSelect) {
+            languageSelect.value = initialLang;
+        }
+        applyLanguage(initialLang);
+        loadChatHistory();
+    });
+
+    // Also run immediately in case DOM is already parsed
+    (function () {
+        let initialLang = "English";
+        try {
+            const stored = localStorage.getItem("bharatassist_lang");
+            if (stored && TRANSLATIONS[stored]) {
+                initialLang = stored;
+            }
+        } catch (_) {}
+
+        if (languageSelect) {
+            languageSelect.value = initialLang;
+        }
+        applyLanguage(initialLang);
+    })();
+
+</script>
+
+{% endblock %}

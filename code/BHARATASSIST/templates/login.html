@@ -1,0 +1,920 @@
+{% extends "base.html" %}
+
+{% block title %}Citizen Sign In — BharatAssist{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-container {
+        padding: 40px 0 70px;
+        min-height: calc(100vh - 280px);
+        display: flex;
+        align-items: center;
+    }
+
+    .auth-card {
+        background: #ffffff;
+        border: 1px solid rgba(255, 153, 51, 0.25);
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .auth-card-header {
+        background: linear-gradient(135deg, rgba(255, 153, 51, 0.08) 0%, rgba(19, 136, 8, 0.08) 100%);
+        padding: 26px 24px 20px;
+        text-align: center;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .auth-card-body {
+        padding: 30px 36px;
+    }
+
+    /* Dual Tab Styling */
+    .auth-nav-tabs {
+        display: flex;
+        background: #F1F5F9;
+        border-radius: 12px;
+        padding: 4px;
+        margin-bottom: 24px;
+        border: 1px solid #E2E8F0;
+    }
+
+    .auth-tab-btn {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 10px 14px;
+        border-radius: 9px;
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: var(--slate-700);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+
+    .auth-tab-btn.active {
+        background: #FFFFFF;
+        color: var(--navy);
+        box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+    }
+
+    .phone-input-group {
+        display: flex;
+        border: 1.5px solid #CBD5E1;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .phone-input-group:focus-within {
+        border-color: var(--saffron-dark);
+        box-shadow: 0 0 0 3px rgba(255, 153, 51, 0.18);
+    }
+
+    .phone-prefix {
+        background: #F8FAFC;
+        border-right: 1.5px solid #E2E8F0;
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 700;
+        color: var(--navy);
+        font-size: 0.95rem;
+    }
+
+    .phone-input {
+        border: none;
+        outline: none;
+        padding: 10px 14px;
+        width: 100%;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--slate-900);
+        letter-spacing: 0.5px;
+    }
+
+    .password-input-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-input-group input {
+        padding-right: 42px;
+    }
+
+    .password-toggle-btn {
+        position: absolute;
+        right: 12px;
+        background: none;
+        border: none;
+        color: #94A3B8;
+        cursor: pointer;
+        padding: 4px;
+    }
+
+    .password-toggle-btn:hover {
+        color: var(--navy);
+    }
+
+    .otp-field {
+        letter-spacing: 8px;
+        font-size: 1.5rem;
+        font-weight: 800;
+        text-align: center;
+        border: 2px solid #CBD5E1;
+        border-radius: 12px;
+        padding: 10px 14px;
+        color: var(--navy);
+        transition: all 0.2s ease;
+    }
+
+    .otp-field:focus {
+        border-color: var(--green);
+        box-shadow: 0 0 0 3px rgba(19, 136, 8, 0.15);
+        outline: none;
+    }
+
+    .sms-simulation-box {
+        background: rgba(19, 136, 8, 0.07);
+        border: 1px dashed rgba(19, 136, 8, 0.35);
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+    }
+
+    .privacy-shield-card {
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 14px;
+        padding: 18px 20px;
+        margin-top: 25px;
+    }
+
+    .privacy-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(19, 136, 8, 0.12);
+        color: var(--green);
+        font-size: 0.76rem;
+        font-weight: 700;
+    }
+
+    .privacy-feature {
+        display: flex;
+        gap: 12px;
+        margin-top: 12px;
+    }
+
+    .privacy-feature i {
+        font-size: 1rem;
+        color: var(--green);
+        margin-top: 2px;
+    }
+
+    .divider-text {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        color: #94A3B8;
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin: 22px 0 16px;
+    }
+
+    .divider-text::before, .divider-text::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #E2E8F0;
+    }
+
+    .divider-text:not(:empty)::before {
+        margin-right: .75em;
+    }
+
+    .divider-text:not(:empty)::after {
+        margin-left: .75em;
+    }
+
+    .mandatory-badge {
+        font-size: 0.72rem;
+        color: #dc3545;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="auth-card">
+                    <!-- Header -->
+                    <div class="auth-card-header">
+                        <div class="brand-icon-box mx-auto mb-2" style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg, var(--saffron) 0%, var(--saffron-dark) 100%);display:flex;align-items:center;justify-content:center;">
+                            <i class="fa-solid fa-id-card-clip text-white fs-4"></i>
+                        </div>
+                        <h3 class="fw-bold mb-1" style="color: var(--navy);">Citizen Portal Access</h3>
+                        <p class="text-muted small mb-0">Government-Aided Civic Services & AI Assistant</p>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="auth-card-body">
+                        {% if current_user %}
+                        <!-- Already logged in state -->
+                        <div class="text-center py-3">
+                            <div class="mb-3">
+                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 border border-success border-opacity-25" style="width:72px;height:72px;">
+                                    <i class="fa-solid fa-user-check text-success fs-2"></i>
+                                </div>
+                            </div>
+                            <h5 class="fw-bold mb-1" style="color: var(--navy);">{{ current_user.name }}</h5>
+                            <p class="text-muted small mb-3">
+                                <i class="fa-solid fa-mobile-screen me-1"></i> {{ current_user.masked_phone or current_user.phone }}
+                            </p>
+                            <span class="privacy-badge mb-4">
+                                <i class="fa-solid fa-shield-halved"></i> Zero-LLM Privacy Shield Active
+                            </span>
+                            
+                            <div class="d-grid gap-2 mt-4">
+                                <a href="{{ url_for('index') }}" class="btn btn-tricolor py-2 fw-semibold">
+                                    <i class="fa-solid fa-house me-2"></i> Go to Homepage
+                                </a>
+                                <a href="{{ url_for('assistant') }}" class="btn btn-outline-secondary py-2 fw-semibold">
+                                    <i class="fa-solid fa-robot me-2"></i> Open AI Civic Assistant
+                                </a>
+                                <a href="{{ url_for('logout') }}" class="btn btn-outline-danger py-2 fw-semibold">
+                                    <i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Sign Out
+                                </a>
+                            </div>
+                        </div>
+                        {% else %}
+
+                        <!-- DUAL TABS: LOGIN vs REGISTER -->
+                        <div class="auth-nav-tabs">
+                            <button type="button" id="tabBtnLogin" class="auth-tab-btn active">
+                                <i class="fa-solid fa-right-to-bracket me-1"></i> Login (Existing Citizens)
+                            </button>
+                            <button type="button" id="tabBtnRegister" class="auth-tab-btn">
+                                <i class="fa-solid fa-user-plus me-1"></i> Sign Up (New Citizens)
+                            </button>
+                        </div>
+
+                        <!-- ==============================================
+                             TAB 1: LOGIN FOR EXISTING CITIZENS
+                             ============================================== -->
+                        <div id="paneLogin">
+                            <form id="formPasswordLogin">
+                                <label class="form-label fw-bold small text-navy mb-2">
+                                    <i class="fa-solid fa-mobile-screen me-1 text-saffron"></i> Registered Mobile Number
+                                </label>
+                                <div class="phone-input-group mb-3">
+                                    <span class="phone-prefix">
+                                        <span style="font-size: 1.1rem;">🇮🇳</span> +91
+                                    </span>
+                                    <input
+                                        type="tel"
+                                        id="loginPhone"
+                                        class="phone-input"
+                                        placeholder="98765 43210"
+                                        maxlength="10"
+                                        autocomplete="tel"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <label class="form-label fw-bold small text-navy mb-0">
+                                        <i class="fa-solid fa-lock me-1 text-saffron"></i> Account Password
+                                    </label>
+                                    <button type="button" id="btnSwitchToOtpLogin" class="btn btn-link p-0 small text-decoration-none" style="font-size: 0.76rem;">
+                                        Login via OTP instead?
+                                    </button>
+                                </div>
+                                <div class="password-input-group mb-3">
+                                    <input
+                                        type="password"
+                                        id="loginPassword"
+                                        class="form-control py-2"
+                                        placeholder="Enter your password"
+                                        style="border-radius: 10px; border-color: #CBD5E1;"
+                                        required
+                                    >
+                                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('loginPassword', this)">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+
+                                <div id="loginAlert" class="alert alert-danger py-2 small d-none mb-3"></div>
+
+                                <button type="submit" id="btnLoginSubmit" class="btn btn-tricolor w-100 py-2 fw-bold">
+                                    <i class="fa-solid fa-right-to-bracket me-2"></i> Sign In to Account
+                                </button>
+                            </form>
+
+                            <div class="text-center mt-3">
+                                <span class="small text-muted">First time here?</span>
+                                <button type="button" class="btn btn-link small text-decoration-none fw-bold p-0 ms-1 text-navy" onclick="switchTab('register')">
+                                    Create New Citizen Account
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ==============================================
+                             TAB 2: SIGN UP / REGISTER FOR NEW CITIZENS
+                             ============================================== -->
+                        <div id="paneRegister" class="d-none">
+                            <!-- STEP 1: Registration Form -->
+                            <div id="registerStep1">
+                                <!-- Mandatory Full Name -->
+                                <label class="form-label fw-bold small text-navy mb-1">
+                                    <i class="fa-solid fa-user me-1 text-saffron"></i> Full Name 
+                                    <span class="mandatory-badge">* (Mandatory for official records)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="registerName"
+                                    class="form-control mb-3 py-2"
+                                    placeholder="Enter your official full name"
+                                    style="border-radius: 10px; border-color: #CBD5E1;"
+                                    required
+                                >
+
+                                <!-- Mobile Number -->
+                                <label class="form-label fw-bold small text-navy mb-1">
+                                    <i class="fa-solid fa-mobile-screen me-1 text-saffron"></i> Indian Mobile Number 
+                                    <span class="text-danger fw-bold">*</span>
+                                </label>
+                                <div class="phone-input-group mb-3">
+                                    <span class="phone-prefix">
+                                        <span style="font-size: 1.1rem;">🇮🇳</span> +91
+                                    </span>
+                                    <input
+                                        type="tel"
+                                        id="registerPhone"
+                                        class="phone-input"
+                                        placeholder="98765 43210"
+                                        maxlength="10"
+                                        autocomplete="tel"
+                                        required
+                                    >
+                                </div>
+
+                                <!-- Set Up Password -->
+                                <label class="form-label fw-bold small text-navy mb-1">
+                                    <i class="fa-solid fa-key me-1 text-saffron"></i> Set Account Password 
+                                    <span class="mandatory-badge">* (Min. 6 characters)</span>
+                                </label>
+                                <div class="password-input-group mb-3">
+                                    <input
+                                        type="password"
+                                        id="registerPassword"
+                                        class="form-control py-2"
+                                        placeholder="Create a strong password"
+                                        style="border-radius: 10px; border-color: #CBD5E1;"
+                                        minlength="6"
+                                        required
+                                    >
+                                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('registerPassword', this)">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+
+                                <div id="registerAlert" class="alert alert-danger py-2 small d-none mb-3"></div>
+
+                                <button type="button" id="btnRegisterSendOtp" class="btn btn-tricolor w-100 py-2 fw-bold">
+                                    <i class="fa-solid fa-paper-plane me-2"></i> Verify Mobile & Continue
+                                </button>
+
+                                <div class="text-center mt-3">
+                                    <button type="button" id="btnQuickDemoRegister" class="btn btn-link text-decoration-none small text-muted p-0" style="font-size: 0.78rem;">
+                                        <i class="fa-solid fa-bolt text-warning me-1"></i> Quick Test: Auto-fill Demo Citizen
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- STEP 2: Verify OTP for Registration -->
+                            <div id="registerStep2" class="d-none">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="small text-muted">
+                                        Verification code sent to <strong id="regDisplayTargetPhone" class="text-navy"></strong>
+                                    </span>
+                                    <button type="button" id="btnRegEditDetails" class="btn btn-link p-0 small text-decoration-none" style="font-size: 0.78rem;">
+                                        Edit Details
+                                    </button>
+                                </div>
+
+                                <!-- Simulated SMS Dispatch Notice -->
+                                <div class="sms-simulation-box">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="small">
+                                            <div class="fw-bold text-success" style="font-size: 0.78rem;">
+                                                <i class="fa-solid fa-comment-sms me-1"></i> Govt Portal SMS Simulator:
+                                            </div>
+                                            <div class="text-muted" style="font-size: 0.75rem;">
+                                                OTP: <strong id="regSimulatedOtpValue" class="text-dark fs-6 font-monospace"></strong>
+                                            </div>
+                                        </div>
+                                        <button type="button" id="btnRegAutoFillOtp" class="btn btn-sm btn-success px-2 py-1 fw-semibold" style="font-size: 0.72rem;">
+                                            Auto-Fill OTP
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <label class="form-label fw-bold small text-navy mb-2 text-center d-block">
+                                    Enter 6-Digit Verification Code
+                                </label>
+                                <input
+                                    type="text"
+                                    id="inputRegOtp"
+                                    class="form-control otp-field mb-3"
+                                    placeholder="••••••"
+                                    maxlength="6"
+                                    inputmode="numeric"
+                                    pattern="\d*"
+                                >
+
+                                <div id="regVerifyAlert" class="alert alert-danger py-2 small d-none mb-3"></div>
+
+                                <button type="button" id="btnRegVerifySubmit" class="btn btn-tricolor w-100 py-2 fw-bold mb-3">
+                                    <i class="fa-solid fa-circle-check me-2"></i> Complete Sign Up & Enter Portal
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ==============================================
+                             ALTERNATIVE: OTP LOGIN FOR EXISTING CITIZENS
+                             ============================================== -->
+                        <div id="paneOtpLogin" class="d-none">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="fw-bold small text-navy">
+                                    <i class="fa-solid fa-key me-1 text-saffron"></i> Login via Mobile OTP
+                                </span>
+                                <button type="button" id="btnBackToPasswordLogin" class="btn btn-link p-0 small text-decoration-none" style="font-size: 0.76rem;">
+                                    Back to Password Login
+                                </button>
+                            </div>
+
+                            <div id="otpLoginStep1">
+                                <div class="phone-input-group mb-3">
+                                    <span class="phone-prefix">
+                                        <span style="font-size: 1.1rem;">🇮🇳</span> +91
+                                    </span>
+                                    <input
+                                        type="tel"
+                                        id="otpLoginPhone"
+                                        class="phone-input"
+                                        placeholder="98765 43210"
+                                        maxlength="10"
+                                        autocomplete="tel"
+                                    >
+                                </div>
+                                <div id="otpLoginAlert" class="alert alert-danger py-2 small d-none mb-3"></div>
+                                <button type="button" id="btnOtpLoginSend" class="btn btn-tricolor w-100 py-2 fw-bold">
+                                    <i class="fa-solid fa-paper-plane me-2"></i> Send Login OTP
+                                </button>
+                            </div>
+
+                            <div id="otpLoginStep2" class="d-none">
+                                <div class="sms-simulation-box mt-2">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="small">
+                                            <div class="fw-bold text-success" style="font-size: 0.78rem;">
+                                                <i class="fa-solid fa-comment-sms me-1"></i> SMS Simulator:
+                                            </div>
+                                            <div class="text-muted" style="font-size: 0.75rem;">
+                                                OTP: <strong id="otpLoginHint" class="text-dark fs-6 font-monospace"></strong>
+                                            </div>
+                                        </div>
+                                        <button type="button" id="btnOtpLoginAutoFill" class="btn btn-sm btn-success px-2 py-1 fw-semibold" style="font-size: 0.72rem;">
+                                            Auto-Fill
+                                        </button>
+                                    </div>
+                                </div>
+                                <input
+                                    type="text"
+                                    id="otpLoginCode"
+                                    class="form-control otp-field mb-3"
+                                    placeholder="••••••"
+                                    maxlength="6"
+                                    inputmode="numeric"
+                                >
+                                <div id="otpLoginVerifyAlert" class="alert alert-danger py-2 small d-none mb-3"></div>
+                                <button type="button" id="btnOtpLoginVerify" class="btn btn-tricolor w-100 py-2 fw-bold">
+                                    <i class="fa-solid fa-shield-check me-2"></i> Verify & Sign In
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="divider-text">ZERO-LLM CITIZEN PRIVACY SHIELD</div>
+
+                        <!-- Zero-LLM Privacy Shield Explanation -->
+                        <div class="privacy-shield-card">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="privacy-badge"><i class="fa-solid fa-shield-halved"></i> Zero-LLM Privacy Invariant</span>
+                                <span class="badge bg-light text-dark border">100% Protected</span>
+                            </div>
+                            <p class="small text-muted mb-2" style="line-height: 1.55; font-size: 0.78rem;">
+                                BharatAssist protects citizen confidentiality. Your phone number and password hashes are saved strictly in your local encrypted database and <strong>never transmitted to Gemini or any public AI</strong>.
+                            </p>
+
+                            <div class="privacy-feature">
+                                <i class="fa-solid fa-lock"></i>
+                                <div>
+                                    <strong class="d-block small text-dark">Local Authentication Only</strong>
+                                    <span class="text-muted small" style="font-size: 0.74rem;">Passwords use Argon2/scrypt cryptographic hashing. Only your verified name is used by the assistant to address you respectfully.</span>
+                                </div>
+                            </div>
+
+                            <div class="privacy-feature">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                <div>
+                                    <strong class="d-block small text-dark">Private Saved Chat History</strong>
+                                    <span class="text-muted small" style="font-size: 0.74rem;">Past civic questions and answers are preserved securely under your account so you can reference them anytime.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab switching
+    const tabBtnLogin = document.getElementById("tabBtnLogin");
+    const tabBtnRegister = document.getElementById("tabBtnRegister");
+    const paneLogin = document.getElementById("paneLogin");
+    const paneRegister = document.getElementById("paneRegister");
+    const paneOtpLogin = document.getElementById("paneOtpLogin");
+
+    function switchTab(target) {
+        if (target === "login") {
+            if (tabBtnLogin) tabBtnLogin.classList.add("active");
+            if (tabBtnRegister) tabBtnRegister.classList.remove("active");
+            if (paneLogin) paneLogin.classList.remove("d-none");
+            if (paneRegister) paneRegister.classList.add("d-none");
+            if (paneOtpLogin) paneOtpLogin.classList.add("d-none");
+        } else if (target === "register") {
+            if (tabBtnRegister) tabBtnRegister.classList.add("active");
+            if (tabBtnLogin) tabBtnLogin.classList.remove("active");
+            if (paneRegister) paneRegister.classList.remove("d-none");
+            if (paneLogin) paneLogin.classList.add("d-none");
+            if (paneOtpLogin) paneOtpLogin.classList.add("d-none");
+        }
+    }
+
+    if (tabBtnLogin) tabBtnLogin.addEventListener("click", () => switchTab("login"));
+    if (tabBtnRegister) tabBtnRegister.addEventListener("click", () => switchTab("register"));
+
+    // Switch between Password Login and OTP Login
+    const btnSwitchToOtpLogin = document.getElementById("btnSwitchToOtpLogin");
+    const btnBackToPasswordLogin = document.getElementById("btnBackToPasswordLogin");
+
+    if (btnSwitchToOtpLogin) {
+        btnSwitchToOtpLogin.addEventListener("click", () => {
+            paneLogin.classList.add("d-none");
+            paneOtpLogin.classList.remove("d-none");
+            const lp = document.getElementById("loginPhone").value;
+            if (lp) document.getElementById("otpLoginPhone").value = lp;
+        });
+    }
+
+    if (btnBackToPasswordLogin) {
+        btnBackToPasswordLogin.addEventListener("click", () => {
+            paneOtpLogin.classList.add("d-none");
+            paneLogin.classList.remove("d-none");
+        });
+    }
+
+    function togglePasswordVisibility(fieldId, btn) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        const isPassword = field.type === "password";
+        field.type = isPassword ? "text" : "password";
+        btn.innerHTML = isPassword ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+    }
+
+    // ============================================================
+    // 1. PASSWORD LOGIN (TAB 1)
+    // ============================================================
+    const formPasswordLogin = document.getElementById("formPasswordLogin");
+    const loginAlert = document.getElementById("loginAlert");
+    const btnLoginSubmit = document.getElementById("btnLoginSubmit");
+
+    if (formPasswordLogin) {
+        formPasswordLogin.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const phone = document.getElementById("loginPhone").value.trim();
+            const password = document.getElementById("loginPassword").value;
+
+            if (!phone || phone.length !== 10 || !/^[6-9]\d{9}$/.test(phone)) {
+                loginAlert.textContent = "Please enter a valid 10-digit Indian mobile number.";
+                loginAlert.classList.remove("d-none");
+                return;
+            }
+
+            if (!password) {
+                loginAlert.textContent = "Please enter your password.";
+                loginAlert.classList.remove("d-none");
+                return;
+            }
+
+            btnLoginSubmit.disabled = true;
+            btnLoginSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Signing In...';
+            loginAlert.classList.add("d-none");
+
+            try {
+                const res = await fetch("/api/auth/login-password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ phone, password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = "{{ url_for('index') }}";
+                } else {
+                    btnLoginSubmit.disabled = false;
+                    btnLoginSubmit.innerHTML = '<i class="fa-solid fa-right-to-bracket me-2"></i> Sign In to Account';
+                    loginAlert.textContent = data.error || "Login failed. Please verify your mobile number and password.";
+                    loginAlert.classList.remove("d-none");
+                }
+            } catch (err) {
+                console.error("Login error:", err);
+                btnLoginSubmit.disabled = false;
+                btnLoginSubmit.innerHTML = '<i class="fa-solid fa-right-to-bracket me-2"></i> Sign In to Account';
+                loginAlert.textContent = "Connection error. Please try again.";
+                loginAlert.classList.remove("d-none");
+            }
+        });
+    }
+
+    // ============================================================
+    // 2. REGISTRATION / SIGN IN (TAB 2)
+    // ============================================================
+    const registerName = document.getElementById("registerName");
+    const registerPhone = document.getElementById("registerPhone");
+    const registerPassword = document.getElementById("registerPassword");
+    const btnRegisterSendOtp = document.getElementById("btnRegisterSendOtp");
+    const registerAlert = document.getElementById("registerAlert");
+    const registerStep1 = document.getElementById("registerStep1");
+    const registerStep2 = document.getElementById("registerStep2");
+    const regDisplayTargetPhone = document.getElementById("regDisplayTargetPhone");
+    const regSimulatedOtpValue = document.getElementById("regSimulatedOtpValue");
+    const btnRegAutoFillOtp = document.getElementById("btnRegAutoFillOtp");
+    const inputRegOtp = document.getElementById("inputRegOtp");
+    const btnRegVerifySubmit = document.getElementById("btnRegVerifySubmit");
+    const regVerifyAlert = document.getElementById("regVerifyAlert");
+    const btnRegEditDetails = document.getElementById("btnRegEditDetails");
+    const btnQuickDemoRegister = document.getElementById("btnQuickDemoRegister");
+
+    let currentRegPhone = "";
+    let currentRegOtp = "";
+
+    if (btnQuickDemoRegister) {
+        btnQuickDemoRegister.addEventListener("click", () => {
+            registerName.value = "Pooja Verma";
+            registerPhone.value = "9812345678";
+            registerPassword.value = "SecurePass@123";
+        });
+    }
+
+    if (btnRegisterSendOtp) {
+        btnRegisterSendOtp.addEventListener("click", async function () {
+            const name = registerName.value.trim();
+            const phone = registerPhone.value.trim();
+            const password = registerPassword.value;
+
+            // Strict mandatory name check
+            if (!name || name.length < 2) {
+                registerAlert.textContent = "Full Name is mandatory and must be at least 2 characters long.";
+                registerAlert.classList.remove("d-none");
+                registerName.focus();
+                return;
+            }
+
+            if (!phone || phone.length !== 10 || !/^[6-9]\d{9}$/.test(phone)) {
+                registerAlert.textContent = "Please enter a valid 10-digit Indian mobile number.";
+                registerAlert.classList.remove("d-none");
+                registerPhone.focus();
+                return;
+            }
+
+            if (!password || password.length < 6) {
+                registerAlert.textContent = "Password is mandatory and must be at least 6 characters long.";
+                registerAlert.classList.remove("d-none");
+                registerPassword.focus();
+                return;
+            }
+
+            btnRegisterSendOtp.disabled = true;
+            btnRegisterSendOtp.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Sending OTP...';
+            registerAlert.classList.add("d-none");
+
+            try {
+                const res = await fetch("/api/auth/register-send-otp", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, phone, password })
+                });
+                const data = await res.json();
+                btnRegisterSendOtp.disabled = false;
+                btnRegisterSendOtp.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i> Verify Mobile & Continue';
+
+                if (data.success) {
+                    currentRegPhone = data.phone;
+                    currentRegOtp = data.otp_hint || "";
+                    regDisplayTargetPhone.textContent = data.masked_phone || ("+91 " + currentRegPhone);
+                    regSimulatedOtpValue.textContent = currentRegOtp;
+
+                    registerStep1.classList.add("d-none");
+                    registerStep2.classList.remove("d-none");
+                    inputRegOtp.value = "";
+                    inputRegOtp.focus();
+                } else {
+                    registerAlert.textContent = data.error || "Failed to initiate registration.";
+                    registerAlert.classList.remove("d-none");
+                }
+            } catch (err) {
+                console.error("Register send OTP error:", err);
+                btnRegisterSendOtp.disabled = false;
+                btnRegisterSendOtp.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i> Verify Mobile & Continue';
+                registerAlert.textContent = "Connection error. Please try again.";
+                registerAlert.classList.remove("d-none");
+            }
+        });
+    }
+
+    if (btnRegAutoFillOtp) {
+        btnRegAutoFillOtp.addEventListener("click", () => {
+            if (currentRegOtp) {
+                inputRegOtp.value = currentRegOtp;
+                btnRegVerifySubmit.click();
+            }
+        });
+    }
+
+    if (btnRegEditDetails) {
+        btnRegEditDetails.addEventListener("click", () => {
+            registerStep2.classList.add("d-none");
+            registerStep1.classList.remove("d-none");
+            registerPhone.focus();
+        });
+    }
+
+    if (btnRegVerifySubmit) {
+        btnRegVerifySubmit.addEventListener("click", async function () {
+            const otp = inputRegOtp.value.trim();
+            if (!otp || otp.length !== 6) {
+                regVerifyAlert.textContent = "Please enter the 6-digit verification code.";
+                regVerifyAlert.classList.remove("d-none");
+                return;
+            }
+
+            btnRegVerifySubmit.disabled = true;
+            btnRegVerifySubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Creating Account...';
+            regVerifyAlert.classList.add("d-none");
+
+            try {
+                const res = await fetch("/api/auth/register-verify", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ phone: currentRegPhone, otp })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = "{{ url_for('index') }}";
+                } else {
+                    btnRegVerifySubmit.disabled = false;
+                    btnRegVerifySubmit.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i> Complete Sign Up & Enter Portal';
+                    regVerifyAlert.textContent = data.error || "Incorrect verification code.";
+                    regVerifyAlert.classList.remove("d-none");
+                }
+            } catch (err) {
+                console.error("Register verify error:", err);
+                btnRegVerifySubmit.disabled = false;
+                btnRegVerifySubmit.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i> Complete Sign Up & Enter Portal';
+                regVerifyAlert.textContent = "Connection error. Please try again.";
+                regVerifyAlert.classList.remove("d-none");
+            }
+        });
+    }
+
+    // ============================================================
+    // 3. OTP-ONLY LOGIN FLOW
+    // ============================================================
+    const otpLoginPhone = document.getElementById("otpLoginPhone");
+    const btnOtpLoginSend = document.getElementById("btnOtpLoginSend");
+    const otpLoginAlert = document.getElementById("otpLoginAlert");
+    const otpLoginStep1 = document.getElementById("otpLoginStep1");
+    const otpLoginStep2 = document.getElementById("otpLoginStep2");
+    const otpLoginHint = document.getElementById("otpLoginHint");
+    const btnOtpLoginAutoFill = document.getElementById("btnOtpLoginAutoFill");
+    const otpLoginCode = document.getElementById("otpLoginCode");
+    const btnOtpLoginVerify = document.getElementById("btnOtpLoginVerify");
+    const otpLoginVerifyAlert = document.getElementById("otpLoginVerifyAlert");
+
+    let currentOtpLoginPhone = "";
+    let currentOtpLoginCode = "";
+
+    if (btnOtpLoginSend) {
+        btnOtpLoginSend.addEventListener("click", async function () {
+            const raw = otpLoginPhone.value.trim();
+            if (!raw || raw.length !== 10 || !/^[6-9]\d{9}$/.test(raw)) {
+                otpLoginAlert.textContent = "Please enter a valid 10-digit Indian mobile number.";
+                otpLoginAlert.classList.remove("d-none");
+                return;
+            }
+
+            btnOtpLoginSend.disabled = true;
+            btnOtpLoginSend.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Sending...';
+            otpLoginAlert.classList.add("d-none");
+
+            try {
+                const res = await fetch("/api/auth/send-otp", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ phone: raw })
+                });
+                const data = await res.json();
+                btnOtpLoginSend.disabled = false;
+                btnOtpLoginSend.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i> Send Login OTP';
+
+                if (data.success) {
+                    currentOtpLoginPhone = data.phone;
+                    currentOtpLoginCode = data.otp_hint || "";
+                    otpLoginHint.textContent = currentOtpLoginCode;
+                    otpLoginStep1.classList.add("d-none");
+                    otpLoginStep2.classList.remove("d-none");
+                    otpLoginCode.focus();
+                } else {
+                    otpLoginAlert.textContent = data.error || "Failed to dispatch OTP.";
+                    otpLoginAlert.classList.remove("d-none");
+                }
+            } catch (err) {
+                btnOtpLoginSend.disabled = false;
+                btnOtpLoginSend.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i> Send Login OTP';
+                otpLoginAlert.textContent = "Server communication error.";
+                otpLoginAlert.classList.remove("d-none");
+            }
+        });
+    }
+
+    if (btnOtpLoginAutoFill) {
+        btnOtpLoginAutoFill.addEventListener("click", () => {
+            if (currentOtpLoginCode) {
+                otpLoginCode.value = currentOtpLoginCode;
+                btnOtpLoginVerify.click();
+            }
+        });
+    }
+
+    if (btnOtpLoginVerify) {
+        btnOtpLoginVerify.addEventListener("click", async function () {
+            const code = otpLoginCode.value.trim();
+            if (!code || code.length !== 6) {
+                otpLoginVerifyAlert.textContent = "Enter 6-digit OTP.";
+                otpLoginVerifyAlert.classList.remove("d-none");
+                return;
+            }
+
+            btnOtpLoginVerify.disabled = true;
+            btnOtpLoginVerify.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Verifying...';
+
+            try {
+                const res = await fetch("/api/auth/verify-otp", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ phone: currentOtpLoginPhone, otp: code })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = "{{ url_for('index') }}";
+                } else {
+                    btnOtpLoginVerify.disabled = false;
+                    btnOtpLoginVerify.innerHTML = '<i class="fa-solid fa-shield-check me-2"></i> Verify & Sign In';
+                    otpLoginVerifyAlert.textContent = data.error || "Incorrect OTP.";
+                    otpLoginVerifyAlert.classList.remove("d-none");
+                }
+            } catch (err) {
+                btnOtpLoginVerify.disabled = false;
+                btnOtpLoginVerify.innerHTML = '<i class="fa-solid fa-shield-check me-2"></i> Verify & Sign In';
+                otpLoginVerifyAlert.textContent = "Server error.";
+                otpLoginVerifyAlert.classList.remove("d-none");
+            }
+        });
+    }
+</script>
+{% endblock %}
