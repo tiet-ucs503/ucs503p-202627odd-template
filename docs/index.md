@@ -1,40 +1,20 @@
-﻿![Tiet Logo](assets/tiet-logo.svg){ .tiet-logo }
+![Tiet Logo](../assets/tiet-logo.svg){ .tiet-logo }
 
 **UCS503: Software Engineering (Project)**  
 **TIET Patiala**
 
-# The Sum Function in C++
+# EcoCode - Green-Software Analysis Platform
 
-**Author(s)**:
+EcoCode is a deterministic Java static-analysis prototype developed through iterative increments.
 
-`(RGB)` Raghav B. Venkataramaiyer `<bv.raghav -at-
-thapar -dot- edu>`
+## Current implementation
 
-This project creates a sum function in c++ as a sample
-to illustrate how to compile a shared library and
-distribute it for use along with the binary.
+- Iteration 1: project indexing, JavaParser and ProjectModel
+- Iteration 2: method-call extraction, lightweight symbol resolution and CallGraph
+- Iteration 3: deterministic rule engine EC101-EC108
 
-## Installation
+The rules are implemented but are still being tested and refined for false positives. Static findings are therefore treated as review candidates rather than confirmed performance defects.
 
-``` shell
-make -C code
-```
+## Reference validation
 
-This will create create a folder `dist` in `code`
-folder, with following contents
-
-```
-dist
- +-lib
- |  \-libbvr_math.so
- +-bin
-    \-run
-```
-
-## Usage
-
-``` shell
-cd code
-export LD_LIBRARY_PATH=dist/lib
-./dist/bin/run
-```
+On the current `minimal-json` reference run, EcoCode processed 54 Java files, 10,870 lines, 63 classes, 912 methods and 2,931 method calls with 0 parse warnings. The latest refined rule set produced 106 static findings, split into 42 non-test-source findings and 64 test-code findings.
