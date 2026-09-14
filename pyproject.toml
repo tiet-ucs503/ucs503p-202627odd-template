@@ -1,10 +1,10 @@
-﻿
+
 [build-system]
 requires = ["hatchling","hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "tiet-ucs503.github.io/ucs503p-202627odd-template"
+name = "tiet-ucs503-202627odd-template"
 version = "0.0.1"
 authors = [
   { name="Raghav B. Venkataramaiyer", email="bv.raghav@thapar.edu" },

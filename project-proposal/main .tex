@@ -1,0 +1,441 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+
+\setstretch{1.3}
+
+\hypersetup{
+colorlinks=true,
+linkcolor=blue,
+urlcolor=blue
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{TravelSphere}
+\fancyhead[R]{Project Proposal}
+\fancyfoot[C]{\thepage}
+
+\titleformat{\section}
+{\Large\bfseries}
+{\thesection}{1em}{}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{titlepage}
+
+\centering
+
+\vspace*{2cm}
+
+{\Huge\bfseries TravelSphere}
+
+\vspace{0.3cm}
+
+{\Large A Community-Driven Travel Ecosystem}
+
+\vspace{0.3cm}
+
+{\large\textit{Plan • Protect • Save • Discover}}
+
+\vspace{2cm}
+
+{\LARGE Software Engineering Project Proposal}
+
+\vspace{2cm}
+
+\textbf{Submitted By}
+
+\vspace{0.8cm}
+
+\begin{tabular}{ll}
+\textbf{Name} & \textbf{Roll Number} \\ \hline
+Ayush Gupta & 1024030781 \\
+Niharika Chawla & 1024030762 \\
+Sarwar Singh Dhillon & 1024030862 \\
+\end{tabular}
+
+\vfill
+
+\textbf{Department of Computer Science and Engineering}
+
+\vspace{0.2cm}
+
+Thapar Institute of Engineering \& Technology
+
+\vspace{0.2cm}
+
+Academic Year 2026--27
+
+\end{titlepage}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction}
+
+Travel has become increasingly accessible, but planning and managing a journey still requires travelers to switch between multiple platforms. People often rely on Reddit for reviews, YouTube for itineraries, Google Maps for navigation, weather applications for forecasts, and social media for discovering destinations.
+
+Although these platforms provide useful information, they are disconnected and often contain outdated or scattered content. There is currently no dedicated platform where travelers can collaboratively share authentic experiences, receive real-time updates, and connect with other travelers in one place.
+
+TravelSphere is proposed as a community-driven travel ecosystem that brings together travel experiences, trip management, community interaction, and safety updates within a single platform.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Need for the Project}
+
+Modern travelers spend significant time searching different websites and applications before planning a trip. Important information such as local recommendations, travel expenses, hidden attractions, weather conditions, safety alerts, and current road situations is scattered across multiple sources.
+
+This fragmented process makes travel planning inefficient and often results in decisions based on outdated information.
+
+TravelSphere aims to address this problem by creating a centralized community where travelers can share real-time experiences, help one another, and access reliable travel information through a single platform.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Problem Statement}
+
+Current travel platforms solve only individual aspects of travel, requiring users to constantly switch between applications.
+
+Some major challenges include:
+
+\begin{itemize}
+
+\item Lack of a centralized travel platform.
+
+\item Outdated travel reviews and recommendations.
+
+\item Difficulty in obtaining real-time destination updates.
+
+\item Limited interaction between travelers visiting similar destinations.
+
+\item Absence of a dedicated travel community focused on collaboration and safety.
+
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Proposed Solution}
+
+TravelSphere is a centralized travel platform designed specifically for travelers. The platform enables users to create travel profiles, share authentic travel experiences, publish location-based updates, connect with fellow travelers, discover new destinations, and receive community-generated safety alerts.
+
+Instead of replacing existing travel services, TravelSphere complements them by bringing essential travel information and community interaction into one unified ecosystem.
+
+\section{Unique Selling Proposition (USP)}
+
+Unlike traditional travel platforms that focus on navigation, bookings, or media sharing, TravelSphere combines travel experiences, community interaction, trip management, and real-time safety updates within a single platform. This creates a collaborative ecosystem where travelers not only consume information but also actively contribute to a growing repository of authentic travel knowledge.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Project Objectives}
+
+The main objectives of the proposed system are:
+
+\begin{itemize}
+
+\item Develop a centralized platform for travelers.
+
+\item Encourage sharing of authentic travel experiences.
+
+\item Enable real-time community updates.
+
+\item Improve traveler safety through community alerts.
+
+\item Connect travelers with similar interests and destinations.
+
+\item Build a scalable software system using modern Software Engineering principles.
+
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Proposed System}
+
+The proposed system consists of multiple integrated components that together provide a complete travel ecosystem. The major functionalities are summarized below.
+
+\begin{table}[h]
+
+\centering
+
+\renewcommand{\arraystretch}{1.4}
+
+\begin{tabular}{|p{4cm}|p{10cm}|}
+
+\hline
+
+\textbf{Module} & \textbf{Description} \\
+
+\hline
+
+User Profiles &
+Users can create personalized profiles containing travel interests, visited destinations, and travel history. \\
+
+\hline
+
+Travel Feed &
+Share travel experiences, recommendations, photographs, food suggestions, hidden places, and travel tips. \\
+
+\hline
+
+Trip Management &
+Create trips, maintain travel journals, and organize travel timelines. \\
+
+\hline
+
+Interactive Map &
+Display location-tagged travel posts, nearby attractions, and community updates on an interactive map. \\
+
+\hline
+
+Travel Companion &
+Find and connect with travelers visiting similar destinations or planning similar trips. \\
+
+\hline
+
+Safety Alerts &
+Report road closures, scams, weather conditions, accidents, and emergency situations to help nearby travelers. \\
+
+\hline
+
+Notifications &
+Receive updates from followed travelers, destinations, and important community alerts. \\
+
+\hline
+
+\end{tabular}
+
+\caption{Major Modules of TravelSphere}
+
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Technology Stack}
+
+The proposed technologies for the development of TravelSphere are listed below.
+
+\begin{table}[h]
+
+\centering
+
+\renewcommand{\arraystretch}{1.4}
+
+\begin{tabular}{|p{5cm}|p{8cm}|}
+
+\hline
+
+\textbf{Component} & \textbf{Technology} \\
+
+\hline
+
+Frontend & React.js, Tailwind CSS \\
+
+\hline
+
+Backend & FastAPI (Python) \\
+
+\hline
+
+Database & PostgreSQL \\
+
+\hline
+
+ORM & SQLAlchemy \\
+
+\hline
+
+Authentication & JWT Authentication \\
+
+\hline
+
+Maps & OpenStreetMap + Leaflet \\
+
+\hline
+
+Real-time Communication & WebSockets \\
+
+\hline
+
+Notifications & Firebase Cloud Messaging \\
+
+\hline
+
+Version Control & Git and GitHub \\
+
+\hline
+
+Deployment & Docker \\
+
+\hline
+
+\end{tabular}
+
+\caption{Technology Stack}
+
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Development Methodology}
+
+The project will follow the Agile Software Development methodology, allowing incremental development, continuous testing, and regular feedback throughout the project lifecycle.
+
+\begin{table}[h]
+
+\centering
+
+\renewcommand{\arraystretch}{1.4}
+
+\begin{tabular}{|c|p{10cm}|}
+
+\hline
+
+\textbf{Phase} & \textbf{Activity} \\
+
+\hline
+
+1 & Requirement Analysis and Planning \\
+
+\hline
+
+2 & System Design and Database Design \\
+
+\hline
+
+3 & Backend Development \\
+
+\hline
+
+4 & Frontend Development \\
+
+\hline
+
+5 & Integration and Testing \\
+
+\hline
+
+6 & Deployment and Documentation \\
+
+\hline
+
+\end{tabular}
+
+\caption{Development Phases}
+
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Expected Outcomes}
+
+The successful implementation of TravelSphere is expected to provide:
+
+\begin{itemize}
+
+\item A centralized platform dedicated to travelers.
+
+\item Reliable community-driven travel information.
+
+\item Better collaboration among travelers.
+
+\item Improved travel safety through real-time alerts.
+
+\item Easier discovery of destinations and authentic travel experiences.
+
+\item A scalable software system built using modern Software Engineering principles.
+
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Project Scope}
+
+The initial version of TravelSphere focuses on building a centralized platform where travelers can connect, share experiences, and access reliable travel information.
+
+The scope of the project includes:
+
+\begin{itemize}
+
+\item User registration and authentication.
+
+\item Travel profiles and travel history.
+
+\item Community travel feed.
+
+\item Trip planning and travel journals.
+
+\item Interactive map with location-based posts.
+
+\item Travel companion discovery.
+
+\item Community-driven safety alerts.
+
+\item Real-time notifications.
+
+\end{itemize}
+
+Features such as hotel booking, flight booking, payment integration, and advanced AI-based recommendations are considered beyond the scope of the initial implementation.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Future Scope}
+
+TravelSphere can be further enhanced with several advanced features in future versions.
+
+\begin{itemize}
+
+\item AI-powered travel itinerary generation.
+
+\item Personalized destination recommendations.
+
+\item RAG-based travel assistant using official tourism information.
+
+\item Multi-language support.
+
+\item Group expense management.
+
+\item Integration with hotel and transportation booking services.
+
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Conclusion}
+
+TravelSphere aims to simplify travel by creating a single platform where travelers can plan journeys, share authentic experiences, connect with fellow travelers, and receive real-time community updates.
+
+By bringing together travel planning, location-based information, safety alerts, and community interaction into one ecosystem, the platform addresses the fragmented nature of current travel services. The project also provides an opportunity to apply modern Software Engineering principles such as modular system design, RESTful API development, database management, authentication, and collaborative software development.
+
+We believe that TravelSphere has the potential to become a valuable platform for travel enthusiasts while providing a strong foundation for future enhancements and intelligent travel services.
+
+\vspace{1cm}
+
+\begin{center}
+
+\Large \textbf{TravelSphere}
+
+\vspace{0.3cm}
+
+\textit{Plan • Protect • Save • Discover}
+
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}

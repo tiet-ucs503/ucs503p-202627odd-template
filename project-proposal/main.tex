@@ -1,242 +1,262 @@
-\documentclass[11pt,a4paper]{article}
-\usepackage[margin=1in]{geometry}
-\usepackage{hyperref}
-\usepackage{enumitem}
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
 \usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
 \usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{parskip} % Provides clean, modern paragraph spacing without excessive manual gaps
 
-% -----------------------------------------------------
-% bvraghav-tiet-ucs503p-article.sty
-% -----------------------------------------------------
+\setstretch{1.15} % Standard comfortable line spacing for 12pt documents
 
-% Variable: Lab Instructor
-\makeatletter \newcommand{\BvrSetLabInstructor}[1]{%
-  \gdef\Bvr@LabInstructor{#1}}
-% default
-\newcommand{\Bvr@LabInstructor}{Dr. Raghav %
-  B. Venkataramaiyer}
-% public accessor
-\newcommand{\BvrLabInstructorValue}{\Bvr@LabInstructor}
-\makeatother
-
-% Add subtitle
-\usepackage{titling}
-% -- Set title bold
-\pretitle{\begin{center}\bfseries\fontsize{18bp}{18bp}\selectfont}
-\makeatletter
-\newcommand{\BvrSubtitle}[1]{%
-  \posttitle{%
-    \par\end{center}
-    \begin{center}\large#1\end{center}
-    \vskip 0.5em}%
-}
-\makeatother
-
-% Hints in the section title(s)
-\newcommand{\BvrHint}[1]{%
-  {\normalfont\normalsize\itshape\hfill #1}}
-
-% -----------------------------------------------------
-
-\title{Grievance-Resolution System for a Tier-2/3 City}
-
-\BvrSetLabInstructor{Dr. Raghav B. Venkataramaiyer}
-
-\BvrSubtitle{%
-  Project Proposal for UCS503P  \\
-  Submitted to: \BvrLabInstructorValue \\ \bfseries
-  Thapar Institute of Engineering and Technology% 
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue
 }
 
-\author{
-  Vidya Vaidyanathan, CSED%
-  \thanks{Roll No: \texttt{1024030xxx}, %
-    Email: \texttt{vvaidhanathan\_be24\@thapar.edu}}
-  \and 
-  Bhanurekha Ganesan, CSED%
-  \thanks{Roll No: \texttt{1024030xxx}, %
-    Email: \texttt{bganesan\_be24\@thapar.edu}}
-}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{TravelSphere}
+\fancyhead[R]{Project Proposal}
+\fancyfoot[C]{\thepage}
 
-\date{\today}
+\titleformat{\section}
+{\Large\bfseries}
+{\thesection}{1em}{}
+
+% Adjust list spacing to standard compact format
+\setlist[itemize]{topsep=2pt, partopsep=0pt, parsep=2pt, itemsep=2pt}
 
 \begin{document}
-\maketitle
 
-\section{Higher-order goal%
-  \BvrHint{\ldots secondary framing}}
-This project aims to improve sustainable urban
-governance by reducing the time and effort required to
-resolve citizen issues. While the topic is broader than
-any single municipality, the immediate engineering
-objective is to translate \emph{efficient public
-  service delivery} into a measurable, deployable
-software solution.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{titlepage}
 
-\section{Time-to-value %
-\BvrHint{\ldots primary heuristic}}
-\begin{itemize}[leftmargin=0.7cm]
-    \item We will deliver meaningful increments quickly by prototyping the core user workflow and validating it with users within a short iteration window.
-    \item We will prioritize fast feedback over perfection by using weekly iterations (and targeting CI-backed automation early) to reduce release friction.
-    \item Success is defined by what can be delivered and measured in the first iteration, then improved based on user feedback.
-\end{itemize}
+\centering
+
+\vspace*{1.2cm}
+
+{\Huge\bfseries TravelSphere\par}
+
+\vspace{0.4cm}
+
+{\Large A Community-Driven Travel Ecosystem\par}
+
+\vspace{1.5cm}
+
+{\Large Project Proposal for UCS503P\par}
+
+\vspace{0.4cm}
+
+{\large Submitted to:\par}
+
+{\Large \textbf{Dr. Jeelani Asif}\par}
+
+\vspace{0.4cm}
+
+{\large Department of Computer Science and Engineering\par}
+
+{\Large \textbf{Thapar Institute of Engineering and Technology}\par}
+
+\vspace{1.5cm}
+
+{\large\textbf{Submitted By}\par}
+
+\vspace{0.6cm}
+
+\renewcommand{\arraystretch}{1.5}
+
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Name} & \textbf{Roll Number} \\
+\hline
+Ayush Gupta & 1024030781 \\
+\hline
+Niharika Chawla & 1024030762 \\
+\hline
+Sarwar Singh Dhillon & 1024030862 \\
+\hline
+\end{tabular}
+\vfill
+
+{\large Academic Year 2026--27\par}
+
+\vspace{0.2cm}
+
+
+
+\end{titlepage}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction}
+Travel has become increasingly accessible, but planning and managing a journey still requires travelers to switch between multiple platforms. People often rely on Reddit for reviews, YouTube for itineraries, Google Maps for navigation, weather applications for forecasts, and social media for discovering destinations.
+
+Although these platforms provide useful information, they are disconnected and often contain outdated or scattered content. There is currently no dedicated platform where travelers can collaboratively share authentic experiences, receive real-time updates, and connect with other travelers in one place.
+
+TravelSphere is proposed as a community-driven travel ecosystem that brings together travel experiences, trip management, community interaction, and safety updates within a single platform.
+
+\section{Need for the Project}
+Modern travelers spend significant time searching different websites and applications before planning a trip. Important information such as local recommendations, travel expenses, hidden attractions, weather conditions, safety alerts, and current road situations is scattered across multiple sources.
+
+This fragmented process makes travel planning inefficient and often results in decisions based on outdated information.
+
+TravelSphere aims to address this problem by creating a centralized community where travelers can share real-time experiences, help one another, and access reliable travel information through a single platform.
 
 \section{Problem Statement}
-Citizens in a tier-2/3 Indian city face delays and uncertainty when reporting local issues (e.g., streetlight outages, water leakage, garbage accumulation, road potholes). Common pain points include:
-\begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Fragmentation:} complaints are often made via multiple channels (calls, social media, paper forms), causing lost context.
-    \item \textbf{Low transparency:} citizens cannot easily see the status of their complaint (e.g., ``received'', ``assigned'', ``in progress'', ``resolved'').
-    \item \textbf{Slow coordination:} departments/field teams lack a unified, trackable workflow with clear ownership.
-    \item \textbf{Poor data quality:} duplicate or incomplete reports force rework and extend resolution time.
+Current travel platforms solve only individual aspects of travel, requiring users to constantly switch between applications. Some major challenges include:
+\begin{itemize}
+    \item Lack of a centralized travel platform.
+    \item Outdated travel reviews and recommendations.
+    \item Difficulty in obtaining real-time destination updates.
+    \item Limited interaction between travelers visiting similar destinations.
+    \item Absence of a dedicated travel community focused on collaboration and safety.
 \end{itemize}
 
-\textbf{Why this matters now (contextual relevance):} In an urban setting with limited staff bandwidth, even small process improvements can noticeably reduce resolution delays and repeated submissions.
+\section{Proposed Solution}
+TravelSphere is a centralized travel platform designed specifically for travelers. The platform enables users to create travel profiles, share authentic travel experiences, publish location-based updates, connect with fellow travelers, discover new destinations, and receive community-generated safety alerts.
 
-\section{Proposed Solution %
-\BvrHint{\ldots Software Proposition}}
-\subsection{Overview}
-Build a \textbf{web-based} ``Grievance-to-Resolution'' system with the following components:
-\begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Citizen submission portal:} users submit an issue with photo (optional), category, and locality/ward.
-    \item \textbf{Automated triage:} basic duplicate detection and completeness checks.
-    \item \textbf{Department workflow:} assign issues to relevant department/team and update statuses.
-    \item \textbf{Status transparency:} citizens track status and receive notifications when resolved.
-    \item \textbf{Admin/ops dashboard:} performance summaries (resolution time, backlog).
+Instead of replacing existing travel services, TravelSphere complements them by bringing essential travel information and community interaction into one unified ecosystem.
+
+\section{Unique Selling Proposition (USP)}
+Unlike traditional travel platforms that focus on navigation, bookings, or media sharing, TravelSphere combines travel experiences, community interaction, trip management, and real-time safety updates within a single platform. This creates a collaborative ecosystem where travelers not only consume information but also actively contribute to a growing repository of authentic travel knowledge.
+
+\section{Project Objectives}
+The main objectives of the proposed system are:
+\begin{itemize}
+    \item Develop a centralized platform for travelers.
+    \item Encourage sharing of authentic travel experiences.
+    \item Enable real-time community updates.
+    \item Improve traveler safety through community alerts.
+    \item Connect travelers with similar interests and destinations.
+    \item Build a scalable software system using modern Software Engineering principles.
 \end{itemize}
 
-\subsection{Core workflow}
-\begin{enumerate}[leftmargin=0.7cm]
-    \item Citizen creates a complaint and receives a complaint ID immediately.
-    \item System validates completeness and suggests possible duplicates (lightweight similarity on text/category and approximate location).
-    \item Department staff update status (Received $\rightarrow$ Assigned $\rightarrow$ In Progress $\rightarrow$ Resolved).
-    \item Citizen views status updates and resolution notes.
-\end{enumerate}
+\section{Proposed System}
+The proposed system consists of multiple integrated components that together provide a complete travel ecosystem. The major functionalities are summarized below.
 
-\subsection{Operational constraints for an educational, tier-2/3 setting}
-\begin{itemize}[leftmargin=0.7cm]
-    \item Keep the solution usable on low-to-mid range devices via responsive web design.
-    \item Avoid dependence on advanced research algorithms; focus on workflow, automation, and system correctness.
-    \item Design for deployability using common web hosting and managed databases.
+\begin{table}[htbp]
+\centering
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{|p{4cm}|p{10.5cm}|}
+\hline
+\textbf{Module} & \textbf{Description} \\ \hline
+User Profiles & Users can create personalized profiles containing travel interests, visited destinations, and travel history. \\ \hline
+Travel Feed & Share travel experiences, recommendations, photographs, food suggestions, hidden places, and travel tips. \\ \hline
+Trip Management & Create trips, maintain travel journals, and organize travel timelines. \\ \hline
+Interactive Map & Display location-tagged travel posts, nearby attractions, and community updates on an interactive map. \\ \hline
+Travel Companion & Find and connect with travelers visiting similar destinations or planning similar trips. \\ \hline
+Safety Alerts & Report road closures, scams, weather conditions, accidents, and emergency situations to help nearby travelers. \\ \hline
+Notifications & Receive updates from followed travelers, destinations, and important community alerts. \\ \hline
+\end{tabular}
+\caption{Major Modules of TravelSphere}
+\end{table}
+
+\section{Technology Stack}
+The proposed technologies for the development of TravelSphere are listed below.
+
+\begin{table}[htbp]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|p{5.5cm}|p{8.5cm}|}
+\hline
+\textbf{Component} & \textbf{Technology} \\ \hline
+Frontend & React.js, Tailwind CSS \\ \hline
+Backend & FastAPI (Python) \\ \hline
+Database & PostgreSQL \\ \hline
+ORM & SQLAlchemy \\ \hline
+Authentication & JWT Authentication \\ \hline
+Maps & OpenStreetMap + Leaflet \\ \hline
+Real-time Communication & WebSockets \\ \hline
+Notifications & Firebase Cloud Messaging \\ \hline
+Version Control & Git and GitHub \\ \hline
+Deployment & Docker \\ \hline
+\end{tabular}
+\caption{Technology Stack}
+\end{table}
+
+\section{Development Methodology}
+The project will follow the Agile Software Development methodology, allowing incremental development, continuous testing, and regular feedback throughout the project lifecycle.
+
+\begin{table}[htbp]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|c|p{10.5cm}|}
+\hline
+\textbf{Phase} & \textbf{Activity} \\ \hline
+1 & Requirement Analysis and Planning \\ \hline
+2 & System Design and Database Design \\ \hline
+3 & Backend Development \\ \hline
+4 & Frontend Development \\ \hline
+5 & Integration and Testing \\ \hline
+6 & Deployment and Documentation \\ \hline
+\end{tabular}
+\caption{Development Phases}
+\end{table}
+
+\section{Expected Outcomes}
+The successful implementation of TravelSphere is expected to provide:
+\begin{itemize}
+    \item A centralized platform dedicated to travelers.
+    \item Reliable community-driven travel information.
+    \item Better collaboration among travelers.
+    \item Improved travel safety through real-time alerts.
+    \item Easier discovery of destinations and authentic travel experiences.
+    \item A scalable software system built using modern Software Engineering principles.
 \end{itemize}
 
-\section{Solution Approach %
-\BvrHint{\ldots Engineering focus}}
-This is an engineering course project, so we focus on scalable administrative and workflow aspects rather than novel algorithm research.
+\section{Project Scope}
+The initial version of TravelSphere focuses on building a centralized platform where travelers can connect, share experiences, and access reliable travel information.
 
-\subsection{Duplicate/quality assistance %
-\BvrHint{\ldots non-research}}
-Duplicate detection will be heuristic-based:
-\begin{itemize}[leftmargin=0.7cm]
-    \item Normalize text (category + short description keywords).
-    \item Use a simple similarity measure (e.g., token overlap / TF-IDF cosine with threshold) without claiming state-of-the-art.
-    \item Show top candidate duplicates to staff for decision; never fully auto-delete or auto-reject.
+The scope of the project includes:
+\begin{itemize}
+    \item User registration and authentication.
+    \item Travel profiles and travel history.
+    \item Community travel feed.
+    \item Trip planning and travel journals.
+    \item Interactive map with location-based posts.
+    \item Travel companion discovery.
+    \item Community-driven safety alerts.
+    \item Real-time notifications.
 \end{itemize}
 
-\subsection{Web architecture %
-\BvrHint{\ldots web-based solution}}
-A typical 3-tier web architecture:
-\begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Frontend:} responsive UI for citizens and staff (status pages, submission form, dashboard).
-    \item \textbf{Backend API:} authentication, complaint submission, status transitions, assignment logic.
-    \item \textbf{Database:} store users, complaints, status history, attachments metadata.
+Features such as hotel booking, flight booking, payment integration, and advanced AI-based recommendations are considered beyond the scope of the initial implementation.
+
+\section{Future Scope}
+TravelSphere can be further enhanced with several advanced features in future versions:
+\begin{itemize}
+    \item AI-powered travel itinerary generation.
+    \item Personalized destination recommendations.
+    \item RAG-based travel assistant using official tourism information.
+    \item Multi-language support.
+    \item Group expense management.
+    \item Integration with hotel and transportation booking services.
 \end{itemize}
 
-\subsection{CI/CD and fast delivery enabler}
-CI/CD will be used to:
-\begin{itemize}[leftmargin=0.7cm]
-    \item Automatically build and run tests on every change.
-    \item Produce repeatable deployment artifacts to staging.
-    \item Enable safe and frequent releases of incremental features.
-\end{itemize}
+\section{Conclusion}
+TravelSphere aims to simplify travel by creating a single platform where travelers can plan journeys, share authentic experiences, connect with fellow travelers, and receive real-time community updates.
 
-\section{Evaluation Criterion %
-\BvrHint{\ldots measurable and attributable}}
-We define success using measurable metrics tied to the core workflow.
+By bringing together travel planning, location-based information, safety alerts, and community interaction into one ecosystem, the platform addresses the fragmented nature of current travel services. The project also provides an opportunity to apply modern Software Engineering principles such as modular system design, RESTful API development, database management, authentication, and collaborative software development.
 
-\subsection{Primary evaluation metric}
-\textbf{Time-to-acknowledgement (TTA):} time between complaint submission and ``Received/Assigned'' status creation in the system.
-\begin{itemize}[leftmargin=0.7cm]
-    \item Target: median TTA $\le$ 2 hours during pilot window.
-    \item Attribution: measured from database timestamps (submission vs. first status update by staff).
-\end{itemize}
+We believe that TravelSphere has the potential to become a valuable platform for travel enthusiasts while providing a strong foundation for future enhancements and intelligent travel services.
 
-\subsection{Secondary evaluation metrics}
-\begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Resolution time reduction:} reduce time-to-resolved compared to baseline process (even if baseline is collected via survey).
-    \item \textbf{Duplicate rate:} percentage of complaints flagged as duplicates and resolved without rework.
-    \item \textbf{User clarity:} citizen-reported clarity of status using a simple 1--5 feedback question.
-    \item \textbf{Reliability:} availability of staging/production for login and submission during business hours (e.g., $\ge$ 99\% uptime in pilot).
-\end{itemize}
+\vspace{0.8cm}
 
-\subsection{Pilot validation plan %
-\BvrHint{\ldots high-level}}
-\begin{itemize}[leftmargin=0.7cm]
-    \item Recruit 10--20 pilot users (citizens) and 3--5 staff roles (department simulation if real staff unavailable).
-    \item Compare metrics before/after within the iteration window by logging baseline estimates via short interviews or existing process observations.
-\end{itemize}
-
-\section{Scalability %
-\BvrHint{\ldots with foresight}}
-The proposition should scale in both theoretical and practical senses.
-
-\begin{enumerate}[leftmargin=0.7cm]
-    \item \textbf{Scalable (theoretically):} The system should support growth in number of complaints and concurrent dashboard usage by:
-    \begin{itemize}[leftmargin=0.7cm]
-        \item decoupling components (frontend/backend),
-        \item enabling pagination and indexing for common queries,
-        \item using stateless API design.
-    \end{itemize}
-    
-    \item \textbf{Operationally deployable (practically):} The system should run on common web hosting:
-    \begin{itemize}[leftmargin=0.7cm]
-        \item managed database,
-        \item containerized or platform-hosted deployment,
-        \item CI/CD pipeline for staging/production.
-    \end{itemize}
-\end{enumerate}
-
-\section{Engine availability heuristic}
-A mature set of ``engines'' (tooling/services) is available to implement this as a web-based project:
-\begin{itemize}[leftmargin=0.7cm]
-    \item Web framework for REST APIs and templated/reactive pages.
-    \item Managed relational or document database.
-    \item Authentication approach (token-based or session-based).
-    \item Object storage for optional attachments (or local storage for pilot).
-    \item Test framework for unit/integration tests.
-    \item CI runner and staging deployment target.
-\end{itemize}
-We will use these mature components to focus on workflow design, correctness, and measurement rather than inventing new infrastructure.
-
-\section{Project scope and deliverables %
-\BvrHint{\ldots iteration-friendly}}
-\subsection{Initial deliverable %
-\BvrHint{\ldots first iteration}}
-\begin{itemize}[leftmargin=0.7cm]
-    \item Citizen submission form + complaint ID generation
-    \item Staff workflow: update status and assignment
-    \item Citizen status page: view timeline/history
-    \item Basic logging and timestamps for TTA measurement
-    \item CI: build + backend unit tests + linting
-    \item CD to staging with a single command or pipeline job
-\end{itemize}
-
-\subsection{Subsequent deliverables}
-\begin{itemize}[leftmargin=0.7cm]
-    \item Lightweight duplicate suggestions with staff review
-    \item Notification layer (email/SMS optional in later iteration; can start with in-app notifications)
-    \item Admin dashboard for metrics and backlog
-    \item Improved search/filtering and indexed queries for scale readiness
-\end{itemize}
-
-\section{Risks and mitigations}
-\begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Data privacy / consent:} minimize collected data; keep attachments optional; store only what is needed.
-    \item \textbf{Staff adoption:} provide an easy UI for status updates; keep workflow steps minimal; include shortcuts.
-    \item \textbf{Evaluation measurement ambiguity:} instrument timestamps and define clear status transitions before development begins.
-    \item \textbf{Operational issues in pilot:} use staging early; ensure CI/CD produces repeatable deployments.
-\end{itemize}
-
-\section{Summary}
-This project proposes a deployable web platform to reduce grievance handling delays in a tier-2/3 city context. It meets the course criteria by emphasizing time-to-value through rapid iterations, implementing CI/CD to support frequent safe releases, and using measurable evaluation criteria (especially time-to-acknowledgement). It remains focused on engineering workflow and scalability readiness rather than research-driven novelty.
+\begin{center}
+{\large \textbf{TravelSphere}}\par
+\vspace{0.15cm}
+\textit{Plan • Protect • Save • Discover}
+\end{center}
 
 \end{document}

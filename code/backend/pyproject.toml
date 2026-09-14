@@ -1,0 +1,28 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "TravelSphere backend"
+readme = "README.md"
+authors = [
+    { name = "Ayush", email = "dayush0524@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "alembic==1.19.1",
+    "email-validator==2.3.0",
+    "fastapi[standard]==0.141.1",
+    "passlib[bcrypt]==1.7.4",
+    "psycopg[binary]==3.2.10",
+    "pydantic==2.13.5",
+    "pydantic-settings==2.10.1",
+    "python-dotenv==1.1.1",
+    "python-jose[cryptography]==3.5.0",
+    "python-multipart==0.0.20",
+    "sqlalchemy==2.0.52",
+]
+
+[dependency-groups]
+dev = [
+    "httpx==0.28.1",
+    "pytest==8.4.1",
+]
