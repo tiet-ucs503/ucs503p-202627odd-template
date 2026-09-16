@@ -1,0 +1,162 @@
+/* ==========================================================================
+   HISTORY & LOGBOOK
+   Minimalist session list, flaw breakdown, and AI coaching diagnosis
+   ========================================================================== */
+
+.history-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.dashboard-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.section-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: 1.5rem;
+}
+
+.section-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.65rem;
+}
+
+.section-card-header h3 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--text-white);
+}
+
+/* Technique Flaws Breakdown */
+.common-issues-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.issue-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.issue-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.84rem;
+}
+
+.issue-name {
+  color: var(--text-primary);
+  text-transform: uppercase;
+  font-weight: 500;
+  font-family: var(--font-condensed);
+}
+
+.issue-count {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.issue-bar-wrap {
+  height: 4px;
+  background: #181818;
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+
+.issue-bar {
+  height: 100%;
+  background: var(--red-primary);
+}
+
+/* Session History List */
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #0a0a0a;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  transition: border-color 0.15s ease;
+}
+
+.session-row:hover {
+  border-color: var(--border-strong);
+}
+
+.session-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.session-exercise {
+  color: var(--text-white);
+  font-family: var(--font-condensed);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.session-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.session-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.session-reps {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.session-score-pill {
+  background: #141414;
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* Empty State */
+.empty-state-box {
+  text-align: center;
+  padding: 2.25rem 1rem;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  margin-bottom: 0.5rem;
+  color: var(--text-subtle);
+}
+
+.empty-hint {
+  font-size: 0.85rem;
+}

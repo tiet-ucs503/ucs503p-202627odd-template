@@ -5,16 +5,13 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 
-% -----------------------------------------------------
-% bvraghav-tiet-ucs503p-article.sty
-% -----------------------------------------------------
+
 
 % Variable: Lab Instructor
 \makeatletter \newcommand{\BvrSetLabInstructor}[1]{%
   \gdef\Bvr@LabInstructor{#1}}
 % default
-\newcommand{\Bvr@LabInstructor}{Dr. Raghav %
-  B. Venkataramaiyer}
+\newcommand{\Bvr@LabInstructor}{Jhonsy Bansal}
 % public accessor
 \newcommand{\BvrLabInstructorValue}{\Bvr@LabInstructor}
 \makeatother
@@ -38,24 +35,20 @@
 
 % -----------------------------------------------------
 
-\title{Grievance-Resolution System for a Tier-2/3 City}
+\title{Camera-Based Weightlifting/Exercise Form Analysis and Feedback System}
 
-\BvrSetLabInstructor{Dr. Raghav B. Venkataramaiyer}
+\BvrSetLabInstructor{Jhonsy Bansal}
 
 \BvrSubtitle{%
-  Project Proposal for UCS503P  \\
+  Project Proposal for UCS503  \\
   Submitted to: \BvrLabInstructorValue \\ \bfseries
-  Thapar Institute of Engineering and Technology% 
+  Thapar Institute of Engineering and Technology%
 }
 
 \author{
-  Vidya Vaidyanathan, CSED%
-  \thanks{Roll No: \texttt{1024030xxx}, %
-    Email: \texttt{vvaidhanathan\_be24\@thapar.edu}}
-  \and 
-  Bhanurekha Ganesan, CSED%
-  \thanks{Roll No: \texttt{1024030xxx}, %
-    Email: \texttt{bganesan\_be24\@thapar.edu}}
+  Lakshay Gambhir \; (1024031026) \\
+  Gagandeep Singh \; (1024031027) \\
+  Divjot Singh \; (1024031028)
 }
 
 \date{\today}
@@ -65,114 +58,171 @@
 
 \section{Higher-order goal%
   \BvrHint{\ldots secondary framing}}
-This project aims to improve sustainable urban
-governance by reducing the time and effort required to
-resolve citizen issues. While the topic is broader than
-any single municipality, the immediate engineering
-objective is to translate \emph{efficient public
-  service delivery} into a measurable, deployable
-software solution.
+This project aims to improve individual training safety and consistency by
+giving fitness practitioners automated, camera-based feedback on their
+weightlifting technique. While the broader motivation is accessible,
+coach-free technique guidance, the immediate engineering objective is to
+translate \emph{pose estimation and geometric biomechanical analysis} into a
+measurable, deployable software solution that runs on hardware most users
+already own -- a laptop webcam.
 
 \section{Time-to-value %
 \BvrHint{\ldots primary heuristic}}
 \begin{itemize}[leftmargin=0.7cm]
-    \item We will deliver meaningful increments quickly by prototyping the core user workflow and validating it with users within a short iteration window.
-    \item We will prioritize fast feedback over perfection by using weekly iterations (and targeting CI-backed automation early) to reduce release friction.
-    \item Success is defined by what can be delivered and measured in the first iteration, then improved based on user feedback.
+    \item We will deliver a working, testable increment quickly by building
+    one exercise (Squat) fully end-to-end -- pose estimation, rep detection,
+    form rules, and feedback -- before extending to Deadlift and Bench Press.
+    \item We will prioritize a verifiable feedback loop over exhaustive
+    exercise coverage, since a single reliable exercise pipeline validates
+    the full architecture and de-risks the remaining two.
+    \item Success in the first iteration is defined as: correct rep counting
+    and at least one correctly detected form violation on self-recorded
+    Squat footage, measured against manual review.
 \end{itemize}
 
 \section{Problem Statement}
-Citizens in a tier-2/3 Indian city face delays and uncertainty when reporting local issues (e.g., streetlight outages, water leakage, garbage accumulation, road potholes). Common pain points include:
+Recreational and intermediate lifters who train without a coach or training
+partner have no objective, repeatable way to assess their own exercise
+technique. Common pain points include:
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Fragmentation:} complaints are often made via multiple channels (calls, social media, paper forms), causing lost context.
-    \item \textbf{Low transparency:} citizens cannot easily see the status of their complaint (e.g., ``received'', ``assigned'', ``in progress'', ``resolved'').
-    \item \textbf{Slow coordination:} departments/field teams lack a unified, trackable workflow with clear ownership.
-    \item \textbf{Poor data quality:} duplicate or incomplete reports force rework and extend resolution time.
+    \item \textbf{No real-time awareness:} a lifter cannot see their own
+    knee alignment, depth, or back angle while performing a lift.
+    \item \textbf{Manual video review is slow:} filming and reviewing sets
+    after the fact is time-consuming and requires technique knowledge to
+    interpret correctly.
+    \item \textbf{No structured history:} without dedicated tooling, there
+    is no consistent record of technique quality across sessions, so
+    progress (or regression) goes unnoticed.
+    \item \textbf{Hardware barrier:} wearable-sensor or motion-capture-based
+    solutions require equipment beyond what a typical home or gym user owns.
 \end{itemize}
 
-\textbf{Why this matters now (contextual relevance):} In an urban setting with limited staff bandwidth, even small process improvements can noticeably reduce resolution delays and repeated submissions.
+\textbf{Why this matters now (contextual relevance):} lightweight, real-time
+pose-estimation models (e.g., MediaPipe Pose) now run efficiently on
+consumer laptops without specialized hardware, making a camera-only
+technique-feedback tool practically buildable within a single-semester
+timeframe.
 
 \section{Proposed Solution %
 \BvrHint{\ldots Software Proposition}}
 \subsection{Overview}
-Build a \textbf{web-based} ``Grievance-to-Resolution'' system with the following components:
+Build a \textbf{browser-based} ``Form Capture-to-Feedback'' system with the
+following components:
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Citizen submission portal:} users submit an issue with photo (optional), category, and locality/ward.
-    \item \textbf{Automated triage:} basic duplicate detection and completeness checks.
-    \item \textbf{Department workflow:} assign issues to relevant department/team and update statuses.
-    \item \textbf{Status transparency:} citizens track status and receive notifications when resolved.
-    \item \textbf{Admin/ops dashboard:} performance summaries (resolution time, backlog).
+    \item \textbf{Exercise selection \& camera capture:} user selects
+    Squat, Deadlift, or Bench Press and grants webcam access.
+    \item \textbf{Real-time pose pipeline:} pose estimation, landmark
+    smoothing, and joint-angle calculation running client-side.
+    \item \textbf{Rep detection \& form analysis:} a per-exercise movement
+    state machine counts repetitions; a geometric rule engine flags common
+    technique issues per rep.
+    \item \textbf{Feedback \& scoring:} prioritized real-time text feedback
+    during the set, plus a post-session form score and summary.
+    \item \textbf{History dashboard:} session-level metrics (not video) are
+    stored and displayed as trends over time.
 \end{itemize}
 
 \subsection{Core workflow}
 \begin{enumerate}[leftmargin=0.7cm]
-    \item Citizen creates a complaint and receives a complaint ID immediately.
-    \item System validates completeness and suggests possible duplicates (lightweight similarity on text/category and approximate location).
-    \item Department staff update status (Received $\rightarrow$ Assigned $\rightarrow$ In Progress $\rightarrow$ Resolved).
-    \item Citizen views status updates and resolution notes.
+    \item User selects an exercise and starts a session after a camera
+    visibility check.
+    \item System tracks pose per frame, verifies the movement matches the
+    selected exercise, and advances a rep-detection state machine.
+    \item On each completed rep, form rules evaluate the rep's angle
+    history and the top-priority issue (if any) is shown to the user.
+    \item On session end, aggregate metrics and a form score are computed
+    and saved; the dashboard is updated.
 \end{enumerate}
 
-\subsection{Operational constraints for an educational, tier-2/3 setting}
+\subsection{Operational constraints for an educational, single-semester setting}
 \begin{itemize}[leftmargin=0.7cm]
-    \item Keep the solution usable on low-to-mid range devices via responsive web design.
-    \item Avoid dependence on advanced research algorithms; focus on workflow, automation, and system correctness.
-    \item Design for deployability using common web hosting and managed databases.
+    \item Keep the solution usable on a standard laptop webcam; no
+    specialized sensors, depth cameras, or GPUs required.
+    \item Avoid dependence on a large proprietary or novel ML training
+    pipeline; focus on pose landmarks, geometry, and rule correctness.
+    \item Design for deployability using common web hosting and a managed
+    relational database.
 \end{itemize}
 
 \section{Solution Approach %
 \BvrHint{\ldots Engineering focus}}
-This is an engineering course project, so we focus on scalable administrative and workflow aspects rather than novel algorithm research.
+This is an engineering course project, so we focus on a correct,
+modular real-time pipeline rather than novel computer-vision research.
 
-\subsection{Duplicate/quality assistance %
+\subsection{Form analysis strategy %
 \BvrHint{\ldots non-research}}
-Duplicate detection will be heuristic-based:
+Form analysis will be rule-based, not classifier-based:
 \begin{itemize}[leftmargin=0.7cm]
-    \item Normalize text (category + short description keywords).
-    \item Use a simple similarity measure (e.g., token overlap / TF-IDF cosine with threshold) without claiming state-of-the-art.
-    \item Show top candidate duplicates to staff for decision; never fully auto-delete or auto-reject.
+    \item Extract exercise-specific joint angles (e.g., knee, hip, torso for
+    Squat) from smoothed pose landmarks.
+    \item Compare each rep's angle trajectory against configurable
+    thresholds (e.g., minimum depth, maximum knee drift) without claiming a
+    validated clinical or biomechanical model.
+    \item Surface only the single highest-priority violation per rep to the
+    user, never an unranked list of warnings.
 \end{itemize}
 
 \subsection{Web architecture %
-\BvrHint{\ldots web-based solution}}
-A typical 3-tier web architecture:
+\BvrHint{\ldots browser-based solution}}
+A client-heavy three-tier architecture:
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Frontend:} responsive UI for citizens and staff (status pages, submission form, dashboard).
-    \item \textbf{Backend API:} authentication, complaint submission, status transitions, assignment logic.
-    \item \textbf{Database:} store users, complaints, status history, attachments metadata.
+    \item \textbf{Frontend (client):} React UI running camera capture,
+    MediaPipe Pose, rep detection, form analysis, and feedback in real time.
+    \item \textbf{Backend API:} FastAPI service for authentication, session
+    submission, and history/dashboard queries.
+    \item \textbf{Database:} PostgreSQL storing structured session, rep,
+    and form-issue records -- never workout video.
 \end{itemize}
 
 \subsection{CI/CD and fast delivery enabler}
-CI/CD will be used to:
+A CI/CD pipeline will be used to:
 \begin{itemize}[leftmargin=0.7cm]
-    \item Automatically build and run tests on every change.
-    \item Produce repeatable deployment artifacts to staging.
-    \item Enable safe and frequent releases of incremental features.
+    \item Automatically run tests (angle calculation, state-machine logic)
+    on every change.
+    \item Produce repeatable deployment artifacts for the frontend and
+    backend.
+    \item Enable safe, frequent releases as each exercise (Squat, then
+    Deadlift, then Bench Press) is completed.
 \end{itemize}
 
 \section{Evaluation Criterion %
 \BvrHint{\ldots measurable and attributable}}
-We define success using measurable metrics tied to the core workflow.
+We define success using measurable metrics tied to the core pipeline.
 
 \subsection{Primary evaluation metric}
-\textbf{Time-to-acknowledgement (TTA):} time between complaint submission and ``Received/Assigned'' status creation in the system.
+\textbf{Rep-counting accuracy:} agreement between system-counted repetitions
+and manually counted repetitions on self-recorded test sets.
 \begin{itemize}[leftmargin=0.7cm]
-    \item Target: median TTA $\le$ 2 hours during pilot window.
-    \item Attribution: measured from database timestamps (submission vs. first status update by staff).
+    \item Target: high agreement across a self-recorded test set covering
+    all three exercises under normal camera conditions.
+    \item Attribution: measured by comparing logged rep counts against a
+    human reviewer's manual count on the same recordings.
 \end{itemize}
 
 \subsection{Secondary evaluation metrics}
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Resolution time reduction:} reduce time-to-resolved compared to baseline process (even if baseline is collected via survey).
-    \item \textbf{Duplicate rate:} percentage of complaints flagged as duplicates and resolved without rework.
-    \item \textbf{User clarity:} citizen-reported clarity of status using a simple 1--5 feedback question.
-    \item \textbf{Reliability:} availability of staging/production for login and submission during business hours (e.g., $\ge$ 99\% uptime in pilot).
+    \item \textbf{Form-detection agreement:} percentage of deliberately
+    introduced technique errors (e.g., shallow squat, rounded back) that
+    are correctly flagged by the rule engine.
+    \item \textbf{Visibility-handling correctness:} whether the system
+    correctly pauses/warns rather than emits confident feedback under poor
+    lighting or occlusion.
+    \item \textbf{Session completeness:} percentage of sessions that save
+    successfully to the database without data loss.
+    \item \textbf{Reliability:} basic uptime/availability of the
+    staging/production deployment during testing windows.
 \end{itemize}
 
 \subsection{Pilot validation plan %
 \BvrHint{\ldots high-level}}
 \begin{itemize}[leftmargin=0.7cm]
-    \item Recruit 10--20 pilot users (citizens) and 3--5 staff roles (department simulation if real staff unavailable).
-    \item Compare metrics before/after within the iteration window by logging baseline estimates via short interviews or existing process observations.
+    \item Record a self-collected test set (self and, where possible, a
+    small number of additional volunteers) performing clean and
+    deliberately flawed reps for each exercise.
+    \item Compare system output (rep counts, flagged issues) against
+    manual review of the same footage.
+    \item Where accessible, cross-check Squat detections against a public
+    labelled dataset (e.g., Fitness-AQA) as an external reference point.
 \end{itemize}
 
 \section{Scalability %
@@ -180,63 +230,92 @@ We define success using measurable metrics tied to the core workflow.
 The proposition should scale in both theoretical and practical senses.
 
 \begin{enumerate}[leftmargin=0.7cm]
-    \item \textbf{Scalable (theoretically):} The system should support growth in number of complaints and concurrent dashboard usage by:
+    \item \textbf{Scalable (theoretically):} the system should support
+    growth in users and sessions by:
     \begin{itemize}[leftmargin=0.7cm]
-        \item decoupling components (frontend/backend),
-        \item enabling pagination and indexing for common queries,
-        \item using stateless API design.
+        \item keeping real-time pose processing client-side, so backend
+        load scales only with session-submission and dashboard traffic,
+        \item decoupling frontend and backend,
+        \item using indexed queries for session/history lookups.
     \end{itemize}
-    
-    \item \textbf{Operationally deployable (practically):} The system should run on common web hosting:
+
+    \item \textbf{Operationally deployable (practically):} the system
+    should run on common web hosting:
     \begin{itemize}[leftmargin=0.7cm]
-        \item managed database,
-        \item containerized or platform-hosted deployment,
-        \item CI/CD pipeline for staging/production.
+        \item managed PostgreSQL database,
+        \item standard frontend hosting for the React app,
+        \item CI/CD pipeline for staging/production releases.
     \end{itemize}
 \end{enumerate}
 
 \section{Engine availability heuristic}
-A mature set of ``engines'' (tooling/services) is available to implement this as a web-based project:
+A mature set of ``engines'' (tooling/libraries) is available to implement
+this as a browser-based project:
 \begin{itemize}[leftmargin=0.7cm]
-    \item Web framework for REST APIs and templated/reactive pages.
-    \item Managed relational or document database.
-    \item Authentication approach (token-based or session-based).
-    \item Object storage for optional attachments (or local storage for pilot).
-    \item Test framework for unit/integration tests.
+    \item MediaPipe Pose (Tasks API, JavaScript) for real-time, on-device
+    pose landmark extraction.
+    \item Web framework for REST APIs (FastAPI).
+    \item Managed relational database (PostgreSQL).
+    \item Authentication approach (token-based).
+    \item Charting library for the React dashboard.
+    \item Test framework for unit/integration tests (state machine, angle
+    math, API endpoints).
     \item CI runner and staging deployment target.
 \end{itemize}
-We will use these mature components to focus on workflow design, correctness, and measurement rather than inventing new infrastructure.
+We will use these mature, existing components to focus on the pipeline
+design, rule correctness, and measurement, rather than inventing new
+computer-vision infrastructure.
 
 \section{Project scope and deliverables %
 \BvrHint{\ldots iteration-friendly}}
 \subsection{Initial deliverable %
 \BvrHint{\ldots first iteration}}
 \begin{itemize}[leftmargin=0.7cm]
-    \item Citizen submission form + complaint ID generation
-    \item Staff workflow: update status and assignment
-    \item Citizen status page: view timeline/history
-    \item Basic logging and timestamps for TTA measurement
-    \item CI: build + backend unit tests + linting
-    \item CD to staging with a single command or pipeline job
+    \item Camera capture + pose landmark extraction with live overlay
+    \item Squat rep-detection state machine with smoothing/hysteresis
+    \item Squat form rules (depth, knee alignment, torso angle) with
+    prioritized real-time feedback
+    \item Session save to backend (rep count, metrics, issues -- no video)
+    \item CI: build + unit tests for angle/state-machine logic
 \end{itemize}
 
 \subsection{Subsequent deliverables}
 \begin{itemize}[leftmargin=0.7cm]
-    \item Lightweight duplicate suggestions with staff review
-    \item Notification layer (email/SMS optional in later iteration; can start with in-app notifications)
-    \item Admin dashboard for metrics and backlog
-    \item Improved search/filtering and indexed queries for scale readiness
+    \item Deadlift and Bench Press state machines and form rules
+    \item Configurable weighted form score
+    \item History dashboard with session trends and common-issue summaries
+    \item Calibration against a self-recorded test set (and, where
+    accessible, an external dataset reference check)
+    \item CD to staging with a repeatable deployment pipeline
 \end{itemize}
 
 \section{Risks and mitigations}
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Data privacy / consent:} minimize collected data; keep attachments optional; store only what is needed.
-    \item \textbf{Staff adoption:} provide an easy UI for status updates; keep workflow steps minimal; include shortcuts.
-    \item \textbf{Evaluation measurement ambiguity:} instrument timestamps and define clear status transitions before development begins.
-    \item \textbf{Operational issues in pilot:} use staging early; ensure CI/CD produces repeatable deployments.
+    \item \textbf{Single-camera accuracy limits:} depth-dependent metrics
+    (e.g., precise bar path) cannot be reliably measured from one webcam;
+    such metrics will be explicitly labelled as approximate or unavailable
+    rather than presented as accurate.
+    \item \textbf{Noisy pose data / false rep counts:} mitigated via
+    landmark smoothing and hysteresis thresholds in the state machine.
+    \item \textbf{No large labelled weightlifting-form dataset:} V1 does
+    not depend on one -- form analysis is rule-based; a self-recorded test
+    set is used for calibration and evaluation instead.
+    \item \textbf{Scope creep beyond three exercises:} mitigated by
+    building and validating Squat completely before starting Deadlift or
+    Bench Press (see Section 2).
+    \item \textbf{Privacy concerns:} mitigated by never storing workout
+    video -- only structured, derived metrics are persisted.
 \end{itemize}
 
 \section{Summary}
-This project proposes a deployable web platform to reduce grievance handling delays in a tier-2/3 city context. It meets the course criteria by emphasizing time-to-value through rapid iterations, implementing CI/CD to support frequent safe releases, and using measurable evaluation criteria (especially time-to-acknowledgement). It remains focused on engineering workflow and scalability readiness rather than research-driven novelty.
+This project proposes a deployable, browser-based system that gives
+weightlifters automated, real-time technique feedback for Squat, Deadlift,
+and Bench Press using only a standard laptop webcam. It meets the course
+criteria by emphasizing time-to-value through an incremental,
+one-exercise-at-a-time build order, using measurable evaluation criteria
+(rep-counting accuracy and form-detection agreement against manual review),
+and remaining focused on engineering correctness and modular pipeline
+design rather than novel computer-vision research or dependence on a
+large proprietary dataset.
 
 \end{document}

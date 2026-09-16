@@ -1,0 +1,135 @@
+/* ==========================================================================
+   LOGIN & GATEWAY PAGE
+   Minimalist stealth black login card, clean Google OAuth container
+   ========================================================================== */
+
+.login-page-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  background-color: var(--bg-base);
+}
+
+.login-hero-card {
+  max-width: 520px;
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  padding: 2.75rem 2.25rem;
+  text-align: center;
+  position: relative;
+}
+
+.login-badge-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #121212;
+  border: 1px solid var(--border-subtle);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-xs);
+  margin-bottom: 1.25rem;
+}
+
+.login-gem-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--red-primary);
+  border-radius: 50%;
+}
+
+.login-badge-text {
+  font-family: var(--font-condensed);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.login-hero-title {
+  font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  line-height: 1.05;
+  margin-bottom: 0.75rem;
+  color: #ffffff;
+}
+
+.login-hero-subtitle {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 1.75rem;
+}
+
+.oauth-action-area {
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.oauth-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.login-highlights-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .login-highlights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.highlight-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.35rem;
+}
+
+.highlight-icon-wrap {
+  width: 32px;
+  height: 32px;
+  background: #121212;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.highlight-text strong {
+  display: block;
+  font-family: var(--font-condensed);
+  font-size: 0.8rem;
+  color: var(--text-white);
+  text-transform: uppercase;
+}
+
+.highlight-text span {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.auth-error-banner {
+  background: #1a0f0f;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #f2f2f2;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.82rem;
+  margin-bottom: 1.15rem;
+}

@@ -1,0 +1,77 @@
+/* ==========================================================================
+   BUTTON PRIMITIVES
+   Clean, sharp, minimalist styling
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-condensed);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  text-decoration: none;
+  user-select: none;
+}
+
+/* Primary Action Button (Clean crisp red) */
+.btn-primary {
+  background: var(--red-primary);
+  color: #ffffff;
+  border-color: var(--red-primary);
+}
+
+.btn-primary:hover {
+  background: var(--red-hover);
+  border-color: var(--red-hover);
+}
+
+.btn-primary:active {
+  background: var(--red-active);
+}
+
+/* Secondary Button (Charcoal dark outline) */
+.btn-secondary {
+  background: #121212;
+  color: var(--text-primary);
+  border-color: var(--border-medium);
+}
+
+.btn-secondary:hover {
+  background: #1a1a1a;
+  color: #ffffff;
+  border-color: var(--border-strong);
+}
+
+/* Danger Button */
+.btn-danger {
+  background: #1e1111;
+  color: #f2f2f2;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.btn-danger:hover {
+  background: var(--red-primary);
+  color: #ffffff;
+  border-color: var(--red-primary);
+}
+
+/* Size Modifiers */
+.btn-sm {
+  font-size: 0.82rem;
+  padding: 0.35rem 0.75rem;
+}
+
+.btn-lg {
+  font-size: 1.1rem;
+  padding: 0.8rem 1.85rem;
+  letter-spacing: 0.06em;
+}

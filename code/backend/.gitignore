@@ -1,0 +1,12 @@
+# Scoped backend .gitignore. The root .gitignore's `data/*.db` /
+# `backend/.venv/` entries only match paths rooted at the repo top level
+# (gitignore patterns containing a "/" are relative to the .gitignore that
+# defines them) — they do NOT match backend/data/app.db. This file closes
+# that gap for anything created under backend/.
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/*.db
+data/*.db-journal
+.env

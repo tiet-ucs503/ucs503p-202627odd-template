@@ -1,0 +1,18 @@
+/* ==========================================================================
+   GLOBAL FOOTER
+   ========================================================================== */
+
+.app-footer {
+  border-top: 1px solid var(--border-subtle);
+  background: #000000;
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+}
+
+.disclaimer {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  max-width: 760px;
+  margin: 0 auto;
+  line-height: 1.5;
+}

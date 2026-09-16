@@ -1,0 +1,139 @@
+/* ==========================================================================
+   WORKOUT LAB & SET TRACKER
+   Clean dark set tracking board with subtle active dots
+   ========================================================================== */
+
+.set-tracker-board {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: 1.35rem;
+  margin-bottom: 1.5rem;
+}
+
+.set-tracker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.65rem;
+}
+
+.set-tracker-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  letter-spacing: 0.03em;
+  color: var(--text-white);
+}
+
+.set-target-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.target-label {
+  font-family: var(--font-condensed);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-right: 0.25rem;
+}
+
+.target-pill {
+  background: #141414;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.target-pill:hover {
+  color: #ffffff;
+  border-color: var(--border-strong);
+}
+
+.target-pill.active {
+  background: #222222;
+  border-color: var(--red-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.target-pill:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.set-nodes-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1.15rem;
+}
+
+.set-node-box {
+  background: #0a0a0a;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.set-node-box:hover {
+  border-color: var(--border-strong);
+}
+
+.set-node-box.current {
+  background: #141414;
+  border-color: var(--red-primary);
+}
+
+.set-node-box.done {
+  background: #0c120e;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.set-box-label {
+  font-family: var(--font-condensed);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-white);
+  text-transform: uppercase;
+}
+
+.set-box-status {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.set-node-box.current .set-box-status {
+  color: var(--red-primary);
+  font-weight: 500;
+}
+
+.set-node-box.done .set-box-status {
+  color: var(--success);
+  font-weight: 500;
+}
+
+.set-tracker-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}

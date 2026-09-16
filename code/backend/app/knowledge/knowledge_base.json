@@ -1,0 +1,106 @@
+[
+  {
+    "id": "squat_depth_femur_proportions",
+    "title": "Squat Depth and Individual Femur-to-Torso Biomechanics",
+    "topic": "depth",
+    "exercise": "squat",
+    "keywords": ["depth", "shallow", "knee_angle", "femur", "femur_to_torso", "rom", "hip_crease", "parallel"],
+    "content": "Full anatomical squat depth is defined as the hip crease dropping just below the top of the patella. However, individual femur-to-torso proportions significantly dictate bottom knee and hip angles. Lifters with longer femurs relative to their torso (ratio > 1.05) naturally require greater hip flexion and a slightly forward torso lean to maintain center of mass over the midfoot. Forcing excessive depth past an individual's structural threshold can cause posterior pelvic tilt (butt wink) and lumbar shear. Maintain a controlled descent until hip crease reaches knee level without compromising lumbar neutrality.",
+    "recommendations": [
+      "Work on hip opening and ankle dorsiflexion to achieve parallel depth comfortably.",
+      "Practice box squats set exactly to your calibrated depth threshold to build positional awareness.",
+      "Widen your stance slightly and flare toes 20-30 degrees to allow the pelvis to settle between the femurs."
+    ]
+  },
+  {
+    "id": "squat_torso_lean_bracing",
+    "title": "Torso Lean, Hip Leverage, and Intra-Abdominal Bracing",
+    "topic": "torso_lean",
+    "exercise": "squat",
+    "keywords": ["torso_lean", "torso", "lean", "chest_drop", "bracing", "lower_back", "lumbar", "core"],
+    "content": "Torso inclination during the squat is heavily governed by skeletal limb lengths and barbell placement. An upright torso requires excellent ankle mobility and quad dominance. When torso lean exceeds an athlete's calibrated baseline, it often signals quad fatigue, ankle stiffness, or weak spinal erectors resulting in a 'good morning' squat. Effective 360-degree intra-abdominal pressure (Valsalva maneuver) before descending stiffens the trunk and prevents spinal shear stresses. Avoid collapsing the chest at the transition point out of the bottom.",
+    "recommendations": [
+      "Practice paused goblet squats with an upright torso to strengthen anterior core and thoracic extension.",
+      "Cue 'driving the traps into the bar' on the ascent rather than letting the hips shoot up first.",
+      "Perform dedicated ankle dorsiflexion mobility drills (banded ankle distractions) to allow forward knee travel."
+    ]
+  },
+  {
+    "id": "squat_knee_alignment_valgus",
+    "title": "Knee Alignment and Dynamic Valgus Prevention",
+    "topic": "knee_valgus",
+    "exercise": "squat",
+    "keywords": ["knee_valgus", "knee_cave", "valgus", "knee_alignment", "glute_medius", "knees_out", "stance"],
+    "content": "Dynamic knee valgus (knee caving inward during ascent) increases lateral patellofemoral pressure and ACL strain. It is frequently driven by underactive gluteus medius/maximus muscles or collapse of the medial foot arch. The knees should track along the line of the second and third toes throughout the entire movement. Actively recruit hip external rotators by cueing 'screwing the feet into the floor' to create torque through the kinetic chain.",
+    "recommendations": [
+      "Perform banded squats or monster walks during warmups to prime the glute medius for external rotation.",
+      "Focus on actively gripping the floor with the 'tripod foot' (heel, base of big toe, base of pinky toe).",
+      "Reduce bar load slightly to reinforce knee tracking over toes without reflexive inward collapse."
+    ]
+  },
+  {
+    "id": "squat_tempo_control",
+    "title": "Rep Tempo, Eccentric Control, and Bottom Reversal",
+    "topic": "tempo",
+    "exercise": "squat",
+    "keywords": ["tempo", "too_fast", "dive_bomb", "eccentric", "stretch_reflex", "speed", "ascent_descent_ratio"],
+    "content": "Diving rapidly into the bottom of a squat to bounce out uses passive connective tissue rather than active muscular control, substantially increasing the risk of knee ligament and spinal strain. A controlled eccentric descent (2.5 to 3.5 seconds) maintains muscular tension, reinforces technical groove, and optimizes stretch-shortening cycle mechanics. The transition from descent to ascent should be tight, intentional, and explosive without losing brace.",
+    "recommendations": [
+      "Incorporate 3-1-1 tempo squats (3s descent, 1s pause at bottom, 1s explosive ascent) into warmups.",
+      "Maintain active quad and glute engagement on the way down rather than relaxing into the joint capsule.",
+      "Keep steady breathing and avoid rushing reps when fatigue accumulates late in the set."
+    ]
+  },
+  {
+    "id": "squat_warmup_mobility",
+    "title": "Targeted Warmup and Joint Mobility Protocols",
+    "topic": "warmup",
+    "exercise": "squat",
+    "keywords": ["warmup", "mobility", "stiff", "ankle_mobility", "hip_flexor", "dorsiflexion", "activation"],
+    "content": "A biomechanically sound squat requires adequate ankle dorsiflexion (minimum 35-40 degrees knee-to-wall) and hip internal/external rotation. Pre-session preparation should transition from general thermogenic activity to targeted joint mobility and neuromuscular activation. Spend 3-5 minutes on hip 90/90 mobility, half-kneeling ankle rocks, and bodyweight squats before touching an external load.",
+    "recommendations": [
+      "Perform 10 reps of half-kneeling ankle rocks per side to increase ankle dorsiflexion range.",
+      "Do 2 sets of 30-second goblet squat pry stretches holding a light dumbbell at the bottom.",
+      "Complete 15 bodyweight reps focusing on smooth transitions before loading the movement."
+    ]
+  },
+  {
+    "id": "squat_corrective_exercises",
+    "title": "Evidence-Based Corrective Squat Variations",
+    "topic": "corrective",
+    "exercise": "squat",
+    "keywords": ["corrective", "goblet_squat", "box_squat", "pin_squat", "spanish_squat", "drills"],
+    "content": "Corrective exercises provide immediate kinesthetic biofeedback that self-corrects movement faults. The goblet squat places load anteriorly, counterbalancing the pelvis and demanding a more upright torso. Box squats eliminate the stretch reflex, teaching lifters to sit back and engage the posterior chain while defining consistent depth. Spanish squats unload patellar shear and reinforce quadriceps hypertrophy without knee irritation.",
+    "recommendations": [
+      "Use goblet squats with a 2-second pause at bottom as your primary warm-up or accessory exercise.",
+      "Incorporate box squats at or slightly above parallel to rebuild depth consistency and prevent dive-bombing.",
+      "Include split squats or lunges to eliminate unilateral side-to-side asymmetries between legs."
+    ]
+  },
+  {
+    "id": "squat_progressive_overload_recovery",
+    "title": "Progressive Overload, Volume Management, and Recovery",
+    "topic": "recovery",
+    "exercise": "squat",
+    "keywords": ["overload", "volume", "recovery", "fatigue", "sleep", "rpe", "progression"],
+    "content": "Technique degradation on later reps in a set is a primary indicator of neuromuscular fatigue rather than lack of effort. True progressive overload involves maintaining technical precision while gradually increasing volume, load, or movement density. If form breaks down consistently on rep 4 or 5, reduce working weight by 10% to preserve motor patterns. Ensure adequate recovery (minimum 48 hours between heavy squat sessions, 7-9 hours sleep).",
+    "recommendations": [
+      "Keep 1 to 2 reps in reserve (RPE 8) on working sets to prevent technique breakdown under excessive fatigue.",
+      "Allow at least 48 to 72 hours of recovery between heavy lower-body squat workouts.",
+      "Prioritize 7-9 hours of quality sleep and sufficient protein intake to facilitate muscle repair."
+    ]
+  },
+  {
+    "id": "squat_safety_boundaries",
+    "title": "Safety Boundaries and Medical Disclaimer",
+    "topic": "safety",
+    "exercise": "squat",
+    "keywords": ["safety", "pain", "injury", "medical", "disclaimer", "sharp_pain", "discomfort"],
+    "content": "Biomechanics analysis is an automated heuristic educational tool and does not provide medical evaluation, physical therapy diagnoses, or clearance for injured athletes. Mild muscular burning is normal; sharp, shooting, pinching, or unilateral joint pain (especially in knees, hips, or lower back) is an immediate signal to cease movement. If pain persists across workouts or radiates down the limb, discontinue squatting and consult a licensed physical therapist or sports medicine physician.",
+    "recommendations": [
+      "Immediately terminate the exercise set if sharp or pinching joint pain occurs.",
+      "Consult a qualified physical therapist or sports medicine professional if pain persists.",
+      "Never attempt to push through sharp joint discomfort or numbness."
+    ]
+  }
+]

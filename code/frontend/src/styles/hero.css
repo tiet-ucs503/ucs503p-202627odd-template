@@ -1,0 +1,103 @@
+/* ==========================================================================
+   HERO BANNER
+   Minimalist stealth black banner with clean athletic typography
+   ========================================================================== */
+
+.hero-banner {
+  position: relative;
+  background: #080808;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 3rem 2.5rem;
+  margin-bottom: 2.25rem;
+}
+
+.hero-content {
+  max-width: 720px;
+}
+
+.hero-brand-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #111111;
+  border: 1px solid var(--border-subtle);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-condensed);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  line-height: 0.98;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  margin-bottom: 0.85rem;
+  text-transform: uppercase;
+}
+
+.hero-title .accent-word {
+  color: #ffffff;
+}
+
+.hero-subtitle {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.75rem;
+  max-width: 600px;
+  line-height: 1.55;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.hero-cta-btn {
+  background: var(--red-primary);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hero-cta-btn:hover {
+  background: var(--red-hover);
+}
+
+.hero-secondary-btn {
+  background: #111111;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-condensed);
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.75rem 1.45rem;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hero-secondary-btn:hover {
+  border-color: var(--border-strong);
+  color: #ffffff;
+}

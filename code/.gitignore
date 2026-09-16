@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+
+# Environment Variables
+.env
+.env.local
+
+# Build artifacts & caches
+dist/
+build/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+test-results/
+
+# Database & local data
+*.db
+data/
+backend/data/
+
+# OS files
+.DS_Store
+Thumbs.db
