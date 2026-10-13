@@ -1,0 +1,115 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="KZaBD0zGSiUZjOAzQ1FV">
+    <mxGraphModel dx="1288" dy="709" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontStyle=1;fontSize=16;align=left;" value="Level 2 DFD - Explosion of Process 4.0 (Rank &amp; Decide Cleaning / Multi-Agent Backend)" vertex="1">
+          <mxGeometry height="30" width="900" x="20" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="fromP3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;" value="From 3.0&#xa;Classify &amp; Score Dirt" vertex="1">
+          <mxGeometry height="70" width="150" x="20" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="d2ext" parent="1" style="html=1;dashed=0;whiteSpace=wrap;shape=partialRectangle;right=0;left=0;fillColor=#fff2cc;strokeColor=#d6b656;" value="D2  Panel Dirt Score DB" vertex="1">
+          <mxGeometry height="40" width="150" x="20" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="entOperator" parent="1" style="html=1;dashed=0;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" value="Plant Operator / Admin" vertex="1">
+          <mxGeometry height="60" width="150" x="20" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="toP5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;dashed=1;" value="To 5.0&#xa;Execute Targeted Cleaning" vertex="1">
+          <mxGeometry height="70" width="150" x="1120" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="p41" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="4.1&#xa;Confidence Agent" vertex="1">
+          <mxGeometry height="70" width="160" x="240" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="p42" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="4.2&#xa;Priority Agent" vertex="1">
+          <mxGeometry height="70" width="160" x="480" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="p43" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="4.3&#xa;Benchmarking Agent" vertex="1">
+          <mxGeometry height="70" width="160" x="720" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="p44" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="4.4&#xa;Impact &amp; ROI Agent" vertex="1">
+          <mxGeometry height="70" width="160" x="960" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="p45" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="4.5&#xa;Water &amp; Action Optimizer" vertex="1">
+          <mxGeometry height="70" width="160" x="960" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="d4" parent="1" style="html=1;dashed=0;whiteSpace=wrap;shape=partialRectangle;right=0;left=0;fillColor=#fff2cc;strokeColor=#d6b656;" value="D4  Agent Decision Log" vertex="1">
+          <mxGeometry height="40" width="160" x="720" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="fromP3" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="p41" value="dirt score &amp; panel ID">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="235" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="p41" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="p42" value="confirmed dirty panels">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="d2ext" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;dashed=1;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="p42" value="historical scores">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="p42" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="p43" value="priority-ranked list">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="p42" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="entOperator" value="priority ranking">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="510" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="p43" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="p44" value="AI vs manual benchmark">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="p44" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="p45" value="energy &amp; cost gain">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="entOperator" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="p45" value="cleaning confirmation">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="95" y="420" />
+              <mxPoint x="1040" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="p45" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="toP5" value="servo/pump command">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1040" y="214" />
+              <mxPoint x="1195" y="214" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="p44" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="d4" value="decision record">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="920" y="135" />
+              <mxPoint x="920" y="500" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="p45" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="d4" value="decision record">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1040" y="500" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,59 +1,65 @@
-site_name: "UCS503 : Software Engineering : Project Template"
-site_url: https://tiet-ucs503.github.io/ucs503p-202627odd-template
+site_name: "Solar Sage AI — Drone-Based Edge-AI Solar Panel Cleaning"
+site_url: https://omkarshukla101.github.io/ucs503p-202627-solar-sage
+site_description: "Solar Sage AI: An autonomous drone-based Edge-AI system for condition-based solar panel cleaning. UCS503P Software Engineering Project at TIET."
+
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Diagrams: diagrams.md
+  - Roadmap: roadmap.md
+  - Team: team.md
 
 plugins:
 - search
-# - gen-files:
-#     scripts:
-#     - scripts/gen_ref_pages.py
-- literate-nav:
-    nav_file: summary.md
-- section-index
 - git-revision-date-localized
-# - git-committers:
-#     repository: "tiet-unc512/tiet-unc512.github.io"
 - git-authors
-- mkdocstrings:
-    handlers:
-      python:
-        paths: [src]
-        options:
-          summary: true
-          show_symbol_type_heading: true
-          show_symbol_type_toc: true
-          # show_object_full_path: true
-          show_root_full_path: true
-          show_root_heading: true
-          show_source: false
 
 theme:
   name: material
   custom_dir: docs/assets/theme-overrides
   features:
     - navigation.footer
-    - header.autohide
-    - content.tabs.link
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
     - navigation.tracking
     - navigation.top
-    - toc.integrate
+    - header.autohide
+    - content.tabs.link
     - content.tooltips
+    - search.suggest
+    - search.highlight
   icon:
     repo: fontawesome/brands/github
     annotation: material/plus-circle-outline
   palette:
-    primary: amber
-    accent: orange
+    - scheme: slate
+      primary: custom
+      accent: orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: amber
+      accent: orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
   logo: assets/tiet-logo.svg
   favicon: assets/favicon.png
+  font:
+    text: Inter
+    code: JetBrains Mono
 
-repo_url: https://github.com/tiet-ucs503/ucs503p-202627odd-template
-repo_name: ucs503p-202627odd-template
-copyright: "Copyright &copy; 2025 <a href='https://bvraghav.com/'>Raghav B. Venkataramaiyer</a> &lt;<code style='color:inherit; background:transparent'>bv.raghav</code>&gt;"
+repo_url: https://github.com/omkarshukla101/ucs503p-202627-solar-sage
+repo_name: Solar Sage AI
+copyright: "Copyright &copy; 2026 Solar Sage AI Team — UCS503P, TIET"
+
 extra:
   social:
   - icon: fontawesome/brands/github
-    link: https://github.com/tiet-ucs503/ucs503p-202627odd-template
-    name: Git Repo for UCS503P Project Template
+    link: https://github.com/omkarshukla101/ucs503p-202627-solar-sage
+    name: Solar Sage AI on GitHub
 
 extra_css:
   - assets/stylesheets/extra.css
@@ -61,7 +67,6 @@ extra_css:
 
 extra_javascript:
 - https://unpkg.com/katex@0/dist/katex.min.js
-- javascript/arithmatex.js
 
 markdown_extensions:
   - abbr
@@ -69,6 +74,7 @@ markdown_extensions:
   - attr_list
   - toc:
       permalink: true
+      toc_depth: 4
   - footnotes
   - pymdownx.arithmatex:
       generic: true
@@ -76,17 +82,13 @@ markdown_extensions:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
-  - pymdownx.inlinehilite:
-      custom_inline:
-        - name: math
-          class: arithmatex
-          format: !!python/object/apply:pymdownx.arithmatex.arithmatex_inline_format {which: generic}
+  - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences:
       custom_fences:
-        - name: math
-          class: arithmatex
-          arithmatex: !!python/object/apply:pymdownx.arithmatex.arithmatex_fenced_format {which: generic}
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.emoji:
@@ -97,7 +99,7 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.mark
   - pymdownx.tilde
-  # - mkdocs-click
-  - toc:
-      toc_depth: 4
+  - pymdownx.tasklist:
+      custom_checkbox: true
   - sane_lists
+  - tables

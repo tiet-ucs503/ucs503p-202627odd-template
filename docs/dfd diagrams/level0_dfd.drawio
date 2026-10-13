@@ -1,0 +1,54 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="IoZVrmx12kgaRVEKvYAB">
+    <mxGraphModel dx="896" dy="493" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontStyle=1;fontSize=18;align=left;" value="Level 0 DFD - Context Diagram: Solar Sage AI" vertex="1">
+          <mxGeometry height="30" width="600" x="20" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="entField" parent="1" style="html=1;dashed=0;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" value="Solar Panel Field / Environment" vertex="1">
+          <mxGeometry height="70" width="180" x="40" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="p0" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=14;" value="0&#xa;Solar Sage AI System" vertex="1">
+          <mxGeometry height="100" width="200" x="360" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="entOperator" parent="1" style="html=1;dashed=0;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" value="Plant Operator / Admin" vertex="1">
+          <mxGeometry height="70" width="180" x="700" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="entField" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=0.1;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="p0" value="panel imagery (visual/thermal)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="297" y="187" />
+              <mxPoint x="297" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="p0" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=0.9;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="entField" value="targeted water spray">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="283" y="260" />
+              <mxPoint x="283" y="215" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="p0" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=0.1;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="entOperator" value="dirt ranking &amp; ROI dashboard">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="630" y="180" />
+              <mxPoint x="630" y="215" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="entOperator" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=0.9;libavoidRouting=1;orthogonalLoop=1;jettySize=auto;" target="p0" value="cleaning confirmation">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="630" y="243" />
+              <mxPoint x="630" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

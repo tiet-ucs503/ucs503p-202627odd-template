@@ -1,9 +1,10 @@
-name: mkdocs 
+name: Deploy Solar Sage Docs
 on:
   push:
     branches:
-      - master 
+      - master
       - main
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
@@ -11,36 +12,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Configure Git Credentials
         run: |
           git config user.name github-actions[bot]
-          git config user.email 14331962+bvraghav@users.noreply.github.com
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
       - uses: actions/cache@v4
         with:
           key: mkdocs-material-${{ env.cache_id }}
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install             			\
-          click                      			\
-          numpy                      			\
-          pandas                     			\
-          scikit-learn               			\
-          mkdocs                     			\
-          mkdocs-material            			\
-          mkdocs-material-extensions 			\
-          mkdocstrings               			\
-          mkdocstrings-python        			\
-          mkdocs-gen-files           			\
-          mkdocs-literate-nav        			\
-          mkdocs-section-index       			\
-          mkdocs-click                                  \
-          mkdocs-git-revision-date-localized-plugin     \
-          mkdocs-git-committers-plugin-2                \
-          mkdocs-git-authors-plugin                     \
+      - run: pip install                              \
+          mkdocs                                      \
+          mkdocs-material                             \
+          mkdocs-material-extensions                  \
+          mkdocs-git-revision-date-localized-plugin   \
+          mkdocs-git-authors-plugin                   \
           pymdown-extensions
-      - run: PYTHONPATH=src:$PYTHONPATH mkdocs gh-deploy --force
+      - run: mkdocs gh-deploy --force

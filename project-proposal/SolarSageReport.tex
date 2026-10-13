@@ -1,0 +1,188 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{times}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{parskip}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue,
+}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+\title{\textbf{Solar Sage AI: A Drone-Based Edge-AI System for Condition-Based Solar Panel Cleaning}}
+\author{Project Proposal for UCS503P \\ Thapar Institute of Engineering and Technology}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Higher-order goal}
+This project aims to improve solar-asset operations by removing a structural inefficiency that keeps maintenance decisions blind to the real condition of a panel: reliance on fixed-schedule, water-heavy manual cleaning. While the underlying problem extends across the solar industry, the immediate engineering objective is to translate that operational need into a measurable, deployable system, an autonomous drone paired with an edge-AI decision layer that can trigger cleaning only where and when a panel genuinely needs it.
+
+\section{Time-to-value}
+\begin{itemize}
+    \item We will deliver meaningful increments quickly by prototyping the core perception pipeline (dirt detection) and the actuation layer (servo and pump control) in parallel, validating each independently within short iteration windows.
+    \item We will prioritize fast feedback over perfection by testing the full detect-and-clean loop end to end early, rather than polishing any single stage before integration.
+    \item Success is defined by what can be delivered and measured in the first iteration, a working detect-and-clean loop running on a small test array, then improved based on field results and further validation.
+\end{itemize}
+
+\section{Problem Statement}
+Solar operators at utility scale routinely face a mismatch between how panels are maintained and how dirty they actually are. Manual, calendar-based cleaning is the default response, but it comes with several recurring pain points:
+
+\begin{itemize}
+    \item \textbf{Resource intensity:} manual cleaning at scale consumes large volumes of water and labour, with a 1~GW farm using upwards of 12.5 million litres a month on washing alone.
+    \item \textbf{Schedule blindness:} fixed-calendar cleaning wastes effort on panels that are still reasonably clean while genuinely soiled panels can go unaddressed for weeks between cycles.
+    \item \textbf{Physical degradation risk:} frequent contact-based cleaning is a documented cause of micro-cracks, which shorten panel life and accelerate long-term efficiency loss.
+    \item \textbf{Fragmented decision-making:} without per-panel condition data, operators cannot prioritise cleaning by actual impact, so the most degraded panels are not necessarily serviced first.
+\end{itemize}
+
+\textbf{Why this matters now (contextual relevance):} as utility-scale solar deployment grows, the operational cost of blind, calendar-driven cleaning is rising faster than the tooling available to make maintenance condition-aware, making a drone-based, edge-AI approach directly relevant.
+
+\section{Proposed Solution}
+
+\subsection{Overview}
+Build a drone-based ``Inspect-to-Clean'' system with the following components:
+\begin{itemize}
+    \item \textbf{Perception pipeline:} an RGB/thermal drone payload paired with OpenCV-based detection to capture and segment panel imagery.
+    \item \textbf{Edge decision layer:} an ESP32-driven control system that classifies dirt level and issues cleaning commands with sub-second latency.
+    \item \textbf{Multi-agent backend:} confidence, priority, benchmarking, ROI, and water-optimisation agents that jointly decide when and where to clean.
+    \item \textbf{Actuation:} servo-controlled, targeted water application, replacing fixed-duration cleaning cycles.
+    \item \textbf{Dashboard:} a monitoring interface showing per-panel dirt score, efficiency gain, and cost savings.
+\end{itemize}
+
+\subsection{Core workflow}
+\begin{itemize}
+    \item The drone captures RGB/thermal imagery across the panel field and transmits it to a backend server.
+    \item OpenCV-based detection segments the imagery to isolate panels and identify dirt or debris regions.
+    \item The AI decision layer scores each panel's dirt level (0--100, grouped as Low/Medium/High) and ranks panels by cleaning priority.
+    \item The ESP32 execution layer issues precise servo and pump signals, and targeted cleaning runs only on panels that cross the dirt threshold, keeping water use to a minimum.
+\end{itemize}
+
+\subsection{Operational constraints for an educational, pilot setting}
+\begin{itemize}
+    \item Keep perception-to-decision latency under one second by running the pipeline fully on-edge, with no dependence on cloud round-trips.
+    \item Start dirt classification with explainable, heuristic thresholds rather than research-grade generative or deep-learning models; treat advanced computer-vision novelty as a stretch goal only.
+    \item Design for deployability using a small test array, standard flight hardware, and common hosting for the dashboard.
+\end{itemize}
+
+\section{Solution Approach}
+This is an engineering course project, so the focus is on system integration, control-loop correctness, and measurement, rather than novel computer-vision research.
+
+\subsection{Dirt classification (non-research)}
+\begin{itemize}
+    \item Use OpenCV-based feature extraction (colour/texture thresholds) to flag dirt and debris regions on the panel surface.
+    \item Score each panel on a simple 0--100 scale using a heuristic combination of coverage and contrast features, without claiming state-of-the-art detection accuracy.
+    \item Surface the top-ranked dirty panels to the dashboard for confirmation before any cleaning cycle is triggered.
+\end{itemize}
+
+\subsection{System architecture}
+The system runs as a five-stage pipeline, summarised in Table~\ref{tab:pipeline}.
+
+\begin{table}[h]
+\centering
+\caption{Solar Sage AI processing pipeline}
+\label{tab:pipeline}
+\begin{tabular}{@{}c l p{8cm}@{}}
+\toprule
+\textbf{Stage} & \textbf{Component} & \textbf{Function} \\
+\midrule
+1 & Drone (RGB/Thermal) & Captures images and video of solar panel arrays. \\
+2 & OpenCV Detection & Segments the image to isolate individual panels and detect surface dirt or debris. \\
+3 & AI Decision Layer & Classifies each panel as clean or dirty, quantifies dirt level, and ranks panels by cleaning priority. \\
+4 & ESP32 Execution & Sends precise control signals to servo motors and the water pump for targeted cleaning. \\
+5 & Measure and Validate & Confirms the cleaning effect and logs efficiency and resource metrics for ROI tracking. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{CI/CD and fast delivery enabler}
+CI/CD will be used to automatically build and test the OpenCV detection pipeline and ESP32 firmware on every change, produce repeatable deployment artifacts for the dashboard and control software, and enable frequent, safe iteration on both the software and the hardware control loop.
+
+\section{Evaluation Criterion}
+We define success using measurable metrics tied to both the detection pipeline and the cleaning outcome.
+
+\subsection{Primary evaluation metrics}
+\begin{itemize}
+    \item \textbf{Perception-to-decision latency:} time between image capture and a cleaning decision being issued; target under 1 second.
+    \item \textbf{Cleaning trigger accuracy:} percentage of cleaning actions that correctly target genuinely dirty panels, verified against manual inspection.
+\end{itemize}
+
+\subsection{Secondary evaluation metrics}
+\begin{itemize}
+    \item \textbf{Water savings:} reduction in per-panel water use compared with the manual-cleaning baseline of 2.8~L.
+    \item \textbf{Cleaning time reduction:} reduction in time spent cleaning compared with manual cleaning, measured per panel.
+    \item \textbf{Cost savings:} estimated rupee savings per panel per month, derived from water, labour, and electrical output gains.
+    \item \textbf{Reliability:} dashboard and control-loop availability during test and demo windows (target $\geq 99\%$ uptime).
+\end{itemize}
+
+\subsection{Validation plan}
+\begin{itemize}
+    \item Run water, electrical, and dust tests on a small test array, comparing manual cleaning against Solar Sage AI cleaning under matched conditions.
+    \item Compare summary statistics (water use, cleaning time, residual dirt, output gain) before and after each iteration, rather than claiming state-of-the-art benchmarks.
+\end{itemize}
+
+\section{Scalability}
+The proposition should scale in both theoretical and practical senses.
+\begin{itemize}
+    \item \textbf{Scalable (theoretically):} the system should support growth in panel count and concurrent dashboard usage by decoupling perception from the decision layer, enabling multi-drone coordination, and using indexed queries for dashboard data at scale.
+    \item \textbf{Operationally deployable (practically):} the system should run on common hosting for the dashboard and backend, with containerized deployment and a CI/CD pipeline for staging and production, alongside standard drone flight hardware.
+\end{itemize}
+
+\section{Engine availability heuristic}
+A mature set of ``engines'' (tooling/services) is available to implement this as a drone-based, edge-AI project:
+\begin{itemize}
+    \item Computer-vision library (OpenCV) for detection and segmentation.
+    \item Microcontroller firmware toolchain (ESP32) for servo and pump control.
+    \item Python data/ML ecosystem for scoring and agent logic.
+    \item Web framework and dashboard tooling for monitoring and ROI reporting.
+    \item Test framework for unit/integration tests, plus a CI runner and staging deployment target.
+\end{itemize}
+We will use these mature components to focus on control-loop design, workflow correctness, and measurement rather than inventing new infrastructure.
+
+\section{Project scope and deliverables}
+
+\subsection{Initial deliverable --- first iteration}
+\begin{itemize}
+    \item Drone image capture and OpenCV-based detection and segmentation
+    \item Basic dirt-level scoring (0--100) with heuristic thresholds
+    \item ESP32-driven servo and pump actuation prototype
+    \item Basic logging and timestamps for latency and cleaning-trigger measurement
+    \item CI: build, firmware/backend tests, and linting
+\end{itemize}
+
+\subsection{Subsequent deliverables}
+\begin{itemize}
+    \item Full multi-agent decision layer (confidence, priority, benchmarking, ROI, water optimisation)
+    \item Dashboard for per-panel metrics, efficiency gain, and ROI reporting
+    \item Extended validation: water, electrical, and dust tests across a larger test array
+    \item Stretch goal: learned (rather than purely heuristic) dirt classification for higher-accuracy edge cases
+\end{itemize}
+
+\section{Risks and mitigations}
+\begin{itemize}
+    \item \textbf{Environmental constraints:} low-light conditions or glare-heavy panel surfaces can reduce detection accuracy; mitigated by combining RGB with thermal imaging and scheduling flights during better lighting windows.
+    \item \textbf{False-positive cleaning triggers:} misclassification could set off cleaning that is not needed; mitigated by a confidence check that suppresses low-confidence detections before any actuation signal goes out.
+    \item \textbf{Hardware and field-testing delays:} drone flight availability can depend on the weather; a buffer window is built into the final project phase to absorb such delays.
+    \item \textbf{Measurement ambiguity:} baseline (manual-cleaning) measurements are taken under the same panel and weather conditions as automated-cleaning measurements before any comparison is drawn.
+\end{itemize}
+
+\section{Summary}
+This project proposes Solar Sage AI, a deployable drone-based system that pairs edge-AI perception with targeted actuation to replace fixed-schedule, water-heavy solar panel cleaning with a condition-based process. It meets the course criteria by emphasizing time-to-value through a working detect-and-clean loop in the first iteration, using CI/CD to support frequent safe releases across the software and firmware, and defining measurable evaluation criteria, particularly perception-to-decision latency and cleaning trigger accuracy. It remains focused on engineering system integration, control-loop correctness, and field validation, with advanced computer-vision novelty treated as a stretch goal rather than the core deliverable.
+
+\vspace{1cm}
+\noindent
+Name -- Shorya Gupta, Roll No: 1024030752 \\
+Name -- Omkar Shukla, Roll No: 1024030757 \\
+Name -- Sahil Soni, Roll No: 1024030760
+
+\end{document}

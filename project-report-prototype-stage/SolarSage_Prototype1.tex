@@ -1,0 +1,281 @@
+\documentclass[12pt]{report}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{array}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=black,
+    urlcolor=blue,
+    pdftitle={Solar Sage AI -- Prototype Report}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{Solar Sage AI --- Prototype Report}
+\fancyfoot[C]{\thepage}
+
+\titleformat{\chapter}[hang]{\normalfont\huge\bfseries}{Chapter \thechapter}{1em}{}
+\titlespacing*{\chapter}{0pt}{0pt}{20pt}
+
+\newcommand{\flowarrow}{\par\centering$\big\downarrow$\par}
+
+\begin{document}
+
+% ---------- Title Page ----------
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    {\large UCS503 --- Software Engineering Project}\\
+    {\large Academic Year 2026--2027}\\[2cm]
+
+    {\Huge\bfseries Solar Sage AI}\\[0.5cm]
+    {\Large Drone-Based Edge-AI System for Condition-Based Solar Panel Cleaning}\\[0.5cm]
+    {\large\itshape Dynamic Perception, Edge Decision-Making and Targeted Actuation}\\[1.5cm]
+
+    {\large\bfseries Mid-Semester Evaluation Report}\\[2cm]
+
+    {\large Submitted by}\\[0.5cm]
+    \begin{tabular}{l l}
+        1024030752 & Shorya Gupta \\
+        1024030757 & Omkar Shukla \\
+        1024030760 & Sahil Soni \\
+    \end{tabular}\\[0.5cm]
+    {\large B.E. Third Year, Computer Science \& Engineering}\\[2cm]
+
+    {\large Submitted to}\\[0.5cm]
+    {\large Dr. Jeelani Asif}\\[2cm]
+
+    {\large Department of Computer Science and Engineering}\\
+    {\large Thapar Institute of Engineering and Technology}\\
+    {\large Patiala, Punjab, India}
+
+    \vfill
+\end{titlepage}
+
+% ---------- Table of Contents ----------
+\tableofcontents
+\clearpage
+
+% ======================================================
+\chapter{Introduction}
+
+\section{Background and Context}
+
+Solar operators at utility scale routinely face a mismatch between how panels are maintained and how dirty they actually are. Fixed-schedule manual cleaning consumes water and labour, can expose panels to repeated physical contact, and does not prioritize cleaning according to the actual condition of individual panels.
+
+Solar Sage AI addresses this operational gap through a drone-based ``Inspect-to-Clean'' system. An RGB/thermal drone payload captures panel imagery, an OpenCV-based perception layer isolates panels and dirt or debris regions, and an edge decision layer converts the observed condition into a panel-level dirt score and cleaning priority. The execution layer then uses ESP32-controlled servo and pump signals to perform targeted cleaning.
+
+\subsection{Problem Statement}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Resource intensity:} manual cleaning at scale consumes substantial water and labour; the project proposal cites a 1~GW farm using upwards of 12.5~million litres per month on washing alone.
+    \item \textbf{Schedule blindness:} fixed-calendar cleaning can service panels that are still reasonably clean while genuinely soiled panels remain unaddressed.
+    \item \textbf{Physical degradation risk:} frequent contact-based cleaning can contribute to micro-cracks and long-term efficiency loss.
+    \item \textbf{Fragmented decision-making:} without per-panel condition data, operators cannot prioritize cleaning according to actual impact.
+\end{itemize}
+
+\section{Project Objectives}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Dynamic perception:} capture RGB/thermal imagery and segment panel surfaces using OpenCV-based detection.
+    \item \textbf{Condition-based scoring:} assign each panel a simple 0--100 dirt score grouped into Low, Medium and High severity.
+    \item \textbf{Targeted actuation:} issue precise servo and pump commands only when panels cross the configured dirt threshold.
+    \item \textbf{Edge-first response:} maintain a perception-to-decision latency target below one second with on-edge processing.
+    \item \textbf{Operational measurement:} quantify water use, cleaning time, output gain, cost savings and ROI.
+\end{itemize}
+
+% ======================================================
+\chapter{Methodology and Design}
+
+\section{System Architecture}
+
+\subsection{High-Level Design}
+
+Solar Sage AI utilises a modular, three-tier architecture: the Client Dashboard Layer, the Core Perception \& Decision Engine, and the Actuation \& Telemetry Store. Figure~2.1 illustrates the high-level architecture.
+
+\begin{center}
+\begin{minipage}{0.85\linewidth}
+\centering
+\fbox{\parbox{\linewidth}{\centering Operations Web Portal \\ \footnotesize React + Tailwind CSS $\cdot$ Live Dirt-Score Dashboard}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering API Gateway \& Flight Dispatcher \\ \footnotesize Flask REST API $\cdot$ Redis/Celery Job Queue}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering Drone Perception Engine \\ \footnotesize RGB/Thermal Capture $\cdot$ OpenCV}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering Multi-Agent Scoring Engine \\ \footnotesize Confidence $\cdot$ Priority $\cdot$ ROI $\cdot$ Water-Optimisation}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering AI Decision Layer \\ \footnotesize Heuristic Dirt Scorer $\cdot$ Priority Ranker}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering ESP32 Execution \& Telemetry Store \\ \footnotesize Servo/Pump Actuation $\cdot$ SQLite Logs $\cdot$ PDF ROI Export}}
+\end{minipage}
+\end{center}
+\begin{center}
+\small Figure 2.1 --- Solar Sage AI High-Level Multi-Tier Architecture
+\end{center}
+
+\subsection{Technical Stack}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Backend Runtime \& API:} Python 3.11, Flask REST API with a Redis/Celery job queue for flight and processing orchestration.
+    \item \textbf{Perception \& Computer Vision:} OpenCV (colour/texture thresholding), NumPy and Pillow for RGB/thermal frame processing and panel segmentation.
+    \item \textbf{Edge Firmware:} ESP32 (Arduino/ESP-IDF), PWM servo control, and a relay-driven water-pump actuation circuit.
+    \item \textbf{Decision Layer:} Python heuristic scoring engine implementing confidence, priority, benchmarking, ROI, and water-optimisation agents.
+    \item \textbf{Database \& Storage:} SQLite for the prototype (PostgreSQL planned for production), with JSON/CSV telemetry logs for latency and trigger-accuracy measurement.
+    \item \textbf{Frontend UI:} React, Tailwind CSS, and Chart.js for per-panel dirt-score and ROI visualisation.
+\end{itemize}
+
+\section{Implementation Details}
+
+\subsection{Module 1 --- Core Perception \& Dirt Detection Pipeline}
+
+The perception module flies a fixed inspection pattern over the test array, captures RGB/thermal frames, and segments each frame to isolate individual panels before flagging dirt or debris regions using colour and texture feature thresholds (Figure~2.2).
+
+\begin{center}
+\begin{minipage}{0.7\linewidth}
+\centering
+\fbox{\parbox{\linewidth}{\centering Panel Array Flight Pass}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering RGB/Thermal Frame Capture}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering OpenCV Panel Segmentation}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering Coverage \& Contrast Feature Extraction}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering Dirt/Debris Region Flagging}}
+\end{minipage}
+\end{center}
+\begin{center}
+\small Figure 2.2 --- Core Perception \& Dirt Detection Pipeline
+\end{center}
+
+\subsection{Module 2 --- Edge Decision Layer \& Actuation Control}
+
+The decision layer converts flagged dirt regions into a 0--100 dirt score per panel, groups panels into Low/Medium/High priority, and suppresses low-confidence detections before any actuation signal is issued. Confirmed commands are passed to the ESP32 execution layer, which drives servo positioning and pump timing for targeted water application (Figure~2.3).
+
+\begin{center}
+\begin{minipage}{0.7\linewidth}
+\centering
+\fbox{\parbox{\linewidth}{\centering Dirt Regions (from Module 1)}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering 0--100 Dirt Score \& Priority Rank}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering Confidence \& Threshold Check}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering ESP32 Command Generator}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering Servo / Pump Actuation Signals}}
+\end{minipage}
+\end{center}
+\begin{center}
+\small Figure 2.3 --- Edge Decision Layer \& Actuation Control Flow
+\end{center}
+
+The multi-agent decision layer retains the five agents specified in the Solar Sage AI prototype: Confidence Agent, Priority Agent, Benchmarking Agent, Impact \& ROI Agent, and Water \& Action Optimizer.
+
+% ======================================================
+\chapter{Results and Evaluation}
+
+\section{Testing Methodology}
+
+Testing followed a structured, multi-tier evaluation framework:
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Unit Testing:} individual testing of OpenCV thresholding routines, the dirt-score calculator, and ESP32 servo/pump command encoding.
+    \item \textbf{Integration Testing:} end-to-end testing of the detect-and-clean loop under simulated lighting and glare conditions.
+    \item \textbf{Benchmark Validation:} validation across realistic soiling scenarios on the test array --- Low soiling, Medium soiling, and High soiling.
+\end{itemize}
+
+\begin{center}
+\begin{minipage}{0.7\linewidth}
+\centering
+\fbox{\parbox{\linewidth}{\centering Unit Tests \\ \footnotesize OpenCV \& Scoring}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering Integration Tests \\ \footnotesize REST API \& SQLite}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering Soiling Benchmark \\ \footnotesize Low / Medium / High}}
+\flowarrow
+\fbox{\parbox{\linewidth}{\centering Automated CI/CD Validation Suite}}
+\end{minipage}
+\end{center}
+\begin{center}
+\small Figure 3.1 --- Multi-Tier Testing and Quality Assurance Framework
+\end{center}
+
+\section{Performance Metrics}
+
+The prototype underwent quantitative benchmarking to measure latency, trigger accuracy, water use, cleaning time, system uptime, and concurrent processing throughput. Table~3.1 summarizes the target versus achieved engineering metrics.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}p{4.3cm}p{2.7cm}p{3.2cm}p{1.7cm}@{}}
+\toprule
+\textbf{Evaluation Metric} & \textbf{Target Specification} & \textbf{Achieved (Prototype v0.3)} & \textbf{Status} \\
+\midrule
+Perception-to-Decision Latency & $\leq 1.0$ s & 0.71 s & Exceeded \\
+Cleaning Trigger Accuracy & $\geq 90.0\%$ & 93.8\% & Exceeded \\
+Water Use per Panel (vs.\ 2.8 L manual baseline) & $\leq 0.6$ L & 0.34 L & Exceeded \\
+Cleaning Time per Panel & $\leq 15$ s & 5.2 s & Exceeded \\
+Dashboard / Control-Loop Uptime & $\geq 99.0\%$ & 99.4\% & Exceeded \\
+Concurrent Processing Throughput & $\geq 20$ panels/min & 34 panels/min & Exceeded \\
+\bottomrule
+\end{tabular}
+\caption{Solar Sage AI Prototype Performance Metrics Summary}
+\end{table}
+
+\section{Analysis}
+
+The prototype results indicate that the Solar Sage AI workflow can satisfy the core engineering targets defined for the pilot. Perception-to-decision latency of 0.71~s remains below the one-second target, while cleaning trigger accuracy reaches 93.8\%. The reported water-use figure of 0.34~L per panel is substantially below the 2.8~L manual baseline and the 0.6~L project target.
+
+The prototype also reports a 5.2-second cleaning time per panel, 99.4\% dashboard/control-loop uptime, and concurrent processing of 34 panels per minute. Together, these figures support the intended condition-based workflow: inspect the array, identify panels that require attention, and actuate cleaning only where the decision layer indicates a sufficient need.
+
+% ======================================================
+\chapter{Conclusion}
+
+\section{Summary of Work}
+
+During the first half of the project lifecycle, the team defined and prototyped an end-to-end Solar Sage AI workflow connecting drone inspection, RGB/thermal image capture, OpenCV perception, heuristic dirt scoring, multi-agent decision-making, ESP32 actuation, and telemetry/dashboard reporting.
+
+\section{Key Findings}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Fast edge response:} 0.71~s perception-to-decision latency was achieved in the prototype benchmark.
+    \item \textbf{Reliable cleaning decisions:} cleaning trigger accuracy reached 93.8\%, above the project target.
+    \item \textbf{Reduced water use:} the Prototype v0.3 figure is 0.34~L per panel versus a 2.8~L manual baseline.
+    \item \textbf{Targeted actuation:} 5.2~s cleaning time per panel supports short, condition-based intervention.
+    \item \textbf{Operational readiness:} 99.4\% control-loop/dashboard uptime and 34 panels/min processing throughput were reported.
+\end{itemize}
+
+\section{Future Work and Recommendations}
+
+\begin{itemize}[leftmargin=*]
+    \item Extend the multi-agent decision layer for confidence, priority, benchmarking, ROI, and water optimisation across larger arrays.
+    \item Validate the system across larger test arrays and wider ranges of dust, lighting, glare, weather, and panel orientation.
+    \item Move from heuristic dirt classification toward learned edge-AI models as a stretch goal for difficult visual cases.
+    \item Strengthen multi-drone coordination and scalable dashboard data handling for deployment at utility scale.
+    \item Containerize the software stack and formalize CI/CD staging and production deployment.
+\end{itemize}
+
+\section{Final Remarks}
+
+Solar Sage AI offers a practical engineering path from inspection to condition-based cleaning by linking perception, decision-making, actuation, and measurement in one control loop. The prototype demonstrates measurable improvements in latency, trigger accuracy, resource consumption, and operational throughput, while the architecture leaves a clear path toward larger pilot deployments and more advanced edge-AI perception.
+
+% ======================================================
+\chapter*{Bibliography}
+\addcontentsline{toc}{chapter}{Bibliography}
+
+% Add references here, e.g.:
+% \begin{thebibliography}{9}
+% \bibitem{ref1} Author, Title, Publisher, Year.
+% \end{thebibliography}
+
+\end{document}

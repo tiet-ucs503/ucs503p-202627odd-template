@@ -26,10 +26,33 @@ a.autorefs-external:hover::after {
   background-color: var(--md-accent-fg-color);
 }
 
+/* ======================== */
+/*    Solar Sage Branding   */
+/* ======================== */
+
+/* Custom Primary Color */
 :root {
+  --md-primary-fg-color: #1a1a2e;
+  --md-primary-fg-color--light: #16213e;
+  --md-primary-fg-color--dark: #0f0f1a;
   --md-hue: 36deg;
 }
 
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #1a1a2e;
+  --md-primary-fg-color--light: #16213e;
+  --md-primary-fg-color--dark: #0f0f1a;
+  --md-accent-fg-color: #FFB74D;
+}
+
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #1a1a2e;
+  --md-primary-fg-color--light: #2a2a4e;
+  --md-primary-fg-color--dark: #0f0f1a;
+  --md-accent-fg-color: #FF8A65;
+}
+
+/* Logo Styling */
 .tiet-logo {
   height: 2.9em !important;
   filter: invert(30%) sepia(26%) saturate(6248%) hue-rotate(345deg) brightness(83%) contrast(84%);
@@ -41,4 +64,51 @@ a.autorefs-external:hover::after {
   padding-left: 0.33em;
   color: #bf9003;
   font-size: 0.7em;
+}
+
+/* Navigation Enhancement */
+.md-header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+}
+
+.md-tabs {
+  background: rgba(22, 33, 62, 0.95) !important;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better figure/image styling */
+figure {
+  margin: 1.5rem 0;
+}
+
+figure img {
+  border-radius: 8px;
+  border: 1px solid var(--md-typeset-table-color);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+figure img:hover {
+  transform: scale(1.01);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+figcaption {
+  text-align: center;
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin-top: 0.5rem;
+}
+
+/* Footer Branding */
+.md-footer {
+  background: #1a1a2e !important;
+}
+
+/* Content area tweaks */
+.md-content__inner {
+  max-width: 960px;
 }
