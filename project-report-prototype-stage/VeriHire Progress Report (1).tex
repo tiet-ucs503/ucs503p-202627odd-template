@@ -1,0 +1,569 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in,bottom=1.2in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+
+\onehalfspacing
+
+% ==================== FOOTER CONFIGURATION ====================
+\pagestyle{fancy}
+\fancyhf{}
+
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\fancyfoot[L]{%
+  \parbox{\textwidth}{%
+    \textbf{\thepage}\quad UCS503 - Software Engineering\\[-0.2em]
+    \rule{\textwidth}{0.5pt}%
+  }%
+}
+
+\fancypagestyle{plain}{%
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0pt}
+  \renewcommand{\footrulewidth}{0pt}
+  \fancyfoot[L]{%
+    \parbox{\textwidth}{%
+      \textbf{\thepage}\quad UCS503 - Software Engineering\\[-0.2em]
+      \rule{\textwidth}{0.5pt}%
+    }%
+  }%
+}
+
+\begin{document}
+
+% ==================== TITLE PAGE ====================
+\begin{titlepage}
+    \centering
+    \vspace*{0.5cm}
+
+    {\large \textbf{UCS503 - Software Engineering}}\\[1.5cm]
+
+    {\LARGE \textbf{VeriHire: AI-Powered Job Posting Verification System}}\\[0.5cm]
+
+    {\large \textit{An Explainable Machine Learning System for Detecting Suspicious Job and Internship Postings}}\\[2cm]
+
+    \textbf{Submitted by:}\\[0.3cm]
+
+    \begin{tabular}{ll}
+        \textbf{Nidhish} & \texttt{1024160013} \\
+        \textbf{Geet Rawal} & \texttt{1024160012} \\
+        \textbf{Parvesh} & \texttt{1024160017} \\
+    \end{tabular}\\[1.5cm]
+
+    \textbf{Faculty Advisor:}\\
+    Dr. Jeelani\\[2cm]
+
+    \vfill
+
+    {\large \textbf{Progress Evaluation}}\\[0.2cm]
+    {\bfseries Computer Science and Engineering Department}\\[0.15cm]
+    Thapar Institute of Engineering and Technology, Patiala\\[0.5cm]
+    \today
+
+\end{titlepage}
+
+
+% ==================== TABLE OF CONTENTS ====================
+\tableofcontents
+\newpage
+
+
+% ==================== CHAPTER 1: INTRODUCTION ====================
+\chapter{Introduction}
+
+\section{Background and Context}
+
+Online job and internship platforms have significantly simplified the process of discovering employment opportunities. However, the increasing number of fraudulent and misleading postings has created a serious risk for students and job seekers. Fraudulent postings may use unrealistic compensation, registration or application fees, generic contact information, urgency-based language, or incomplete organizational details to manipulate applicants.
+
+VeriHire is being developed as an AI-powered verification platform that analyzes job and internship postings and identifies suspicious characteristics before a user applies. Rather than treating the problem as a simple binary ``real or fake'' classification, the system is designed to provide a risk assessment supported by interpretable suspicious signals.
+
+The project combines a web-based verification interface with a machine learning pipeline so that users can submit a posting, receive a risk assessment, inspect the detected signals, and review their previous verification activity.
+
+\subsection{Problem Statement}
+
+Existing job platforms primarily focus on discovering and applying to opportunities and generally do not provide a dedicated mechanism for analyzing whether a posting contains characteristics commonly associated with fraudulent recruitment.
+
+Students and inexperienced applicants may therefore have difficulty identifying suspicious postings, especially when scams are presented using professional-looking job descriptions. Manually evaluating every posting is time-consuming and subjective.
+
+VeriHire addresses this gap by designing an explainable verification system that analyzes textual and contextual features of job and internship postings, assigns a risk level, provides a confidence estimate, and highlights the signals contributing to the assessment.
+
+\section{Project Objectives}
+
+The current project objectives are:
+
+\begin{enumerate}
+
+    \item \textbf{AI-Based Risk Assessment:}
+    Develop a machine learning pipeline capable of estimating the risk associated with a job or internship posting.
+
+    \item \textbf{Suspicious Signal Detection:}
+    Identify interpretable indicators such as payment requests, unrealistic compensation, suspicious contact information, urgency-based language, and incomplete organizational information.
+
+    \item \textbf{Explainable Results:}
+    Present the risk assessment together with the signals that contributed to the result rather than returning only a binary prediction.
+
+    \item \textbf{Web-Based Verification:}
+    Provide a React-based interface through which users can submit job posting text or supported URLs for analysis.
+
+    \item \textbf{Verification History:}
+    Maintain a history of previously analyzed postings so users can revisit earlier results.
+
+    \item \textbf{Analytics Dashboard:}
+    Provide an authenticated dashboard containing verification statistics, risk distribution, activity trends, and frequently detected suspicious signals.
+
+    \item \textbf{Professional Product Experience:}
+    Develop a consistent dark, premium interface connecting the interactive constellation-based landing experience with the authenticated verification environment.
+
+\end{enumerate}
+
+
+% ==================== CHAPTER 2: METHODOLOGY & DESIGN ====================
+\chapter{Methodology and Design}
+
+\section{System Architecture}
+
+VeriHire follows a modular web application architecture separating the presentation layer, verification logic, machine learning pipeline, and persistent application services.
+
+\subsection{High-Level Design}
+
+The current architecture is organized into the following major layers:
+
+\begin{enumerate}
+
+    \item \textbf{Presentation Layer:}
+    A React-based frontend providing the landing page, posting checker, verification result interface, authentication screens, and dashboard.
+
+    \item \textbf{Verification Layer:}
+    Processes submitted job or internship posting content and prepares it for analysis.
+
+    \item \textbf{Machine Learning Layer:}
+    Extracts relevant textual and contextual features and produces a fraud-risk assessment.
+
+    \item \textbf{Explainability Layer:}
+    Converts model output and rule-based indicators into understandable suspicious signals that can be presented to the user.
+
+    \item \textbf{Application Data Layer:}
+    Stores authentication, verification history, and other application-level information required by the product.
+
+\end{enumerate}
+
+
+\subsection{Technical Stack}
+
+The current project uses the following technologies and design choices:
+
+\begin{itemize}
+
+    \item \textbf{Frontend Framework:}
+    React with Vite.
+
+    \item \textbf{Language:}
+    JavaScript / JSX.
+
+    \item \textbf{Styling:}
+    Tailwind CSS and custom design tokens where applicable.
+
+    \item \textbf{Icons:}
+    Lucide React.
+
+    \item \textbf{Backend:}
+    REST-based backend services for authentication, verification, and application data.
+
+    \item \textbf{Machine Learning:}
+    Python-based machine learning pipeline.
+
+    \item \textbf{Data Processing:}
+    Pandas and NumPy.
+
+    \item \textbf{Machine Learning Libraries:}
+    scikit-learn and related model tooling.
+
+    \item \textbf{Database:}
+    Application database layer for user and verification data.
+
+    \item \textbf{Development Environment:}
+    Git/GitHub with Antigravity-assisted development workflow.
+
+\end{itemize}
+
+
+\section{Machine Learning Methodology}
+
+The ML component is being designed as a risk-assessment system rather than a black-box binary classifier.
+
+\subsection{Data and Feature Strategy}
+
+The training and validation strategy is based on labeled fraudulent-job data together with real-world job posting examples and manually engineered patterns relevant to Indian recruitment scams.
+
+Important feature groups include:
+
+\begin{itemize}
+
+    \item Payment or registration fee indicators.
+
+    \item Salary and stipend realism.
+
+    \item Suspicious or generic contact information.
+
+    \item Email and domain characteristics.
+
+    \item Job-description language and suspicious phrases.
+
+    \item Urgency and pressure-based wording.
+
+    \item Experience and qualification inconsistencies.
+
+    \item Completeness of company and job information.
+
+    \item Other textual and contextual indicators associated with suspicious recruitment.
+
+\end{itemize}
+
+
+\subsection{Model Selection Strategy}
+
+Candidate supervised classification models are being evaluated using standard classification metrics such as precision, recall, and F1-score.
+
+The current design considers tree-based ensemble learning, particularly Random Forest and gradient-boosting approaches, as strong candidates because they can model nonlinear relationships between heterogeneous risk features.
+
+The final production model will be selected after comparative evaluation on the prepared validation data. The model output will subsequently be transformed into a normalized risk score used by the application.
+
+
+\subsection{Risk Assessment and Explainability}
+
+The final user-facing result is intended to contain:
+
+\begin{itemize}
+
+    \item \textbf{Risk Level:}
+    LOW, MEDIUM, or HIGH.
+
+    \item \textbf{Risk Score:}
+    A normalized score representing the estimated level of concern.
+
+    \item \textbf{Model Confidence:}
+    Confidence associated with the prediction.
+
+    \item \textbf{Detected Signals:}
+    Human-readable reasons contributing to the assessment.
+
+    \item \textbf{Recommendation:}
+    A practical action for the applicant based on the detected risk.
+
+\end{itemize}
+
+The system is designed to communicate that a high-risk assessment is an indication for further verification and caution, rather than definitive proof that a posting is fraudulent.
+
+
+\section{Implementation Progress}
+
+\subsection{Module 1: Project Definition and Software Engineering Artifacts}
+
+The initial project scope and system requirements have been established. The use-case and data-flow representations were reviewed and corrected to better match the actual VeriHire workflow.
+
+The main workflow currently follows:
+
+\begin{equation}
+\text{User} \rightarrow \text{Posting Input} \rightarrow \text{Analysis} \rightarrow
+\text{Risk Assessment} \rightarrow \text{Explainable Result}
+\end{equation}
+
+
+\subsection{Module 2: Authentication and Application Foundation}
+
+The basic frontend and backend foundation for user authentication has been implemented. The project includes the initial login and signup flow and the authenticated application structure required to support dashboard access.
+
+The authentication layer is being integrated with the rest of the application so that verification activity can be associated with a user.
+
+
+\subsection{Module 3: Frontend Product Interface}
+
+A React-based interface has been developed and the major product screens are being organized into a coherent application flow.
+
+The landing experience uses an interactive constellation/network visual as the primary brand element. The constellation represents signals and connections and establishes the technical identity of VeriHire.
+
+The authenticated dashboard has also been implemented with the following current sections:
+
+\begin{itemize}
+
+    \item Overview
+
+    \item Check Posting
+
+    \item History
+
+    \item Analytics
+
+    \item Settings
+
+    \item Help / Methodology
+
+\end{itemize}
+
+The current dashboard contains verification KPIs, recent verification records, risk distribution, verification activity, action-required items, frequently detected signals, and system status information.
+
+
+\subsection{Module 4: Verification Dashboard}
+
+The dashboard is designed as a verification control center rather than a generic administrative interface.
+
+The current design includes:
+
+\begin{itemize}
+
+    \item Total verification count.
+
+    \item High-, medium-, and low-risk posting counts.
+
+    \item Recent verification table.
+
+    \item Risk distribution visualization.
+
+    \item Verification activity trend.
+
+    \item Action-required verification items.
+
+    \item Frequently detected suspicious signals.
+
+    \item Model and analysis engine status.
+
+\end{itemize}
+
+The interface is currently being refined using a dark, near-black theme with layered surfaces, restrained green/cyan accents, and modern typography. Technical monospace typography is being limited to system metadata rather than the entire interface.
+
+
+\subsection{Module 5: Verification Result Design}
+
+The verification result is being designed as the main analytical output of the system.
+
+The planned result structure includes:
+
+\begin{itemize}
+
+    \item Overall risk classification.
+
+    \item Numerical risk score.
+
+    \item Model confidence.
+
+    \item Detected suspicious signals.
+
+    \item Evidence from the submitted posting.
+
+    \item Explanation of why each signal is relevant.
+
+    \item Recommended next action.
+
+\end{itemize}
+
+This design ensures that the ML prediction is presented together with interpretable evidence.
+
+
+% ==================== CHAPTER 3: CURRENT STATUS & EVALUATION ====================
+\chapter{Current Status and Evaluation}
+
+\section{Development Status}
+
+The project has progressed from initial requirements and software engineering documentation into active implementation of the product interface, authentication foundation, dashboard, and machine learning architecture.
+
+\begin{table}[h]
+\centering
+
+\begin{tabular}{p{0.55\textwidth}p{0.25\textwidth}}
+
+\toprule
+
+\textbf{Component} & \textbf{Current Status} \\
+
+\midrule
+
+Project scope and requirements & Completed \\
+
+Use-case and DFD refinement & Completed \\
+
+React application foundation & Completed \\
+
+Authentication foundation & Implemented \\
+
+Landing page concept & Implemented / Refining \\
+
+Dashboard overview & Implemented / Refining \\
+
+Verification checker & In development \\
+
+Verification result interface & In development \\
+
+History interface & Planned / In development \\
+
+Analytics interface & In development \\
+
+ML data preparation & In progress \\
+
+Model comparison and validation & In progress \\
+
+Backend-frontend integration & In progress \\
+
+\bottomrule
+
+\end{tabular}
+
+\caption{Current VeriHire Development Status}
+
+\label{tab:status}
+
+\end{table}
+
+
+\section{Testing Strategy}
+
+The project will evaluate the system at multiple levels:
+
+\begin{itemize}
+
+    \item \textbf{Unit Testing:}
+    Validate individual preprocessing, feature extraction, risk calculation, and utility functions.
+
+    \item \textbf{Model Evaluation:}
+    Compare candidate classifiers using precision, recall, F1-score, confusion matrix, and related classification metrics.
+
+    \item \textbf{Integration Testing:}
+    Verify the complete flow from posting submission through backend processing and result delivery.
+
+    \item \textbf{Frontend Testing:}
+    Verify authentication, navigation, posting submission, result rendering, history access, and dashboard interactions.
+
+    \item \textbf{Edge-Case Testing:}
+    Test incomplete postings, extremely short inputs, suspicious URLs, missing fields, and malformed submissions.
+
+\end{itemize}
+
+
+\section{Current Challenges}
+
+The major challenges being addressed during the current development phase include:
+
+\begin{enumerate}
+
+    \item \textbf{Explainability:}
+    Ensuring that the ML prediction can be communicated through understandable suspicious signals.
+
+    \item \textbf{Dataset Generalization:}
+    Ensuring that the model performs well on real-world job postings rather than only on the training dataset.
+
+    \item \textbf{Risk Calibration:}
+    Designing meaningful LOW, MEDIUM, and HIGH risk thresholds without presenting the prediction as absolute proof of fraud.
+
+    \item \textbf{Frontend Consistency:}
+    Maintaining a coherent visual identity between the constellation landing page and the authenticated dashboard.
+
+    \item \textbf{Backend Integration:}
+    Connecting the implemented frontend screens with real verification and ML services while keeping the application architecture modular.
+
+\end{enumerate}
+
+
+% ==================== CHAPTER 4: CONCLUSION ====================
+\chapter{Conclusion}
+
+\section{Summary of Progress}
+
+During the current development phases, VeriHire has progressed from project definition and software engineering documentation to implementation of the core application foundation.
+
+The authentication foundation, React frontend structure, constellation-based landing experience, and dark verification dashboard have been developed. The ML architecture has also been defined around explainable risk assessment, suspicious signal detection, and comparative evaluation of candidate classification models.
+
+The current work is focused on completing the posting-analysis workflow, integrating the ML pipeline with the backend, implementing the detailed verification result interface, and connecting the remaining dashboard functionality with real application data.
+
+
+\section{Key Findings}
+
+The development process has established several important design decisions:
+
+\begin{itemize}
+
+    \item \textbf{Risk Assessment over Binary Classification:}
+    VeriHire should communicate levels of risk and supporting evidence instead of presenting fraud detection as an infallible binary decision.
+
+    \item \textbf{Explainability is Central:}
+    The usefulness of the system depends not only on prediction accuracy but also on explaining the suspicious signals detected in a posting.
+
+    \item \textbf{Product Trust Requires Visual Consistency:}
+    The constellation-based landing page and the authenticated dashboard need to share a consistent technical identity while serving different purposes.
+
+\end{itemize}
+
+
+\section{Future Work and Recommendations}
+
+The next development phases will focus on:
+
+\begin{enumerate}
+
+    \item Completing the ML preprocessing, feature engineering, model comparison, and validation pipeline.
+
+    \item Finalizing the production model based on validation performance.
+
+    \item Integrating the ML inference service with the backend API.
+
+    \item Completing the Check Posting workflow for text and supported URL inputs.
+
+    \item Implementing the detailed Verification Result page.
+
+    \item Completing History and Analytics functionality.
+
+    \item Connecting dashboard statistics to real verification records.
+
+    \item Adding comprehensive frontend, backend, and ML testing.
+
+    \item Preparing the system for deployment and final evaluation.
+
+\end{enumerate}
+
+
+\section{Final Remarks}
+
+VeriHire is being developed as an explainable AI-assisted verification platform for students and job seekers. The current implementation establishes the product foundation, while the remaining work will concentrate on validating the machine learning pipeline and integrating it into a reliable end-to-end verification workflow.
+
+
+% ==================== REFERENCES ====================
+\begin{thebibliography}{9}
+
+\bibitem{scikit}
+
+Scikit-learn Documentation,
+
+\emph{Machine Learning in Python},
+
+\url{https://scikit-learn.org/}
+
+
+\bibitem{pandas}
+
+Pandas Documentation,
+
+\emph{Python Data Analysis Library},
+
+\url{https://pandas.pydata.org/}
+
+
+\bibitem{react}
+
+React Documentation,
+
+\emph{React: The library for web and native user interfaces},
+
+\url{https://react.dev/}
+
+\end{thebibliography}
+
+
+\end{document}

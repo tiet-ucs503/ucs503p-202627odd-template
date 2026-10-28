@@ -1,5 +1,6 @@
-site_name: "UCS503 : Software Engineering : Project Template"
-site_url: https://tiet-ucs503.github.io/ucs503p-202627odd-template
+site_name: "VeriHire — AI-Powered Resume Verification and Hiring Platform"
+
+site_url: https://nidhish2211.github.io/VeriHire_SE/
 
 plugins:
 - search
@@ -46,14 +47,14 @@ theme:
   logo: assets/tiet-logo.svg
   favicon: assets/favicon.png
 
-repo_url: https://github.com/tiet-ucs503/ucs503p-202627odd-template
-repo_name: ucs503p-202627odd-template
+repo_url: https://github.com/nidhish2211/VeriHire_SE
+repo_name: VeriHire_SE
 copyright: "Copyright &copy; 2025 <a href='https://bvraghav.com/'>Raghav B. Venkataramaiyer</a> &lt;<code style='color:inherit; background:transparent'>bv.raghav</code>&gt;"
 extra:
   social:
   - icon: fontawesome/brands/github
-    link: https://github.com/tiet-ucs503/ucs503p-202627odd-template
-    name: Git Repo for UCS503P Project Template
+    link: https://github.com/nidhish2211/VeriHire_SE
+    name: VeriHire GitHub Repository
 
 extra_css:
   - assets/stylesheets/extra.css

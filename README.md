@@ -1,45 +1,41 @@
-# UCS503P Project Template
+# VeriHire
 
-This is a project template for UCS503P Project (2026-27
-ODD). 
+VeriHire is an AI-powered recruitment and candidate evaluation system designed to assist organizations in screening, analyzing, and evaluating job applicants efficiently.
 
-There are 3 reports in LaTeX format, namely *a*)
-Project Proposal, *b*) Project Report Prototype Stage,
-and *c*) Project Report Final -- each in their
-respective folders.
+The project is developed as part of the **UCS503P – Software Engineering Project (2026–27 ODD)**.
 
-Journals are stacked under the folder `journals`, one
-folder for each team member.  A sample entry has been
-made for example.
+## Project Overview
 
-The source code is contained within the folder `code`.
+Traditional recruitment processes often involve manually reviewing large numbers of resumes and evaluating candidates across multiple criteria. VeriHire aims to streamline this process by providing a centralized platform for candidate management and intelligent evaluation.
 
-The documentation is under folder `docs`.
+The system is designed to support:
 
-All other aspects of code organisation are left to the
-discretion of the user(s).
+- Candidate registration and management
+- Resume and candidate information processing
+- Candidate evaluation and scoring
+- Job and applicant management
+- Automated analysis
+- Recruitment documentation and reporting
 
+## Repository Structure
 
-## Docs
-
-As of now, the `docs` is just an organised collection
-of markdown (`md`) files.  But the build procedure is
-using [`mkdocs`](https://google.com/search?q=mkdocs)
-backend.  As a result, any commit into the `master`
-branch of github repository would result in CI/CD based
-build and deployment of the documentation including the
-journals.
-
-For a local DEV-version of the docs for viewing and
-testing, install the local env and issue the following
-command:
-
-``` shell
-make docs
-```
-
-### Local `env` for `docs`
-
-``` shell
-
-```
+```text
+VeriHire_SE/
+│
+├── code/                 # Source code of the project
+│
+├── docs/                 # Project documentation
+│
+├── journals/             # Individual team member journals
+│   ├── <member-1>/
+│   ├── <member-2>/
+│   └── ...
+│
+├── project-proposal/     # Project proposal documents
+│
+├── project-report/       # Project reports
+│
+├── mkdocs.yml            # MkDocs configuration
+├── Makefile              # Project automation commands
+├── pyproject.toml        # Python project configuration
+└── README.md             # Project overview
