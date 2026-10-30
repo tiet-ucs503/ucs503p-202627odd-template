@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Vigilante — Inbox</title>
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+
+<body class="page">
+    <div class="header">
+        <h2>Prioritized Inbox</h2>
+        <p class="muted">
+            <%= email %> — <%= emails.length %> emails, sorted by importance
+        </p>
+    </div>
+    <div class="list">
+        <% emails.forEach(function (e) { %>
+            <div class="email <%= e.badge.dimmed ? 'dimmed' : '' %>">
+                <div class="email-top">
+                    <span class="from">
+                        <%= e.sender %>
+                    </span>
+                    <span class="score-wrap">
+                        <span class="badge <%= e.badge.cls %>">
+                            <%= e.badge.text %>
+                        </span>
+                        <span class="score-num">
+                            <%= e.badge.display %>
+                        </span>
+                    </span>
+                </div>
+                <div class="subject">
+                    <%= e.subject || "(no subject)" %>
+                </div>
+                <div class="snippet">
+                    <%= e.snippet %>
+                </div>
+                <div class="labels">
+                    <% e.gmail_labels.forEach(function (l) { %>
+                        <span class="label">
+                            <%= l %>
+                        </span>
+                        <% }); %>
+                </div>
+            </div>
+            <% }); %>
+    </div>
+</body>
+
+</html>

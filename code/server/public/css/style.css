@@ -1,0 +1,164 @@
+/* public/css/style.css */
+body {
+    font-family: system-ui, sans-serif;
+    background: #13151b;
+    color: #eef1f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.card {
+    background: #1f222b;
+    padding: 2.5rem 3rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    text-align: center;
+}
+
+h2 {
+    margin: 0 0 1rem;
+}
+
+.ok {
+    color: #7ee3a0;
+}
+
+.err {
+    color: #f28b82;
+}
+
+.muted {
+    color: #9aa3b6;
+    font-size: 0.95rem;
+}
+
+/* --- Inbox / email list page --- */
+.page {
+    display: block;
+    height: auto;
+    padding: 2rem;
+}
+
+.header {
+    max-width: 900px;
+    margin: 0 auto 1.5rem;
+}
+
+.header h2 {
+    color: #7ee3a0;
+    margin: 0 0 0.3rem;
+}
+
+.header .muted {
+    color: #9aa3b6;
+}
+
+.list {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.email {
+    background: #1f222b;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.email .from {
+    color: #eef1f7;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.email .subject {
+    color: #cdd3df;
+    margin: 0.25rem 0;
+}
+
+.email .snippet {
+    color: #9aa3b6;
+    font-size: 0.88rem;
+}
+
+.email .labels {
+    margin-top: 0.4rem;
+}
+
+.label {
+    display: inline-block;
+    font-size: 0.72rem;
+    color: #8fb0f0;
+    background: #23283a;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 4px;
+    margin-bottom: 2px;
+}
+
+/* --- Scored inbox: badges & score --- */
+.email-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.score-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.3px;
+}
+
+.badge-high {
+    background: #1f3d2b;
+    color: #7ee3a0;
+}
+
+/* important — green */
+.badge-mid {
+    background: #3d371f;
+    color: #e3c67e;
+}
+
+/* low — amber */
+.badge-low {
+    background: #3d2320;
+    color: #f28b82;
+}
+
+/* archive — red */
+.badge-unknown {
+    background: #2a2e3a;
+    color: #9aa3b6;
+}
+
+.score-num {
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-variant-numeric: tabular-nums;
+    min-width: 2.4rem;
+    text-align: right;
+}
+
+.email.dimmed {
+    opacity: 0.55;
+}
+
+.email.dimmed:hover {
+    opacity: 1;
+    transition: opacity 0.15s;
+}

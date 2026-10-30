@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Vigilante — Connected</title>
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+
+<body>
+    <div class="card">
+        <h2 class="ok">Gmail connected successfully</h2>
+        <p>Connected as: <strong>
+                <%= email %>
+            </strong></p>
+        <p class="muted">Refresh token stored: <%= hasRefreshToken ? "yes" : "NO — see console" %>
+        </p>
+    </div>
+</body>
+
+</html>
