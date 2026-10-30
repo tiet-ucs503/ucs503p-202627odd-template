@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  color-scheme: light;
+  --font-serif: 'DM Serif Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+
+  /* Prompt Recommended Palette: "The Local Standard" */
+  --background: #FAF9F6;          /* Warm ivory background */
+  --foreground: #202321;          /* Primary dark text */
+  --card: #FFFFFF;                /* Pure white surface */
+  --card-foreground: #202321;
+  --popover: #FFFFFF;
+  --popover-foreground: #202321;
+
+  --primary: #244C3A;             /* Forest green */
+  --primary-hover: #183628;       /* Deep forest green */
+  --primary-deep: #183628;
+  --primary-foreground: #FFFFFF;
+
+  --secondary: #E8EEE7;           /* Soft sage */
+  --secondary-foreground: #183628;
+
+  --muted: #F2F0EA;               /* Subtle neutral surface */
+  --muted-foreground: #777970;    /* Secondary text */
+
+  --accent: #E8EEE7;              /* Soft sage */
+  --accent-foreground: #244C3A;
+
+  --brass: #B79A64;               /* Muted brass */
+  --brass-foreground: #FFFFFF;
+
+  --destructive: #DC2626;         /* Restrained red */
+  --destructive-foreground: #FFFFFF;
+
+  --border: #E8E6DF;              /* Warm border */
+  --input: #E8E6DF;
+  --ring: #244C3A;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #111613;          /* Deep warm forest charcoal */
+  --foreground: #F4F5F2;
+  --card: #18201B;                /* Elevated dark surface */
+  --card-foreground: #F4F5F2;
+  --popover: #1F2823;
+  --popover-foreground: #F4F5F2;
+
+  --primary: #3E7358;             /* Lighter forest green for dark mode */
+  --primary-hover: #528E6F;
+  --primary-deep: #183628;
+  --primary-foreground: #FAF9F6;
+
+  --secondary: #1E2822;           /* Dark sage slate */
+  --secondary-foreground: #E0E7E1;
+
+  --muted: #1A221D;
+  --muted-foreground: #9EA39A;
+
+  --accent: #233128;
+  --accent-foreground: #72B38F;
+
+  --brass: #CBB17E;               /* Warm muted brass in dark mode */
+  --brass-foreground: #111613;
+
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+
+  --border: #26332A;              /* Muted dark border */
+  --input: #26332A;
+  --ring: #3E7358;
+}
+
+html, body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  transition: background-color 0.25s ease, color 0.25s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  border-color: var(--border);
+}
+
+::selection {
+  background-color: var(--primary);
+  color: #FFFFFF;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Editorial Serif Heading utility */
+.font-editorial {
+  font-family: var(--font-serif);
+  letter-spacing: -0.015em;
+}
+
