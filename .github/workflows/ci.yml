@@ -42,3 +42,5 @@ jobs:
       - run: npm run check:i18n
       - run: npm test
       - run: npm run build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:5001
