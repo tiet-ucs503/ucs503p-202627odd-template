@@ -1,0 +1,15 @@
+process.env.NODE_ENV = 'test';
+process.env.PORT = '5001';
+process.env.CLIENT_URL = 'http://localhost:3000';
+process.env.CORS_ORIGINS = 'http://localhost:3000';
+process.env.LOG_LEVEL = 'silent';
+process.env.DATABASE_URL = 'postgresql://agriconnect:agriconnect_local@localhost:5432/agriconnect';
+process.env.DIRECT_URL = process.env.DATABASE_URL;
+process.env.SUPABASE_URL = 'https://example.supabase.co';
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
+process.env.SUPABASE_LISTINGS_BUCKET = 'listings';
+process.env.JWT_ACCESS_SECRET = 'a'.repeat(64);
+process.env.JWT_REFRESH_SECRET = 'b'.repeat(64);
+process.env.ENCRYPTION_KEY = 'c'.repeat(64);
+process.env.ADMIN_SEED_EMAIL = 'admin@agriconnect.local';
+process.env.ADMIN_SEED_PASSWORD = 'replace_with_a_strong_password';

@@ -1,0 +1,55 @@
+---
+description: Update docs/WEEKLY_PROGRESS.md after product work; Sunday IST close-out before Monday faculty read.
+alwaysApply: true
+---
+
+# Weekly progress tracker
+
+Keep `docs/WEEKLY_PROGRESS.md` short. Team: **Kabir Manchanda**, **Manbhav Kumar Terry**. Faculty read it Monday → Monday (IST). Newest week on top. Do not invent work.
+
+## When to update (same session)
+
+Update **in the same session** whenever you ship, start, block, or materially change product work — not only on request.
+
+**Update when any of these happen:**
+- Feature, bug fix, UI, API, migration, Docker, or docs that faculty would notice
+- Task moved between Working on / Done / Blocked / Backlog
+- A session finishes with uncommitted or newly committed work
+
+**Skip only:** pure Q&A, read-only reviews, or edits that do not change product behavior.
+
+Before ending a product session, if the board or “What we delivered” is stale, touch `docs/WEEKLY_PROGRESS.md` in that same change — do not leave it for later.
+
+## Sunday recheck (IST)
+
+If **today is Sunday (IST)** or the user asks for a weekly close-out, run a **final pass** on the project and file:
+
+1. **Recheck repo** — `git status`, recent commits, uncommitted diff; align Working on / Done with reality.
+2. **Recheck board** — move finished rows to **Done** (commit hash or named screen); drop stale Working on; refresh **Risks** and **Next week**.
+3. **Recheck phases** — update Lab / Prototype / Capstone one-liners if shipped scope changed.
+4. **Set header** — **Updated** = today; **Status** = Green / Amber / Red with one short reason.
+5. **Do not wait for Monday** — Sunday is the last edit before faculty reads on Monday.
+
+If it is not Sunday and the week is still open, still update after changes; save full board sweep for Sunday unless the user asks sooner.
+
+## Format (do not grow)
+
+1. **Current week block** (top): week number + Mon→Mon dates, team, updated, Green/Amber/Red, **Lab / Prototype / Capstone** phase snapshot, board table, risks, next week.
+2. **Archive** (below): one `### Week N — Mon … → Mon …` section per closed week; paste the closed board + status; do not delete history.
+3. **Monday roll:** increment week number; move previous week to Archive; carry leftover **Working on** into the new board; clear stale Done rows from the live board.
+
+Use **Lab → Prototype → Capstone** (PRD phased growth model). Do **not** label faculty progress as V1/V2/V3 — those are internal release tags; `/api/v1` is API versioning, not the project phase.
+
+| Phase | Faculty-facing name | Theme |
+|---|---|---|
+| Lab | **Lab milestone** | Functional CRUD marketplace |
+| Prototype | **Prototype milestone** | Real-time, production-shaped system |
+| Capstone | **Capstone milestone** | AI-assisted advisory platform |
+
+Verify **Done** against `git log`, `git status`, and code — do not invent features.
+
+4. One line **risks** and **next week** under the current board only. No faculty how-to, no day log.
+
+Uncommitted work stays in **Working on**. **Done** needs a commit hash or a named screen/file path.
+
+**Markdown:** table rows must be **consecutive lines** — no blank lines between `|` rows or tables will not render.

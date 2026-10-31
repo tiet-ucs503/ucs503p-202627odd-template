@@ -1,0 +1,465 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  FARMER
+  BUYER
+  ADMIN
+  /// Human expert for Grounded Kisan escalation. Seeded only — not self-registerable.
+  AGRONOMIST
+}
+
+enum ListingStatus {
+  draft
+  active
+  sold_out
+  expired
+  removed
+}
+
+enum OrderStatus {
+  pending
+  accepted
+  confirmed
+  fulfilled
+  cancelled
+}
+
+enum BidStatus {
+  pending
+  accepted
+  rejected
+  countered
+  withdrawn
+}
+
+enum Unit {
+  kg
+  quintal
+  ton
+}
+
+enum DeliveryMode {
+  pickup
+  delivery
+}
+
+enum BuyerType {
+  trader
+  retailer
+  bulk
+  horeca
+}
+
+enum NotificationType {
+  ORDER_PLACED
+  ORDER_STATUS_CHANGED
+  MESSAGE_RECEIVED
+  LISTING_EXPIRING
+  LISTING_PUBLISHED
+  ACCOUNT_SUSPENDED
+  LISTING_MODERATED
+  PASSWORD_RESET
+  ADVISORY_ESCALATION
+  BID_RECEIVED
+  BID_ACCEPTED
+  BID_REJECTED
+  BID_COUNTERED
+}
+
+enum EscalationStatus {
+  pending
+  claimed
+  resolved
+}
+
+enum LogisticsStatus {
+  none
+  dispatched
+  in_transit
+  delivered
+}
+
+enum PaymentStatus {
+  pending
+  authorized
+  held
+  released
+  refunded
+  failed
+}
+
+enum PaymentMethod {
+  upi
+  card
+  netbanking
+  cod
+}
+
+enum PriceTrendSource {
+  internal_listing
+  internal_order
+  agmarknet
+  enam
+}
+
+model User {
+  id                  String               @id @default(uuid()) @db.Uuid
+  email               String               @unique
+  passwordHash        String
+  role                Role
+  name                String
+  phone               String?
+  languagePref        String               @default("en")
+  state               String?
+  district            String?
+  village             String?
+  verified            Boolean              @default(false)
+  isSuspended         Boolean              @default(false)
+  failedLoginAttempts Int                  @default(0)
+  lockedUntil         DateTime?            @db.Timestamptz(6)
+  deletedAt           DateTime?            @db.Timestamptz(6)
+  createdAt           DateTime             @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime             @updatedAt @db.Timestamptz(6)
+  farmerProfile       FarmerProfile?
+  buyerProfile        BuyerProfile?
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  notifications       Notification[]
+  adminActivityLogs   AdminActivityLog[]   @relation("AdminActor")
+  buyerOrders         Order[]              @relation("OrderBuyer")
+  farmerOrders        Order[]              @relation("OrderFarmer")
+  messagesSent        Message[]
+  reviewsWritten      Review[]             @relation("ReviewAuthor")
+  reviewsReceived     Review[]             @relation("ReviewTarget")
+  buyerCropAlerts     BuyerCropAlert[]
+  escalationsOpened   AdvisoryEscalation[] @relation("EscalationFarmer")
+  escalationsAssigned AdvisoryEscalation[] @relation("EscalationAssignee")
+  bidsPlaced          Bid[]                @relation("BidBuyer")
+  bidsReceived        Bid[]                @relation("BidFarmer")
+
+  @@index([role])
+  @@index([isSuspended])
+  @@map("users")
+}
+
+model FarmerProfile {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @unique @db.Uuid
+  farmName  String?
+  region    String?
+  fpoId     String?   @db.Uuid
+  ratingAvg Decimal?  @db.Decimal(3, 2)
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listings  Listing[]
+
+  @@map("farmer_profiles")
+}
+
+model BuyerProfile {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @unique @db.Uuid
+  businessName String?
+  buyerType    BuyerType @default(trader)
+  ratingAvg    Decimal?  @db.Decimal(3, 2)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(6)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("buyer_profiles")
+}
+
+model Listing {
+  id                   String        @id @default(uuid()) @db.Uuid
+  farmerProfileId      String        @db.Uuid
+  crop                 String
+  category             String
+  variety              String?
+  quantity             Decimal       @db.Decimal(12, 3)
+  unit                 Unit
+  pricePerUnit         Decimal       @db.Decimal(12, 2)
+  harvestDate          DateTime      @db.Date
+  state                String
+  district             String
+  village              String?
+  description          String?
+  minimumOrderQuantity Decimal       @db.Decimal(12, 3)
+  status               ListingStatus @default(draft)
+  perishable           Boolean
+  viewCount            Int           @default(0)
+  interestCount        Int           @default(0)
+  expiresAt            DateTime?     @db.Timestamptz(6)
+  deletedAt            DateTime?     @db.Timestamptz(6)
+  createdAt            DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime      @updatedAt @db.Timestamptz(6)
+  farmerProfile        FarmerProfile @relation(fields: [farmerProfileId], references: [id])
+  photos               ListingPhoto[]
+  orders               Order[]
+  bids                 Bid[]
+
+  @@index([farmerProfileId])
+  @@index([status, crop])
+  @@index([status, state, district])
+  @@index([harvestDate])
+  @@index([deletedAt])
+  @@map("listings")
+}
+
+model ListingPhoto {
+  id          String   @id @default(uuid()) @db.Uuid
+  listingId   String   @db.Uuid
+  storagePath String
+  publicUrl   String
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, sortOrder])
+  @@index([listingId])
+  @@map("listing_photos")
+}
+
+model Order {
+  id                 String       @id @default(uuid()) @db.Uuid
+  listingId          String       @db.Uuid
+  buyerId            String       @db.Uuid
+  farmerId           String       @db.Uuid
+  quantity           Decimal      @db.Decimal(12, 3)
+  unit               Unit
+  pricePerUnit       Decimal      @db.Decimal(12, 2)
+  priceTotal         Decimal      @db.Decimal(12, 2)
+  status             OrderStatus  @default(pending)
+  deliveryMode       DeliveryMode
+  notes              String?
+  cancellationReason String?
+  logisticsStatus    LogisticsStatus @default(none)
+  dispatchedAt       DateTime?       @db.Timestamptz(6)
+  inTransitAt        DateTime?       @db.Timestamptz(6)
+  logisticsDeliveredAt DateTime?       @db.Timestamptz(6)
+  createdAt          DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime        @updatedAt @db.Timestamptz(6)
+  listing            Listing         @relation(fields: [listingId], references: [id])
+  buyer              User            @relation("OrderBuyer", fields: [buyerId], references: [id])
+  farmer             User            @relation("OrderFarmer", fields: [farmerId], references: [id])
+  messages           Message[]
+  reviews            Review[]
+  payment            Payment?
+
+  @@index([buyerId])
+  @@index([farmerId])
+  @@index([listingId])
+  @@index([status])
+  @@index([farmerId, status])
+  @@index([buyerId, status])
+  @@map("orders")
+}
+
+model Bid {
+  id              String    @id @default(uuid()) @db.Uuid
+  listingId       String    @db.Uuid
+  buyerId         String    @db.Uuid
+  farmerId        String    @db.Uuid
+  pricePerUnit    Decimal   @db.Decimal(12, 2)
+  quantity        Decimal   @db.Decimal(12, 3)
+  unit            Unit
+  priceTotal      Decimal   @db.Decimal(12, 2)
+  status          BidStatus @default(pending)
+  counterPrice    Decimal?  @db.Decimal(12, 2)
+  notes           String?
+  rejectionReason String?
+  orderId         String?   @db.Uuid
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+  listing         Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer           User      @relation("BidBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  farmer          User      @relation("BidFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, status])
+  @@index([buyerId, status])
+  @@index([farmerId, status])
+  @@map("bids")
+}
+
+model Notification {
+  id                String           @id @default(uuid()) @db.Uuid
+  userId            String           @db.Uuid
+  type              NotificationType
+  title             String
+  body              String
+  /// Structured values behind title/body so the client can render them in any language.
+  params            Json?
+  readAt            DateTime?        @db.Timestamptz(6)
+  relatedEntityType String?
+  relatedEntityId   String?          @db.Uuid
+  createdAt         DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime         @updatedAt @db.Timestamptz(6)
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+model RefreshToken {
+  id           String         @id @default(uuid()) @db.Uuid
+  userId       String         @db.Uuid
+  tokenHash    String
+  expiresAt    DateTime       @db.Timestamptz(6)
+  revokedAt    DateTime?      @db.Timestamptz(6)
+  replacedById String?        @unique @db.Uuid
+  userAgent    String?
+  ip           String?
+  createdAt    DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime       @updatedAt @db.Timestamptz(6)
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replacedBy   RefreshToken?  @relation("RefreshTokenRotation", fields: [replacedById], references: [id])
+  replaces     RefreshToken?  @relation("RefreshTokenRotation")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String
+  expiresAt DateTime  @db.Timestamptz(6)
+  usedAt    DateTime? @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model AdminActivityLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String   @db.Uuid
+  action     String
+  targetType String
+  targetId   String   @db.Uuid
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  actor      User     @relation("AdminActor", fields: [actorId], references: [id])
+
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
+  @@map("admin_activity_logs")
+}
+
+model Message {
+  id        String    @id @default(uuid()) @db.Uuid
+  orderId   String    @db.Uuid
+  senderId  String    @db.Uuid
+  body      String
+  sentAt    DateTime  @default(now()) @db.Timestamptz(6)
+  readAt    DateTime? @db.Timestamptz(6)
+  order     Order     @relation(fields: [orderId], references: [id])
+  sender    User      @relation(fields: [senderId], references: [id])
+
+  @@index([orderId, sentAt])
+  @@map("messages")
+}
+
+model Review {
+  id         String   @id @default(uuid()) @db.Uuid
+  orderId    String   @db.Uuid
+  fromUserId String   @db.Uuid
+  toUserId   String   @db.Uuid
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(6)
+  order      Order    @relation(fields: [orderId], references: [id])
+  fromUser   User     @relation("ReviewAuthor", fields: [fromUserId], references: [id])
+  toUser     User     @relation("ReviewTarget", fields: [toUserId], references: [id])
+
+  @@unique([orderId, fromUserId])
+  @@index([toUserId])
+  @@map("reviews")
+}
+
+model PriceTrend {
+  id           String           @id @default(uuid()) @db.Uuid
+  crop         String
+  state        String
+  district     String?
+  source       PriceTrendSource
+  pricePerUnit Decimal          @db.Decimal(12, 2)
+  unit         Unit
+  recordedAt   DateTime         @default(now()) @db.Timestamptz(6)
+  createdAt    DateTime         @default(now()) @db.Timestamptz(6)
+
+  @@index([crop, state, recordedAt(sort: Desc)])
+  @@map("price_trends")
+}
+
+model Payment {
+  id            String         @id @default(uuid()) @db.Uuid
+  orderId       String         @unique @db.Uuid
+  provider      String         @default("razorpay")
+  providerRef   String?
+  method        PaymentMethod?
+  status        PaymentStatus  @default(pending)
+  amount        Decimal        @db.Decimal(12, 2)
+  currency      String         @default("INR")
+  failureReason String?
+  heldAt        DateTime?      @db.Timestamptz(6)
+  releasedAt    DateTime?      @db.Timestamptz(6)
+  refundedAt    DateTime?      @db.Timestamptz(6)
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
+  order         Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("payments")
+}
+
+model BuyerCropAlert {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  crop      String?
+  state     String?
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, crop, state])
+  @@index([userId])
+  @@map("buyer_crop_alerts")
+}
+
+/// Grounded Kisan handoff when retrieval is weak or the ask is high-stakes (PRD §8.2).
+model AdvisoryEscalation {
+  id           String           @id @default(uuid()) @db.Uuid
+  farmerId     String           @db.Uuid
+  question     String
+  reason       String
+  language     String           @default("en")
+  status       EscalationStatus @default(pending)
+  assignedToId String?          @db.Uuid
+  resolution   String?
+  createdAt    DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime         @updatedAt @db.Timestamptz(6)
+  farmer       User             @relation("EscalationFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  assignedTo   User?            @relation("EscalationAssignee", fields: [assignedToId], references: [id])
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([farmerId, createdAt(sort: Desc)])
+  @@index([assignedToId])
+  @@map("advisory_escalations")
+}

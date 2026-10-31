@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: agriconnect-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: agriconnect
+      POSTGRES_USER: agriconnect
+      POSTGRES_PASSWORD: agriconnect_local
+    ports:
+      - "5432:5432"
+    volumes:
+      - agriconnect_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agriconnect -d agriconnect"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    container_name: agriconnect-api
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./frontend
+    container_name: agriconnect-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:5001
+    depends_on:
+      - api
+
+volumes:
+  agriconnect_postgres_data:

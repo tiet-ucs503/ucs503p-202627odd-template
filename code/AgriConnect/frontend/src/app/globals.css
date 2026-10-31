@@ -1,0 +1,197 @@
+@import "tailwindcss";
+
+:root {
+  --field: #f6f8f5;
+  --paper: #ffffff;
+  --forest: #0c2d1c;
+  --leaf: #15803d;
+  --harvest: #d97706;
+  --soil: #475569;
+  --ink: #0f172a;
+  --clay: #dc2626;
+}
+
+@theme inline {
+  --color-field: var(--field);
+  --color-paper: var(--paper);
+  --color-forest: var(--forest);
+  --color-leaf: var(--leaf);
+  --color-harvest: var(--harvest);
+  --color-soil: var(--soil);
+  --color-ink: var(--ink);
+  --color-clay: var(--clay);
+  --font-sans: var(--font-nunito);
+  --font-display: var(--font-fraunces);
+  --shadow-card: 0 2px 10px -1px rgba(12, 45, 28, 0.05), 0 1px 3px 0 rgba(12, 45, 28, 0.03);
+  --shadow-card-hover: 0 20px 32px -4px rgba(12, 45, 28, 0.12), 0 6px 14px -2px rgba(12, 45, 28, 0.06);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background-color: var(--field);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 0% -10%, rgb(21 128 61 / 0.08), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgb(217 119 6 / 0.07), transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cg fill='%230c2d1c' fill-opacity='0.035'%3E%3Ccircle cx='4' cy='4' r='1.2'/%3E%3Ccircle cx='40' cy='22' r='1'/%3E%3Ccircle cx='18' cy='48' r='1.1'/%3E%3C/g%3E%3C/svg%3E");
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+}
+
+html[lang='hi'] body,
+html[lang='mr'] body {
+  font-family: var(--font-noto-deva), 'Nirmala UI', var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+}
+
+html[lang='pa'] body {
+  font-family: var(--font-noto-gur), 'Nirmala UI', var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+}
+
+html[lang='bn'] body,
+html[lang='as'] body {
+  font-family: var(--font-noto-beng), 'Nirmala UI', var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+}
+
+html[lang='ta'] body {
+  font-family: var(--font-noto-taml), 'Nirmala UI', var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+}
+
+html[lang='te'] body {
+  font-family: var(--font-noto-telu), 'Nirmala UI', var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+}
+
+html[lang='gu'] body {
+  font-family: var(--font-noto-gujr), 'Nirmala UI', var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+}
+
+html[lang='kn'] body {
+  font-family: var(--font-noto-knda), 'Nirmala UI', var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+}
+
+html[lang='ml'] body {
+  font-family: var(--font-noto-mlym), 'Nirmala UI', var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+}
+
+html[lang='or'] body {
+  font-family: var(--font-noto-orya), 'Nirmala UI', var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Nastaliq is a tall calligraphic face; the extra leading keeps descenders off the row below. */
+html[lang='ur'] body {
+  font-family: var(--font-noto-urdu), 'Nirmala UI', var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  line-height: 2;
+}
+
+.font-display {
+  font-family: var(--font-fraunces), ui-serif, Georgia, serif;
+}
+
+html[lang='hi'] .font-display,
+html[lang='pa'] .font-display,
+html[lang='bn'] .font-display,
+html[lang='ta'] .font-display,
+html[lang='te'] .font-display,
+html[lang='mr'] .font-display,
+html[lang='gu'] .font-display,
+html[lang='kn'] .font-display,
+html[lang='ml'] .font-display,
+html[lang='or'] .font-display,
+html[lang='as'] .font-display,
+html[lang='ur'] .font-display {
+  font-family: inherit;
+}
+
+@keyframes kisan-idle {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.015);
+  }
+}
+
+@keyframes kisan-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes kisan-dots {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+.kisan-bounce {
+  animation: kisan-idle 3.6s ease-in-out infinite;
+}
+
+.kisan-glow {
+  box-shadow:
+    0 0 0 2px rgb(255 252 245 / 0.92),
+    0 0 0 5px rgb(212 160 23 / 0.42),
+    0 14px 32px rgb(31 61 43 / 0.28);
+}
+
+.photo-scrim {
+  background: linear-gradient(180deg, rgba(31, 61, 43, 0.45) 0%, rgba(31, 61, 43, 0) 35%, rgba(12, 28, 18, 0.75) 100%);
+}
+
+.kisan-panel {
+  animation: kisan-panel-in 180ms ease-out;
+}
+
+.kisan-hint::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: -6px;
+  bottom: 12px;
+  border: 7px solid transparent;
+  border-inline-start-color: var(--forest);
+}
+
+.kisan-typing::after {
+  content: '…';
+  animation: kisan-dots 1.2s steps(3, end) infinite;
+}
+
+@keyframes kisan-wave {
+  0%,
+  100% {
+    height: 0.35rem;
+    opacity: 0.45;
+  }
+  50% {
+    height: 1.65rem;
+    opacity: 1;
+  }
+}
+
+.kisan-wave-bar {
+  height: 0.75rem;
+  animation: kisan-wave 0.85s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kisan-bounce,
+  .kisan-panel,
+  .kisan-wave-bar,
+  .kisan-typing::after {
+    animation: none !important;
+  }
+}
