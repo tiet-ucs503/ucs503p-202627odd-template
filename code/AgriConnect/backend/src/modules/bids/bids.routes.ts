@@ -56,7 +56,7 @@ bidsRouter.get(
 
 bidsRouter.post(
   '/:id/accept',
-  roleGuard('FARMER'),
+  roleGuard('FARMER', 'BUYER'),
   requireActiveAccount,
   validate({ params: bidIdParamsSchema }),
   acceptBidController,

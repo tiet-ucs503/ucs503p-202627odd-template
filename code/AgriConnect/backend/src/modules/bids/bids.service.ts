@@ -251,7 +251,13 @@ export async function listFarmerBids(farmerId: string, query: ListBidsQuery) {
   };
 }
 
-export async function acceptBid(farmerId: string, bidId: string) {
+export async function acceptBid(
+  actor: string | { id: string; role?: Role },
+  bidId: string,
+) {
+  const actorId = typeof actor === 'string' ? actor : actor.id;
+  const actorRole = typeof actor === 'string' ? undefined : actor.role;
+
   const bid = await getPrismaClient().bid.findUnique({
     where: { id: bidId },
     include: { listing: true },
@@ -261,11 +267,15 @@ export async function acceptBid(farmerId: string, bidId: string) {
     throw new AppError(404, 'NOT_FOUND', 'Bid not found');
   }
 
-  if (bid.farmerId !== farmerId) {
-    throw new AppError(403, 'FORBIDDEN', 'You do not own the listing for this bid');
-  }
-
-  if (bid.status !== 'pending' && bid.status !== 'countered') {
+  if (bid.status === 'pending') {
+    if (bid.farmerId !== actorId && actorRole !== 'ADMIN') {
+      throw new AppError(403, 'FORBIDDEN', 'Only the listing farmer can accept a pending bid');
+    }
+  } else if (bid.status === 'countered') {
+    if (bid.buyerId !== actorId && bid.farmerId !== actorId && actorRole !== 'ADMIN') {
+      throw new AppError(403, 'FORBIDDEN', 'Only the buyer can accept this counter-offer');
+    }
+  } else {
     throw new AppError(400, 'INVALID_REQUEST', `Cannot accept bid with status ${bid.status}`);
   }
 
@@ -290,11 +300,18 @@ export async function acceptBid(farmerId: string, bidId: string) {
     include: bidInclude,
   });
 
+  // Notify the other party
+  const isFarmerAction = actorId === bid.farmerId;
+  const notifyUserId = isFarmerAction ? bid.buyerId : bid.farmerId;
+  const notifyBody = isFarmerAction
+    ? `The farmer accepted your bid of ₹${moneyString(pricePerUnit)}/${bid.unit} for ${bid.listing.crop}. Order created!`
+    : `The buyer accepted your counter-offer of ₹${moneyString(pricePerUnit)}/${bid.unit} for ${bid.listing.crop}. Order created!`;
+
   await createNotification({
-    userId: bid.buyerId,
+    userId: notifyUserId,
     type: 'BID_ACCEPTED',
     title: 'Bid Accepted!',
-    body: `The farmer accepted your bid of ₹${moneyString(pricePerUnit)}/${bid.unit} for ${bid.listing.crop}. Order created!`,
+    body: notifyBody,
     params: {
       crop: bid.listing.crop,
       price: moneyString(pricePerUnit),

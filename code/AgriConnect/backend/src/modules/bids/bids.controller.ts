@@ -65,7 +65,7 @@ export const listIncomingBidsController = asyncHandler(async (request, response)
 });
 
 export const acceptBidController = asyncHandler(async (request, response) => {
-  const result = await acceptBid(authenticated(request).id, bidId(request));
+  const result = await acceptBid(authenticated(request), bidId(request));
   sendSuccess(response, result);
 });
 
