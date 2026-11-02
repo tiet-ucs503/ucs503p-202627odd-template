@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Minus, Plus } from "lucide-react";
 import { Chip, SelectField, TextField } from "@/components/ui";
 import { cn, formatMoney } from "@/lib/utils";
@@ -39,6 +40,12 @@ export function DestinationStep({ data, setData }: { data: WizardData; setData: 
           </Chip>
         ))}
       </div>
+      <p className="mt-6 text-sm text-zinc-500">
+        Not sure where to go, or when?{" "}
+        <Link href="/travis" className="font-medium text-orange-700 hover:underline dark:text-orange-400">
+          Ask Travis
+        </Link>
+      </p>
     </div>
   );
 }

@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
-import { Compass, Plus } from "lucide-react";
+import { Compass } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
+import { StartCard } from "@/components/dashboard/start-card";
 import { TripCard } from "@/components/dashboard/trip-card";
-import { Alert, Button } from "@/components/ui";
+import { Alert } from "@/components/ui";
 import { subscribeToOwnerTrips } from "@/lib/services/trips";
 import { toDateInputValue } from "@/lib/date";
 import type { Trip } from "@/types/trip";
@@ -56,7 +56,7 @@ export default function DashboardPage() {
           className="text-sm font-medium text-zinc-500"
         >
           {greeting()}
-          {firstName ? `, ${firstName}` : ""} 👋
+          {firstName ? `, ${firstName}` : ""}
         </motion.p>
         <motion.h1
           initial={{ opacity: 0, y: 8 }}
@@ -68,13 +68,24 @@ export default function DashboardPage() {
         </motion.h1>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
-        <Link href="/trips/new">
-          <Button size="lg">
-            <Plus className="h-4 w-4" />
-            Create new trip
-          </Button>
-        </Link>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="grid gap-4 sm:grid-cols-2"
+      >
+        <StartCard
+          href="/trips/new"
+          title="Plan a trip"
+          description="You know where you're going. Answer a few questions and TripEase builds a day-by-day plan you can edit."
+          cta="Start planning"
+        />
+        <StartCard
+          href="/travis"
+          title="Ask Travis"
+          description="You're still deciding. Talk through where to go and when it usually costs less, then turn an idea into a trip."
+          cta="Talk to Travis"
+        />
       </motion.div>
 
       {loadError ? <Alert>Couldn&apos;t load your trips: {loadError}</Alert> : null}
@@ -127,13 +138,9 @@ function EmptyState() {
     <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed border-zinc-300 py-20 text-center dark:border-zinc-700">
       <Compass className="h-10 w-10 text-orange-500" />
       <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100">No trips yet.</p>
-      <p className="max-w-xs text-sm text-zinc-500">Your next adventure starts here.</p>
-      <Link href="/trips/new" className="mt-3">
-        <Button>
-          <Plus className="h-4 w-4" />
-          Create your first trip
-        </Button>
-      </Link>
+      <p className="max-w-xs text-sm text-zinc-500">
+        Choose how to start above, and your trip will appear here once it&apos;s planned.
+      </p>
     </div>
   );
 }

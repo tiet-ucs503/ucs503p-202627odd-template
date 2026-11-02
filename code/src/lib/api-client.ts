@@ -12,6 +12,12 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    /**
+     * A short machine-readable reason, when the route supplies one ("busy",
+     * "unavailable", "rate-limited"…). The message is for people; this is for
+     * code that needs to react differently to different failures.
+     */
+    readonly code?: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -52,12 +58,13 @@ export async function postAuthenticated<T>(path: string, body: unknown): Promise
   }
 
   if (!response.ok) {
+    const body = payload as { error?: string; code?: string } | null;
     const message =
-      (payload as { error?: string } | null)?.error ??
+      body?.error ??
       (response.status === 401
         ? "Your session expired. Sign in again to continue."
         : "Something went wrong. Please try again.");
-    throw new ApiError(response.status, message);
+    throw new ApiError(response.status, message, typeof body?.code === "string" ? body.code : undefined);
   }
 
   return payload as T;

@@ -2,7 +2,7 @@ import { GroqAIProvider } from "./groq-provider";
 import { MockAIProvider } from "./mock-provider";
 import type { AIProvider } from "./provider";
 
-export type { AIProvider, AIProviderName, AIFailureCode } from "./provider";
+export type { AIProvider, AIProviderName, AIFailureCode, TravisRequest } from "./provider";
 export { AIProviderError } from "./provider";
 export { MockAIProvider } from "./mock-provider";
 export { GroqAIProvider } from "./groq-provider";

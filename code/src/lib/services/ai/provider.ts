@@ -1,5 +1,7 @@
 import type { CityPlanRequest } from "@/types/planning";
 import type { LlmCityPlan } from "@/lib/validation/planning";
+import type { TravisMessageInput } from "@/types/travis";
+import type { LlmTravisTurn } from "@/lib/validation/travis";
 
 /**
  * The reasoning layer's provider seam.
@@ -35,6 +37,14 @@ export class AIProviderError extends Error {
   }
 }
 
+/** What Travis is asked: the conversation so far, and today's date as the server knows it. */
+export interface TravisRequest {
+  /** Oldest first; the last entry is the traveller's newest message. */
+  messages: TravisMessageInput[];
+  /** `YYYY-MM-DD`. Supplied by us so the model never has to guess the date. */
+  today: string;
+}
+
 export interface AIProvider {
   readonly name: AIProviderName;
   /** Identifier of the model actually used, for reporting and logs. */
@@ -54,6 +64,14 @@ export interface AIProvider {
    * passed `llmCityPlanSchema`.
    */
   planCities(request: CityPlanRequest, repairNote?: string): Promise<LlmCityPlan>;
+
+  /**
+   * One turn of Travis, the discovery assistant. Same contract as
+   * `planCities`: a *proposal* only, already parsed through
+   * `llmTravisTurnSchema`, thrown as `AIProviderError` on any failure. What
+   * the traveller finally sees is decided later, in `services/travis`.
+   */
+  converse(request: TravisRequest, repairNote?: string): Promise<LlmTravisTurn>;
 }
 
 /**

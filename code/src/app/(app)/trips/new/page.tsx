@@ -15,9 +15,10 @@ import {
   TravelersStep,
   type WizardData,
 } from "@/components/trips/wizard/steps";
+import { buildInitialWizardData, startingStep } from "@/components/trips/wizard/initial-data";
 import { WizardShell } from "@/components/trips/wizard/wizard-shell";
 import { postAuthenticated } from "@/lib/api-client";
-import { clearDraft, readDraft } from "@/lib/draft-storage";
+import { clearDraft, clearDraftOrigin, readDraft, readDraftOrigin } from "@/lib/draft-storage";
 import { toDateInputValue } from "@/lib/date";
 import { saveGeneratedTrip } from "@/lib/services/trips";
 import type { CityPlan } from "@/types/planning";
@@ -28,22 +29,11 @@ function defaultDates() {
   start.setDate(start.getDate() + 30);
   const end = new Date(start);
   end.setDate(end.getDate() + 7);
-  return { start: toDateInputValue(start), end: toDateInputValue(end) };
+  return { startDate: toDateInputValue(start), endDate: toDateInputValue(end) };
 }
 
 function initialData(): WizardData {
-  const defaults = defaultDates();
-  const draft = readDraft();
-  return {
-    destination: draft?.destination ?? "",
-    startDate: draft?.startDate ?? defaults.start,
-    endDate: draft?.endDate ?? defaults.end,
-    budget: draft?.budget ? String(draft.budget) : "150000",
-    currency: draft?.currency ?? "INR",
-    travelerType: "couple",
-    travelers: 2,
-    preferences: [],
-  };
+  return buildInitialWizardData(readDraft(), defaultDates());
 }
 
 function stepIsValid(step: number, data: WizardData): boolean {
@@ -64,7 +54,10 @@ function stepIsValid(step: number, data: WizardData): boolean {
 export default function NewTripPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [step, setStep] = useState(0);
+  // Read once, before the effect below clears it: the wizard needs to know a
+  // draft came from Travis for as long as the page is open.
+  const [origin] = useState(readDraftOrigin);
+  const [step, setStep] = useState(() => startingStep(origin));
   const [data, setDataState] = useState<WizardData>(initialData);
   const [phase, setPhase] = useState<"wizard" | "generating">("wizard");
   const [stage, setStage] = useState<GenerationStage>("planning");
@@ -75,6 +68,7 @@ export default function NewTripPage() {
 
   useEffect(() => {
     clearDraft();
+    clearDraftOrigin();
   }, []);
 
   function setData(patch: Partial<WizardData> | ((prev: WizardData) => Partial<WizardData>)) {
@@ -144,6 +138,19 @@ export default function NewTripPage() {
 
   return (
     <WizardShell step={step}>
+      {/* The dates were Travis's suggestion, not the traveller's choice. Say so
+          on the step where they appear, so they get checked rather than trusted. */}
+      {origin && step === 1 ? (
+        <div className="mb-6">
+          <Alert tone="info">
+            <p className="font-medium">Started from Travis: {origin.destination}</p>
+            <p className="mt-0.5">
+              It&apos;s usually best in {origin.windowLabel}, so we&apos;ve filled in dates in that window. Check
+              them, then answer a few quick questions and TripEase will build your plan.
+            </p>
+          </Alert>
+        </div>
+      ) : null}
       {step === 0 && <DestinationStep data={data} setData={setData} />}
       {step === 1 && <DatesStep data={data} setData={setData} />}
       {step === 2 && <BudgetStep data={data} setData={setData} />}

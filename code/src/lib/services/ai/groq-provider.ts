@@ -1,4 +1,6 @@
+import type { ZodType } from "zod";
 import { llmCityPlanSchema, type LlmCityPlan } from "@/lib/validation/planning";
+import { llmTravisTurnSchema, type LlmTravisTurn } from "@/lib/validation/travis";
 import type { CityPlanRequest } from "@/types/planning";
 import {
   AIProviderError,
@@ -6,7 +8,9 @@ import {
   CITY_PLAN_JSON_SCHEMA,
   CITY_PLANNER_SYSTEM_PROMPT,
   type AIProvider,
+  type TravisRequest,
 } from "./provider";
+import { buildTravisMessages, TRAVIS_JSON_SCHEMA } from "./travis-prompt";
 
 /**
  * Groq-hosted models via their OpenAI-compatible chat-completions endpoint.
@@ -16,11 +20,15 @@ import {
  * so the key never reaches the browser.
  *
  * Output is constrained with `response_format: json_schema` where the model
- * supports it, which makes the model emit the planner's exact structure
- * rather than prose. Not every Groq model accepts a schema, so a rejection of
- * that specific parameter falls back to plain JSON mode for the retry — the
- * result is validated identically either way, so the fallback loses
- * constraint strength but never correctness.
+ * supports it, which makes the model emit the requested structure rather than
+ * prose. Not every Groq model accepts a schema, so a rejection of that
+ * specific parameter falls back to plain JSON mode for the retry — the result
+ * is validated identically either way, so the fallback loses constraint
+ * strength but never correctness.
+ *
+ * Every capability (city planning, Travis) goes through the one `structured`
+ * method below, so timeouts, error classification and the schema fallback are
+ * written once rather than per feature.
  */
 
 const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
@@ -28,8 +36,30 @@ const DEFAULT_MODEL = "openai/gpt-oss-120b";
 const TIMEOUT_MS = 20_000;
 
 interface ChatMessage {
-  role: "system" | "user";
+  role: "system" | "user" | "assistant";
   content: string;
+}
+
+/** What differs between one structured call and another. */
+interface StructuredSpec<T> {
+  /** Names the schema to the model. */
+  name: string;
+  schema: object;
+  /** The boundary the model's JSON has to cross before anything uses it. */
+  parser: ZodType<T>;
+  temperature: number;
+  /**
+   * Caps the completion. Besides bounding cost, it matters for rate limits:
+   * Groq counts the tokens a request *could* use against the per-minute
+   * allowance, so an uncapped call reserves far more than it spends.
+   */
+  maxTokens?: number;
+  /**
+   * How hard a reasoning model thinks before answering. Chat doesn't need a
+   * long chain of thought, and the thinking is billed against the same
+   * tokens-per-minute allowance as the answer. Only sent to models that take it.
+   */
+  reasoningEffort?: "low" | "medium" | "high";
 }
 
 export class GroqAIProvider implements AIProvider {
@@ -62,14 +92,38 @@ export class GroqAIProvider implements AIProvider {
       });
     }
 
-    let raw = await this.complete(messages, this.schemaModeSupported);
+    return this.structured(messages, {
+      name: "city_plan",
+      schema: CITY_PLAN_JSON_SCHEMA,
+      parser: llmCityPlanSchema,
+      temperature: 0.3,
+    });
+  }
+
+  async converse(request: TravisRequest, repairNote?: string): Promise<LlmTravisTurn> {
+    return this.structured(buildTravisMessages(request.today, request.messages, repairNote), {
+      name: "travis_turn",
+      schema: TRAVIS_JSON_SCHEMA,
+      parser: llmTravisTurnSchema,
+      // Warmer than the planner: this is a conversation, and two travellers
+      // asking the same question shouldn't get word-for-word identical answers.
+      temperature: 0.5,
+      // Three suggestion cards plus a short reply fit comfortably in this.
+      maxTokens: 1500,
+      reasoningEffort: "low",
+    });
+  }
+
+  /** Ask for JSON in `spec.schema`'s shape and return it only if it parses and validates. */
+  private async structured<T>(messages: ChatMessage[], spec: StructuredSpec<T>): Promise<T> {
+    let raw = await this.complete(messages, this.schemaModeSupported, spec);
 
     // Some models accept the request but reject the schema parameter; retry
-    // once in plain JSON mode rather than failing the whole plan over it.
+    // once in plain JSON mode rather than failing the whole call over it.
     if (raw === "unsupported-schema") {
       this.schemaModeSupported = false;
       console.warn("[ai] Groq model rejected json_schema; falling back to json_object mode.");
-      raw = await this.complete(messages, false);
+      raw = await this.complete(messages, false, spec);
     }
 
     let parsed: unknown;
@@ -79,7 +133,7 @@ export class GroqAIProvider implements AIProvider {
       throw new AIProviderError("malformed-json", "The model returned text that isn't JSON.");
     }
 
-    const result = llmCityPlanSchema.safeParse(parsed);
+    const result = spec.parser.safeParse(parsed);
     if (!result.success) {
       throw new AIProviderError("schema", "The model's JSON didn't match the expected shape.");
     }
@@ -87,11 +141,15 @@ export class GroqAIProvider implements AIProvider {
   }
 
   /** Returns the message content, or the sentinel "unsupported-schema". */
-  private async complete(messages: ChatMessage[], useSchema: boolean): Promise<string> {
+  private async complete(
+    messages: ChatMessage[],
+    useSchema: boolean,
+    spec: Pick<StructuredSpec<unknown>, "name" | "schema" | "temperature" | "maxTokens" | "reasoningEffort">,
+  ): Promise<string> {
     const responseFormat = useSchema
       ? {
           type: "json_schema",
-          json_schema: { name: "city_plan", strict: true, schema: CITY_PLAN_JSON_SCHEMA },
+          json_schema: { name: spec.name, strict: true, schema: spec.schema },
         }
       : { type: "json_object" };
 
@@ -106,8 +164,14 @@ export class GroqAIProvider implements AIProvider {
         body: JSON.stringify({
           model: this.model,
           messages,
-          temperature: 0.3,
+          temperature: spec.temperature,
           response_format: responseFormat,
+          ...(spec.maxTokens ? { max_completion_tokens: spec.maxTokens } : {}),
+          // `reasoning_effort` is a gpt-oss parameter; other models may reject
+          // an option they don't know, so it is sent only where it applies.
+          ...(spec.reasoningEffort && this.model.includes("gpt-oss")
+            ? { reasoning_effort: spec.reasoningEffort }
+            : {}),
         }),
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
@@ -115,7 +179,7 @@ export class GroqAIProvider implements AIProvider {
       const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
       throw new AIProviderError(
         timedOut ? "timeout" : "provider-error",
-        timedOut ? "The planner timed out." : "Could not reach the planning model.",
+        timedOut ? "The model timed out." : "Could not reach the model.",
       );
     }
 
@@ -128,12 +192,12 @@ export class GroqAIProvider implements AIProvider {
         return "unsupported-schema";
       }
       if (response.status === 401 || response.status === 403) {
-        throw new AIProviderError("auth", "The planning model rejected our credentials.");
+        throw new AIProviderError("auth", "The model rejected our credentials.");
       }
       if (response.status === 429) {
-        throw new AIProviderError("quota", "The planning model is rate limited.");
+        throw new AIProviderError("quota", "The model is rate limited.");
       }
-      throw new AIProviderError("provider-error", "The planning model failed.");
+      throw new AIProviderError("provider-error", "The model failed.");
     }
 
     let content: unknown;
