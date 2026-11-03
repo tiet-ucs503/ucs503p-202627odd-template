@@ -63,7 +63,9 @@ classDiagram
         +Int[] SPEEDS
         +Int MAX_EARLY_SEC
         +Int STEP_SEC
-        +optimise(route, km, arrSec) OptimizeResult
+        +optimise(route, km, arrSec, mode) OptimizeResult
+        +optimiseLeave(route, km, nowSec, mode) OptimizeResult
+        +refine(route, km, dep, base, mode) Float[]
         -simulateJourney(sigs, dep, driveSec) SignalDetail[]
         -score(driveSec, waitSec, greens) Float
     }
@@ -71,6 +73,33 @@ classDiagram
     class NormalGpsSimulator {
         +Int NORMAL_SPEED
         +simulate(route, km, gwDep) NormalGpsResult
+    }
+
+    class RoadGraph {
+        +Edge[] edges
+        +getRoute(originId, destId) Route
+        -dijkstra(origin, dest) String[]
+    }
+
+    class Vehicle {
+        +Float distKm
+        +Float speedKmh
+        +Int nextSignalIdx
+        +Boolean stopped
+        +Int stops
+        +step(dt, target, greenFn) void
+    }
+
+    class DriveSimulator {
+        +Float simTime
+        +Vehicle syncCar
+        +Vehicle normalCar
+        +Vehicle ambulance
+        +Vehicle[] traffic
+        +Set forcedSignals
+        +advise() Advice
+        +advance(dt) void
+        +yieldSpeed(vehicle) Float
     }
 
     class MapRenderer {
@@ -88,6 +117,8 @@ classDiagram
         +showToast(msg) void
         +updateClock() void
         +setMode(tab) void
+        +startDrive() void
+        +applyLayerToggles() void
     }
 
     Route "1" --> "1..*" Signal : passes through
@@ -104,4 +135,8 @@ classDiagram
     UIController --> GreenWaveOptimizer : invokes
     UIController --> NormalGpsSimulator : invokes
     UIController --> MapRenderer : updates
+    UIController --> DriveSimulator : starts
+    UIController --> RoadGraph : resolves routes
+    DriveSimulator "1" --> "3..*" Vehicle : moves
+    RoadGraph ..> Route : generates
 ```

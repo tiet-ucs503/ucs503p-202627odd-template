@@ -472,7 +472,7 @@ input[type="time"].chip-time:disabled{opacity:.35;cursor:default}
 .cn-advice.ok{color:var(--green)}.cn-advice.warn{color:var(--amber)}.cn-advice.red{color:var(--red)}
 .cn-next,.cn-eta{font-size:.7rem;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cn-btns{display:flex;gap:6px}
-.icon-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);color:var(--text);
+.icon-btn{min-width:38px;height:38px;padding:0 14px;border-radius:19px;font-weight:600;font-size:.74rem;border:1px solid var(--border2);background:var(--bg3);color:var(--text);
   cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center}
 .icon-btn:hover{background:var(--bg4)}
 .race{margin-top:12px}
@@ -563,7 +563,7 @@ input[type="time"].chip-time:disabled{opacity:.35;cursor:default}
 .rfill.amb{background:#fff}
 #emg-banner{display:none;position:absolute;top:52px;left:50%;transform:translateX(-50%);z-index:550;background:rgba(255,69,58,.92);color:#fff;
   font-size:.72rem;font-weight:800;letter-spacing:.3px;padding:7px 16px;border-radius:20px;box-shadow:0 6px 20px rgba(255,69,58,.4);white-space:nowrap;
-  animation:blink 1.6s infinite}
+  }
 #toast{top:96px!important}
 
 /* separate emergency mode + signal toggles */
@@ -581,6 +581,12 @@ body.emg .panel-title{color:var(--red)}
 .tg.dis{opacity:.4}
 #map.hide-sig .sg-wrap{display:none}
 #map.hide-timer .sg:not(.ev){font-size:0}
+#layers{position:absolute;top:84px;left:10px;z-index:500;background:rgba(28,28,30,.88);backdrop-filter:blur(16px);
+  border:1px solid var(--border2);border-radius:12px;padding:8px 12px;font-size:.68rem;color:var(--sub);line-height:2;min-width:132px}
+#layers .tg{border:none;padding:0;margin:0}
+#layers #tg-all{color:var(--text);font-weight:700;border-bottom:1px solid var(--divider);margin-bottom:2px}
+#map.hide-places .pl-wrap{display:none}
+#map.zoom-far .sg:not(.ev){width:12px;height:12px;margin:6px;border-width:1px;font-size:0}
 </style>
 </head>
 <body>
@@ -641,7 +647,7 @@ body.emg .panel-title{color:var(--red)}
         <button class="mode-tab" data-mode="bike">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h2l2 5.5m-7 0L15 6M8 17.5L11 6h1l1.5 3H10"/></svg>Cycle
         </button>
-        <button class="mode-tab" data-mode="emerg" title="Emergency / ambulance mode">🚑 SOS</button>
+        <button class="mode-tab" data-mode="emerg" title="Emergency / ambulance mode">SOS</button>
       </div>
     </div>
 
@@ -757,7 +763,7 @@ body.emg .panel-title{color:var(--red)}
         </div>
 
         <div class="sec-hd">Live Signal Timeline</div>
-        <div class="strip-key"><span>▮ <span style="color:var(--green)">green</span> window</span><span>| now</span><span>◯ you arrive</span></div>
+        <div class="strip-key"><span><span style="color:var(--green)">Green</span> window</span><span>White line: now</span><span>Ring: you arrive</span></div>
         <div class="list-group" id="sig-list"></div>
 
         <div class="sec-hd">Turn by Turn</div>
@@ -768,9 +774,9 @@ body.emg .panel-title{color:var(--red)}
         <div class="sec-hd">Ambulance run</div>
         <div class="leave-hero" style="border-color:rgba(255,69,58,.45)">
           <div class="lh-left"><div class="lh-label">Ambulance ETA</div><div class="lh-time" id="e-eta">—</div><div class="lh-sub" id="e-sub">—</div></div>
-          <div class="lh-right" style="background:var(--red);font-size:1.5rem">🚑</div>
+          <div class="lh-right" style="background:var(--red);font-size:.8rem;font-weight:800;color:#fff">SOS</div>
         </div>
-        <div class="act-row"><button class="btn-go btn-emg" id="btn-dispatch" style="flex:1">🚑 Dispatch ambulance</button></div>
+        <div class="act-row"><button class="btn-go btn-emg" id="btn-dispatch" style="flex:1">Dispatch ambulance</button></div>
         <div class="list-group">
           <div class="list-row"><span class="lr-label">Distance</span><div class="lr-val" id="e-dist">—</div></div>
           <div class="list-row"><span class="lr-label">With green corridor</span><div class="lr-val green" id="e-with">—</div></div>
@@ -787,8 +793,7 @@ body.emg .panel-title{color:var(--red)}
       </div>
 
       <div class="empty-state" id="empty-hint">
-        <div class="ei">🛣️</div>
-        Choose a start and end point,<br/>or click a place on the map,<br/>
+                Choose a start and end point,<br/>or click a place on the map,<br/>
         then tap <strong style="color:var(--accent)">Sync Route</strong>
         <div class="recents" id="recents"></div>
         <div class="kbd-hint">
@@ -846,15 +851,20 @@ body.emg .panel-title{color:var(--red)}
     <div><i style="background:var(--red)"></i>Red · seconds to green</div>
     <div><i style="background:var(--accent)"></i>SyncDrive</div>
     <div><i style="background:var(--red);opacity:.7"></i>Normal GPS</div>
-    <div class="tg on" id="tg-sig"><span>Signal lights</span><b></b></div>
-    <div class="tg on" id="tg-tim"><span>Countdown timers</span><b></b></div>
+  </div>
+
+  <div id="layers">
+    <div class="tg on" id="tg-all"><span>All layers</span><b></b></div>
+    <div class="tg on" id="tg-sig"><span>Signals</span><b></b></div>
+    <div class="tg on" id="tg-tim"><span>Timers</span><b></b></div>
+    <div class="tg on" id="tg-plc"><span>Places</span><b></b></div>
   </div>
 
   <div id="hud">
     <div class="hud-n" id="hud-spd">—</div>
     <div class="hud-u">km / h</div>
     <div class="hud-a" id="hud-advice">—</div>
-    <button class="hud-start" id="hud-start">▶ Start drive</button>
+    <button class="hud-start" id="hud-start">Start drive</button>
   </div>
 
   <div id="console">
@@ -866,8 +876,8 @@ body.emg .panel-title{color:var(--red)}
         <div class="cn-eta" id="cn-eta">—</div>
       </div>
       <div class="cn-btns">
-        <button class="icon-btn" id="cn-play" title="Pause / resume (Space)">❚❚</button>
-        <button class="icon-btn" id="cn-stop" title="Stop (Esc)">■</button>
+        <button class="icon-btn" id="cn-play" title="Pause / resume (Space)">Pause</button>
+        <button class="icon-btn" id="cn-stop" title="Stop (Esc)">Stop</button>
       </div>
     </div>
     <div class="race">
@@ -885,11 +895,12 @@ body.emg .panel-title{color:var(--red)}
       <input type="range" id="cn-slider" min="15" max="55" step="1" value="32"/>
       <button class="tog active" id="cn-follow">Follow</button>
       <button class="tog" id="cn-voice">Voice</button>
+      <select class="tog" id="cn-voice-sel" style="display:none;max-width:150px"></select>
     </div>
   </div>
 
   <div id="finish">
-    <h3 id="fin-h">You've arrived 🎉</h3>
+    <h3 id="fin-h">You've arrived</h3>
     <p id="fin-sub">—</p>
     <div class="fin-grid">
       <div><b id="fin-gw">—</b><span id="fl-1">SyncDrive</span></div>
@@ -1340,7 +1351,7 @@ L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_D
 // Places — clickable, with "Start here / Go here"
 Object.entries(PLACES).forEach(([id,p])=>{
   const ic = L.divIcon({
-    className:'',
+    className:'pl-wrap',
     html:`<div style="background:rgba(28,28,30,.85);border:1.5px solid rgba(255,255,255,.2);color:#f5f5f7;font-size:10px;font-weight:600;
       padding:3px 9px;border-radius:16px;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.5);font-family:'Inter',sans-serif;
       backdrop-filter:blur(8px);cursor:pointer">${p.name.split(' ').slice(0,2).join(' ')}</div>`,
@@ -1384,7 +1395,7 @@ function updateSignals(t){
     if(sCache[s.id]===key) return;
     sCache[s.id]=key;
     const el=sEl[s.id];
-    el.className=cls; el.textContent=forced?'🚑':f;
+    el.className=cls; el.textContent=forced?'EV':f;
     if(smk[s.id].isTooltipOpen()) smk[s.id].setTooltipContent(sigTip(s,t));
   });
 }
@@ -1462,7 +1473,7 @@ function renderPopular(){
   POPULAR.forEach(([a,b])=>{
     const rt=getRoute(a,b); if(!rt) return;
     const r=document.createElement('div'); r.className='pop-row';
-    r.innerHTML=`<span>${PLACES[a].name.split(' ').slice(0,2).join(' ')} → ${PLACES[b].name.split(' ').slice(0,2).join(' ')}</span><span class="pm">${rt.km} km · ${rt.sigs.length} 🚦</span>`;
+    r.innerHTML=`<span>${PLACES[a].name.split(' ').slice(0,2).join(' ')} → ${PLACES[b].name.split(' ').slice(0,2).join(' ')}</span><span class="pm">${rt.km} km · ${rt.sigs.length} signals</span>`;
     r.onclick=()=>{ setRoute(a,b); switchView('dir'); calc(); };
     box.appendChild(r);
   });
@@ -1666,7 +1677,7 @@ function renderResults(){
   $('lbl-ng-d').textContent=mins(ng.driveSec)+'m driving';
   $('lbl-ng-w').textContent=ng.waitSec>0?mins(ng.waitSec)+'m at reds':'no waits';
   $('lbl-gw-d').textContent=mins(gw.driveSec)+'m driving';
-  $('lbl-gw-w').textContent=gw.waitSec>0?mins(gw.waitSec)+'m at reds':'0m waiting ✓';
+  $('lbl-gw-w').textContent=gw.waitSec>0?mins(gw.waitSec)+'m at reds':'0m waiting';
   $('c-ng-spd').textContent=M.ng+' km/h';
   $('c-gw-spd').textContent=fmtSpd(gw.spd)+' km/h';
   $('c-ng-reds').textContent=ng.reds+' stops';
@@ -1736,7 +1747,7 @@ function renderResults(){
 //  those junctions until it has passed.
 // ═══════════════════════════════════════════════════════
 const EMG_SPEED=70, EMG_RANGE=0.5, YIELD_RANGE=0.35, AMB_DELAY=20, N_BG=7;
-const D = {active:false,paused:false,warp:4,manual:false,manSpd:32,follow:true,voice:false,
+const D = {voiceName:'',active:false,paused:false,warp:4,manual:false,manSpd:32,follow:true,voice:false,
   t:0,sync:null,ng:null,curTarget:0,adv:null,advKey:'',finished:false,lastSay:0,mS:null,mN:null,
   emerg:false,amb:null,bg:[],mA:null,bgM:[],rCorr:null,forced:new Set(),yielded:new Set(),cleared:0};
 
@@ -1796,7 +1807,7 @@ function advise(){
   const v=D.sync, M=MODES[S.mode];
   const cur=D.manual?D.manSpd:planSpd(v);
   if(v.done) return {txt:'You have arrived',cls:'ok',key:'done'};
-  if(isFinite(yieldSpeed(v))) return {txt:'🚑 Ambulance behind — pulling over to clear the way',cls:'red',key:'yield',speed:null,say:'Ambulance approaching. Pull over and slow down.'};
+  if(isFinite(yieldSpeed(v))) return {txt:'Ambulance behind — pulling over to clear the way',cls:'red',key:'yield',speed:null,say:'Ambulance approaching. Pull over and slow down.'};
   if(v.stopped){
     const w=Math.ceil(flipIn(v.sigs[v.idx],D.t));
     return {txt:D.emerg&&D.forced.has(v.sigs[v.idx].id)?'Holding for ambulance':`Red light — green in ${w}s`,cls:'red',key:'red:'+v.idx,speed:null};
@@ -1822,8 +1833,34 @@ function say(txt){
   if(!D.voice || !('speechSynthesis' in window) || D.warp>4 || !txt) return;
   const now=Date.now(); if(now-D.lastSay<2500) return;
   D.lastSay=now;
-  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(txt); u.rate=1.05; speechSynthesis.speak(u); }catch(e){}
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(txt);
+    const v=pickVoice(); if(v){ u.voice=v; u.lang=v.lang; } else u.lang='en-US';
+    u.rate=1; u.pitch=1.05;
+    setTimeout(()=>speechSynthesis.speak(u),60);
+  }catch(e){}
 }
+
+// Female, Siri-like voice. Order matters: Apple's Siri-style voices first, then other natural female English voices.
+const FEMALE=['Siri','Samantha','Ava','Allison','Susan','Zoe','Karen','Kathy','Tessa','Moira','Serena','Victoria','Fiona','Nicky',
+  'Google UK English Female','Google US English','Aria','Jenny','Zira','Hazel'];
+const NOVELTY=/^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Fred|Good News|Jester|Junior|Organ|Ralph|Superstar|Trinoids|Whisper|Wobble|Zarvox)$/;
+const MALE=/^(Aaron|Alex|Daniel|Rishi|Reed|Rocko|Eddy|Grandpa|David|Mark|Fred|Ralph|Junior)\b/;
+const enVoices=()=>speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang)&&!NOVELTY.test(v.name));
+function pickVoice(){
+  const vs=enVoices(); if(!vs.length) return null;
+  if(D.voiceName){ const m=vs.find(v=>v.name===D.voiceName); if(m) return m; }
+  for(const n of FEMALE){ const m=vs.find(v=>v.name.startsWith(n)&&!MALE.test(v.name)); if(m) return m; }
+  return vs.find(v=>!MALE.test(v.name))||vs[0];
+}
+function fillVoiceList(){
+  const sel=$('cn-voice-sel'); if(!sel) return;
+  const vs=enVoices().filter(v=>!MALE.test(v.name)); if(!vs.length) return;
+  const cur=pickVoice();
+  sel.innerHTML=vs.map(v=>`<option value="${v.name}"${cur&&v.name===cur.name?' selected':''}>${v.name} (${v.lang})</option>`).join('');
+}
+if('speechSynthesis' in window) speechSynthesis.onvoiceschanged=fillVoiceList;
 
 function carIcon(cls,size=20,html=''){ return L.divIcon({className:'car-wrap',html:`<div class="car ${cls}">${html}</div>`,iconSize:[size,size],iconAnchor:[size/2,size/2]}); }
 
@@ -1844,7 +1881,7 @@ function startDrive(emerg){
     D.amb=mkVeh(route,route.km,EMG_SPEED,gw.dep); D.amb.start=gw.dep+AMB_DELAY; D.amb.v=0;
     for(let i=0;i<N_BG;i++){ const b=mkBg(route,route.km,i); D.bg.push(b); D.bgM.push(L.marker(pointAt(S.geo,toGeo(S.geo,b.d/b.km)),{icon:carIcon('bg',14),zIndexOffset:800}).addTo(map)); }
     D.rCorr=L.polyline([p0,p0],{color:'#0a84ff',weight:9,opacity:.55}).addTo(map);
-    D.mA=L.marker(p0,{icon:carIcon('amb',28,'🚑'),zIndexOffset:1200}).addTo(map);
+    D.mA=L.marker(p0,{icon:carIcon('amb',28,'A'),zIndexOffset:1200}).addTo(map);
   }
   D.mN=L.marker(p0,{icon:carIcon('ng'),zIndexOffset:900}).addTo(map);
   D.mS=L.marker(p0,{icon:carIcon('sync'),zIndexOffset:1000}).addTo(map);
@@ -1855,7 +1892,7 @@ function startDrive(emerg){
   $('rl-sync').textContent=emerg?'Car A':'SyncDrive'; $('rl-ng').textContent=emerg?'Car B':'Normal GPS';
   $('emg-banner').style.display=emerg?'block':'none';
   $('finish').classList.remove('show');
-  $('cn-play').textContent='❚❚';
+  $('cn-play').textContent='Pause';
   if(D.follow) map.setView(p0,15,{animate:true});
   D.adv=advise();
   say(emerg?'Emergency run started. Green corridor active.':`Drive started. Hold ${fmtSpd(gw.spd)} kilometres per hour.`);
@@ -1926,7 +1963,7 @@ function nextLine(f){
   if(f.idx<f.sigs.length){
     const s=f.sigs[f.idx], dm=(f.sigD[f.idx]-f.d)*1000, g=greenAt(s,D.t), fl=Math.ceil(flipIn(s,D.t));
     const state=D.emerg&&D.forced.has(s.id)?'forced green for ambulance':`${g?'green':'red'} ${fl}s`;
-    return `🚦 ${s.name} · ${dm>=1000?(dm/1000).toFixed(1)+' km':Math.round(dm/10)*10+' m'} · ${state}`;
+    return `${s.name} · ${dm>=1000?(dm/1000).toFixed(1)+' km':Math.round(dm/10)*10+' m'} · ${state}`;
   }
   return `${Math.round((f.km-f.d)*1000)} m to destination`;
 }
@@ -1937,10 +1974,10 @@ function renderConsole(){
   $('cn-spd').textContent=fmtSpd(f.v);
   const ad=$('cn-advice');
   if(em){
-    ad.textContent=a.done?'Ambulance arrived':D.t<a.start?`Ambulance dispatching in ${Math.ceil(a.start-D.t)}s`:`🚑 Green corridor — ${D.forced.size} signal${D.forced.size===1?'':'s'} cleared ahead`;
+    ad.textContent=a.done?'Ambulance arrived':D.t<a.start?`Ambulance dispatching in ${Math.ceil(a.start-D.t)}s`:`Green corridor — ${D.forced.size} signal${D.forced.size===1?'':'s'} cleared ahead`;
     ad.className='cn-advice '+(a.done?'ok':'red');
     const yl=[D.sync,D.ng,...D.bg].filter(x=>isFinite(yieldSpeed(x))).length;
-    $('emg-banner').textContent=`🚑 EMERGENCY RUN · ${D.forced.size} signals cleared · ${yl} vehicle${yl===1?'':'s'} yielding · ${D.cleared} red lights overridden`;
+    $('emg-banner').textContent=`EMERGENCY RUN · ${D.forced.size} signals cleared · ${yl} vehicle${yl===1?'':'s'} yielding · ${D.cleared} red lights overridden`;
   } else {
     ad.textContent=D.manual&&!v.stopped&&!v.done?`${adv.txt} (manual: ${fmtSpd(D.manSpd)})`:adv.txt; ad.className='cn-advice '+adv.cls;
   }
@@ -1950,8 +1987,8 @@ function renderConsole(){
   $('cn-eta').textContent=f.done?`Arrived ${fmt(f.finishT)}`:`ETA ${fmt(D.t+rem)} · ${(f.km-f.d).toFixed(2)} km left`;
   $('rf-sync').style.width=(v.d/v.km*100)+'%'; $('rf-ng').style.width=(n.d/n.km*100)+'%';
   const ys=isFinite(yieldSpeed(v)), yn=isFinite(yieldSpeed(n));
-  $('rv-sync').textContent=ys?'yielding 🚑':v.done?`done · ${v.stops} stops`:`${v.stops} stops`;
-  $('rv-ng').textContent  =yn?'yielding 🚑':n.done?`done · ${n.stops} stops`:`${n.stops} stops`;
+  $('rv-sync').textContent=ys?'yielding':v.done?`done · ${v.stops} stops`:`${v.stops} stops`;
+  $('rv-ng').textContent  =yn?'yielding':n.done?`done · ${n.stops} stops`:`${n.stops} stops`;
   if(em){ $('rf-amb').style.width=(a.d/a.km*100)+'%'; $('rv-amb').textContent=a.done?'arrived':`${fmtSpd(a.v)} km/h`; }
   if((em?a.done:v.done) && !D.finished) showFinish();
 }
@@ -1961,7 +1998,7 @@ function showFinish(){
   const lab=(a,b,c,d)=>[a,b,c,d].forEach((x,i)=>$('fl-'+(i+1)).textContent=x);
   if(D.emerg){
     const a=D.amb, tA=a.finishT-a.start, base=evaluate(S.route,S.route.km,a.start,EMG_SPEED).total;
-    $('fin-h').textContent='Ambulance arrived 🚑';
+    $('fin-h').textContent='Ambulance arrived';
     lab('Ambulance','Normal signals','Red lights cleared','Vehicles yielded');
     $('fin-gw').textContent=(tA/60).toFixed(1)+' min'; $('fin-ng').textContent=(base/60).toFixed(1)+' min';
     $('fin-gw-stops').textContent=D.cleared; $('fin-ng-stops').textContent=D.yielded.size;
@@ -1976,7 +2013,7 @@ function showFinish(){
   const tS=v.finishT-v.dep;
   // Normal GPS may still be on the road: use the planned (identical-physics) total until it finishes
   const tN = n.done ? n.finishT-n.dep : S.ng.total;
-  $('fin-h').textContent="You've arrived 🎉";
+  $('fin-h').textContent="You've arrived";
   lab('SyncDrive','Normal GPS','Stops (Sync)','Stops (Normal)');
   $('fin-gw').textContent=(tS/60).toFixed(1)+' min';
   $('fin-ng').textContent=(tN/60).toFixed(1)+' min';
@@ -1991,7 +2028,7 @@ function showFinish(){
 // drive controls
 function togglePause(){
   if(!D.active) { if(S.route) startDrive(); return; }
-  D.paused=!D.paused; $('cn-play').textContent=D.paused?'▶':'❚❚';
+  D.paused=!D.paused; $('cn-play').textContent=D.paused?'Play':'Pause';
 }
 function setWarp(w){
   D.warp=w;
@@ -2014,8 +2051,10 @@ document.querySelectorAll('#pilot-seg button').forEach(b=>b.onclick=()=>{
 });
 $('cn-slider').oninput=e=>{ D.manSpd=+e.target.value; };
 $('cn-follow').onclick=()=>{ D.follow=!D.follow; $('cn-follow').classList.toggle('active',D.follow); };
+$('cn-voice-sel').onchange=e=>{ D.voiceName=e.target.value; say('This is your navigation voice.'); };
 $('cn-voice').onclick=()=>{
   D.voice=!D.voice; $('cn-voice').classList.toggle('active',D.voice);
+  $('cn-voice-sel').style.display=D.voice?'':'none'; if(D.voice) fillVoiceList();
   if(D.voice){ if(!('speechSynthesis' in window)){ showToast('Voice not supported in this browser'); D.voice=false; $('cn-voice').classList.remove('active'); } else showToast('Voice guidance on (works at ≤4× speed)'); }
   else try{ speechSynthesis.cancel(); }catch(e){}
 };
@@ -2035,6 +2074,7 @@ document.addEventListener('keydown',e=>{
   else if(k==='e'||k==='E'){ stopDrive(true); setModeUI(S.mode==='emerg'?'car':'emerg'); scheduleCalc(); }
   else if(k==='l'||k==='L'){ UI.sig=!UI.sig; applyUI(); }
   else if(k==='t'||k==='T'){ UI.tim=!UI.tim; applyUI(); }
+  else if(k==='p'||k==='P'){ UI.plc=!UI.plc; applyUI(); }
   else if(k==='s'||k==='S'){ switchView('dir'); swap(); }
   else if(k==='+'||k==='='){ const w=[1,2,4,8,16]; setWarp(w[Math.min(w.indexOf(D.warp)+1,4)]); }
   else if(k==='-'||k==='_'){ const w=[1,2,4,8,16]; setWarp(w[Math.max(w.indexOf(D.warp)-1,0)]); }
@@ -2088,14 +2128,19 @@ function showToast(msg){
 // ═══════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════
-const UI={sig:true,tim:true};
+const UI={sig:true,tim:true,plc:true};
 try{ Object.assign(UI,JSON.parse(localStorage.getItem('syncdrive.ui')||'{}')); }catch(e){}
 function applyUI(){
   $('map').classList.toggle('hide-sig',!UI.sig); $('map').classList.toggle('hide-timer',!UI.tim);
+  $('map').classList.toggle('hide-places',!UI.plc); $('tg-plc').classList.toggle('on',UI.plc); $('tg-all').classList.toggle('on',UI.sig||UI.plc);
   $('tg-sig').classList.toggle('on',UI.sig); $('tg-tim').classList.toggle('on',UI.tim); $('tg-tim').classList.toggle('dis',!UI.sig);
   try{ localStorage.setItem('syncdrive.ui',JSON.stringify(UI)); }catch(e){}
 }
 $('tg-sig').onclick=()=>{ UI.sig=!UI.sig; applyUI(); };
+$('tg-plc').onclick=()=>{ UI.plc=!UI.plc; applyUI(); };
+$('tg-all').onclick=()=>{ const v=!(UI.sig||UI.plc); UI.sig=UI.plc=UI.tim=v; applyUI(); };
+function zoomClass(){ $('map').classList.toggle('zoom-far',map.getZoom()<=14); }
+map.on('zoomend',zoomClass); zoomClass();
 $('tg-tim').onclick=()=>{ UI.tim=!UI.tim; applyUI(); };
 applyUI();
 buildBoard(); renderPlaces(); renderPopular(); renderRecents();

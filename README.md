@@ -76,7 +76,7 @@ SyncDrive/
 │
 ├── journals/
 │   ├── 1024030177-tarun/               ← 5 weekly entries (W1–W5)
-│   ├── 1024030178-parth/               ← 5 weekly entries (W1–W5)
+│   ├── 1024030178-parth/               ← 7 weekly entries (W1–W7)
 │   └── 1024031077-adhiraj/             ← 5 weekly entries (W1–W5)
 │
 ├── project-proposal/
@@ -107,20 +107,31 @@ Traffic engineers use *green waves* — timing signals along a corridor so a veh
 ### Algorithm
 
 ```
-For each speed in [25, 28, 30, 32, 35, 38, 40, 42, 45] km/h:
-  For each departure offset in 0..25 min (step 15 s):
-    dep = arrivalTime - driveTime - offset
+Speeds (car): 20, 22, ... 48 km/h          (finer sets for Cycle / Walk)
+For each speed:
+  For each departure offset in 0..25 min (step 10 s):      "Arrive by"
+    dep = arrivalTime - driveTime - offset                  (or now + 0..10 min for "Leave now")
     Simulate each signal:
       phase = (dep + timeToSignal + elapsed) % cycle
       if red: elapsed += waitUntilGreen(signal, phase)
-    score = totalTime - 0.5 * greensHit   ← minimise
+    Refine: per stretch between signals, pick the speed that reaches the next
+            signal on green soonest ("Smart" plan, speeds vary per stretch)
+    score = totalTime - 0.5 * greensHit   <- minimise
 ```
 
 The `elapsed` accumulation is critical: each red stop shifts all subsequent signal arrival times, so missing it gives wrong results.
 
 ### Normal GPS comparison
 
-Uses the **same departure time** as SyncDrive but drives at 50 km/h, hitting signals at uncontrolled phases and accumulating real wait time — a direct apples-to-apples comparison.
+Normal GPS knows nothing about signals: it leaves at the naive time (arrive-by minus drive time at its flat 50 km/h) and hits signals at uncontrolled phases, accumulating real wait time. At a 09:00 arrival (car), SyncDrive is faster on 149 of the 182 routes, 38 s on average.
+
+### Live drive simulation
+
+Two vehicles run on the same clock and signals: SyncDrive (follows a live speed advisor, or a manual speed) and Normal GPS (flat speed, stops at every red). The advisor checks the next signal each tick and suggests the speed that reaches it on green.
+
+### Emergency (SOS) mode
+
+A separate mode tab. An ambulance runs at 70 km/h with a green corridor: signals within 500 m ahead are forced green. Every other vehicle (the two cars above plus 7 background cars) slows to 6-12 km/h within 350 m ahead of the ambulance and holds at corridor junctions until it has passed.
 
 ---
 
@@ -128,9 +139,10 @@ Uses the **same departure time** as SyncDrive but drives at 50 km/h, hitting sig
 
 | | Count |
 |---|---|
-| Locations | 7 (Sec 17, 22, 35, 43, PGI, Elante, Tribune Chowk) |
-| Traffic signals | 16 (simulated Chandigarh sector grid) |
-| Routes | 42 (all bidirectional pairs) |
+| Locations | 14 (Sec 8, 17, 22, 26, 35, 43, PGI, Panjab University, Rock Garden, Sukhna Lake, Elante, Tribune Chowk, Railway Station, Airport) |
+| Traffic signals | 25 (simulated Chandigarh sector grid) |
+| Routes | 182 directed pairs: 42 hand-defined + the rest generated over a road graph (shortest path) |
+| Modes | Drive, Walk, Cycle, SOS (ambulance) |
 | Tech dependencies | 0 (no install, no API key, no server) |
 
 ---
@@ -140,7 +152,7 @@ Uses the **same departure time** as SyncDrive but drives at 50 km/h, hitting sig
 | Layer | Technology |
 |---|---|
 | Map | Leaflet.js 1.9.4 |
-| Tiles | Stadia Maps `alidade_smooth_dark` (free, no key) |
+| Tiles | Esri World Dark Gray Canvas (free, no key) |
 | Font | Inter via Google Fonts |
 | Language | Vanilla JavaScript (ES6+) |
 | Build | None — single HTML file |
@@ -164,7 +176,7 @@ All UML and architecture diagrams are in [`diagrams/`](./diagrams/README.md), re
 
 ## Journals
 
-Weekly development journals for each team member (W1–W5):
+Weekly development journals for each team member (Parth: W1–W7, others: W1–W5):
 
 - [Tarun's Journal](./journals/1024030177-tarun/index.md)
 - [Parth's Journal](./journals/1024030178-parth/index.md)
