@@ -15,6 +15,20 @@ SyncDrive is a signal-aware GPS prototype that tells a driver *when to leave* an
 
 ---
 
+## What's New (v0.5)
+
+- **Live signals** — every junction shows real green/red state and a seconds-left countdown on the map, ticking in real time
+- **Live drive simulator** — race SyncDrive vs Normal GPS along the route (1×–16× speed), with a live speed advisor ("Ease to 32 to catch the green"), Auto/Manual pilot, follow-camera and optional voice guidance
+- **Leave now / Arrive by** modes, plus Drive / Cycle / Walk speed profiles
+- **Auto-recalculate** on any input change, swap button, click places on the map to set start/destination
+- **Speed-vs-time chart**, fuel/CO₂ estimates, per-signal live cycle strips
+- **Live Signals board**, place search, popular routes, recent routes, shareable route links
+- **Emergency mode (v0.6)** — separate `🚑 SOS` mode tab (or `E`); map signal lights and countdown timers can each be toggled on/off (`L`/`T`) — sends an ambulance down the route at 70 km/h with a green corridor: signals within 500 m ahead are forced green, while every other vehicle (SyncDrive car, Normal GPS car, 7 background cars) slows, pulls over and holds at those junctions until it passes
+- **14 places, 25 signals, any-to-any routing** over a road graph; finer speed steps and per-stretch "Smart" speed plans; Normal GPS now leaves at the naive time for a fair comparison
+- Keyboard: `Enter` sync · `S` swap · `Space` play/pause · `+`/`-` sim speed · `Esc` stop
+
+---
+
 ## Team
 
 | Name | Roll No. |
