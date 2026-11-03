@@ -1,4 +1,4 @@
-z# Weekly Progress Journal — Aryan Chaturvedi (Roll No: 1024160009)
+# Weekly Progress Journal — Aryan Chaturvedi (Roll No: 1024160009)
 
 **Project Name:** PRISM (Poverty Risk Identification through Statistical Mapping)
 **Role:** Contributor — Data Engineering, Modeling \& Documentation
