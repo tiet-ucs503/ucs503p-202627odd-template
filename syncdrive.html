@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SyncDrive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --asphalt:#14171b;
+    --panel:#1b1f25;
+    --card:#242a33;
+    --card-line:#323a46;
+    --ink:#edeef1;
+    --muted:#8b93a1;
+    --go:#4caf7d;
+    --go-dim:#2c4438;
+    --caution:#e8a33d;
+    --caution-dim:#4a3a20;
+    --stop:#d9534f;
+    --stop-dim:#4a2725;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 20% 10%, rgba(76,175,125,0.05), transparent 40%),
+      radial-gradient(circle at 85% 85%, rgba(217,83,79,0.05), transparent 40%),
+      var(--asphalt);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:48px 16px 72px;
+  }
+  .page-head{
+    text-align:center;
+    max-width:520px;
+    margin-bottom:34px;
+  }
+  .page-head .mark{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:0.02em;
+    color:var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .page-head .mark .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--go);
+    box-shadow:0 0 8px rgba(76,175,125,0.8);
+  }
+  .page-head h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:500;
+    font-size:22px;
+    line-height:1.4;
+    margin:0 0 8px;
+    color:var(--ink);
+  }
+  .page-head p{
+    font-size:14px;
+    color:var(--muted);
+    line-height:1.6;
+    margin:0;
+  }
+
+  /* ---- phone frame ---- */
+  .phone{
+    width:380px;
+    max-width:100%;
+    background:var(--panel);
+    border-radius:34px;
+    border:1px solid #2a3038;
+    box-shadow:
+      0 40px 80px -30px rgba(0,0,0,0.7),
+      0 0 0 1px rgba(255,255,255,0.02) inset;
+    overflow:hidden;
+    position:relative;
+  }
+  .screen{
+    padding:22px 20px 18px;
+  }
+
+  /* header */
+  .app-bar{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:22px;
+  }
+  .app-bar .name{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:16px;
+    letter-spacing:0.01em;
+  }
+  .app-bar .route{
+    font-size:12px;
+    color:var(--muted);
+    text-align:right;
+  }
+  .app-bar .route b{
+    color:var(--ink);
+    font-weight:500;
+  }
+
+  /* hero speed */
+  .hero{
+    text-align:center;
+    padding:6px 0 18px;
+  }
+  .hero .label{
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:2px;
+  }
+  .hero .speed-row{
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    gap:8px;
+    line-height:1;
+  }
+  .hero .speed{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:88px;
+    letter-spacing:-0.02em;
+    transition:color 0.4s ease;
+    color:var(--go);
+    font-variant-numeric:tabular-nums;
+  }
+  .hero .unit{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:500;
+    font-size:16px;
+    color:var(--muted);
+    padding-bottom:14px;
+  }
+  .hero .caption{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:6px;
+  }
+  .hero .caption b{
+    color:var(--ink);
+    font-weight:500;
+  }
+  .limit-note{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-top:12px;
+    font-size:11px;
+    color:var(--muted);
+    border:1px solid var(--card-line);
+    border-radius:20px;
+    padding:5px 12px;
+  }
+  .limit-note .swatch{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--muted);
+  }
+
+  /* signal timeline */
+  .section-label{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:12px;
+    color:var(--muted);
+    margin:22px 0 12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .section-label span.count{
+    color:var(--ink);
+  }
+  .timeline-wrap{
+    background:var(--card);
+    border:1px solid var(--card-line);
+    border-radius:18px;
+    padding:20px 16px 14px;
+  }
+  .timeline-svg{
+    width:100%;
+    display:block;
+    overflow:visible;
+  }
+  .sig-label{
+    font-family:'Inter',sans-serif;
+    font-size:10px;
+    fill:var(--muted);
+  }
+  .sig-dist{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:11px;
+    fill:var(--ink);
+    font-weight:500;
+  }
+
+  /* stats row */
+  .stats{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+    margin-top:16px;
+  }
+  .stat{
+    background:var(--card);
+    border:1px solid var(--card-line);
+    border-radius:14px;
+    padding:12px 10px;
+    text-align:center;
+  }
+  .stat .v{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:18px;
+  }
+  .stat .k{
+    font-size:10.5px;
+    color:var(--muted);
+    margin-top:3px;
+  }
+
+  /* emergency banner */
+  .emergency{
+    margin-top:16px;
+    border-radius:14px;
+    padding:13px 14px;
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--stop-dim);
+    border:1px solid rgba(217,83,79,0.35);
+    max-height:0;
+    opacity:0;
+    padding-top:0;
+    padding-bottom:0;
+    margin-top:0;
+    overflow:hidden;
+    transition:all 0.45s ease;
+  }
+  .emergency.show{
+    max-height:120px;
+    opacity:1;
+    padding-top:13px;
+    padding-bottom:13px;
+    margin-top:16px;
+  }
+  .emergency .pulse{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--stop);
+    margin-top:4px;
+    flex-shrink:0;
+    box-shadow:0 0 0 0 rgba(217,83,79,0.6);
+    animation:pulse 1.6s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(217,83,79,0.55);}
+    70%{box-shadow:0 0 0 9px rgba(217,83,79,0);}
+    100%{box-shadow:0 0 0 0 rgba(217,83,79,0);}
+  }
+  .emergency .txt b{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink);
+    margin-bottom:2px;
+  }
+  .emergency .txt span{
+    font-size:11.5px;
+    color:#d7b3b1;
+  }
+
+  /* controls */
+  .controls{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+  }
+  .btn{
+    flex:1;
+    border:1px solid var(--card-line);
+    background:var(--card);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    font-weight:500;
+    padding:12px 10px;
+    border-radius:12px;
+    cursor:pointer;
+    transition:background 0.2s, border-color 0.2s;
+    text-align:center;
+  }
+  .btn:hover{
+    background:#2a313b;
+  }
+  .btn.primary{
+    background:var(--go-dim);
+    border-color:rgba(76,175,125,0.4);
+    color:#bfe9d3;
+  }
+  .btn.primary:hover{
+    background:#33513f;
+  }
+  .btn.danger{
+    background:var(--stop-dim);
+    border-color:rgba(217,83,79,0.4);
+    color:#f0c2c0;
+  }
+  .btn.danger.active{
+    background:var(--stop);
+    color:#1c0f0f;
+    border-color:var(--stop);
+  }
+
+  .home-indicator{
+    width:120px;
+    height:4px;
+    border-radius:3px;
+    background:#3a414b;
+    margin:16px auto 4px;
+  }
+
+  .footnote{
+    max-width:380px;
+    margin-top:30px;
+    text-align:center;
+    font-size:11.5px;
+    color:var(--muted);
+    line-height:1.7;
+  }
+
+  @media (max-width:420px){
+    .hero .speed{font-size:72px;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="page-head">
+    <div class="mark"><span class="dot"></span>SYNCDRIVE</div>
+    <h1>Speed guidance that reads the signals ahead, not just the road</h1>
+    <p>A prototype screen for the driver app — recommended speed is calculated from upcoming signal timing and capped at the legal limit. Try the controls at the bottom.</p>
+</p>
+  </div>
+
+  <div class="phone">
+    <div class="screen">
+
+      <div class="app-bar">
+        <div class="name">SyncDrive</div>
+        <div class="route">Home → <b>TIET Campus</b></div>
+      </div>
+
+      <div class="hero">
+        <div class="label">Recommended speed</div>
+        <div class="speed-row">
+          <div class="speed" id="speedVal">42</div>
+          <div class="unit">km/h</div>
+        </div>
+        <div class="caption" id="captionTxt">Maintain this pace for the next <b>800 m</b> to catch the green at Rajpura Rd</div>
+        <div class="limit-note"><span class="swatch"></span>Limit on this stretch: 60 km/h</div>
+      </div>
+
+      <div class="section-label">Signals ahead <span class="count" id="sigCount">4</span></div>
+      <div class="timeline-wrap">
+        <svg class="timeline-svg" viewBox="0 0 336 92" id="timelineSvg">
+          <!-- base line -->
+          <line x1="14" y1="40" x2="322" y2="40" stroke="#3a414b" stroke-width="2" stroke-dasharray="1 6" stroke-linecap="round"/>
+          <!-- progress line -->
+          <line id="progressLine" x1="14" y1="40" x2="14" y2="40" stroke="#4caf7d" stroke-width="2" stroke-linecap="round"/>
+
+          <!-- vehicle marker -->
+          <g id="vehicleMarker" transform="translate(14,40)">
+            <circle r="6" fill="#edeef1"/>
+            <circle r="10" fill="none" stroke="#edeef1" stroke-opacity="0.25" stroke-width="2"/>
+          </g>
+
+          <!-- signal 1 -->
+          <g transform="translate(112,40)">
+            <circle r="7" fill="#4caf7d" id="sig1dot"/>
+            <text x="0" y="-16" text-anchor="middle" class="sig-dist">300m</text>
+            <text x="0" y="26" text-anchor="middle" class="sig-label">Model Town Chk</text>
+          </g>
+          <!-- signal 2 -->
+          <g transform="translate(190,40)">
+            <circle r="7" fill="#e8a33d" id="sig2dot"/>
+            <text x="0" y="-16" text-anchor="middle" class="sig-dist">800m</text>
+            <text x="0" y="26" text-anchor="middle" class="sig-label">Rajpura Rd</text>
+          </g>
+          <!-- signal 3 -->
+          <g transform="translate(258,40)">
+            <circle r="7" fill="#d9534f" id="sig3dot"/>
+            <text x="0" y="-16" text-anchor="middle" class="sig-dist">1.4km</text>
+            <text x="0" y="26" text-anchor="middle" class="sig-label">Bhupindra Chk</text>
+          </g>
+          <!-- signal 4 / destination-ish -->
+          <g transform="translate(322,40)">
+            <circle r="5" fill="#8b93a1"/>
+            <text x="-4" y="-16" text-anchor="end" class="sig-dist">2.1km</text>
+            <text x="-4" y="26" text-anchor="end" class="sig-label">Campus Gate</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="v" id="etaVal">9 min</div><div class="k">ETA</div></div>
+        <div class="stat"><div class="v" id="distVal">2.1 km</div><div class="k">Distance</div></div>
+        <div class="stat"><div class="v" id="stopsVal">2</div><div class="k">Stops avoided</div></div>
+      </div>
+
+      <div class="emergency" id="emergencyBanner">
+        <div class="pulse"></div>
+        <div class="txt">
+          <b>Ambulance approaching from Bhupindra Chk</b>
+          <span>Nearby speed lowered to ease a path — recommendation adjusted to 30 km/h.</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn primary" id="driveBtn">▸ Simulate drive</button>
+        <button class="btn danger" id="emergencyBtn">Emergency demo</button>
+      </div>
+
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+
+  <p class="footnote">Signal states shown here use simulated timing data, consistent with the prototype's scope — the system does not assume access to live municipal signal controllers.</p>
+
+<script>
+  const speedVal = document.getElementById('speedVal');
+  const captionTxt = document.getElementById('captionTxt');
+  const vehicleMarker = document.getElementById('vehicleMarker');
+  const progressLine = document.getElementById('progressLine');
+  const emergencyBanner = document.getElementById('emergencyBanner');
+  const emergencyBtn = document.getElementById('emergencyBtn');
+  const driveBtn = document.getElementById('driveBtn');
+  const etaVal = document.getElementById('etaVal');
+  const stopsVal = document.getElementById('stopsVal');
+
+  const normalSteps = [
+    { pos: 14,  speed: 42, caption: 'Maintain this pace for the next <b>800 m</b> to catch the green at Rajpura Rd', color: '#4caf7d' },
+    { pos: 112, speed: 38, caption: 'Ease off slightly — <b>Rajpura Rd</b> signal is 500 m ahead, currently red', color: '#e8a33d' },
+    { pos: 190, speed: 45, caption: 'Speed up to <b>45 km/h</b> to reach Bhupindra Chk during its green phase', color: '#4caf7d' },
+    { pos: 258, speed: 30, caption: 'Light stretch ahead — cruise at <b>30 km/h</b> toward the campus gate', color: '#4caf7d' },
+    { pos: 322, speed: 0,  caption: 'You have arrived — recommendation cleared', color: '#8b93a1' },
+  ];
+
+  let stepIndex = 0;
+  let emergencyOn = false;
+  let driving = false;
+  let driveTimer = null;
+
+  function renderStep(i){
+    const s = normalSteps[i];
+    speedVal.textContent = s.speed;
+    speedVal.style.color = s.color;
+    captionTxt.innerHTML = s.caption;
+    vehicleMarker.setAttribute('transform', `translate(${s.pos},40)`);
+    progressLine.setAttribute('x2', s.pos);
+    stopsVal.textContent = i >= 3 ? '2' : (i >= 1 ? '1' : '0');
+    etaVal.textContent = i >= 4 ? '0 min' : (9 - i * 2) + ' min';
+  }
+
+  driveBtn.addEventListener('click', () => {
+    if (driving) return;
+    driving = true;
+    stepIndex = 0;
+    driveBtn.textContent = '● Driving…';
+    driveTimer = setInterval(() => {
+      stepIndex++;
+      if (stepIndex >= normalSteps.length){
+        clearInterval(driveTimer);
+        driving = false;
+        driveBtn.textContent = '▸ Simulate drive';
+        return;
+      }
+      renderStep(stepIndex);
+    }, 1400);
+    renderStep(0);
+  });
+
+  emergencyBtn.addEventListener('click', () => {
+    emergencyOn = !emergencyOn;
+    emergencyBtn.classList.toggle('active', emergencyOn);
+    emergencyBanner.classList.toggle('show', emergencyOn);
+    if (emergencyOn){
+      speedVal.textContent = '30';
+      speedVal.style.color = '#d9534f';
+      captionTxt.innerHTML = 'Reduced for emergency coordination — resume normal guidance once the ambulance has passed';
+      emergencyBtn.textContent = 'End emergency demo';
+    } else {
+      emergencyBtn.textContent = 'Emergency demo';
+      renderStep(stepIndex);
+    }
+  });
+</script>
+
+</body>
+</html>

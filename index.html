@@ -1,0 +1,2153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SyncDrive</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --nav-w:200px;
+  --panel-w:320px;
+  --bg:#1c1c1e;
+  --bg2:#2c2c2e;
+  --bg3:#3a3a3c;
+  --bg4:#48484a;
+  --border:rgba(255,255,255,.08);
+  --border2:rgba(255,255,255,.12);
+  --text:#f5f5f7;
+  --sub:#aeaeb2;
+  --muted:#636366;
+  --accent:#0a84ff;   /* Apple blue — primary accent */
+  --green:#30d158;    /* used ONLY for "signal is green" */
+  --red:#ff453a;
+  --amber:#ffd60a;
+  --divider:rgba(255,255,255,.06);
+}
+html,body{height:100%;overflow:hidden;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+  background:#000;color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ── App shell ───────────────────────────────────────── */
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ── LEFT NAV (narrow — like Apple Maps sidebar) ──────── */
+.nav{
+  width:var(--nav-w);flex-shrink:0;
+  background:rgba(28,28,30,.98);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:16px 0 20px;
+  z-index:200;
+}
+.nav-logo{
+  display:flex;align-items:center;gap:9px;
+  padding:0 16px 18px;border-bottom:1px solid var(--divider);
+  margin-bottom:8px;
+}
+.nav-logo-icon{
+  width:30px;height:30px;border-radius:8px;
+  background:#fff;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+/* SyncDrive logo — stylised S + wave */
+.nav-logo-icon svg{width:18px;height:18px}
+.nav-logo-name{
+  font-size:.88rem;font-weight:800;letter-spacing:-.4px;color:var(--text);
+  line-height:1.1;
+}
+.nav-logo-name small{
+  display:block;font-size:.56rem;font-weight:500;
+  color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-top:1px;
+}
+
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 16px;cursor:pointer;
+  font-size:.82rem;font-weight:500;color:var(--sub);
+  border-radius:0;transition:background .1s;
+  border-left:2px solid transparent;
+}
+.nav-item:hover{background:rgba(255,255,255,.05)}
+.nav-item.active{color:var(--text);border-left-color:var(--accent)}
+.nav-item .ni-icon{
+  width:26px;height:26px;border-radius:7px;
+  background:var(--bg2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.nav-item.active .ni-icon{background:var(--accent)}
+.nav-item svg{width:12px;height:12px}
+
+.nav-bottom{margin-top:auto;padding:0 16px}
+.nav-bottom-tip{
+  font-size:.62rem;color:var(--muted);line-height:1.5;
+  background:var(--bg2);border-radius:8px;padding:8px 10px;
+}
+
+/* ── PANEL (directions pane — like Apple Maps Directions) */
+.panel{
+  width:var(--panel-w);flex-shrink:0;
+  background:rgba(28,28,30,.98);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+  z-index:100;
+}
+.panel-header{
+  padding:16px 16px 12px;flex-shrink:0;
+  border-bottom:1px solid var(--divider);
+}
+.panel-title{font-size:1.1rem;font-weight:700;letter-spacing:-.3px}
+
+/* mode tabs — car / walk */
+.mode-tabs{
+  display:flex;gap:0;background:var(--bg2);
+  border-radius:10px;padding:2px;margin:10px 0 0;
+}
+.mode-tab{
+  flex:1;padding:6px 8px;border-radius:8px;border:none;
+  background:transparent;color:var(--sub);font-size:.78rem;
+  font-weight:600;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;gap:5px;transition:background .15s,color .15s;
+  font-family:inherit;
+}
+.mode-tab.active{background:var(--accent);color:#fff}
+.mode-tab svg{width:13px;height:13px}
+
+/* ── Input group ─────────────────────────────────────── */
+.input-group{
+  background:var(--bg2);border-radius:12px;
+  margin:12px 16px 0;overflow:hidden;
+  border:1px solid var(--border2);
+}
+.input-row{
+  display:flex;align-items:center;min-height:42px;
+  border-bottom:1px solid var(--divider);
+}
+.input-row:last-child{border-bottom:none}
+.input-dot{
+  width:36px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;
+}
+.input-dot svg{width:16px;height:16px}
+.input-field{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--text);font-size:.84rem;font-family:inherit;
+  padding:10px 8px 10px 0;
+}
+.input-field::placeholder{color:var(--muted)}
+select.input-field{appearance:none;cursor:pointer}
+select.input-field option{background:#2c2c2e}
+.input-handle{
+  width:36px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;color:var(--bg4);
+}
+.input-handle svg{width:12px;height:12px}
+
+.arrival-row{
+  display:flex;align-items:center;gap:8px;
+  margin:10px 16px 0;
+}
+.chip{
+  display:flex;align-items:center;gap:5px;
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:20px;padding:5px 12px;
+  font-size:.76rem;font-weight:600;color:var(--text);cursor:pointer;
+}
+.chip svg{width:10px;height:10px;opacity:.6}
+input[type="time"].chip-time{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:20px;padding:5px 12px;
+  font-size:.76rem;font-weight:600;color:var(--text);
+  font-family:inherit;outline:none;
+  appearance:none;cursor:pointer;flex:1;
+}
+input[type="time"].chip-time::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.4;cursor:pointer}
+
+.btn-sync{
+  margin:10px 16px 14px;padding:11px;
+  background:var(--accent);color:#fff;
+  font-weight:700;font-size:.84rem;font-family:inherit;
+  border:none;border-radius:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:opacity .15s,transform .1s;letter-spacing:.1px;
+}
+.btn-sync:hover{opacity:.9}
+.btn-sync:active{transform:scale(.98)}
+.btn-sync svg{width:13px;height:13px}
+
+/* ── Scrollable results body ─────────────────────────── */
+.panel-body{
+  flex:1;overflow-y:auto;padding-bottom:20px;
+}
+.panel-body::-webkit-scrollbar{width:3px}
+.panel-body::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:2px}
+
+/* ── Section header inside panel ────────────────────── */
+.sec-hd{
+  font-size:.62rem;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--muted);
+  padding:14px 16px 6px;
+}
+
+/* ── List group (Apple-style grouped rows) ────────────── */
+.list-group{
+  background:var(--bg2);border-radius:12px;
+  margin:0 10px 8px;overflow:hidden;
+  border:1px solid var(--border);
+}
+.list-row{
+  display:flex;align-items:center;
+  padding:10px 14px;border-bottom:1px solid var(--divider);
+  min-height:44px;
+}
+.list-row:last-child{border-bottom:none}
+.lr-label{font-size:.78rem;color:var(--sub);flex:1}
+.lr-val{font-size:.84rem;font-weight:600;color:var(--text);text-align:right}
+.lr-val.accent{color:var(--accent)}
+.lr-val.green{color:var(--green)}
+.lr-val.red{color:var(--red)}
+.lr-val.amber{color:var(--amber)}
+.lr-sub{font-size:.65rem;color:var(--muted);text-align:right;margin-top:1px}
+
+/* ── Leave-at hero (minimal, not green box) ────────────── */
+.leave-hero{
+  background:var(--bg2);border-radius:12px;
+  margin:0 10px 8px;
+  border:1px solid var(--border);
+  padding:14px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.lh-left .lh-label{font-size:.62rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.lh-left .lh-time{font-size:2rem;font-weight:800;letter-spacing:-.5px;color:var(--text);line-height:1.1;margin-top:2px}
+.lh-left .lh-sub{font-size:.7rem;color:var(--sub);margin-top:4px}
+.lh-right{
+  width:48px;height:48px;background:var(--accent);border-radius:14px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.lh-right svg{width:22px;height:22px;stroke:#fff}
+
+/* ── Speed card ─────────────────────────────────────── */
+.speed-card{
+  background:var(--bg2);border-radius:12px;
+  margin:0 10px 8px;
+  border:1px solid var(--border);
+  padding:14px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sc-left .sc-label{font-size:.62rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.sc-left .sc-val{font-size:1.8rem;font-weight:800;letter-spacing:-.5px;color:var(--text);line-height:1.1;margin-top:2px}
+.sc-left .sc-sub{font-size:.7rem;color:var(--sub);margin-top:4px}
+.sc-right{text-align:right}
+.sc-badge{
+  display:inline-block;padding:4px 10px;border-radius:8px;
+  font-size:.72rem;font-weight:700;letter-spacing:.3px;
+}
+.sc-badge.slower{background:rgba(255,159,10,.15);color:#ff9f0a;border:1px solid rgba(255,159,10,.3)}
+.sc-badge.steady{background:rgba(10,132,255,.15);color:var(--accent);border:1px solid rgba(10,132,255,.3)}
+
+/* ── Comparison — "Why It's Faster" ────────────────────── */
+.cmp-split{
+  display:grid;grid-template-columns:1fr 1fr;gap:6px;
+  margin:0 10px 8px;
+}
+.cmp-half{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:12px;text-align:center;
+}
+.ch-label{font-size:.6rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.ch-time{font-size:1.5rem;font-weight:800;line-height:1;color:var(--text)}
+.ch-sub{font-size:.62rem;color:var(--muted);margin-top:3px}
+/* saved badge on the gw side */
+.ch-saved{
+  display:inline-block;margin-top:6px;
+  background:rgba(48,209,88,.18);color:var(--green);
+  border:1px solid rgba(48,209,88,.3);
+  border-radius:6px;padding:2px 7px;font-size:.65rem;font-weight:700;
+}
+
+/* time bars */
+.tbar-section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin:0 10px 8px;padding:12px 14px}
+.tbar-title{font-size:.68rem;color:var(--sub);font-weight:600;margin-bottom:8px}
+.tbar-track{height:7px;border-radius:4px;background:var(--bg3);display:flex;overflow:hidden;margin-bottom:3px}
+.tbar-d{border-radius:4px 0 0 4px;transition:width .4s}
+.tbar-w{transition:width .4s}
+.tbar-meta{display:flex;justify-content:space-between;font-size:.63rem;color:var(--muted);margin-bottom:10px}
+.tbar-meta:last-child{margin-bottom:0}
+
+/* ── Signal list ─────────────────────────────────────── */
+.sig-row{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 14px;border-bottom:1px solid var(--divider);
+}
+.sig-row:last-child{border-bottom:none}
+.sig-indicator{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+.sig-indicator.g{background:var(--green)}
+.sig-indicator.r{background:var(--red)}
+.sig-name{flex:1;font-size:.77rem;color:var(--text)}
+.sig-time{font-size:.68rem;color:var(--muted)}
+.sig-badge{
+  font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:5px;
+}
+.sig-badge.g{background:rgba(48,209,88,.15);color:var(--green)}
+.sig-badge.r{background:rgba(255,69,58,.15);color:var(--red)}
+
+/* ── Steps ───────────────────────────────────────────── */
+.step-row{
+  display:flex;gap:10px;align-items:flex-start;
+  padding:9px 14px;border-bottom:1px solid var(--divider);
+}
+.step-row:last-child{border-bottom:none}
+.step-n{
+  width:18px;height:18px;background:var(--bg3);border-radius:50%;flex-shrink:0;
+  font-size:.6rem;font-weight:700;color:var(--sub);
+  display:flex;align-items:center;justify-content:center;margin-top:1px;
+}
+.step-txt{font-size:.76rem;color:var(--sub);line-height:1.45}
+
+/* ── Empty state ─────────────────────────────────────── */
+.empty-state{padding:30px 20px;text-align:center;color:var(--muted);font-size:.8rem;line-height:1.7}
+.empty-state .ei{font-size:1.8rem;margin-bottom:10px}
+
+/* ── Map ─────────────────────────────────────────────── */
+.map-wrap{flex:1;position:relative}
+#map{width:100%;height:100%}
+
+/* ── Speed HUD ───────────────────────────────────────── */
+#hud{
+  display:none;position:absolute;bottom:24px;right:20px;z-index:400;
+  background:rgba(28,28,30,.9);backdrop-filter:blur(20px);
+  border:1px solid var(--border2);border-radius:16px;
+  padding:14px 18px;text-align:center;min-width:110px;
+  box-shadow:0 8px 30px rgba(0,0,0,.6);
+}
+.hud-n{font-size:2.8rem;font-weight:800;color:var(--text);line-height:1;letter-spacing:-1px}
+.hud-u{font-size:.6rem;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.hud-a{font-size:.65rem;color:var(--sub);margin-top:6px;line-height:1.3;max-width:90px}
+
+/* ── Toast ───────────────────────────────────────────── */
+#toast{
+  position:fixed;top:62px;left:50%;transform:translateX(-50%) translateY(-10px);
+  background:rgba(44,44,46,.95);backdrop-filter:blur(20px);
+  border:1px solid var(--border2);border-radius:22px;
+  padding:9px 20px;font-size:.78rem;font-weight:600;
+  z-index:9999;opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;white-space:nowrap;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Leaflet overrides */
+.leaflet-control-zoom a{
+  background:rgba(28,28,30,.9)!important;color:var(--text)!important;
+  border-color:var(--border2)!important;
+}
+.leaflet-bar{border-radius:10px!important;overflow:hidden;border:1px solid var(--border2)!important}
+.leaflet-control-attribution{background:rgba(0,0,0,.4)!important;color:var(--muted)!important;font-size:9px!important}
+
+/* ══ v0.5 additions ══════════════════════════════════════ */
+button{font-family:inherit}
+.view{display:none;flex-direction:column;flex:1;min-height:0}
+.view.active{display:flex}
+.title-row{display:flex;align-items:center;justify-content:space-between}
+.live-pill{display:inline-flex;align-items:center;gap:5px;font-size:.58rem;font-weight:700;letter-spacing:.7px;
+  color:var(--green);background:rgba(48,209,88,.12);border-radius:10px;padding:3px 8px}
+.live-pill i{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.25}}
+.panel-sub{font-size:.7rem;color:var(--muted);margin-top:3px}
+.nav-item{user-select:none}
+.nav-kbd{margin-left:auto;font-size:.58rem;color:var(--muted);border:1px solid var(--border2);border-radius:4px;padding:0 4px}
+
+/* swap */
+.swap{width:36px;height:100%;min-height:42px;border:none;background:transparent;color:var(--sub);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .15s,transform .25s}
+.swap:hover{color:var(--accent)}
+.swap.spin{transform:rotate(180deg)}
+.swap svg{width:15px;height:15px}
+
+/* segmented control */
+.seg{display:flex;background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:2px;gap:1px}
+.seg button{border:none;background:transparent;color:var(--sub);font-size:.7rem;font-weight:600;
+  padding:4px 10px;border-radius:18px;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
+.seg button.active{background:var(--accent);color:#fff}
+.arrival-row .seg{flex-shrink:0}
+input[type="time"].chip-time:disabled{opacity:.35;cursor:default}
+
+/* action row */
+.act-row{display:flex;gap:8px;margin:0 10px 8px}
+.btn-go{flex:1;padding:11px;border:none;border-radius:12px;background:var(--green);color:#04210d;font-weight:800;
+  font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:transform .1s,opacity .15s}
+.btn-go:hover{opacity:.9}.btn-go:active{transform:scale(.98)}
+.btn-ghost{width:44px;border:1px solid var(--border2);border-radius:12px;background:var(--bg2);color:var(--sub);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .15s,border-color .15s}
+.btn-ghost:hover{color:var(--accent);border-color:var(--accent)}
+.btn-ghost svg{width:16px;height:16px}
+
+/* speed vs time chart */
+.sp-row{display:grid;grid-template-columns:46px 1fr 46px;gap:8px;align-items:center;padding:6px 14px;font-size:.7rem;color:var(--sub);
+  border-bottom:1px solid var(--divider)}
+.sp-row:last-child{border-bottom:none}
+.sp-row .sp-tot{text-align:right;font-variant-numeric:tabular-nums}
+.sp-bar{height:8px;border-radius:4px;background:var(--bg3);display:flex;overflow:hidden}
+.sp-d{background:var(--accent);transition:width .5s}
+.sp-w{background:var(--red);transition:width .5s}
+.sp-row.best{color:var(--text);font-weight:700;background:rgba(48,209,88,.07)}
+.sp-row.best .sp-tot{color:var(--green)}
+.sp-row.ng .sp-lbl{color:var(--red)}
+.chart-legend{display:flex;gap:12px;padding:8px 14px;font-size:.62rem;color:var(--muted)}
+.chart-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+
+/* signal rows with live strip */
+.sig-row{flex-direction:column;align-items:stretch;gap:0;cursor:pointer;transition:background .15s}
+.sig-row:hover{background:rgba(255,255,255,.03)}
+.sig-line{display:flex;align-items:center;gap:10px}
+.strip{position:relative;height:4px;background:rgba(255,69,58,.4);border-radius:2px;margin:9px 2px 3px}
+.strip .gz{position:absolute;top:0;bottom:0;background:var(--green);border-radius:2px}
+.strip .nd{position:absolute;top:-3px;width:2px;height:10px;background:#fff;border-radius:1px;margin-left:-1px;box-shadow:0 0 4px rgba(255,255,255,.7)}
+.strip .ar{position:absolute;top:-2px;width:8px;height:8px;border-radius:50%;border:2px solid var(--accent);background:var(--bg2);margin-left:-4px}
+.strip-key{display:flex;gap:12px;padding:8px 14px 2px;font-size:.6rem;color:var(--muted)}
+
+/* map signal markers (live) */
+.sg-wrap{background:none!important;border:none!important}
+.sg{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font:700 9px/1 'Inter',sans-serif;color:#04210d;border:2px solid rgba(255,255,255,.4);
+  box-shadow:0 2px 8px rgba(0,0,0,.5);transition:transform .25s,opacity .25s,background .35s;font-variant-numeric:tabular-nums}
+.sg.g{background:var(--green)}
+.sg.r{background:var(--red);color:#fff}
+.sg.dim{opacity:.4;transform:scale(.72)}
+.sg.on{transform:scale(1.18);border-color:#fff}
+.sg.next{animation:pulse 1.1s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.75)}100%{box-shadow:0 0 0 16px rgba(255,255,255,0)}}
+
+/* vehicles */
+.car-wrap{background:none!important;border:none!important}
+.car{width:20px;height:20px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.6)}
+.car.sync{background:var(--accent);animation:ring 1.6s infinite}
+.car.ng{background:var(--red);border-color:rgba(255,255,255,.85)}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(10,132,255,.7)}100%{box-shadow:0 0 0 18px rgba(10,132,255,0)}}
+
+/* leaflet dark popups / tooltips */
+.leaflet-popup-content-wrapper{background:rgba(44,44,46,.97);color:var(--text);border-radius:12px;border:1px solid var(--border2)}
+.leaflet-popup-tip{background:rgba(44,44,46,.97)}
+.leaflet-popup-content{margin:12px 14px;font-family:'Inter',sans-serif;font-size:.8rem}
+.leaflet-container a.leaflet-popup-close-button{color:var(--sub)}
+.pp-btns{display:flex;gap:6px;margin-top:8px}
+.pp-btns button{flex:1;border:none;border-radius:8px;padding:6px 8px;font-size:.7rem;font-weight:700;cursor:pointer;color:#fff}
+.pp-btns .a{background:var(--accent)}.pp-btns .b{background:var(--red)}
+.leaflet-tooltip{background:rgba(28,28,30,.95);color:var(--text);border:1px solid var(--border2);border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:.72rem;box-shadow:0 4px 14px rgba(0,0,0,.5);padding:6px 9px}
+.leaflet-tooltip-top:before{border-top-color:rgba(28,28,30,.95)}
+.tt-state{font-weight:700}.tt-state.g{color:var(--green)}.tt-state.r{color:var(--red)}
+
+/* map overlays */
+.sim-chip{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:500;display:flex;align-items:center;gap:8px;
+  background:rgba(28,28,30,.88);backdrop-filter:blur(16px);border:1px solid var(--border2);border-radius:20px;
+  padding:6px 14px;font-size:.76rem;font-weight:600;font-variant-numeric:tabular-nums}
+.sim-chip i{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite}
+.sim-chip.sim i{background:var(--amber)}
+.sim-chip small{font-size:.6rem;font-weight:700;letter-spacing:.7px;color:var(--muted)}
+.legend{position:absolute;top:12px;right:12px;z-index:500;background:rgba(28,28,30,.88);backdrop-filter:blur(16px);
+  border:1px solid var(--border2);border-radius:12px;padding:9px 12px;font-size:.66rem;color:var(--sub);line-height:1.9}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:-1px}
+
+#hud{min-width:150px}
+#hud .hud-start{margin-top:10px;width:100%;border:none;border-radius:10px;padding:8px;background:var(--green);color:#04210d;
+  font-weight:800;font-size:.74rem;cursor:pointer}
+#hud .hud-start:hover{opacity:.9}
+
+/* drive console */
+#console{display:none;position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:600;
+  width:min(600px,calc(100% - 32px));background:rgba(28,28,30,.93);backdrop-filter:blur(24px);
+  border:1px solid var(--border2);border-radius:20px;padding:14px 16px;box-shadow:0 12px 40px rgba(0,0,0,.65)}
+#console.show{display:block;animation:rise .3s ease}
+@keyframes rise{from{opacity:0;transform:translateX(-50%) translateY(16px)}}
+.cn-row{display:flex;align-items:center;gap:16px}
+.cn-speed{text-align:center;min-width:76px}
+.cn-speed b{display:block;font-size:2.6rem;font-weight:800;line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.cn-speed small{font-size:.58rem;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.cn-info{flex:1;min-width:0}
+.cn-advice{font-size:.92rem;font-weight:700;line-height:1.25}
+.cn-advice.ok{color:var(--green)}.cn-advice.warn{color:var(--amber)}.cn-advice.red{color:var(--red)}
+.cn-next,.cn-eta{font-size:.7rem;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cn-btns{display:flex;gap:6px}
+.icon-btn{min-width:38px;height:38px;padding:0 14px;border-radius:19px;font-weight:600;font-size:.74rem;border:1px solid var(--border2);background:var(--bg3);color:var(--text);
+  cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center}
+.icon-btn:hover{background:var(--bg4)}
+.race{margin-top:12px}
+.race-row{display:grid;grid-template-columns:66px 1fr 70px;gap:8px;align-items:center;font-size:.66rem;color:var(--sub);margin-top:6px}
+.rt{position:relative;height:6px;border-radius:3px;background:var(--bg3)}
+.rfill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;width:0}
+.rfill.sync{background:var(--accent)}.rfill.ng{background:var(--red)}
+.rv{text-align:right;font-variant-numeric:tabular-nums}
+.cn-ctrl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.cn-ctrl input[type=range]{flex:1;min-width:90px;accent-color:var(--accent);display:none}
+.cn-ctrl.manual input[type=range]{display:block}
+.tog{border:1px solid var(--border2);background:var(--bg2);color:var(--sub);border-radius:16px;padding:4px 10px;
+  font-size:.68rem;font-weight:600;cursor:pointer}
+.tog.active{background:rgba(10,132,255,.18);border-color:var(--accent);color:var(--accent)}
+
+/* finish card */
+#finish{display:none;position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:700;width:min(360px,calc(100% - 32px));
+  background:rgba(28,28,30,.96);backdrop-filter:blur(24px);border:1px solid var(--border2);border-radius:20px;padding:20px;
+  box-shadow:0 16px 50px rgba(0,0,0,.7);text-align:center}
+#finish.show{display:block;animation:rise .35s ease}
+#finish h3{font-size:1.15rem;letter-spacing:-.3px}
+#finish p{font-size:.74rem;color:var(--sub);margin-top:4px}
+.fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.fin-grid div{background:var(--bg2);border-radius:12px;padding:10px}
+.fin-grid b{display:block;font-size:1.3rem;font-weight:800}
+.fin-grid span{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:700}
+.fin-save{display:inline-block;background:rgba(48,209,88,.16);color:var(--green);border:1px solid rgba(48,209,88,.3);
+  border-radius:8px;padding:4px 12px;font-size:.78rem;font-weight:800;margin-bottom:14px}
+.fin-actions{display:flex;gap:8px}
+.fin-actions button{flex:1;padding:10px;border-radius:12px;border:none;font-weight:700;font-size:.78rem;cursor:pointer}
+.fin-actions .p{background:var(--accent);color:#fff}.fin-actions .s{background:var(--bg3);color:var(--text)}
+
+/* search + board views */
+.search-box{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;
+  padding:0 10px;margin-top:10px}
+.search-box svg{width:14px;height:14px;color:var(--muted);flex-shrink:0}
+.search-box input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:.84rem;font-family:inherit;padding:10px 0}
+.place-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--divider);font-size:.8rem}
+.place-row:last-child{border-bottom:none}
+.place-row .pn{flex:1;cursor:pointer}
+.place-row .pn:hover{color:var(--accent)}
+.mini-btn{border:none;border-radius:8px;padding:4px 9px;font-size:.64rem;font-weight:700;cursor:pointer;color:#fff}
+.mini-btn.a{background:var(--accent)}.mini-btn.b{background:var(--red)}
+.pop-row{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--divider);cursor:pointer;font-size:.8rem}
+.pop-row:last-child{border-bottom:none}
+.pop-row:hover{background:rgba(255,255,255,.04)}
+.pop-row .pm{margin-left:auto;font-size:.66rem;color:var(--muted)}
+.board-sum{display:flex;gap:8px;margin:12px 10px 4px}
+.board-sum div{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center}
+.board-sum b{display:block;font-size:1.4rem;font-weight:800}
+.board-sum span{font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:700}
+.bd-cd{font-size:.72rem;font-weight:700;min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
+.bd-cd.g{color:var(--green)}.bd-cd.r{color:var(--red)}
+
+/* recents */
+.recents{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px}
+.recents button{border:1px solid var(--border2);background:var(--bg2);color:var(--sub);border-radius:16px;padding:5px 11px;font-size:.7rem;font-weight:600;cursor:pointer}
+.recents button:hover{color:var(--accent);border-color:var(--accent)}
+.kbd-hint{font-size:.62rem;color:var(--muted);margin-top:16px;line-height:1.9}
+.kbd-hint kbd{border:1px solid var(--border2);border-radius:4px;padding:0 5px;font-family:inherit;color:var(--sub)}
+.results-fade{animation:fadein .35s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}}
+
+@media (max-width:1100px){
+  :root{--nav-w:64px}
+  .nav-logo-name,.nav-item span.nl,.nav-bottom,.nav-kbd{display:none}
+  .nav-item{justify-content:center;padding:8px 0}
+  .nav-logo{justify-content:center;padding:0 0 18px}
+}
+@media (max-width:760px){
+  .app{flex-direction:column-reverse}
+  .nav{width:100%;flex-direction:row;padding:6px;justify-content:space-around;border-right:none;border-top:1px solid var(--border)}
+  .nav-logo{display:none}
+  .nav-item{border-left:none;padding:4px 14px}
+  .panel{width:100%;height:46vh;border-right:none}
+  .map-wrap{height:54vh;flex:none}
+  .legend{display:none}
+}
+
+/* emergency mode */
+.btn-emg{background:var(--red);color:#fff;flex:none;padding:11px 13px}
+.sg.ev{background:#0a84ff;color:#fff;border-color:#fff;animation:evp .7s infinite}
+@keyframes evp{0%{box-shadow:0 0 0 0 rgba(10,132,255,.9)}100%{box-shadow:0 0 0 18px rgba(10,132,255,0)}}
+.car.bg{width:13px;height:13px;border-width:2px;background:#8e8e93}
+.car.bg.yield{background:var(--amber)}
+.car.amb{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:15px;background:#fff;border:3px solid var(--red);animation:siren .6s infinite}
+@keyframes siren{0%{box-shadow:0 0 0 0 rgba(255,69,58,.9)}50%{box-shadow:0 0 18px 6px rgba(10,132,255,.9)}100%{box-shadow:0 0 0 0 rgba(255,69,58,.9)}}
+.rfill.amb{background:#fff}
+#emg-banner{display:none;position:absolute;top:52px;left:50%;transform:translateX(-50%);z-index:550;background:rgba(255,69,58,.92);color:#fff;
+  font-size:.72rem;font-weight:800;letter-spacing:.3px;padding:7px 16px;border-radius:20px;box-shadow:0 6px 20px rgba(255,69,58,.4);white-space:nowrap;
+  }
+#toast{top:96px!important}
+
+/* separate emergency mode + signal toggles */
+.mode-tab{padding:6px 4px}
+.mode-tab[data-mode=emerg].active{background:var(--red)}
+body.emg .btn-sync{background:var(--red)}
+body.emg .arrival-row{display:none}
+body.emg .panel-title{color:var(--red)}
+.tg{display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;user-select:none;margin-top:2px;border-top:1px solid var(--divider);padding-top:2px}
+.tg~.tg{border-top:none;padding-top:0;margin-top:0}
+.tg b{width:28px;height:16px;border-radius:8px;background:var(--bg4);position:relative;transition:background .2s;flex-shrink:0}
+.tg b:after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .2s}
+.tg.on b{background:var(--green)}
+.tg.on b:after{transform:translateX(12px)}
+.tg.dis{opacity:.4}
+#map.hide-sig .sg-wrap{display:none}
+#map.hide-timer .sg:not(.ev){font-size:0}
+#layers{position:absolute;top:84px;left:10px;z-index:500;background:rgba(28,28,30,.88);backdrop-filter:blur(16px);
+  border:1px solid var(--border2);border-radius:12px;padding:8px 12px;font-size:.68rem;color:var(--sub);line-height:2;min-width:132px}
+#layers .tg{border:none;padding:0;margin:0}
+#layers #tg-all{color:var(--text);font-weight:700;border-bottom:1px solid var(--divider);margin-bottom:2px}
+#map.hide-places .pl-wrap{display:none}
+#map.zoom-far .sg:not(.ev){width:12px;height:12px;margin:6px;border-width:1px;font-size:0}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ LEFT NAV ══════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="18" cy="18" r="18" fill="#000"/>
+        <path d="M6 26 Q12 10 18 18 Q24 26 30 10" stroke="#fff" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+        <path d="M13 14 L10 17 L13 20" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M23 14 L26 17 L23 20" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="nav-logo-name">SyncDrive<small>Signal Sync GPS</small></div>
+  </div>
+
+  <div class="nav-item" data-view="search">
+    <div class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+    <span class="nl">Search</span>
+  </div>
+  <div class="nav-item" data-view="signals">
+    <div class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="20" rx="3"/><circle cx="12" cy="7" r="1.2" fill="#fff"/><circle cx="12" cy="12" r="1.2" fill="#fff"/><circle cx="12" cy="17" r="1.2" fill="#fff"/></svg></div>
+    <span class="nl">Live Signals</span>
+  </div>
+  <div class="nav-item active" data-view="dir">
+    <div class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></div>
+    <span class="nl">Directions</span>
+  </div>
+
+  <div class="nav-bottom">
+    <div class="nav-bottom-tip">
+      <span id="clock" style="font-size:.78rem;font-weight:700;color:var(--sub);font-variant-numeric:tabular-nums">--:--:--</span><br/>
+      <span style="font-size:.6rem;color:var(--muted)">Chandigarh, IN · live signal clock</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ PANEL ═════════════════════════════════════════════ -->
+<div class="panel">
+
+  <!-- ─ Directions ─ -->
+  <section class="view active" id="view-dir">
+    <div class="panel-header">
+      <div class="title-row">
+        <div class="panel-title" id="panel-title">Directions</div>
+        <span class="live-pill"><i></i>LIVE</span>
+      </div>
+      <div class="mode-tabs" id="mode-tabs">
+        <button class="mode-tab active" data-mode="car">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3v-5l2-5h14l2 5v5h-2"/><path d="M5 17a2 2 0 104 0m6 0a2 2 0 104 0"/></svg>Drive
+        </button>
+        <button class="mode-tab" data-mode="walk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4a1 1 0 110 2 1 1 0 010-2zM7 22l4-4 2 2 3-6m-4-4l-2 6 2 2-4 4"/></svg>Walk
+        </button>
+        <button class="mode-tab" data-mode="bike">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h2l2 5.5m-7 0L15 6M8 17.5L11 6h1l1.5 3H10"/></svg>Cycle
+        </button>
+        <button class="mode-tab" data-mode="emerg" title="Emergency / ambulance mode">SOS</button>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <div class="input-row">
+        <div class="input-dot"><svg viewBox="0 0 24 24" fill="var(--accent)"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg></div>
+        <select class="input-field" id="sel-origin"><option value="">From</option></select>
+        <button class="swap" id="btn-swap" title="Swap start and destination (S)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg>
+        </button>
+      </div>
+      <div class="input-row">
+        <div class="input-dot"><svg viewBox="0 0 24 24" fill="var(--red)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="#fff"/></svg></div>
+        <select class="input-field" id="sel-dest"><option value="">To</option></select>
+        <div class="input-handle"></div>
+      </div>
+    </div>
+
+    <div class="arrival-row">
+      <div class="seg" id="when-seg">
+        <button class="active" data-when="arrive">Arrive by</button>
+        <button data-when="now">Leave now</button>
+      </div>
+      <input type="time" class="chip-time" id="arrival-time" value="09:00"/>
+    </div>
+
+    <button class="btn-sync" id="btn-sync">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Sync Route
+    </button>
+
+    <div class="panel-body">
+      <div id="results" style="display:none">
+
+        <div class="sec-hd">Departure</div>
+        <div class="leave-hero">
+          <div class="lh-left">
+            <div class="lh-label">Leave at</div>
+            <div class="lh-time" id="r-leave">—</div>
+            <div class="lh-sub" id="r-leave-sub">—</div>
+          </div>
+          <div class="lh-right"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 15.5 13.5"/></svg></div>
+        </div>
+
+        <div class="speed-card">
+          <div class="sc-left">
+            <div class="sc-label">Maintain Speed</div>
+            <div class="sc-val"><span id="r-speed">—</span> <span style="font-size:.9rem;font-weight:500;color:var(--sub)">km/h</span></div>
+            <div class="sc-sub" id="r-speed-sub">—</div>
+          </div>
+          <div class="sc-right">
+            <div class="sc-badge slower" id="r-speed-badge">Slower</div>
+            <div style="font-size:.65rem;color:var(--muted);margin-top:6px" id="r-speed-note">—</div>
+          </div>
+        </div>
+
+        <div class="act-row">
+          <button class="btn-go" id="btn-drive">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21"/></svg>
+            Start live drive
+          </button>
+          <button class="btn-ghost" id="btn-share" title="Copy shareable link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          </button>
+        </div>
+
+        <div class="list-group">
+          <div class="list-row"><span class="lr-label">Arrive at</span><div><div class="lr-val amber" id="r-eta">—</div></div></div>
+          <div class="list-row"><span class="lr-label">Distance</span><div><div class="lr-val" id="r-dist">—</div><div class="lr-sub">km</div></div></div>
+          <div class="list-row"><span class="lr-label">Travel time</span><div><div class="lr-val" id="r-mins">—</div><div class="lr-sub">minutes total</div></div></div>
+          <div class="list-row"><span class="lr-label">Signals hit green</span><div><div class="lr-val green" id="r-greens">—</div></div></div>
+        </div>
+
+        <div class="sec-hd">Why It's Faster</div>
+        <div class="cmp-split">
+          <div class="cmp-half">
+            <div class="ch-label">Normal GPS</div>
+            <div class="ch-time" id="c-ng-time">—</div>
+            <div class="ch-sub" id="c-ng-sub">rushing</div>
+          </div>
+          <div class="cmp-half">
+            <div class="ch-label">SyncDrive</div>
+            <div class="ch-time" id="c-gw-time">—</div>
+            <div class="ch-sub">steady, no stops</div>
+            <div class="ch-saved" id="ch-saved" style="display:none">— saved</div>
+          </div>
+        </div>
+
+        <div class="tbar-section">
+          <div class="tbar-title">Normal GPS — time breakdown</div>
+          <div class="tbar-track"><div class="tbar-d" id="bar-ng-d" style="background:var(--accent);width:0%"></div><div class="tbar-w" id="bar-ng-w" style="background:var(--red);width:0%"></div></div>
+          <div class="tbar-meta"><span id="lbl-ng-d">—</span><span id="lbl-ng-w" style="color:var(--red)">—</span></div>
+          <div class="tbar-title">SyncDrive — time breakdown</div>
+          <div class="tbar-track"><div class="tbar-d" id="bar-gw-d" style="background:var(--accent);width:0%"></div><div class="tbar-w" id="bar-gw-w" style="background:var(--red);width:0%"></div></div>
+          <div class="tbar-meta" style="margin-bottom:0"><span id="lbl-gw-d">—</span><span id="lbl-gw-w">—</span></div>
+        </div>
+
+        <div class="list-group">
+          <div class="list-row"><span class="lr-label">Speed</span><div style="display:flex;align-items:center;gap:6px"><span class="lr-val red" id="c-ng-spd">—</span><span style="color:var(--muted);font-size:.7rem">→</span><span class="lr-val accent" id="c-gw-spd">—</span></div></div>
+          <div class="list-row"><span class="lr-label">Red lights</span><div style="display:flex;align-items:center;gap:6px"><span class="lr-val red" id="c-ng-reds">—</span><span style="color:var(--muted);font-size:.7rem">→</span><span class="lr-val green" id="c-gw-reds">—</span></div></div>
+          <div class="list-row"><span class="lr-label">Time lost waiting</span><div style="display:flex;align-items:center;gap:6px"><span class="lr-val red" id="c-ng-wait">—</span><span style="color:var(--muted);font-size:.7rem">→</span><span class="lr-val green" id="c-gw-wait">—</span></div></div>
+        </div>
+
+        <div class="sec-hd">Same departure, different speeds</div>
+        <div class="list-group" id="speed-chart"></div>
+
+        <div class="sec-hd">Impact (estimate)</div>
+        <div class="list-group">
+          <div class="list-row car-only"><span class="lr-label">Fuel used</span><div style="display:flex;align-items:center;gap:6px"><span class="lr-val red" id="i-fuel-ng">—</span><span style="color:var(--muted);font-size:.7rem">→</span><span class="lr-val green" id="i-fuel-gw">—</span></div></div>
+          <div class="list-row car-only"><span class="lr-label">CO₂ emitted</span><div style="display:flex;align-items:center;gap:6px"><span class="lr-val red" id="i-co2-ng">—</span><span style="color:var(--muted);font-size:.7rem">→</span><span class="lr-val green" id="i-co2-gw">—</span></div></div>
+          <div class="list-row"><span class="lr-label">Stops avoided</span><div><div class="lr-val green" id="i-stops">—</div></div></div>
+          <div class="list-row"><span class="lr-label">Idle time avoided</span><div><div class="lr-val green" id="i-idle">—</div></div></div>
+        </div>
+
+        <div class="sec-hd">Live Signal Timeline</div>
+        <div class="strip-key"><span><span style="color:var(--green)">Green</span> window</span><span>White line: now</span><span>Ring: you arrive</span></div>
+        <div class="list-group" id="sig-list"></div>
+
+        <div class="sec-hd">Turn by Turn</div>
+        <div class="list-group" id="steps-list"></div>
+      </div><!-- /results -->
+
+      <div id="results-emg" style="display:none">
+        <div class="sec-hd">Ambulance run</div>
+        <div class="leave-hero" style="border-color:rgba(255,69,58,.45)">
+          <div class="lh-left"><div class="lh-label">Ambulance ETA</div><div class="lh-time" id="e-eta">—</div><div class="lh-sub" id="e-sub">—</div></div>
+          <div class="lh-right" style="background:var(--red);font-size:.8rem;font-weight:800;color:#fff">SOS</div>
+        </div>
+        <div class="act-row"><button class="btn-go btn-emg" id="btn-dispatch" style="flex:1">Dispatch ambulance</button></div>
+        <div class="list-group">
+          <div class="list-row"><span class="lr-label">Distance</span><div class="lr-val" id="e-dist">—</div></div>
+          <div class="list-row"><span class="lr-label">With green corridor</span><div class="lr-val green" id="e-with">—</div></div>
+          <div class="list-row"><span class="lr-label">On normal signals</span><div class="lr-val red" id="e-norm">—</div></div>
+          <div class="list-row"><span class="lr-label">Time saved</span><div class="lr-val green" id="e-saved">—</div></div>
+          <div class="list-row"><span class="lr-label">Red lights overridden</span><div class="lr-val amber" id="e-reds">—</div></div>
+        </div>
+        <div class="sec-hd">Corridor signals</div>
+        <div class="list-group" id="e-sigs"></div>
+        <div class="sec-hd">How it works</div>
+        <div class="list-group"><div class="step-row"><div class="step-txt">Signals within 500 m ahead of the ambulance turn green. Every other vehicle slows to 6–12 km/h and pulls over when the ambulance is within 350 m behind it, and holds at corridor junctions until it has passed. Nobody but the ambulance gets priority.</div></div></div>
+        <div class="sec-hd">Route</div>
+        <div class="list-group" id="e-steps"></div>
+      </div>
+
+      <div class="empty-state" id="empty-hint">
+                Choose a start and end point,<br/>or click a place on the map,<br/>
+        then tap <strong style="color:var(--accent)">Sync Route</strong>
+        <div class="recents" id="recents"></div>
+        <div class="kbd-hint">
+          <kbd>Enter</kbd> sync · <kbd>S</kbd> swap · <kbd>Space</kbd> play/pause<br/>
+          <kbd>E</kbd> emergency mode · <kbd>L</kbd>/<kbd>T</kbd> lights/timers · <kbd>+</kbd><kbd>−</kbd> sim speed · <kbd>Esc</kbd> stop drive
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─ Search ─ -->
+  <section class="view" id="view-search">
+    <div class="panel-header">
+      <div class="panel-title">Search</div>
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="q" placeholder="Search places in Chandigarh" autocomplete="off"/>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="sec-hd">Places</div>
+      <div class="list-group" id="place-list"></div>
+      <div class="sec-hd">Popular routes</div>
+      <div class="list-group" id="popular-list"></div>
+    </div>
+  </section>
+
+  <!-- ─ Live signals ─ -->
+  <section class="view" id="view-signals">
+    <div class="panel-header">
+      <div class="title-row"><div class="panel-title">Live Signals</div><span class="live-pill"><i></i>LIVE</span></div>
+      <div class="panel-sub">All 16 junctions, updating in real time. Tap one to fly there.</div>
+    </div>
+    <div class="panel-body">
+      <div class="board-sum">
+        <div><b id="bs-g" style="color:var(--green)">0</b><span>Green</span></div>
+        <div><b id="bs-r" style="color:var(--red)">0</b><span>Red</span></div>
+        <div><b id="bs-n">0</b><span>Next flip</span></div>
+      </div>
+      <div class="sec-hd">Junctions</div>
+      <div class="list-group" id="board"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ══ MAP ═══════════════════════════════════════════════ -->
+<div class="map-wrap">
+  <div id="map"></div>
+
+  <div id="emg-banner"></div>
+  <div class="sim-chip" id="sim-chip"><i></i><span id="sim-time">--:--:--</span><small id="sim-tag">LIVE</small></div>
+
+  <div class="legend">
+    <div><i style="background:var(--green)"></i>Green · seconds left</div>
+    <div><i style="background:var(--red)"></i>Red · seconds to green</div>
+    <div><i style="background:var(--accent)"></i>SyncDrive</div>
+    <div><i style="background:var(--red);opacity:.7"></i>Normal GPS</div>
+  </div>
+
+  <div id="layers">
+    <div class="tg on" id="tg-all"><span>All layers</span><b></b></div>
+    <div class="tg on" id="tg-sig"><span>Signals</span><b></b></div>
+    <div class="tg on" id="tg-tim"><span>Timers</span><b></b></div>
+    <div class="tg on" id="tg-plc"><span>Places</span><b></b></div>
+  </div>
+
+  <div id="hud">
+    <div class="hud-n" id="hud-spd">—</div>
+    <div class="hud-u">km / h</div>
+    <div class="hud-a" id="hud-advice">—</div>
+    <button class="hud-start" id="hud-start">Start drive</button>
+  </div>
+
+  <div id="console">
+    <div class="cn-row">
+      <div class="cn-speed"><b id="cn-spd">0</b><small>km/h</small></div>
+      <div class="cn-info">
+        <div class="cn-advice" id="cn-advice">—</div>
+        <div class="cn-next" id="cn-next">—</div>
+        <div class="cn-eta" id="cn-eta">—</div>
+      </div>
+      <div class="cn-btns">
+        <button class="icon-btn" id="cn-play" title="Pause / resume (Space)">Pause</button>
+        <button class="icon-btn" id="cn-stop" title="Stop (Esc)">Stop</button>
+      </div>
+    </div>
+    <div class="race">
+      <div class="race-row"><span id="rl-sync">SyncDrive</span><div class="rt"><b class="rfill sync" id="rf-sync"></b></div><span class="rv" id="rv-sync">—</span></div>
+      <div class="race-row"><span id="rl-ng">Normal GPS</span><div class="rt"><b class="rfill ng" id="rf-ng"></b></div><span class="rv" id="rv-ng">—</span></div>
+      <div class="race-row" id="rrow-amb" style="display:none"><span>Ambulance</span><div class="rt"><b class="rfill amb" id="rf-amb"></b></div><span class="rv" id="rv-amb">—</span></div>
+    </div>
+    <div class="cn-ctrl" id="cn-ctrl">
+      <div class="seg" id="warp-seg">
+        <button data-w="1">1×</button><button data-w="2">2×</button><button data-w="4" class="active">4×</button><button data-w="8">8×</button><button data-w="16">16×</button>
+      </div>
+      <div class="seg" id="pilot-seg">
+        <button data-p="auto" class="active">Auto</button><button data-p="manual">Manual</button>
+      </div>
+      <input type="range" id="cn-slider" min="15" max="55" step="1" value="32"/>
+      <button class="tog active" id="cn-follow">Follow</button>
+      <button class="tog" id="cn-voice">Voice</button>
+      <select class="tog" id="cn-voice-sel" style="display:none;max-width:150px"></select>
+    </div>
+  </div>
+
+  <div id="finish">
+    <h3 id="fin-h">You've arrived</h3>
+    <p id="fin-sub">—</p>
+    <div class="fin-grid">
+      <div><b id="fin-gw">—</b><span id="fl-1">SyncDrive</span></div>
+      <div><b id="fin-ng">—</b><span id="fl-2">Normal GPS</span></div>
+      <div><b id="fin-gw-stops">—</b><span id="fl-3">Stops (Sync)</span></div>
+      <div><b id="fin-ng-stops">—</b><span id="fl-4">Stops (Normal)</span></div>
+    </div>
+    <div class="fin-save" id="fin-save">—</div>
+    <div class="fin-actions"><button class="s" id="fin-close">Close</button><button class="p" id="fin-again">Replay</button></div>
+  </div>
+</div>
+
+</div><!-- /app -->
+<div id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  DATA — Chandigarh (extended: 8 places, 16 signals)
+// ═══════════════════════════════════════════════════════
+const PLACES = {
+  sec17:   {name:'Sector 17 Plaza',     lat:30.7395,lng:76.7836},
+  sec22:   {name:'Sector 22 Chowk',    lat:30.7296,lng:76.7818},
+  sec35:   {name:'Sector 35 Bus Stand',lat:30.7248,lng:76.7670},
+  sec43:   {name:'Sector 43 ISBT',     lat:30.7080,lng:76.7840},
+  pgi:     {name:'PGI Hospital',       lat:30.7657,lng:76.7794},
+  elante:  {name:'Elante Mall',        lat:30.7062,lng:76.8014},
+  tribune: {name:'Tribune Chowk',      lat:30.7018,lng:76.7914},
+};
+
+// 16 signals — realistic Chandigarh sector grid timings
+// Each red light stop in Normal GPS costs 25–45 seconds of waiting
+const SIGNALS = [
+  {id:'c1', name:'Jan Marg & Madhya Marg',    lat:30.7380,lng:76.7830,cycle:90,gS:0, gD:42},
+  {id:'c2', name:'Sector 17-22 Divider',      lat:30.7340,lng:76.7828,cycle:70,gS:12,gD:32},
+  {id:'c3', name:'Udyog Path Crossing',       lat:30.7300,lng:76.7820,cycle:80,gS:5, gD:38},
+  {id:'c4', name:'Sector 22 Inner Circle',    lat:30.7285,lng:76.7810,cycle:60,gS:20,gD:28},
+  {id:'c5', name:'Himalaya Marg Signal',      lat:30.7295,lng:76.7750,cycle:75,gS:8, gD:35},
+  {id:'c6', name:'Sector 34-35 Crossing',     lat:30.7260,lng:76.7700,cycle:90,gS:30,gD:40},
+  {id:'c7', name:'Sector 35 Market Entry',    lat:30.7248,lng:76.7682,cycle:60,gS:0, gD:25},
+  {id:'c8', name:'Airport Rd & Sec 43',       lat:30.7120,lng:76.7840,cycle:80,gS:15,gD:36},
+  {id:'c9', name:'Sector 43 Light Point',     lat:30.7090,lng:76.7840,cycle:70,gS:5, gD:30},
+  {id:'c10',name:'PGI Gate Signal',           lat:30.7620,lng:76.7795,cycle:90,gS:10,gD:45},
+  {id:'c11',name:'Madhya Marg & PGI Rd',      lat:30.7500,lng:76.7815,cycle:75,gS:25,gD:33},
+  {id:'c12',name:'Sector 11 Junction',        lat:30.7450,lng:76.7825,cycle:60,gS:0, gD:28},
+  {id:'c13',name:'Dakshin Marg & Sec 35',     lat:30.7230,lng:76.7750,cycle:85,gS:18,gD:38},
+  {id:'c14',name:'Sec 35-43 Connector',       lat:30.7165,lng:76.7790,cycle:75,gS:5, gD:32},
+  {id:'c15',name:'Elante Entry Signal',       lat:30.7080,lng:76.8000,cycle:90,gS:22,gD:40},
+  {id:'c16',name:'Tribune Chowk Signal',      lat:30.7025,lng:76.7920,cycle:70,gS:10,gD:30},
+];
+
+// 20 routes — all major pairs including new stops
+const ROUTES = {
+  // ── sec17 ↔ all ─────────────────────────────────────
+  'sec17->sec22':{sigs:['c1','c2','c3','c4'],km:1.4,
+    pts:[[30.7395,76.7836],[30.7360,76.7832],[30.7330,76.7825],[30.7300,76.7820],[30.7296,76.7818]],
+    steps:['Head south on Madhya Marg','Pass Jan Marg & Madhya Marg signal','Through Sector 17-22 Divider','Cross Udyog Path Crossing','Arrive Sector 22 Chowk']},
+  'sec22->sec17':{sigs:['c4','c3','c2','c1'],km:1.4,
+    pts:[[30.7296,76.7818],[30.7300,76.7820],[30.7330,76.7825],[30.7360,76.7832],[30.7395,76.7836]],
+    steps:['Head north on Madhya Marg','Pass Sector 22 Inner Circle','Through Udyog Path Crossing','Cross Jan Marg signal','Arrive Sector 17 Plaza']},
+  'sec17->sec35':{sigs:['c1','c2','c5','c6','c7'],km:3.4,
+    pts:[[30.7395,76.7836],[30.7350,76.7830],[30.7310,76.7820],[30.7285,76.7790],[30.7265,76.7730],[30.7248,76.7670]],
+    steps:['Head south on Madhya Marg','Pass Jan Marg signal','Turn onto Himalaya Marg','Pass Himalaya Marg Signal','Through Sector 34-35 Crossing','Arrive Sector 35 Bus Stand']},
+  'sec35->sec17':{sigs:['c7','c6','c5','c2','c1'],km:3.4,
+    pts:[[30.7248,76.7670],[30.7265,76.7730],[30.7285,76.7790],[30.7310,76.7820],[30.7350,76.7830],[30.7395,76.7836]],
+    steps:['Head north-east from Sector 35','Through Sector 34-35 Crossing','Pass Himalaya Marg Signal','Continue on Madhya Marg','Cross Jan Marg signal','Arrive Sector 17 Plaza']},
+  'sec17->sec43':{sigs:['c1','c2','c3','c8','c9'],km:3.5,
+    pts:[[30.7395,76.7836],[30.7340,76.7832],[30.7280,76.7835],[30.7200,76.7838],[30.7120,76.7840],[30.7080,76.7840]],
+    steps:['Head south on Madhya Marg','Through Sector 17-22 area','Continue south','Pass Airport Rd & Sec 43 signal','Pass Sector 43 Light Point','Arrive Sector 43 ISBT']},
+  'sec43->sec17':{sigs:['c9','c8','c3','c2','c1'],km:3.5,
+    pts:[[30.7080,76.7840],[30.7120,76.7840],[30.7200,76.7838],[30.7280,76.7835],[30.7340,76.7832],[30.7395,76.7836]],
+    steps:['Head north on Airport Rd','Pass Sector 43 signals','Continue on Madhya Marg','Through Sector 22 area','Cross Jan Marg signal','Arrive Sector 17 Plaza']},
+  'sec17->pgi':{sigs:['c12','c11','c10'],km:3.2,
+    pts:[[30.7395,76.7836],[30.7430,76.7830],[30.7480,76.7820],[30.7560,76.7800],[30.7620,76.7795],[30.7657,76.7794]],
+    steps:['Head north on Madhya Marg','Pass Sector 11 Junction','Continue north','Through Madhya Marg & PGI Rd signal','Pass PGI Gate Signal','Arrive PGI Hospital']},
+  'pgi->sec17':{sigs:['c10','c11','c12'],km:3.2,
+    pts:[[30.7657,76.7794],[30.7620,76.7795],[30.7560,76.7800],[30.7480,76.7820],[30.7430,76.7830],[30.7395,76.7836]],
+    steps:['Head south from PGI','Pass PGI Gate Signal','Continue south on Madhya Marg','Through Sector 11 Junction','Cross Jan Marg','Arrive Sector 17 Plaza']},
+  'sec17->elante':{sigs:['c1','c2','c8','c9','c15'],km:5.2,
+    pts:[[30.7395,76.7836],[30.7340,76.7832],[30.7200,76.7838],[30.7120,76.7840],[30.7080,76.7840],[30.7070,76.7920],[30.7062,76.8014]],
+    steps:['Head south on Madhya Marg','Continue south through Sector 22','Continue to Airport Rd','Pass Airport Rd signal','Pass Sec 43 area','Turn east on Airport Rd','Arrive Elante Mall']},
+  'elante->sec17':{sigs:['c15','c9','c8','c2','c1'],km:5.2,
+    pts:[[30.7062,76.8014],[30.7070,76.7920],[30.7080,76.7840],[30.7120,76.7840],[30.7200,76.7838],[30.7340,76.7832],[30.7395,76.7836]],
+    steps:['Head west from Elante','Continue west on Airport Rd','Pass Sec 43 signals','Turn north on Madhya Marg','Continue north through Sector 22','Cross Jan Marg signal','Arrive Sector 17 Plaza']},
+  'sec17->tribune':{sigs:['c1','c2','c3','c13','c16'],km:5.1,
+    pts:[[30.7395,76.7836],[30.7340,76.7828],[30.7280,76.7820],[30.7200,76.7800],[30.7100,76.7860],[30.7025,76.7920],[30.7018,76.7914]],
+    steps:['Head south on Madhya Marg','Pass Jan Marg signal','Continue south','Turn onto Dakshin Marg area','Cross Dakshin Marg signal','Pass Tribune Chowk Signal','Arrive Tribune Chowk']},
+  'tribune->sec17':{sigs:['c16','c13','c3','c2','c1'],km:5.1,
+    pts:[[30.7018,76.7914],[30.7025,76.7920],[30.7100,76.7860],[30.7200,76.7800],[30.7280,76.7820],[30.7340,76.7828],[30.7395,76.7836]],
+    steps:['Head north from Tribune Chowk','Pass Tribune Chowk Signal','Continue north on connecting road','Through Udyog Path','Cross Sector 17-22 signals','Pass Jan Marg','Arrive Sector 17 Plaza']},
+
+  // ── sec22 ↔ remaining ───────────────────────────────
+  'sec22->sec35':{sigs:['c4','c5','c6','c7'],km:2.2,
+    pts:[[30.7296,76.7818],[30.7285,76.7790],[30.7275,76.7750],[30.7260,76.7710],[30.7248,76.7670]],
+    steps:['Head south-west from Sector 22','Turn onto Himalaya Marg','Pass Himalaya Marg Signal','Through Sector 34-35 Crossing','Arrive Sector 35 Bus Stand']},
+  'sec35->sec22':{sigs:['c7','c6','c5','c4'],km:2.2,
+    pts:[[30.7248,76.7670],[30.7260,76.7710],[30.7275,76.7750],[30.7285,76.7790],[30.7296,76.7818]],
+    steps:['Head north-east from Sector 35','Pass Sector 35 Market Entry','Through Himalaya Marg Signal','Cross Sector 22 area','Arrive Sector 22 Chowk']},
+  'sec22->sec43':{sigs:['c4','c3','c8','c9'],km:2.5,
+    pts:[[30.7296,76.7818],[30.7250,76.7822],[30.7200,76.7830],[30.7140,76.7836],[30.7080,76.7840]],
+    steps:['Head south from Sector 22','Continue south on Madhya Marg','Turn onto Airport Rd south','Pass Airport Rd & Sec 43 signal','Arrive Sector 43 ISBT']},
+  'sec43->sec22':{sigs:['c9','c8','c3','c4'],km:2.5,
+    pts:[[30.7080,76.7840],[30.7140,76.7836],[30.7200,76.7830],[30.7250,76.7822],[30.7296,76.7818]],
+    steps:['Head north from Sector 43','Pass Airport Rd signals','Continue north on Madhya Marg','Through Udyog Path area','Arrive Sector 22 Chowk']},
+  'sec22->pgi':{sigs:['c3','c2','c12','c11','c10'],km:4.1,
+    pts:[[30.7296,76.7818],[30.7340,76.7825],[30.7400,76.7827],[30.7460,76.7820],[30.7560,76.7800],[30.7657,76.7794]],
+    steps:['Head north from Sector 22','Cross Sector 22 signals','Continue on Madhya Marg','Through Sector 11 Junction','Pass PGI road signal','Arrive PGI Hospital']},
+  'pgi->sec22':{sigs:['c10','c11','c12','c2','c3'],km:4.1,
+    pts:[[30.7657,76.7794],[30.7560,76.7800],[30.7460,76.7820],[30.7400,76.7827],[30.7340,76.7825],[30.7296,76.7818]],
+    steps:['Head south from PGI','Pass PGI Gate Signal','South on Madhya Marg','Through Sector 11 Junction','Cross Sector 22 signals','Arrive Sector 22 Chowk']},
+  'sec22->elante':{sigs:['c4','c9','c15'],km:3.8,
+    pts:[[30.7296,76.7818],[30.7200,76.7828],[30.7110,76.7900],[30.7070,76.7990],[30.7062,76.8014]],
+    steps:['Head south on Madhya Marg','Continue toward Airport area','Turn east toward Elante','Pass Elante Entry Signal','Arrive Elante Mall']},
+  'elante->sec22':{sigs:['c15','c9','c4'],km:3.8,
+    pts:[[30.7062,76.8014],[30.7070,76.7990],[30.7110,76.7900],[30.7200,76.7828],[30.7296,76.7818]],
+    steps:['Head west from Elante','Pass Elante Entry Signal','Continue west on Airport Rd','Turn north on Madhya Marg','Arrive Sector 22 Chowk']},
+  'sec22->tribune':{sigs:['c4','c5','c13','c16'],km:4.0,
+    pts:[[30.7296,76.7818],[30.7260,76.7790],[30.7200,76.7760],[30.7110,76.7830],[30.7025,76.7910],[30.7018,76.7914]],
+    steps:['Head south-west from Sector 22','Turn onto Dakshin Marg corridor','Through Himalaya Marg area','Cross Dakshin Marg & Sec 35 signal','Pass Tribune Chowk Signal','Arrive Tribune Chowk']},
+  'tribune->sec22':{sigs:['c16','c13','c5','c4'],km:4.0,
+    pts:[[30.7018,76.7914],[30.7025,76.7910],[30.7110,76.7830],[30.7200,76.7760],[30.7260,76.7790],[30.7296,76.7818]],
+    steps:['Head north from Tribune Chowk','Pass Tribune Chowk Signal','Through Dakshin Marg signal','Continue north-east','Cross Himalaya Marg area','Arrive Sector 22 Chowk']},
+
+  // ── sec35 ↔ remaining ───────────────────────────────
+  'sec35->sec43':{sigs:['c7','c13','c14','c9'],km:2.8,
+    pts:[[30.7248,76.7670],[30.7230,76.7720],[30.7190,76.7760],[30.7140,76.7800],[30.7090,76.7840]],
+    steps:['Head south from Sector 35','Pass Sector 35 Market Entry','Through Dakshin Marg & Sec 35','Cross Sec 35-43 Connector','Arrive Sector 43 ISBT']},
+  'sec43->sec35':{sigs:['c9','c14','c13','c7'],km:2.8,
+    pts:[[30.7090,76.7840],[30.7140,76.7800],[30.7190,76.7760],[30.7230,76.7720],[30.7248,76.7670]],
+    steps:['Head north-west from ISBT','Pass Sec 35-43 Connector','Through Dakshin Marg signal','Cross Sector 35 Market Entry','Arrive Sector 35 Bus Stand']},
+  'sec35->pgi':{sigs:['c7','c6','c5','c12','c11','c10'],km:5.8,
+    pts:[[30.7248,76.7670],[30.7270,76.7720],[30.7295,76.7760],[30.7330,76.7800],[30.7400,76.7818],[30.7480,76.7815],[30.7580,76.7800],[30.7657,76.7794]],
+    steps:['Head north-east from Sector 35','Through Sector 34-35 Crossing','Pass Himalaya Marg Signal','Continue north on Madhya Marg','Pass Sector 11 Junction','Through Madhya Marg & PGI Rd','Pass PGI Gate Signal','Arrive PGI Hospital']},
+  'pgi->sec35':{sigs:['c10','c11','c12','c5','c6','c7'],km:5.8,
+    pts:[[30.7657,76.7794],[30.7580,76.7800],[30.7480,76.7815],[30.7400,76.7818],[30.7330,76.7800],[30.7295,76.7760],[30.7270,76.7720],[30.7248,76.7670]],
+    steps:['Head south from PGI','Pass PGI Gate Signal','Through Madhya Marg & PGI Rd','Continue south on Madhya Marg','Pass Himalaya Marg Signal','Through Sector 34-35 Crossing','Continue south-west','Arrive Sector 35 Bus Stand']},
+  'sec35->elante':{sigs:['c7','c14','c9','c15'],km:3.9,
+    pts:[[30.7248,76.7670],[30.7220,76.7720],[30.7160,76.7780],[30.7090,76.7840],[30.7075,76.7920],[30.7062,76.8014]],
+    steps:['Head south from Sector 35','Pass Sector 35 Market Entry','Through Sec 35-43 Connector','Pass Sector 43 area','Turn east on Airport Rd','Arrive Elante Mall']},
+  'elante->sec35':{sigs:['c15','c9','c14','c7'],km:3.9,
+    pts:[[30.7062,76.8014],[30.7075,76.7920],[30.7090,76.7840],[30.7160,76.7780],[30.7220,76.7720],[30.7248,76.7670]],
+    steps:['Head west from Elante','Continue on Airport Rd','Pass Sector 43 signals','Through Sec 35-43 Connector','Continue north-west','Arrive Sector 35 Bus Stand']},
+  'sec35->tribune':{sigs:['c7','c13','c16'],km:3.2,
+    pts:[[30.7248,76.7670],[30.7200,76.7720],[30.7120,76.7800],[30.7030,76.7900],[30.7018,76.7914]],
+    steps:['Head south from Sector 35','Pass market entry signal','Through Dakshin Marg signal','Continue south-east','Pass Tribune Chowk Signal','Arrive Tribune Chowk']},
+  'tribune->sec35':{sigs:['c16','c13','c7'],km:3.2,
+    pts:[[30.7018,76.7914],[30.7030,76.7900],[30.7120,76.7800],[30.7200,76.7720],[30.7248,76.7670]],
+    steps:['Head north-west from Tribune Chowk','Pass Tribune Chowk Signal','Through Dakshin Marg signal','Continue north','Pass Sector 35 Market Entry','Arrive Sector 35 Bus Stand']},
+
+  // ── sec43 ↔ remaining ───────────────────────────────
+  'sec43->pgi':{sigs:['c9','c8','c3','c12','c11','c10'],km:6.2,
+    pts:[[30.7080,76.7840],[30.7120,76.7840],[30.7200,76.7838],[30.7280,76.7835],[30.7380,76.7830],[30.7460,76.7820],[30.7560,76.7800],[30.7657,76.7794]],
+    steps:['Head north from Sector 43','Pass Sector 43 signals','Continue north on Madhya Marg','Through Sector 22 area','Pass Sector 11 Junction','Through Madhya Marg & PGI Rd','Pass PGI Gate Signal','Arrive PGI Hospital']},
+  'pgi->sec43':{sigs:['c10','c11','c12','c3','c8','c9'],km:6.2,
+    pts:[[30.7657,76.7794],[30.7560,76.7800],[30.7460,76.7820],[30.7380,76.7830],[30.7280,76.7835],[30.7200,76.7838],[30.7120,76.7840],[30.7080,76.7840]],
+    steps:['Head south from PGI','Pass PGI Gate Signal','Through Madhya Marg & PGI Rd','Continue south on Madhya Marg','Through Sector 22 area','Pass Airport Rd signal','Pass Sector 43 Light Point','Arrive Sector 43 ISBT']},
+  'sec43->elante':{sigs:['c9','c15'],km:2.0,
+    pts:[[30.7080,76.7840],[30.7075,76.7900],[30.7068,76.7970],[30.7062,76.8014]],
+    steps:['Head east from Sec 43 ISBT','Continue on Airport Road','Pass Elante Entry Signal','Arrive Elante Mall']},
+  'elante->sec43':{sigs:['c15','c9'],km:2.0,
+    pts:[[30.7062,76.8014],[30.7068,76.7970],[30.7075,76.7900],[30.7080,76.7840]],
+    steps:['Head west from Elante','Continue on Airport Road','Pass Sector 43 Light Point','Arrive Sector 43 ISBT']},
+  'sec43->tribune':{sigs:['c9','c14','c16'],km:2.6,
+    pts:[[30.7080,76.7840],[30.7060,76.7860],[30.7040,76.7880],[30.7025,76.7908],[30.7018,76.7914]],
+    steps:['Head south from Sector 43','Continue south-east','Pass Sec 35-43 Connector area','Cross Tribune Chowk Signal','Arrive Tribune Chowk']},
+  'tribune->sec43':{sigs:['c16','c14','c9'],km:2.6,
+    pts:[[30.7018,76.7914],[30.7025,76.7908],[30.7040,76.7880],[30.7060,76.7860],[30.7080,76.7840]],
+    steps:['Head north from Tribune Chowk','Pass Tribune Chowk Signal','Continue north','Through Sec 35-43 Connector area','Arrive Sector 43 ISBT']},
+
+  // ── pgi ↔ remaining ─────────────────────────────────
+  'pgi->elante':{sigs:['c10','c11','c12','c8','c15'],km:7.1,
+    pts:[[30.7657,76.7794],[30.7560,76.7800],[30.7460,76.7820],[30.7380,76.7830],[30.7200,76.7838],[30.7120,76.7840],[30.7080,76.7840],[30.7070,76.7920],[30.7062,76.8014]],
+    steps:['Head south from PGI','Pass PGI Gate Signal','Continue south on Madhya Marg','Through Sector 11 Junction','Continue south past Sector 22','Pass Airport Rd signal','Through Sector 43 area','Turn east on Airport Rd','Arrive Elante Mall']},
+  'elante->pgi':{sigs:['c15','c8','c12','c11','c10'],km:7.1,
+    pts:[[30.7062,76.8014],[30.7070,76.7920],[30.7080,76.7840],[30.7120,76.7840],[30.7200,76.7838],[30.7380,76.7830],[30.7460,76.7820],[30.7560,76.7800],[30.7657,76.7794]],
+    steps:['Head west from Elante','Continue west on Airport Rd','Through Sector 43 area','Continue north on Madhya Marg','Pass Sector 22 area','Through Sector 11 Junction','Pass Madhya Marg & PGI Rd','Pass PGI Gate Signal','Arrive PGI Hospital']},
+  'pgi->tribune':{sigs:['c10','c11','c12','c13','c16'],km:8.0,
+    pts:[[30.7657,76.7794],[30.7560,76.7800],[30.7460,76.7820],[30.7380,76.7830],[30.7280,76.7820],[30.7180,76.7800],[30.7100,76.7850],[30.7030,76.7905],[30.7018,76.7914]],
+    steps:['Head south from PGI','Pass PGI Gate Signal','Continue south on Madhya Marg','Through Sector 11 Junction','Continue south','Turn onto Dakshin Marg corridor','Through Dakshin Marg signal','Pass Tribune Chowk Signal','Arrive Tribune Chowk']},
+  'tribune->pgi':{sigs:['c16','c13','c12','c11','c10'],km:8.0,
+    pts:[[30.7018,76.7914],[30.7030,76.7905],[30.7100,76.7850],[30.7180,76.7800],[30.7280,76.7820],[30.7380,76.7830],[30.7460,76.7820],[30.7560,76.7800],[30.7657,76.7794]],
+    steps:['Head north from Tribune Chowk','Pass Tribune Chowk Signal','Through Dakshin Marg signal','Continue north on Madhya Marg','Pass Sector 11 Junction','Through Madhya Marg & PGI Rd','Pass PGI Gate Signal','Arrive PGI Hospital']},
+
+  // ── elante ↔ tribune ────────────────────────────────
+  'elante->tribune':{sigs:['c15','c9','c16'],km:3.1,
+    pts:[[30.7062,76.8014],[30.7065,76.7960],[30.7055,76.7900],[30.7040,76.7860],[30.7022,76.7920],[30.7018,76.7914]],
+    steps:['Head west from Elante','Continue west on Airport Rd','Pass Elante Entry Signal area','Turn south-west','Cross Tribune Chowk Signal','Arrive Tribune Chowk']},
+  'tribune->elante':{sigs:['c16','c9','c15'],km:3.1,
+    pts:[[30.7018,76.7914],[30.7022,76.7920],[30.7040,76.7860],[30.7055,76.7900],[30.7065,76.7960],[30.7062,76.8014]],
+    steps:['Head north-east from Tribune Chowk','Pass Tribune Chowk Signal','Continue north-east','Turn east on Airport Rd','Pass Elante Entry Signal','Arrive Elante Mall']},
+};
+
+// ═══════════════════════════════════════════════════════
+//  EXTENDED NETWORK — more places, signals and a road graph.
+//  Hand-drawn ROUTES above stay as they are; any other pair is routed
+//  over this graph (shortest path through junctions).
+// ═══════════════════════════════════════════════════════
+Object.assign(PLACES,{
+  sec8:   {name:'Sector 8 Market',        lat:30.7480,lng:76.7940},
+  pu:     {name:'Panjab University',      lat:30.7590,lng:76.7685},
+  rock:   {name:'Rock Garden',            lat:30.7525,lng:76.8100},
+  sukhna: {name:'Sukhna Lake',            lat:30.7420,lng:76.8190},
+  sec26:  {name:'Sector 26 Grain Market', lat:30.7220,lng:76.8020},
+  rail:   {name:'Railway Station',        lat:30.7040,lng:76.8290},
+  airport:{name:'Chandigarh Airport',     lat:30.6735,lng:76.7885},
+});
+SIGNALS.push(
+  {id:'c17',name:'Sector 9 Crossing',      lat:30.7425,lng:76.7895,cycle:80,gS:10,gD:34},
+  {id:'c18',name:'Rock Garden Rd Signal',  lat:30.7510,lng:76.8040,cycle:75,gS:0, gD:32},
+  {id:'c19',name:'Sukhna Lake Rd',         lat:30.7460,lng:76.8140,cycle:90,gS:20,gD:40},
+  {id:'c20',name:'PU Gate Signal',         lat:30.7600,lng:76.7730,cycle:70,gS:5, gD:30},
+  {id:'c21',name:'Sector 14 Signal',       lat:30.7520,lng:76.7740,cycle:85,gS:15,gD:38},
+  {id:'c22',name:'Sector 26 Chowk',        lat:30.7240,lng:76.7960,cycle:60,gS:10,gD:26},
+  {id:'c23',name:'Railway Lights',         lat:30.7080,lng:76.8150,cycle:90,gS:5, gD:42},
+  {id:'c24',name:'Airport Rd Junction',    lat:30.6900,lng:76.7870,cycle:75,gS:30,gD:34},
+  {id:'c25',name:'Tribune Flyover Signal', lat:30.7050,lng:76.7960,cycle:80,gS:12,gD:36},
+);
+const EDGES=[
+  ['pgi','c10'],['c10','c11'],['c11','c12'],['c12','sec17'],['sec17','c1'],['c1','c2'],['c2','c3'],['c3','sec22'],['sec22','c4'],
+  ['c4','c5'],['c5','c6'],['c6','c7'],['c7','sec35'],['c5','c13'],['c13','c7'],['c13','c14'],['c14','c9'],
+  ['c4','c8'],['c8','c9'],['c9','sec43'],['c9','c15'],['c15','elante'],['c9','c16'],['c16','tribune'],['c14','c16'],
+  ['c16','c25'],['c25','c15'],
+  ['sec17','c17'],['c17','sec8'],['sec8','c12'],['sec8','c18'],['c18','rock'],['c18','c19'],['c19','sukhna'],
+  ['c10','c20'],['c20','pu'],['c20','c21'],['c21','c11'],
+  ['c4','c22'],['c22','sec26'],['sec26','c15'],['c15','c23'],['c23','rail'],
+  ['sec43','c24'],['c24','airport'],['c24','tribune'],
+];
+const nodeOf=id=>PLACES[id]||SIGNALS.find(s=>s.id===id);
+const hav=(a,b)=>{ const r=Math.PI/180,R=6371,dl=(b.lat-a.lat)*r,dn=(b.lng-a.lng)*r;
+  const x=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dn/2)**2; return 2*R*Math.asin(Math.sqrt(x)); };
+const ADJ={};
+EDGES.forEach(([a,b])=>{ const w=hav(nodeOf(a),nodeOf(b)); (ADJ[a]=ADJ[a]||[]).push([b,w]); (ADJ[b]=ADJ[b]||[]).push([a,w]); });
+const genCache={};
+function getRoute(o,d){
+  const key=`${o}->${d}`;
+  if(ROUTES[key]) return ROUTES[key];
+  if(genCache[key]) return genCache[key];
+  const dist={[o]:0}, prev={}, done=new Set();
+  while(true){
+    let u=null; for(const k in dist) if(!done.has(k)&&(u===null||dist[k]<dist[u])) u=k;
+    if(u===null||u===d) break;
+    done.add(u);
+    (ADJ[u]||[]).forEach(([v,w])=>{ if(dist[u]+w<(dist[v]??Infinity)){ dist[v]=dist[u]+w; prev[v]=u; } });
+  }
+  if(dist[d]===undefined) return null;
+  const path=[d]; while(path[0]!==o) path.unshift(prev[path[0]]);
+  const nodes=path.map(nodeOf);
+  const steps=['Head out from '+nodes[0].name];
+  path.slice(1,-1).forEach((id,i)=>steps.push(id[0]==='c'&&!PLACES[id]?`Pass ${nodes[i+1].name}`:`Continue through ${nodes[i+1].name}`));
+  steps.push('Arrive '+nodes[nodes.length-1].name);
+  return genCache[key]={sigs:path.filter(id=>!PLACES[id]),km:Math.round(dist[d]*1.2*10)/10,
+    pts:nodes.map(n=>[n.lat,n.lng]),steps};
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODES — speed sets per travel mode
+// ═══════════════════════════════════════════════════════
+const MODES = {
+  car: {speeds:[20,22,24,26,28,30,32,34,36,38,40,42,44,46,48], ng:50,  lo:15, hi:55, step:1,   dec:0, label:'Drive'},
+  emerg:{speeds:[20,22,24,26,28,30,32,34,36,38,40,42,44,46,48], ng:50, lo:15, hi:55, step:1, dec:0, label:'Emergency'},
+  bike:{speeds:[10,12,14,16,18,20,22,24,26],                   ng:26,  lo:7,  hi:30, step:1,   dec:0, label:'Cycle'},
+  walk:{speeds:[3,3.5,4,4.5,5,5.5,6,6.5],                      ng:6.5, lo:2.5,hi:8,  step:0.5, dec:1, label:'Walk'},
+};
+const S = {mode:'car', when:'arrive', orig:'', dest:'', route:null, geo:null, gw:null, ng:null};
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
+const nowSec = ()=>{ const d=new Date(); return d.getHours()*3600+d.getMinutes()*60+d.getSeconds()+d.getMilliseconds()/1000; };
+const hms  = t=>{ const[h,m]=t.split(':').map(Number); return h*3600+m*60; };
+const pad  = n=>String(n).padStart(2,'0');
+const wrap = s=>((s%86400)+86400)%86400;
+const fmt  = s=>{ s=wrap(s); return `${pad(Math.floor(s/3600))}:${pad(Math.floor((s%3600)/60))}`; };
+const fmtS = s=>{ s=wrap(s); return `${pad(Math.floor(s/3600))}:${pad(Math.floor((s%3600)/60))}:${pad(Math.floor(s%60))}`; };
+const mins = s=>Math.round(s/60);
+const sigR = id=>SIGNALS.find(s=>s.id===id);
+const fmtSpd = v=>MODES[S.mode].dec ? v.toFixed(1) : String(Math.round(v));
+
+// ═══════════════════════════════════════════════════════
+//  SIGNAL MATHS
+// ═══════════════════════════════════════════════════════
+function phase(sig,dep,travel){ return (dep+travel)%sig.cycle; }
+function isGreen(sig,ph){ return ph>=sig.gS && ph<(sig.gS+sig.gD); }
+function waitSec(sig,ph){
+  if(isGreen(sig,ph)) return 0;
+  return ph<sig.gS ? sig.gS-ph : sig.cycle-ph+sig.gS;
+}
+const phAt    = (sig,t)=>((t%sig.cycle)+sig.cycle)%sig.cycle;
+const greenAt = (sig,t,margin=0)=>{ const p=phAt(sig,t); return p>=sig.gS+margin && p<sig.gS+sig.gD-margin; };
+// seconds until this signal changes colour
+function flipIn(sig,t){
+  const p=phAt(sig,t);
+  if(isGreen(sig,p)) return sig.gS+sig.gD-p;
+  return p<sig.gS ? sig.gS-p : sig.cycle-p+sig.gS;
+}
+
+// ═══════════════════════════════════════════════════════
+//  OPTIMISER
+//  evaluate(): one (departure, speed) candidate.
+//  optimise(): "arrive by" — search speeds × departures.
+//  optimiseLeave(): "leave now" — best speed + wait-time within 10 min.
+// ═══════════════════════════════════════════════════════
+// Segment speeds: seg[i] is the speed between signal i-1 and signal i (last = after the final signal).
+function evaluate(route, km, dep, spd, segSpd){
+  const sigs = route.sigs.map(sigR);
+  const n = sigs.length;
+  const fracs = sigs.map((_,i)=>(i+1)/(n+1));
+  const seg = segSpd || Array(n+1).fill(spd);
+  let driven=0, elapsed=0, totalWait=0, greens=0, prevF=0;
+  const det = sigs.map((sig,i)=>{
+    driven += km*(fracs[i]-prevF)/seg[i]*3600; prevF=fracs[i];
+    const toSig = driven+elapsed;
+    const ph = phase(sig,dep,toSig);
+    const g = isGreen(sig,ph);
+    const w = waitSec(sig,ph);
+    if(!g){ totalWait+=w; elapsed+=w; } else greens++;
+    return {sig,g,arrival:dep+toSig,wait:g?0:w};
+  });
+  driven += km*(1-prevF)/seg[n]*3600;
+  return {dep,spd:segSpd?km/(driven/3600):spd,segSpd:seg,isVar:Math.max(...seg)-Math.min(...seg)>1,
+    driveSec:driven,waitSec:totalWait,total:driven+totalWait,greens,n,det};
+}
+
+// Per-segment speed plan: at each signal pick the speed that reaches it on green soonest.
+function refine(route, km, dep, base, M){
+  const sigs = route.sigs.map(sigR), n=sigs.length, seg=[];
+  let t=dep, prev=0;
+  for(let i=0;i<n;i++){
+    const f=(i+1)/(n+1), len=km*(f-prev);
+    let bs=base, bsc=Infinity, bt=t;
+    M.speeds.forEach(sp=>{
+      const ta=t+len/sp*3600, w=waitSec(sigs[i],phase(sigs[i],ta,0));
+      const sc=ta+w+(w>0?45:0)+Math.abs(sp-base)*0.4+Math.max(0,sp-40)*2;
+      if(sc<bsc){ bsc=sc; bs=sp; bt=ta+w; }
+    });
+    seg.push(bs); t=bt; prev=f;
+  }
+  seg.push(base);
+  return seg;
+}
+function bestAt(route, km, dep, spd, M){
+  const c=evaluate(route,km,dep,spd);
+  const r=evaluate(route,km,dep,spd,refine(route,km,dep,spd,M));
+  return (r.total-r.greens*0.5 <= c.total-c.greens*0.5+2) ? r : c;   // equal time but smoother/greener wins
+}
+
+function optimise(route, km, arrSec, M){
+  const MAX_EARLY=25*60, STEP=10;
+  let best=Infinity, res=null;
+  M.speeds.forEach(spd=>{
+    const latest = arrSec - (km/spd)*3600;
+    for(let off=0; off<=MAX_EARLY; off+=STEP){
+      const dep = latest-off;
+      if(dep<0) continue;
+      const ev = bestAt(route,km,dep,spd,M);
+      const score = ev.total - ev.greens*0.5;
+      if(score<best){ best=score; res=ev; }
+    }
+  });
+  return res;
+}
+
+function optimiseLeave(route, km, nowS, M){
+  const MAX_WAIT=10*60, STEP=10;
+  let best=Infinity, res=null;
+  M.speeds.forEach(spd=>{
+    for(let off=0; off<=MAX_WAIT; off+=STEP){
+      const ev = bestAt(route,km,nowS+off,spd,M);
+      const score = off + ev.total - ev.greens*0.5;
+      if(score<best){ best=score; res=ev; res.offset=off; }
+    }
+  });
+  return res;
+}
+
+// rough fuel model (litres) — steady cruising is cheaper than stop-go
+const fuelL = (km,spd,stops,wait)=>km*(0.07+Math.max(0,spd-40)*0.002)+stops*0.025+wait/3600*0.8;
+
+// ═══════════════════════════════════════════════════════
+//  ROUTE GEOMETRY
+//  Model: signal i sits at fraction (i+1)/(n+1) of the trip. Geometry anchors each
+//  model fraction to the signal's real projected position on the polyline so the
+//  vehicle visibly stops AT the marker without changing optimiser numbers.
+// ═══════════════════════════════════════════════════════
+function buildGeo(route){
+  const pts=route.pts, cum=[0];
+  const k=Math.cos(pts[0][0]*Math.PI/180);
+  for(let i=1;i<pts.length;i++){
+    cum.push(cum[i-1]+Math.hypot((pts[i][0]-pts[i-1][0])*111.2,(pts[i][1]-pts[i-1][1])*111.2*k));
+  }
+  const total=cum[cum.length-1]||1e-9;
+  const sigs=route.sigs.map(sigR), n=sigs.length;
+  const proj=sigs.map(s=>{
+    let best=Infinity,bg=0;
+    for(let j=1;j<pts.length;j++){
+      const ax=pts[j-1][1]*111.2*k, ay=pts[j-1][0]*111.2, bx=pts[j][1]*111.2*k, by=pts[j][0]*111.2;
+      const px=s.lng*111.2*k, py=s.lat*111.2;
+      const dx=bx-ax, dy=by-ay, l2=dx*dx+dy*dy||1e-12;
+      const u=clamp(((px-ax)*dx+(py-ay)*dy)/l2,0,1);
+      const d=Math.hypot(ax+u*dx-px, ay+u*dy-py);
+      if(d<best){ best=d; bg=(cum[j-1]+u*(cum[j]-cum[j-1]))/total; }
+    }
+    return bg;
+  });
+  const anchors=[[0,0]];
+  let g=0;
+  proj.forEach((p,i)=>{
+    g=Math.max(p,g+0.01);
+    g=Math.min(g,0.99-(n-1-i)*0.01);
+    anchors.push([(i+1)/(n+1),g]);
+  });
+  anchors.push([1,1]);
+  return {pts,cum,total,anchors};
+}
+function toGeo(geo,f){
+  const a=geo.anchors;
+  for(let i=1;i<a.length;i++){
+    if(f<=a[i][0]){ const u=(f-a[i-1][0])/((a[i][0]-a[i-1][0])||1e-9); return a[i-1][1]+u*(a[i][1]-a[i-1][1]); }
+  }
+  return 1;
+}
+function pointAt(geo,g){
+  const t=clamp(g,0,1)*geo.total, c=geo.cum;
+  let j=1; while(j<c.length-1 && c[j]<t) j++;
+  const u=clamp((t-c[j-1])/((c[j]-c[j-1])||1e-9),0,1);
+  const a=geo.pts[j-1], b=geo.pts[j];
+  return [a[0]+(b[0]-a[0])*u, a[1]+(b[1]-a[1])*u];
+}
+function slicePts(geo,g){
+  const t=clamp(g,0,1)*geo.total, out=[geo.pts[0]];
+  for(let j=1;j<geo.pts.length;j++){ if(geo.cum[j]<=t) out.push(geo.pts[j]); else break; }
+  out.push(pointAt(geo,g));
+  return out;
+}
+
+// ═══════════════════════════════════════════════════════
+//  MAP
+// ═══════════════════════════════════════════════════════
+const map = L.map('map',{zoomControl:true}).setView([30.7250,76.7900],13);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{
+  attribution:'© <a href="https://www.esri.com">Esri</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',
+  maxZoom:16,
+}).addTo(map);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',{maxZoom:16}).addTo(map);
+
+// Places — clickable, with "Start here / Go here"
+Object.entries(PLACES).forEach(([id,p])=>{
+  const ic = L.divIcon({
+    className:'pl-wrap',
+    html:`<div style="background:rgba(28,28,30,.85);border:1.5px solid rgba(255,255,255,.2);color:#f5f5f7;font-size:10px;font-weight:600;
+      padding:3px 9px;border-radius:16px;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.5);font-family:'Inter',sans-serif;
+      backdrop-filter:blur(8px);cursor:pointer">${p.name.split(' ').slice(0,2).join(' ')}</div>`,
+    iconAnchor:[0,0]
+  });
+  L.marker([p.lat,p.lng],{icon:ic}).addTo(map).bindPopup(
+    `<b>${p.name}</b><div class="pp-btns"><button class="a" onclick="pickPlace('${id}','from')">Start here</button><button class="b" onclick="pickPlace('${id}','to')">Go here</button></div>`);
+});
+
+// Signals — live markers showing green/red + seconds left
+const smk = {}, sEl = {}, sCache = {};
+SIGNALS.forEach(s=>{
+  smk[s.id] = L.marker([s.lat,s.lng],{
+    icon:L.divIcon({className:'sg-wrap',html:`<div class="sg" id="sg-${s.id}"></div>`,iconSize:[24,24],iconAnchor:[12,12]}),
+    zIndexOffset:200,
+  }).addTo(map).bindTooltip(()=>sigTip(s,curT()),{direction:'top',offset:[0,-10]});
+  sEl[s.id] = document.getElementById('sg-'+s.id);
+});
+function sigTip(s,t){
+  const g=greenAt(s,t), f=Math.ceil(flipIn(s,t));
+  return `<b>${s.name}</b><br/><span class="tt-state ${g?'g':'r'}">${g?'GREEN':'RED'}</span> · ${g?`red in ${f}s`:`green in ${f}s`}<br/><span style="color:var(--muted)">cycle ${s.cycle}s · green ${s.gD}s</span>`;
+}
+
+let rLayer=null, rNG=null, rProg=null, oMkr=null, dMkr=null;
+
+// ═══════════════════════════════════════════════════════
+//  LIVE UPDATE of signals (map, route list, board)
+// ═══════════════════════════════════════════════════════
+const curT = ()=> D.active ? D.t : nowSec();
+
+function updateSignals(t){
+  const onRoute = S.route ? new Set(S.route.sigs) : null;
+  const em = D.active && D.emerg;
+  const lead = em ? D.amb : D.sync;
+  const nextId = (D.active && lead && !lead.done && lead.idx<lead.sigs.length) ? lead.sigs[lead.idx].id : null;
+  SIGNALS.forEach(s=>{
+    const forced = em && D.forced.has(s.id);
+    const g=forced||greenAt(s,t), f=Math.ceil(flipIn(s,t));
+    const cls = 'sg '+(g?'g':'r')+(forced?' ev':'')+(onRoute ? (onRoute.has(s.id)?' on':' dim') : '')+(s.id===nextId?' next':'');
+    const key = cls+(forced?'E':f);
+    if(sCache[s.id]===key) return;
+    sCache[s.id]=key;
+    const el=sEl[s.id];
+    el.className=cls; el.textContent=forced?'EV':f;
+    if(smk[s.id].isTooltipOpen()) smk[s.id].setTooltipContent(sigTip(s,t));
+  });
+}
+function updateStrips(t){
+  document.querySelectorAll('.strip .nd[data-sid]').forEach(n=>{
+    const s=sigR(n.dataset.sid);
+    n.style.left=(phAt(s,t)/s.cycle*100)+'%';
+  });
+  document.querySelectorAll('[data-live-sid]').forEach(el=>{
+    const s=sigR(el.dataset.liveSid), g=greenAt(s,t);
+    el.className='sig-indicator '+(g?'g':'r');
+  });
+}
+
+// ─ Live signals board ─
+let view='dir';
+function buildBoard(){
+  const b=$('board'); b.innerHTML='';
+  SIGNALS.forEach(s=>{
+    const r=document.createElement('div');
+    r.className='sig-row'; r.id='bd-'+s.id;
+    r.innerHTML=`<div class="sig-line"><div class="sig-indicator"></div><div class="sig-name">${s.name}</div>
+      <div class="bd-cd"></div></div>
+      <div class="strip"><div class="gz" style="left:${s.gS/s.cycle*100}%;width:${s.gD/s.cycle*100}%"></div><div class="nd"></div></div>`;
+    r.onclick=()=>{ map.flyTo([s.lat,s.lng],16,{duration:.8}); setTimeout(()=>smk[s.id].openTooltip(),900); };
+    b.appendChild(r);
+  });
+}
+function renderBoard(t){
+  let g=0,r=0,minF=1e9;
+  SIGNALS.forEach(s=>{
+    const gr=greenAt(s,t), f=Math.ceil(flipIn(s,t));
+    gr?g++:r++; minF=Math.min(minF,f);
+    const row=$('bd-'+s.id);
+    row.querySelector('.sig-indicator').className='sig-indicator '+(gr?'g':'r');
+    const cd=row.querySelector('.bd-cd'); cd.className='bd-cd '+(gr?'g':'r'); cd.textContent=f+'s';
+    row.querySelector('.nd').style.left=(phAt(s,t)/s.cycle*100)+'%';
+  });
+  $('bs-g').textContent=g; $('bs-r').textContent=r; $('bs-n').textContent=minF+'s';
+}
+
+// ═══════════════════════════════════════════════════════
+//  PLACES / VIEWS
+// ═══════════════════════════════════════════════════════
+const selO=$('sel-origin'), selD=$('sel-dest');
+Object.entries(PLACES).forEach(([id,p])=>{
+  selO.add(new Option(p.name,id)); selD.add(new Option(p.name,id));
+});
+
+function switchView(v){
+  view=v;
+  document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+v));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.view===v));
+  if(v==='signals') renderBoard(curT());
+  if(v==='search') $('q').focus();
+}
+document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>switchView(el.dataset.view)));
+
+function renderPlaces(filter=''){
+  const f=filter.trim().toLowerCase(), box=$('place-list'); box.innerHTML='';
+  const list=Object.entries(PLACES).filter(([,p])=>p.name.toLowerCase().includes(f));
+  if(!list.length){ box.innerHTML='<div class="empty-state" style="padding:18px">No places match.</div>'; return; }
+  list.forEach(([id,p])=>{
+    const r=document.createElement('div'); r.className='place-row';
+    r.innerHTML=`<span class="pn">${p.name}</span><button class="mini-btn a">From</button><button class="mini-btn b">To</button>`;
+    r.querySelector('.pn').onclick=()=>{ map.flyTo([p.lat,p.lng],15,{duration:.8}); };
+    r.querySelector('.a').onclick=()=>pickPlace(id,'from');
+    r.querySelector('.b').onclick=()=>pickPlace(id,'to');
+    box.appendChild(r);
+  });
+}
+const POPULAR=[['airport','pgi'],['pu','rail'],['rock','sec35'],['sukhna','airport'],['sec17','pgi'],['pgi','elante'],['sec35','tribune'],['sec17','elante'],['sec22','sec35'],['sec43','pgi']];
+function renderPopular(){
+  const box=$('popular-list'); box.innerHTML='';
+  POPULAR.forEach(([a,b])=>{
+    const rt=getRoute(a,b); if(!rt) return;
+    const r=document.createElement('div'); r.className='pop-row';
+    r.innerHTML=`<span>${PLACES[a].name.split(' ').slice(0,2).join(' ')} → ${PLACES[b].name.split(' ').slice(0,2).join(' ')}</span><span class="pm">${rt.km} km · ${rt.sigs.length} signals</span>`;
+    r.onclick=()=>{ setRoute(a,b); switchView('dir'); calc(); };
+    box.appendChild(r);
+  });
+}
+$('q').addEventListener('input',e=>renderPlaces(e.target.value));
+
+function setRoute(o,d){ selO.value=o; selD.value=d; }
+function pickPlace(id,which){
+  map.closePopup();
+  (which==='from'?selO:selD).value=id;
+  switchView('dir');
+  showToast(`${which==='from'?'Start':'Destination'}: ${PLACES[id].name}`);
+  scheduleCalc();
+}
+window.pickPlace=pickPlace;
+
+// ═══════════════════════════════════════════════════════
+//  RECENTS + SHARE LINK
+// ═══════════════════════════════════════════════════════
+function getRecents(){ try{ return JSON.parse(localStorage.getItem('syncdrive.recents')||'[]'); }catch(e){ return []; } }
+function addRecent(o,d){
+  try{
+    const r=getRecents().filter(x=>!(x[0]===o&&x[1]===d)); r.unshift([o,d]);
+    localStorage.setItem('syncdrive.recents',JSON.stringify(r.slice(0,4)));
+  }catch(e){}
+  renderRecents();
+}
+function renderRecents(){
+  const box=$('recents'); box.innerHTML='';
+  getRecents().forEach(([o,d])=>{
+    if(!PLACES[o]||!PLACES[d]) return;
+    const b=document.createElement('button');
+    b.textContent=`${PLACES[o].name.split(' ').slice(0,2).join(' ')} → ${PLACES[d].name.split(' ').slice(0,2).join(' ')}`;
+    b.onclick=()=>{ setRoute(o,d); calc(); };
+    box.appendChild(b);
+  });
+}
+function hashFor(){
+  const p=new URLSearchParams({o:selO.value,d:selD.value,t:$('arrival-time').value,w:S.when,m:S.mode});
+  return '#'+p.toString();
+}
+function applyHash(){
+  if(!location.hash.length) return false;
+  const p=new URLSearchParams(location.hash.slice(1));
+  const o=p.get('o'), d=p.get('d');
+  if(!PLACES[o]||!PLACES[d]) return false;
+  setRoute(o,d);
+  if(/^\d\d:\d\d$/.test(p.get('t')||'')) $('arrival-time').value=p.get('t');
+  if(p.get('w')==='now'||p.get('w')==='arrive') setWhenUI(p.get('w'));
+  if(MODES[p.get('m')]) setModeUI(p.get('m'));
+  return true;
+}
+$('btn-share').onclick=()=>{
+  const url=location.href.split('#')[0]+hashFor();
+  (navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject()).then(
+    ()=>showToast('Link copied — opens this exact route'),
+    ()=>{ prompt('Copy this link:',url); });
+};
+
+// ═══════════════════════════════════════════════════════
+//  INPUT CONTROLS (mode, when, swap) + live auto-recalculation
+// ═══════════════════════════════════════════════════════
+let calcTimer=null;
+function scheduleCalc(){ clearTimeout(calcTimer); calcTimer=setTimeout(()=>calc(true),120); }
+
+function setModeUI(m){
+  const was=S.mode; S.mode=m;
+  document.body.classList.toggle('emg',m==='emerg');
+  $('panel-title').textContent=m==='emerg'?'Emergency Response':'Directions';
+  if(m==='emerg' && was!=='emerg'){ S.prevWhen=S.when; setWhenUI('now'); }
+  else if(m!=='emerg' && was==='emerg'){ setWhenUI(S.prevWhen||'arrive'); }
+  document.querySelectorAll('#mode-tabs .mode-tab').forEach(t=>t.classList.toggle('active',t.dataset.mode===m));
+  const M=MODES[m];
+  const sl=$('cn-slider'); sl.min=M.lo; sl.max=M.hi; sl.step=M.step;
+}
+function setWhenUI(w){
+  S.when=w;
+  document.querySelectorAll('#when-seg button').forEach(b=>b.classList.toggle('active',b.dataset.when===w));
+  $('arrival-time').disabled = (w==='now');
+}
+document.querySelectorAll('#mode-tabs .mode-tab').forEach(t=>t.addEventListener('click',()=>{ stopDrive(true); setModeUI(t.dataset.mode); scheduleCalc(); }));
+document.querySelectorAll('#when-seg button').forEach(b=>b.addEventListener('click',()=>{ setWhenUI(b.dataset.when); scheduleCalc(); }));
+[selO,selD,$('arrival-time')].forEach(el=>el.addEventListener('change',scheduleCalc));
+$('btn-sync').onclick=()=>calc();
+function swap(){
+  const a=selO.value; selO.value=selD.value; selD.value=a;
+  const b=$('btn-swap'); b.classList.toggle('spin');
+  scheduleCalc();
+}
+$('btn-swap').onclick=swap;
+
+// ═══════════════════════════════════════════════════════
+//  MAIN CALCULATION
+// ═══════════════════════════════════════════════════════
+function calc(silent){
+  const orig=selO.value, dest=selD.value;
+  if(!orig||!dest){ if(!silent) showToast('Pick an origin and destination'); return false; }
+  if(orig===dest){ if(!silent) showToast('Origin and destination must differ'); return false; }
+  const route=getRoute(orig,dest);
+  if(!route){ if(!silent) showToast('No route defined for this pair'); return false; }
+
+  stopDrive(true);
+  const M=MODES[S.mode];
+  const gw = S.mode==='emerg' ? Object.assign(bestAt(route,route.km,Math.ceil(nowSec()),32,M),{offset:0}) : S.when==='arrive'
+    ? optimise(route,route.km,hms($('arrival-time').value||'09:00'),M)
+    : optimiseLeave(route,route.km,Math.ceil(nowSec()),M);
+  if(!gw){ if(!silent) showToast('Could not compute route'); return false; }
+  // Normal GPS knows nothing about signals: it leaves at the naive time (arrive-by minus drive time at its flat speed)
+  const ngDep = S.when==='arrive' && S.mode!=='emerg' ? hms($('arrival-time').value||'09:00')-route.km/M.ng*3600 : gw.dep-(gw.offset||0);
+  const ng = evaluate(route,route.km,ngDep,M.ng);
+  ng.reds = ng.n-ng.greens;
+  Object.assign(S,{orig,dest,route,gw,ng,geo:buildGeo(route)});
+
+  // ── map layers ──
+  [rLayer,rNG,rProg,oMkr,dMkr].forEach(l=>l&&map.removeLayer(l));
+  rProg=null;
+  rNG = L.polyline(route.pts,{color:'rgba(255,69,58,.28)',weight:4,dashArray:'5 8'}).addTo(map);
+  rLayer = L.polyline(route.pts,{color:'#0a84ff',weight:5,opacity:.95}).addTo(map);
+  map.fitBounds(rLayer.getBounds(),{padding:[70,70]});
+  const o=PLACES[orig], d2=PLACES[dest];
+  oMkr=L.circleMarker([o.lat,o.lng],{radius:10,color:'#fff',weight:2.5,fillColor:'#0a84ff',fillOpacity:1}).addTo(map).bindPopup(`<b>Start: ${o.name}</b>`);
+  dMkr=L.circleMarker([d2.lat,d2.lng],{radius:10,color:'#fff',weight:2.5,fillColor:'#ff453a',fillOpacity:1}).addTo(map).bindPopup(`<b>End: ${d2.name}</b>`);
+  sCache && Object.keys(sCache).forEach(k=>delete sCache[k]);
+  updateSignals(curT());
+
+  renderResults();
+  history.replaceState(null,'',hashFor());
+  addRecent(orig,dest);
+  if(!silent) showToast(`Synced · ${gw.spd} km/h · leave ${fmt(gw.dep)} · ${gw.greens}/${gw.n} greens`);
+  return true;
+}
+
+function renderEmergency(){
+  const {route,gw}=S;
+  const start=gw.dep+AMB_DELAY, ev=evaluate(route,route.km,start,EMG_SPEED);
+  const withC=ev.driveSec, reds=ev.n-ev.greens;
+  $('e-eta').textContent=fmt(start+withC);
+  $('e-sub').textContent=`Dispatch ${fmt(start)} · ${(withC/60).toFixed(1)} min with green corridor`;
+  $('e-dist').textContent=route.km.toFixed(1)+' km';
+  $('e-with').textContent=(withC/60).toFixed(1)+' min';
+  $('e-norm').textContent=(ev.total/60).toFixed(1)+' min';
+  $('e-saved').textContent=Math.round(ev.waitSec)+' s';
+  $('e-reds').textContent=`${reds} of ${ev.n}`;
+  const box=$('e-sigs'); box.innerHTML='';
+  ev.det.forEach(d=>{
+    const s=d.sig, r=document.createElement('div'); r.className='sig-row';
+    r.innerHTML=`<div class="sig-line"><div class="sig-indicator ${d.g?'g':'r'}"></div><div class="sig-name">${s.name}</div>
+      <div class="sig-time">${fmt(d.arrival)}</div><div class="sig-badge ${d.g?'g':'r'}">${d.g?'green':'forced'}</div></div>`;
+    r.onclick=()=>{ map.flyTo([s.lat,s.lng],16,{duration:.8}); };
+    box.appendChild(r);
+  });
+  const st=$('e-steps'); st.innerHTML='';
+  route.steps.forEach((x,i)=>{ const r=document.createElement('div'); r.className='step-row'; r.innerHTML=`<div class="step-n">${i+1}</div><div class="step-txt">${x}</div>`; st.appendChild(r); });
+}
+function renderResults(){
+  const em=S.mode==='emerg';
+  $('results-emg').style.display=em?'block':'none';
+  if(em){
+    renderEmergency();
+    $('results').style.display='none'; $('empty-hint').style.display='none'; $('hud').style.display='none';
+    const r=$('results-emg'); r.classList.remove('results-fade'); void r.offsetWidth; r.classList.add('results-fade');
+    return;
+  }
+  const {route,gw,ng}=S, M=MODES[S.mode], arrSec=hms($('arrival-time').value||'09:00');
+  const car=S.mode==='car';
+  document.querySelectorAll('.car-only').forEach(e=>e.style.display=car?'':'none');
+
+  // hud (pre-drive)
+  $('hud').style.display='block';
+  $('hud-spd').textContent=fmtSpd(gw.spd);
+  $('hud-advice').textContent = gw.spd<=M.ng*0.65?'Ease back — signal wave is ahead':'Steady pace — riding the wave';
+
+  const gwMins=mins(gw.total), ngMins=mins(ng.total), saved=Math.max(0,ngMins-gwMins);
+  $('r-leave').textContent=fmt(gw.dep);
+  if(S.when==='arrive'){
+    const buf=Math.round((arrSec-(gw.dep+gw.total))/60);
+    $('r-leave-sub').textContent = buf>0?`Arrive ~${buf} min before target`:'Arrive right on time';
+  } else {
+    $('r-leave-sub').textContent = gw.offset>0?`Wait ${Math.round(gw.offset/60*10)/10} min — catches the green wave`:'Leave right now';
+  }
+  $('r-speed').textContent=fmtSpd(gw.spd);
+  $('r-speed-sub').textContent=(gw.isVar?`varies ${fmtSpd(Math.min(...gw.segSpd))}–${fmtSpd(Math.max(...gw.segSpd))} · `:'')+`${gw.greens}/${gw.n} signals hit green`;
+  const badge=$('r-speed-badge');
+  if(gw.spd<=M.ng*0.65){ badge.textContent='Slower — saves time'; badge.className='sc-badge slower'; }
+  else { badge.textContent='Steady pace'; badge.className='sc-badge steady'; }
+  $('r-speed-note').textContent=`vs ${M.ng} km/h + ${ng.reds} red stops`;
+  $('r-eta').textContent=fmt(gw.dep+gw.total);
+  $('r-dist').textContent=route.km.toFixed(1);
+  $('r-mins').textContent=gwMins;
+  $('r-greens').textContent=`${gw.greens} / ${gw.n}`;
+
+  $('c-ng-time').textContent=ngMins+' min';
+  $('c-gw-time').textContent=gwMins+' min';
+  $('c-ng-sub').textContent=`rushing at ${M.ng} km/h`;
+  const sv=$('ch-saved');
+  if(saved>0){ sv.textContent=`${saved} min saved`; sv.style.display='inline-block'; } else sv.style.display='none';
+
+  const maxT=Math.max(ng.total,gw.total), pct=v=>((v/maxT)*100).toFixed(1)+'%';
+  $('bar-ng-d').style.width=pct(ng.driveSec); $('bar-ng-w').style.width=pct(ng.waitSec);
+  $('bar-gw-d').style.width=pct(gw.driveSec); $('bar-gw-w').style.width=pct(gw.waitSec);
+  $('lbl-ng-d').textContent=mins(ng.driveSec)+'m driving';
+  $('lbl-ng-w').textContent=ng.waitSec>0?mins(ng.waitSec)+'m at reds':'no waits';
+  $('lbl-gw-d').textContent=mins(gw.driveSec)+'m driving';
+  $('lbl-gw-w').textContent=gw.waitSec>0?mins(gw.waitSec)+'m at reds':'0m waiting';
+  $('c-ng-spd').textContent=M.ng+' km/h';
+  $('c-gw-spd').textContent=fmtSpd(gw.spd)+' km/h';
+  $('c-ng-reds').textContent=ng.reds+' stops';
+  $('c-gw-reds').textContent=(gw.n-gw.greens)+' stops';
+  $('c-ng-wait').textContent=ng.waitSec>0?mins(ng.waitSec)+'m lost':'0m';
+  $('c-gw-wait').textContent=gw.waitSec>0?mins(gw.waitSec)+'m':'0m saved';
+
+  // speed-vs-time chart at the chosen departure
+  const rows=M.speeds.map(sp=>({sp,ev:evaluate(route,route.km,gw.dep,sp),best:!gw.isVar&&sp===gw.spd}));
+  if(gw.isVar) rows.unshift({sp:'Smart',ev:gw,best:true});
+  rows.push({sp:M.ng,ev:ng,ng:true});
+  const mx=Math.max(...rows.map(r=>r.ev.total));
+  $('speed-chart').innerHTML = rows.map(r=>`
+    <div class="sp-row ${r.best?'best':''} ${r.ng?'ng':''}">
+      <span class="sp-lbl">${r.sp}${r.ng?' GPS':''}</span>
+      <div class="sp-bar"><div class="sp-d" style="width:${r.ev.driveSec/mx*100}%"></div><div class="sp-w" style="width:${r.ev.waitSec/mx*100}%"></div></div>
+      <span class="sp-tot">${(r.ev.total/60).toFixed(1)}m</span>
+    </div>`).join('') +
+    `<div class="chart-legend"><span><i style="background:var(--accent)"></i>driving</span><span><i style="background:var(--red)"></i>waiting at red</span><span>${M.speeds.length+1} fixed speeds${gw.isVar?' + Smart (varies per stretch)':''}</span></div>`;
+
+  // impact
+  const fN=fuelL(route.km,M.ng,ng.reds,ng.waitSec), fG=fuelL(route.km,gw.spd,gw.n-gw.greens,gw.waitSec);
+  $('i-fuel-ng').textContent=fN.toFixed(2)+' L'; $('i-fuel-gw').textContent=fG.toFixed(2)+' L';
+  $('i-co2-ng').textContent=Math.round(fN*2310)+' g'; $('i-co2-gw').textContent=Math.round(fG*2310)+' g';
+  $('i-stops').textContent=Math.max(0,ng.reds-(gw.n-gw.greens))+' of '+ng.n;
+  $('i-idle').textContent=Math.max(0,Math.round(ng.waitSec-gw.waitSec))+' s';
+
+  // signals with live strips
+  const sl=$('sig-list'); sl.innerHTML='';
+  gw.det.forEach(d=>{
+    const s=d.sig, r=document.createElement('div');
+    r.className='sig-row';
+    r.innerHTML=`
+      <div class="sig-line">
+        <div class="sig-indicator" data-live-sid="${s.id}"></div>
+        <div class="sig-name">${s.name}</div>
+        <div class="sig-time">${fmt(d.arrival)}${gw.isVar?` · →${fmtSpd(gw.segSpd[gw.det.indexOf(d)+1])}`:''}</div>
+        <div class="sig-badge ${d.g?'g':'r'}">${d.g?'GREEN':'RED'}</div>
+      </div>
+      <div class="strip">
+        <div class="gz" style="left:${s.gS/s.cycle*100}%;width:${s.gD/s.cycle*100}%"></div>
+        <div class="ar" style="left:${phase(s,d.arrival,0)/s.cycle*100}%"></div>
+        <div class="nd" data-sid="${s.id}"></div>
+      </div>`;
+    r.onclick=()=>{ map.flyTo([s.lat,s.lng],16,{duration:.8}); setTimeout(()=>smk[s.id].openTooltip(),900); };
+    sl.appendChild(r);
+  });
+  const stl=$('steps-list'); stl.innerHTML='';
+  route.steps.forEach((s,i)=>{
+    const r=document.createElement('div'); r.className='step-row';
+    r.innerHTML=`<div class="step-n">${i+1}</div><div class="step-txt">${s}</div>`;
+    stl.appendChild(r);
+  });
+  updateStrips(curT());
+
+  const res=$('results');
+  res.style.display='block'; res.classList.remove('results-fade'); void res.offsetWidth; res.classList.add('results-fade');
+  $('empty-hint').style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════
+//  LIVE DRIVE SIMULATION
+//  Normal run: SyncDrive (advisor / manual) vs Normal GPS (flat speed).
+//  Emergency run: an ambulance gets a green corridor (signals within 500 m
+//  ahead of it are forced green) while every other vehicle — including the
+//  two cars above and background traffic — slows, pulls over and holds at
+//  those junctions until it has passed.
+// ═══════════════════════════════════════════════════════
+const EMG_SPEED=70, EMG_RANGE=0.5, YIELD_RANGE=0.35, AMB_DELAY=20, N_BG=7;
+const D = {voiceName:'',active:false,paused:false,warp:4,manual:false,manSpd:32,follow:true,voice:false,
+  t:0,sync:null,ng:null,curTarget:0,adv:null,advKey:'',finished:false,lastSay:0,mS:null,mN:null,
+  emerg:false,amb:null,bg:[],mA:null,bgM:[],rCorr:null,forced:new Set(),yielded:new Set(),cleared:0};
+
+function mkVeh(route,km,spd,dep){
+  const sigs=route.sigs.map(sigR), n=sigs.length;
+  return {sigs,sigD:sigs.map((_,i)=>km*(i+1)/(n+1)),km,d:0,v:spd,idx:0,stopped:false,done:false,dep,start:-Infinity,finishT:null,stops:0,waitT:0};
+}
+function mkBg(route,km,i){
+  const v=mkVeh(route,km,30,0);
+  v.d=km*(0.06+i*0.12); v.base=29+((i*5)%15); v.ph=i*1.7; v.v=v.base;
+  while(v.idx<v.sigs.length && v.sigD[v.idx]<=v.d) v.idx++;
+  return v;
+}
+const bgTarget=v=>v.base+3*Math.sin(D.t/9+v.ph);
+
+// traffic yields when the ambulance is within range behind it
+function yieldSpeed(v){
+  const a=D.amb;
+  if(!D.emerg||!a||a.done||v===a||D.t<a.start) return Infinity;
+  const gap=v.d-a.d;
+  if(gap>=-0.03 && gap<YIELD_RANGE) return gap<0.12?6:12;
+  return Infinity;
+}
+const gOthers=(s,t)=>!(D.emerg&&D.forced.has(s.id)) && greenAt(s,t);   // hold at corridor signals
+const gAmb   =(s,t)=>D.forced.has(s.id) || greenAt(s,t);
+function updateForced(){
+  D.forced.clear();
+  const a=D.amb;
+  if(!a||a.done||D.t<a.start) return;
+  for(let i=a.idx;i<a.sigs.length;i++){ if(a.sigD[i]-a.d<=EMG_RANGE) D.forced.add(a.sigs[i].id); else break; }
+}
+
+function stepVeh(v,dt,t,target,gf){
+  if(v.done || t<v.start) return;
+  gf=gf||greenAt;
+  if(v.stopped){
+    if(gf(v.sigs[v.idx],t)){ v.stopped=false; v.idx++; }
+    else { v.v=0; v.waitT+=dt; return; }
+  }
+  const a=Math.max(2,target*0.3);                         // km/h gained per second
+  v.v+=clamp(target-v.v,-2*a*dt,a*dt);
+  const step=v.v/3600*dt;
+  const lim=v.idx<v.sigs.length?v.sigD[v.idx]:v.km;
+  if(v.d+step>=lim-1e-9){
+    if(v.idx<v.sigs.length){
+      const ta=t+(lim-v.d)/Math.max(v.v,0.1)*3600;
+      if(gf(v.sigs[v.idx],ta)){ v.d+=step; v.idx++; }
+      else { v.d=lim; v.stopped=true; v.v=0; v.stops++; }
+    } else { v.d=v.km; v.done=true; v.v=0; v.finishT=t+dt; }
+  } else v.d+=step;
+}
+
+const planSpd=v=>S.gw.segSpd[Math.min(v.idx,S.gw.segSpd.length-1)];
+
+// Live advisor: what speed reaches the next signal on green?
+function advise(){
+  const v=D.sync, M=MODES[S.mode];
+  const cur=D.manual?D.manSpd:planSpd(v);
+  if(v.done) return {txt:'You have arrived',cls:'ok',key:'done'};
+  if(isFinite(yieldSpeed(v))) return {txt:'Ambulance behind — pulling over to clear the way',cls:'red',key:'yield',speed:null,say:'Ambulance approaching. Pull over and slow down.'};
+  if(v.stopped){
+    const w=Math.ceil(flipIn(v.sigs[v.idx],D.t));
+    return {txt:D.emerg&&D.forced.has(v.sigs[v.idx].id)?'Holding for ambulance':`Red light — green in ${w}s`,cls:'red',key:'red:'+v.idx,speed:null};
+  }
+  if(v.idx>=v.sigs.length) return {txt:'Clear road — cruise to destination',cls:'ok',key:'clear',speed:cur};
+  const sig=v.sigs[v.idx], dist=v.sigD[v.idx]-v.d;
+  const ok=sp=>greenAt(sig,D.t+dist/sp*3600,1.5);
+  if(ok(cur)) return {txt:`Hold ${fmtSpd(cur)} — green on arrival`,cls:'ok',key:'hold:'+v.idx,speed:cur,say:`Hold ${fmtSpd(cur)}. Next light will be green.`};
+  let best=null;
+  for(let sp=M.lo; sp<=M.hi+1e-9; sp+=M.step){
+    if(ok(sp) && (best===null || Math.abs(sp-cur)<Math.abs(best-cur))) best=sp;
+  }
+  if(best!==null){
+    const slower=best<cur;
+    return {txt:`${slower?'Ease to':'Speed up to'} ${fmtSpd(best)} to catch the green`,cls:'warn',key:(slower?'slow:':'fast:')+v.idx,speed:best,
+      say:`${slower?'Ease off to':'Speed up to'} ${fmtSpd(best)} to catch the green.`};
+  }
+  return {txt:'Red on arrival — expect a short stop',cls:'warn',key:'stop:'+v.idx,speed:cur};
+}
+const syncTarget=()=> D.manual ? D.manSpd : D.curTarget;
+
+function say(txt){
+  if(!D.voice || !('speechSynthesis' in window) || D.warp>4 || !txt) return;
+  const now=Date.now(); if(now-D.lastSay<2500) return;
+  D.lastSay=now;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(txt);
+    const v=pickVoice(); if(v){ u.voice=v; u.lang=v.lang; } else u.lang='en-US';
+    u.rate=1; u.pitch=1.05;
+    setTimeout(()=>speechSynthesis.speak(u),60);
+  }catch(e){}
+}
+
+// Female, Siri-like voice. Order matters: Apple's Siri-style voices first, then other natural female English voices.
+const FEMALE=['Siri','Samantha','Ava','Allison','Susan','Zoe','Karen','Kathy','Tessa','Moira','Serena','Victoria','Fiona','Nicky',
+  'Google UK English Female','Google US English','Aria','Jenny','Zira','Hazel'];
+const NOVELTY=/^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Fred|Good News|Jester|Junior|Organ|Ralph|Superstar|Trinoids|Whisper|Wobble|Zarvox)$/;
+const MALE=/^(Aaron|Alex|Daniel|Rishi|Reed|Rocko|Eddy|Grandpa|David|Mark|Fred|Ralph|Junior)\b/;
+const enVoices=()=>speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang)&&!NOVELTY.test(v.name));
+function pickVoice(){
+  const vs=enVoices(); if(!vs.length) return null;
+  if(D.voiceName){ const m=vs.find(v=>v.name===D.voiceName); if(m) return m; }
+  for(const n of FEMALE){ const m=vs.find(v=>v.name.startsWith(n)&&!MALE.test(v.name)); if(m) return m; }
+  return vs.find(v=>!MALE.test(v.name))||vs[0];
+}
+function fillVoiceList(){
+  const sel=$('cn-voice-sel'); if(!sel) return;
+  const vs=enVoices().filter(v=>!MALE.test(v.name)); if(!vs.length) return;
+  const cur=pickVoice();
+  sel.innerHTML=vs.map(v=>`<option value="${v.name}"${cur&&v.name===cur.name?' selected':''}>${v.name} (${v.lang})</option>`).join('');
+}
+if('speechSynthesis' in window) speechSynthesis.onvoiceschanged=fillVoiceList;
+
+function carIcon(cls,size=20,html=''){ return L.divIcon({className:'car-wrap',html:`<div class="car ${cls}">${html}</div>`,iconSize:[size,size],iconAnchor:[size/2,size/2]}); }
+
+function startDrive(emerg){
+  emerg = S.mode==='emerg';
+  if(!S.route){ showToast('Sync a route first'); return; }
+  stopDrive(true);
+  const {route,gw}=S, M=MODES[S.mode];
+  D.emerg=emerg;
+  D.sync=mkVeh(route,route.km,gw.segSpd[0],gw.dep); D.sync.start=gw.dep;
+  D.ng=mkVeh(route,route.km,M.ng,S.ng.dep); D.ng.start=S.ng.dep;
+  D.t=Math.min(gw.dep,S.ng.dep); D.curTarget=gw.segSpd[0]; D.manSpd=gw.spd; D.paused=false; D.finished=false; D.advKey='';
+  D.cleared=0; D.yielded.clear(); D.forced.clear(); D.bg=[]; D.bgM=[]; D.amb=null;
+  D.active=true;
+  $('cn-slider').value=Math.round(gw.spd);
+  const p0=route.pts[0];
+  if(emerg){
+    D.amb=mkVeh(route,route.km,EMG_SPEED,gw.dep); D.amb.start=gw.dep+AMB_DELAY; D.amb.v=0;
+    for(let i=0;i<N_BG;i++){ const b=mkBg(route,route.km,i); D.bg.push(b); D.bgM.push(L.marker(pointAt(S.geo,toGeo(S.geo,b.d/b.km)),{icon:carIcon('bg',14),zIndexOffset:800}).addTo(map)); }
+    D.rCorr=L.polyline([p0,p0],{color:'#0a84ff',weight:9,opacity:.55}).addTo(map);
+    D.mA=L.marker(p0,{icon:carIcon('amb',28,'A'),zIndexOffset:1200}).addTo(map);
+  }
+  D.mN=L.marker(p0,{icon:carIcon('ng'),zIndexOffset:900}).addTo(map);
+  D.mS=L.marker(p0,{icon:carIcon('sync'),zIndexOffset:1000}).addTo(map);
+  rProg=L.polyline([p0,p0],{color:'#fff',weight:3,opacity:.9}).addTo(map);
+  $('hud').style.display='none';
+  $('console').classList.add('show');
+  $('rrow-amb').style.display=emerg?'':'none';
+  $('rl-sync').textContent=emerg?'Car A':'SyncDrive'; $('rl-ng').textContent=emerg?'Car B':'Normal GPS';
+  $('emg-banner').style.display=emerg?'block':'none';
+  $('finish').classList.remove('show');
+  $('cn-play').textContent='Pause';
+  if(D.follow) map.setView(p0,15,{animate:true});
+  D.adv=advise();
+  say(emerg?'Emergency run started. Green corridor active.':`Drive started. Hold ${fmtSpd(gw.spd)} kilometres per hour.`);
+  renderConsole(); drawDrive();
+}
+
+function stopDrive(silent){
+  if(!D.active && silent) return;
+  D.active=false; D.emerg=false;
+  [D.mS,D.mN,D.mA,D.rCorr,...D.bgM].forEach(m=>m&&map.removeLayer(m));
+  D.mS=D.mN=D.mA=D.rCorr=null; D.bgM=[]; D.bg=[]; D.amb=null; D.forced.clear();
+  if(rProg){ map.removeLayer(rProg); rProg=null; }
+  $('console').classList.remove('show');
+  $('finish').classList.remove('show');
+  $('emg-banner').style.display='none';
+  if(S.route && S.mode!=='emerg') $('hud').style.display='block';
+  try{ speechSynthesis.cancel(); }catch(e){}
+  Object.keys(sCache).forEach(k=>delete sCache[k]);
+  updateSignals(nowSec());
+  if(!silent) showToast('Drive stopped — back to live signals');
+}
+
+function advance(sdt){
+  let left=sdt;
+  const M=MODES[S.mode];
+  while(left>0){
+    const c=Math.min(left,0.5);
+    if(D.emerg) updateForced();
+    const t=D.t;
+    stepVeh(D.sync,c,t,Math.min(syncTarget(),yieldSpeed(D.sync)),gOthers);
+    stepVeh(D.ng,c,t,Math.min(M.ng,yieldSpeed(D.ng)),gOthers);
+    if(D.emerg){
+      D.bg.forEach(b=>stepVeh(b,c,t,Math.min(bgTarget(b),yieldSpeed(b)),gOthers));
+      const a=D.amb, pi=a.idx;
+      stepVeh(a,c,t,EMG_SPEED,gAmb);
+      if(a.idx>pi && !greenAt(a.sigs[pi],t)) D.cleared++;
+      [D.sync,D.ng,...D.bg].forEach(v=>{ if(isFinite(yieldSpeed(v))) D.yielded.add(v); });
+    }
+    D.t+=c; left-=c;
+  }
+}
+
+function sliceRange(geo,g1,g2){
+  const t1=g1*geo.total, t2=g2*geo.total, out=[pointAt(geo,g1)];
+  for(let j=1;j<geo.pts.length;j++) if(geo.cum[j]>t1 && geo.cum[j]<t2) out.push(geo.pts[j]);
+  out.push(pointAt(geo,g2));
+  return out;
+}
+function drawDrive(){
+  const g=S.geo, v=D.sync, n=D.ng;
+  const gs=toGeo(g,v.d/v.km), gn=toGeo(g,n.d/n.km);
+  D.mS.setLatLng(pointAt(g,gs)); D.mN.setLatLng(pointAt(g,gn));
+  rProg.setLatLngs(slicePts(g,gs));
+  if(D.emerg){
+    const a=D.amb, ga=toGeo(g,a.d/a.km);
+    D.mA.setLatLng(pointAt(g,ga));
+    const ahead=a.done||D.t<a.start?ga:toGeo(g,Math.min(1,(a.d+EMG_RANGE)/a.km));
+    D.rCorr.setLatLngs(sliceRange(g,ga,Math.max(ahead,ga+1e-6)));
+    D.bg.forEach((b,i)=>{
+      D.bgM[i].setLatLng(pointAt(g,toGeo(g,b.d/b.km)));
+      const el=D.bgM[i].getElement(); if(el) el.firstChild.classList.toggle('yield',isFinite(yieldSpeed(b)));
+    });
+  }
+}
+
+function nextLine(f){
+  if(f.done) return 'Destination reached';
+  if(f.idx<f.sigs.length){
+    const s=f.sigs[f.idx], dm=(f.sigD[f.idx]-f.d)*1000, g=greenAt(s,D.t), fl=Math.ceil(flipIn(s,D.t));
+    const state=D.emerg&&D.forced.has(s.id)?'forced green for ambulance':`${g?'green':'red'} ${fl}s`;
+    return `${s.name} · ${dm>=1000?(dm/1000).toFixed(1)+' km':Math.round(dm/10)*10+' m'} · ${state}`;
+  }
+  return `${Math.round((f.km-f.d)*1000)} m to destination`;
+}
+
+function renderConsole(){
+  const v=D.sync, n=D.ng, adv=D.adv, a=D.amb, em=D.emerg;
+  const f=em?a:v;
+  $('cn-spd').textContent=fmtSpd(f.v);
+  const ad=$('cn-advice');
+  if(em){
+    ad.textContent=a.done?'Ambulance arrived':D.t<a.start?`Ambulance dispatching in ${Math.ceil(a.start-D.t)}s`:`Green corridor — ${D.forced.size} signal${D.forced.size===1?'':'s'} cleared ahead`;
+    ad.className='cn-advice '+(a.done?'ok':'red');
+    const yl=[D.sync,D.ng,...D.bg].filter(x=>isFinite(yieldSpeed(x))).length;
+    $('emg-banner').textContent=`EMERGENCY RUN · ${D.forced.size} signals cleared · ${yl} vehicle${yl===1?'':'s'} yielding · ${D.cleared} red lights overridden`;
+  } else {
+    ad.textContent=D.manual&&!v.stopped&&!v.done?`${adv.txt} (manual: ${fmtSpd(D.manSpd)})`:adv.txt; ad.className='cn-advice '+adv.cls;
+  }
+  $('cn-next').textContent=nextLine(f);
+  const spdNow=em?EMG_SPEED:Math.max(syncTarget(),1);
+  const rem=f.done?0:(f.km-f.d)/spdNow*3600;
+  $('cn-eta').textContent=f.done?`Arrived ${fmt(f.finishT)}`:`ETA ${fmt(D.t+rem)} · ${(f.km-f.d).toFixed(2)} km left`;
+  $('rf-sync').style.width=(v.d/v.km*100)+'%'; $('rf-ng').style.width=(n.d/n.km*100)+'%';
+  const ys=isFinite(yieldSpeed(v)), yn=isFinite(yieldSpeed(n));
+  $('rv-sync').textContent=ys?'yielding':v.done?`done · ${v.stops} stops`:`${v.stops} stops`;
+  $('rv-ng').textContent  =yn?'yielding':n.done?`done · ${n.stops} stops`:`${n.stops} stops`;
+  if(em){ $('rf-amb').style.width=(a.d/a.km*100)+'%'; $('rv-amb').textContent=a.done?'arrived':`${fmtSpd(a.v)} km/h`; }
+  if((em?a.done:v.done) && !D.finished) showFinish();
+}
+
+function showFinish(){
+  D.finished=true;
+  const lab=(a,b,c,d)=>[a,b,c,d].forEach((x,i)=>$('fl-'+(i+1)).textContent=x);
+  if(D.emerg){
+    const a=D.amb, tA=a.finishT-a.start, base=evaluate(S.route,S.route.km,a.start,EMG_SPEED).total;
+    $('fin-h').textContent='Ambulance arrived';
+    lab('Ambulance','Normal signals','Red lights cleared','Vehicles yielded');
+    $('fin-gw').textContent=(tA/60).toFixed(1)+' min'; $('fin-ng').textContent=(base/60).toFixed(1)+' min';
+    $('fin-gw-stops').textContent=D.cleared; $('fin-ng-stops').textContent=D.yielded.size;
+    const diff=base-tA;
+    $('fin-save').textContent=diff>=1?`Green corridor saved ${Math.round(diff)} s`:'No red lights on this run';
+    $('fin-sub').textContent=`${PLACES[S.orig].name} → ${PLACES[S.dest].name} · 0 ambulance stops`;
+    $('finish').classList.add('show');
+    say('Ambulance has arrived.');
+    return;
+  }
+  const v=D.sync, n=D.ng;
+  const tS=v.finishT-v.dep;
+  // Normal GPS may still be on the road: use the planned (identical-physics) total until it finishes
+  const tN = n.done ? n.finishT-n.dep : S.ng.total;
+  $('fin-h').textContent="You've arrived";
+  lab('SyncDrive','Normal GPS','Stops (Sync)','Stops (Normal)');
+  $('fin-gw').textContent=(tS/60).toFixed(1)+' min';
+  $('fin-ng').textContent=(tN/60).toFixed(1)+' min';
+  $('fin-gw-stops').textContent=v.stops; $('fin-ng-stops').textContent=n.done?n.stops:S.ng.reds;
+  const diff=tN-tS;
+  $('fin-save').textContent = diff>=1 ? `Saved ${Math.round(diff)} s vs Normal GPS` : 'Matched Normal GPS';
+  $('fin-sub').textContent=`${PLACES[S.orig].name} → ${PLACES[S.dest].name} at ${fmtSpd(v.km/(tS/3600))} km/h average`;
+  $('finish').classList.add('show');
+  say('You have arrived.');
+}
+
+// drive controls
+function togglePause(){
+  if(!D.active) { if(S.route) startDrive(); return; }
+  D.paused=!D.paused; $('cn-play').textContent=D.paused?'Play':'Pause';
+}
+function setWarp(w){
+  D.warp=w;
+  document.querySelectorAll('#warp-seg button').forEach(b=>b.classList.toggle('active',+b.dataset.w===w));
+}
+$('btn-drive').onclick=()=>startDrive(false);
+$('hud-start').onclick=()=>startDrive(false);
+$('btn-dispatch').onclick=()=>startDrive();
+$('cn-play').onclick=togglePause;
+$('cn-stop').onclick=()=>stopDrive();
+$('fin-close').onclick=()=>$('finish').classList.remove('show');
+$('fin-again').onclick=()=>startDrive(D.emerg);
+document.querySelectorAll('#warp-seg button').forEach(b=>b.onclick=()=>setWarp(+b.dataset.w));
+document.querySelectorAll('#pilot-seg button').forEach(b=>b.onclick=()=>{
+  D.manual=b.dataset.p==='manual';
+  document.querySelectorAll('#pilot-seg button').forEach(x=>x.classList.toggle('active',x===b));
+  $('cn-ctrl').classList.toggle('manual',D.manual);
+  if(D.manual){ D.manSpd=D.curTarget; $('cn-slider').value=D.manSpd; }
+  else D.curTarget=D.manSpd>0?D.manSpd:D.curTarget;
+});
+$('cn-slider').oninput=e=>{ D.manSpd=+e.target.value; };
+$('cn-follow').onclick=()=>{ D.follow=!D.follow; $('cn-follow').classList.toggle('active',D.follow); };
+$('cn-voice-sel').onchange=e=>{ D.voiceName=e.target.value; say('This is your navigation voice.'); };
+$('cn-voice').onclick=()=>{
+  D.voice=!D.voice; $('cn-voice').classList.toggle('active',D.voice);
+  $('cn-voice-sel').style.display=D.voice?'':'none'; if(D.voice) fillVoiceList();
+  if(D.voice){ if(!('speechSynthesis' in window)){ showToast('Voice not supported in this browser'); D.voice=false; $('cn-voice').classList.remove('active'); } else showToast('Voice guidance on (works at ≤4× speed)'); }
+  else try{ speechSynthesis.cancel(); }catch(e){}
+};
+map.on('dragstart',()=>{ if(D.active&&D.follow){ D.follow=false; $('cn-follow').classList.remove('active'); } });
+
+// keyboard
+document.addEventListener('keydown',e=>{
+  if(/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) && e.target.type!=='range') {
+    if(e.key==='Enter'&&e.target.id!=='q') calc();
+    return;
+  }
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  const k=e.key;
+  if(k===' '){ e.preventDefault(); togglePause(); }
+  else if(k==='Escape'){ if(D.active) stopDrive(); }
+  else if(k==='Enter'){ calc(); }
+  else if(k==='e'||k==='E'){ stopDrive(true); setModeUI(S.mode==='emerg'?'car':'emerg'); scheduleCalc(); }
+  else if(k==='l'||k==='L'){ UI.sig=!UI.sig; applyUI(); }
+  else if(k==='t'||k==='T'){ UI.tim=!UI.tim; applyUI(); }
+  else if(k==='p'||k==='P'){ UI.plc=!UI.plc; applyUI(); }
+  else if(k==='s'||k==='S'){ switchView('dir'); swap(); }
+  else if(k==='+'||k==='='){ const w=[1,2,4,8,16]; setWarp(w[Math.min(w.indexOf(D.warp)+1,4)]); }
+  else if(k==='-'||k==='_'){ const w=[1,2,4,8,16]; setWarp(w[Math.max(w.indexOf(D.warp)-1,0)]); }
+});
+
+// ═══════════════════════════════════════════════════════
+//  MAIN LOOP
+// ═══════════════════════════════════════════════════════
+function renderChip(t){
+  const chip=$('sim-chip');
+  chip.classList.toggle('sim',D.active);
+  $('sim-time').textContent=fmtS(t);
+  $('sim-tag').textContent = D.active ? (D.paused?'PAUSED':`SIM ${D.warp}×`) : 'LIVE';
+}
+let lastTs=performance.now(), lastUI=0, lastFollow=0;
+function frame(ts){
+  const dt=Math.min((ts-lastTs)/1000,0.25); lastTs=ts;
+  if(D.active){
+    const allDone=D.sync.done && D.ng.done && (!D.emerg || D.amb.done);
+    if(!D.paused && !allDone){
+      D.adv=advise();
+      if(!D.manual && D.adv.speed) D.curTarget=D.adv.speed;
+      else if(!D.manual && !D.sync.stopped && !isFinite(yieldSpeed(D.sync))) D.curTarget=planSpd(D.sync);
+      if(D.adv.key!==D.advKey){ D.advKey=D.adv.key; if(D.adv.say) say(D.adv.say); else if(D.adv.key.startsWith('red')) say('Red light ahead. Stopping.'); }
+      advance(dt*D.warp);
+    }
+    drawDrive();
+    if(D.follow && ts-lastFollow>90){ lastFollow=ts; map.setView((D.emerg?D.mA:D.mS).getLatLng(),map.getZoom(),{animate:false}); }
+  }
+  if(ts-lastUI>(D.active?100:250)){
+    lastUI=ts;
+    const t=curT();
+    updateSignals(t); updateStrips(t); renderChip(t);
+    if(D.active) renderConsole();
+    if(view==='signals') renderBoard(t);
+    $('clock').textContent=fmtS(nowSec());
+  }
+  requestAnimationFrame(frame);
+}
+
+// ═══════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════
+let toastT;
+function showToast(msg){
+  const el=$('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),4500);
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+const UI={sig:true,tim:true,plc:true};
+try{ Object.assign(UI,JSON.parse(localStorage.getItem('syncdrive.ui')||'{}')); }catch(e){}
+function applyUI(){
+  $('map').classList.toggle('hide-sig',!UI.sig); $('map').classList.toggle('hide-timer',!UI.tim);
+  $('map').classList.toggle('hide-places',!UI.plc); $('tg-plc').classList.toggle('on',UI.plc); $('tg-all').classList.toggle('on',UI.sig||UI.plc);
+  $('tg-sig').classList.toggle('on',UI.sig); $('tg-tim').classList.toggle('on',UI.tim); $('tg-tim').classList.toggle('dis',!UI.sig);
+  try{ localStorage.setItem('syncdrive.ui',JSON.stringify(UI)); }catch(e){}
+}
+$('tg-sig').onclick=()=>{ UI.sig=!UI.sig; applyUI(); };
+$('tg-plc').onclick=()=>{ UI.plc=!UI.plc; applyUI(); };
+$('tg-all').onclick=()=>{ const v=!(UI.sig||UI.plc); UI.sig=UI.plc=UI.tim=v; applyUI(); };
+function zoomClass(){ $('map').classList.toggle('zoom-far',map.getZoom()<=14); }
+map.on('zoomend',zoomClass); zoomClass();
+$('tg-tim').onclick=()=>{ UI.tim=!UI.tim; applyUI(); };
+applyUI();
+buildBoard(); renderPlaces(); renderPopular(); renderRecents();
+setModeUI('car'); setWhenUI('arrive');
+updateSignals(nowSec());
+if(applyHash()) calc(true);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

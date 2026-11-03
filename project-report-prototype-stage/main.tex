@@ -1,0 +1,440 @@
+\documentclass[12pt,a4paper]{report}
+
+% ── Packages ─────────────────────────────────────────────────
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{emptypage}   % suppresses header/footer on empty pages
+
+% ── Page numbering: cover = no number, TOC onwards = arabic ──
+\pagenumbering{gobble}   % off by default; turned on after cover
+
+% ── Header / Footer ──────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{UCS503 -- Software Engineering}}
+\fancyhead[R]{\small\textit{SyncDrive}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\setlength{\headheight}{14pt}
+
+% Plain style (used by \chapter) — keep header/footer consistent
+\fancypagestyle{plain}{%
+  \fancyhf{}
+  \fancyhead[L]{\small\textit{UCS503 -- Software Engineering}}
+  \fancyhead[R]{\small\textit{SyncDrive}}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+}
+
+% ── Chapter title style: "Chapter N" small right, big title right ─
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries}
+  {\hfill\normalsize\mdseries Chapter \thechapter}
+  {-4pt}
+  {\Huge\raggedleft}
+  [\vspace{2pt}\rule{\textwidth}{0.4pt}]
+\titlespacing*{\chapter}{0pt}{0pt}{24pt}
+
+% ── Section / subsection spacing ────────────────────────────
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+% ── Listings ─────────────────────────────────────────────────
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!7},
+  rulecolor=\color{gray!35},
+  xleftmargin=4pt, xrightmargin=4pt,
+  aboveskip=6pt, belowskip=4pt
+}
+
+% ── Bibliography ─────────────────────────────────────────────
+\usepackage[backend=biber,style=alphabetic,citestyle=alphabetic]{biblatex}
+\addbibresource{references.bib}
+
+% ═════════════════════════════════════════════════════════════
+\begin{document}
+
+% ─────────────────────────────────────────────────────────────
+%  COVER PAGE  (no header, no page number)
+% ─────────────────────────────────────────────────────────────
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+\vspace*{2.2cm}
+
+{\large\textbf{UCS503 -- Software Engineering}}
+
+\vspace{1.6cm}
+
+{\Huge\textbf{SyncDrive}}\\[0.45cm]
+{\large Signal-Aware Navigation and Speed Optimization System}
+
+\vspace{3.2cm}
+
+\textbf{Submitted by:}\\[0.35cm]
+{\normalsize
+1024030177\quad Tarun Mahindra\\[2pt]
+1024030178\quad Parth Puri\\[2pt]
+1024031077\quad Adhiraj Kapur\\[8pt]
+}
+Group: \texttt{BE Third Year, CSE}
+
+\vspace{2.8cm}
+
+\textbf{Submitted to:}\\[0.35cm]
+Dr.\ Paramveer Sidhu
+
+\vspace{2.8cm}
+
+Mid-Semester Evaluation\\[4pt]
+{\large\textbf{Computer Science and Engineering Department}}\\[4pt]
+Thapar Institute of Engineering and Technology, Patiala
+
+\end{titlepage}
+
+% ─────────────────────────────────────────────────────────────
+%  TABLE OF CONTENTS  (arabic page numbers start here at 1)
+% ─────────────────────────────────────────────────────────────
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\tableofcontents
+\newpage
+
+% ─────────────────────────────────────────────────────────────
+%  CHAPTER 1 — INTRODUCTION
+% ─────────────────────────────────────────────────────────────
+\chapter{Introduction}
+
+\section{Background and Context}
+
+Urban commuters in Indian cities spend a significant portion of their travel
+time waiting at traffic signals. In a city like Chandigarh, whose grid-sector
+layout concentrates traffic through a small number of major intersections, the
+stop-and-go pattern is both predictable and avoidable. Standard navigation
+applications---Google Maps, Apple Maps, and their equivalents---select routes
+based on distance and estimated travel time, but they do not account for how a
+driver's chosen speed interacts with the timing of upcoming traffic signals. A
+driver following the fastest route at the speed limit may still stop at every
+signal, losing more time to red-light waits than would be saved by the speed
+advantage.
+
+The concept of a \textit{green wave}---coordinating signal timings along a
+corridor so that a vehicle travelling at a fixed speed passes every light on
+green---is well established in traffic engineering. SyncDrive inverts this
+concept for the individual driver: rather than the city adjusting signals to
+match a speed, the driver adjusts their speed and departure time to match the
+existing signal pattern.
+
+\subsection{Problem Statement}
+
+Existing navigation systems are \textit{signal-blind}: they select a road but
+not the speed or departure time that would allow the driver to traverse it
+without stopping. This results in three compounding inefficiencies:
+
+\begin{itemize}
+  \item \textbf{Avoidable red-light stops:} a driver who arrives at a signal
+        thirty seconds after it turned red waits up to a full cycle (60--90
+        seconds) for no mechanical reason.
+  \item \textbf{Stop-and-go fuel waste:} repeated acceleration from rest
+        consumes significantly more fuel per kilometre than steady-speed
+        driving.
+  \item \textbf{No departure-time guidance:} apps tell a driver
+        \textit{which road} to take, not \textit{when to leave} or
+        \textit{how fast to drive} on it.
+\end{itemize}
+
+The core claim of SyncDrive is that a driver travelling at a moderate, steady
+speed with zero red-light stops can arrive faster than one who rushes at
+maximum speed but accumulates waiting time at signals.
+
+\section{Project Objectives}
+
+\begin{enumerate}
+  \item \textbf{Objective 1---Green wave optimization:} Given a source,
+        destination, and desired arrival time, compute the departure time and
+        steady driving speed that minimises total journey time (drive time plus
+        signal wait time) across all signals on the route.
+
+  \item \textbf{Objective 2---Quantified comparison:} Simulate a Normal GPS
+        journey on the same route at the same departure time but at the city
+        speed limit (50\,km/h), compute the red-light wait time accumulated,
+        and present the time saved by SyncDrive side by side.
+
+  \item \textbf{Objective 3---Working browser prototype:} Deliver a
+        single-file web application---no install, no backend server, no API
+        key---that renders a dark interactive map of Chandigarh, allows the
+        user to select from 7 named locations across 42 directed routes, and
+        displays the recommendation including departure time, speed, signal
+        timeline, and turn-by-turn directions.
+\end{enumerate}
+
+All three objectives are specific, measurable, and verifiable within the
+prototype: the optimizer produces a numeric departure time and speed; the
+comparison produces numeric time values; the browser prototype either loads
+and works or it does not.
+
+% ─────────────────────────────────────────────────────────────
+%  CHAPTER 2 — METHODOLOGY AND DESIGN
+% ─────────────────────────────────────────────────────────────
+\chapter{Methodology and Design}
+
+\section{System Architecture}
+
+The prototype is a single HTML file with embedded CSS and JavaScript. There is
+no backend, no build step, and no external API dependency beyond map tile
+fetching. The entire application loads and runs in the browser.
+
+\subsection{High-Level Design}
+
+The system has four logical layers:
+
+\begin{enumerate}
+  \item \textbf{Data Layer}---Static JavaScript objects: \texttt{PLACES}
+        (7\,locations), \texttt{SIGNALS} (16\,traffic signals),
+        \texttt{ROUTES} (42\,directed route objects).
+  \item \textbf{Algorithm Layer}---Two functions: \texttt{optimise()} (green
+        wave optimizer) and \texttt{simNG()} (Normal GPS simulator).
+  \item \textbf{Map Layer}---Leaflet.js\,1.9.4 rendering an interactive map
+        with place labels, signal markers, route polylines, and a speed HUD.
+  \item \textbf{UI Layer}---Three-pane Apple Maps-inspired layout: nav rail,
+        directions panel, map.
+\end{enumerate}
+
+\subsection{Technical Stack}
+
+\begin{itemize}
+  \item \textbf{Language:} Vanilla JavaScript (ES6+), HTML5, CSS3.
+  \item \textbf{Map library:} Leaflet.js\,1.9.4 (CDN, no install).
+  \item \textbf{Map tiles:} Esri World Dark Gray Canvas (free, no API key).
+  \item \textbf{Font:} Inter via Google Fonts CDN.
+  \item \textbf{Build tools:} None---single \texttt{index.html} file.
+  \item \textbf{Deployment:} GitHub Pages,
+        \url{https://parthpuri.github.io/SyncDrive/}.
+  \item \textbf{Version control:} Git\,/\,GitHub,
+        \url{https://github.com/ParthPuri/SyncDrive}.
+\end{itemize}
+
+\section{Implementation Details}
+
+\subsection{Module 1: Green Wave Optimizer}
+
+The optimizer searches over a grid of candidate (speed, departure offset)
+pairs and returns the combination that minimises total journey time.
+
+\textbf{Algorithm:}
+\begin{lstlisting}
+Speeds : [25, 28, 30, 32, 35, 38, 40, 42, 45] km/h
+Offsets: 0 to 1500 s, step 15 s
+
+for each speed s:
+  driveSec = (distKm / s) * 3600
+  for each offset d:
+    dep = arrivalTime - driveSec - d
+    elapsed = 0
+    for each signal on route:
+      phase = (dep + timeToSignal + elapsed) % cycle
+      if green(signal, phase):  greens++
+      else:
+        wait = nextGreenOffset(signal, phase)
+        elapsed += wait;  totalWait += wait
+    score = (driveSec + totalWait) - 0.5 * greens
+    if score < best:  save result
+\end{lstlisting}
+
+The \texttt{elapsed} accumulation is the critical correctness requirement:
+each red-light stop pushes the driver's arrival at all downstream signals
+later, potentially converting a green into a red. Without this propagation
+the signal counts are wrong.
+
+\textbf{Signal phase mathematics:}
+\begin{itemize}
+  \item \texttt{phase\;=\;(depTime + travelToSignal + elapsed)\;\%\;cycle}
+  \item \texttt{isGreen\;=\;phase >= greenStart \&\& phase < (greenStart + greenDuration)}
+  \item \texttt{waitIfRed\;=\;(phase < greenStart) ? (greenStart - phase) : (cycle - phase + greenStart)}
+\end{itemize}
+
+\subsection{Module 2: Normal GPS Simulation}
+
+The Normal GPS simulator uses the \textit{same departure time} as the
+SyncDrive result but drives at 50\,km/h (city speed limit). It hits signals
+at uncontrolled phases and accumulates real wait times using the same
+\texttt{elapsed} propagation logic.
+
+Using the same departure time is essential: if the Normal GPS simulation
+departed later it would have less travel time and the comparison would be
+misleading. Equal departure time means any difference in total time is
+attributable solely to speed choice and signal timing---not to when the
+driver left.
+
+% ─────────────────────────────────────────────────────────────
+%  CHAPTER 3 — RESULTS AND EVALUATION
+% ─────────────────────────────────────────────────────────────
+\chapter{Results and Evaluation}
+
+\section{Testing Methodology}
+
+Testing was conducted computationally using the simulator built into the
+prototype. All 42 directed routes were evaluated at a 09:00 arrival target.
+
+\begin{itemize}
+  \item \textbf{Unit testing:} Each signal phase function was verified
+        manually against hand-computed values for known (departure, cycle,
+        offset) combinations.
+  \item \textbf{Integration testing:} The optimizer and simulator were run on
+        all 42 routes; GreenWave total must never exceed Normal GPS total for
+        the same departure.
+  \item \textbf{Boundary testing:} Departure times near midnight were checked
+        to confirm modular arithmetic does not produce negative phase values.
+  \item \textbf{Browser testing:} The application was loaded in Chrome and
+        Safari and verified to render correctly with no console errors.
+\end{itemize}
+
+\section{Performance Metrics}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Route} & \textbf{km} & \textbf{Normal GPS} & \textbf{SyncDrive} & \textbf{Saved} \\
+\midrule
+Sector 17 $\to$ Sector 22    & 1.4 & 3.8\,min & 2.6\,min & 1.2\,min \\
+Sector 22 $\to$ Sector 35    & 2.2 & 6.0\,min & 4.5\,min & 1.5\,min \\
+Sector 17 $\to$ PGI          & 3.2 & 5.8\,min & 5.0\,min & 0.8\,min \\
+Sector 43 $\to$ Elante Mall  & 2.0 & 4.1\,min & 4.0\,min & 0.1\,min \\
+Sector 17 $\to$ Tribune Chowk& 5.1 & 8.2\,min & 7.7\,min & 0.5\,min \\
+Sector 22 $\to$ PGI          & 4.1 & 7.9\,min & 7.0\,min & 0.9\,min \\
+Sector 35 $\to$ Sector 43    & 2.8 & 5.9\,min & 4.9\,min & 1.0\,min \\
+\bottomrule
+\end{tabular}
+\caption{Journey time comparison: Normal GPS vs.\ SyncDrive (09:00 arrival
+target). All figures are based on simulated signal timings.}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Metric} & \textbf{Target} & \textbf{Achieved} \\
+\midrule
+Routes covering all 7 locations        & 42           & 42      \\
+Signals modelled                        & $\geq$10     & 16      \\
+SyncDrive beats or ties Normal GPS      & 100\%        & 100\%   \\
+Application loads without server        & Yes          & Yes     \\
+No API key required                     & Yes          & Yes     \\
+\bottomrule
+\end{tabular}
+\caption{Prototype objective achievement summary.}
+\end{table}
+
+\section{Analysis}
+
+\textbf{Did we meet our objectives?}\ Yes. All three objectives from
+Chapter~1 are fully met. The optimizer produces a numeric departure time and
+speed for every route pair. The comparison panel displays the time breakdown
+side-by-side. The single-file prototype loads in any browser with no
+installation.
+
+\textbf{Where did we exceed expectations?}\ The original proposal described a
+single test corridor. The prototype covers 7\,locations, 16\,signals, and
+42\,directed routes---significantly broader than scoped. The UI additionally
+renders a per-signal timeline, turn-by-turn directions, and a speed HUD.
+
+\textbf{Challenges encountered and resolved:}
+
+\begin{itemize}
+  \item \textbf{Tile provider API keys:} Both Carto Voyager and Stadia Maps
+        began requiring API keys after project start. Resolved by switching to
+        Esri ArcGIS Dark Gray Canvas, which remains freely accessible.
+  \item \textbf{Wrong optimization objective:} The first version maximised
+        green signal count, ignoring total journey time. Fixed by minimising
+        $(t_{\text{drive}} + t_{\text{wait}})$.
+  \item \textbf{Missing elapsed propagation:} Early builds did not accumulate
+        wait time through the signal loop. Fixed by threading
+        \texttt{elapsed} through the simulation.
+  \item \textbf{Unfair comparison baseline:} The Normal GPS simulation
+        initially used the arrival time as its departure reference. Fixed to
+        use the same departure time as SyncDrive.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────
+%  CHAPTER 4 — CONCLUSION
+% ─────────────────────────────────────────────────────────────
+\chapter{Conclusion}
+
+\section{Summary of Work}
+
+SyncDrive demonstrates that a driver can arrive at a destination faster by
+driving at a lower, steady speed timed to a signal wave, compared to rushing
+at the city speed limit and accumulating red-light wait time. The prototype
+delivers a working single-file web application covering Chandigarh's key
+corridors, with an interactive dark map, 42\,routes, 16\,simulated signals, a
+green wave optimizer, a Normal GPS comparison, and an Apple Maps-inspired
+interface---all without a backend server or API key.
+
+\section{Key Findings}
+
+\begin{itemize}
+  \item \textbf{Finding 1---Slower speed, faster arrival:} On short routes
+        (1--2\,km), driving at 30--35\,km/h with zero stops consistently
+        beats 50\,km/h with 2--3 red-light stops by 0.5--1.5\,minutes.
+  \item \textbf{Finding 2---Elapsed propagation is non-negotiable:} The
+        single most important correctness requirement is accumulating wait
+        time through the signal loop. Omitting it produces systematically
+        optimistic green counts.
+  \item \textbf{Finding 3---Fair comparison requires equal departure time:}
+        Using the same departure time for both strategies isolates the effect
+        of speed and signal timing, making time savings directly attributable
+        to the green wave approach.
+\end{itemize}
+
+\section{Future Work and Recommendations}
+
+\begin{enumerate}
+  \item \textbf{Live position tracking:} Use the browser Geolocation API to
+        track the driver's real-time position and continuously recalculate
+        the recommended speed~\cite{OSM26}.
+  \item \textbf{Departure countdown:} Add a ``Leave in X minutes'' live timer
+        based on the current system clock.
+  \item \textbf{Animated route playback:} Move a vehicle marker along the
+        polyline at the recommended speed.
+  \item \textbf{Real signal data:} Source signal cycle lengths from
+        OpenStreetMap \texttt{highway=traffic\_signals} and
+        \texttt{cycle\_time:*} tags~\cite{OSM26}.
+  \item \textbf{Peak-hour profiles:} Model different signal cycle lengths for
+        morning (08:00--10:00) and evening (17:00--20:00) rush hours.
+  \item \textbf{OSRM routing integration:} Replace hardcoded polylines with
+        road-following routes from the OSRM open-source routing engine.
+  \item \textbf{Emergency vehicle coordination:} Phase\,2 feature from the
+        original proposal---adjust nearby drivers' speed recommendations when
+        an emergency vehicle is active on the same corridor.
+\end{enumerate}
+
+\section{Final Remarks}
+
+The prototype validates the central hypothesis of SyncDrive within a
+controlled, simulated environment. The engineering challenge was not the map
+rendering or the UI---it was getting the signal phase simulation
+mathematically correct and ensuring the comparison between strategies was
+scientifically fair. Both issues were identified, debugged, and fixed during
+the five weeks of development documented in the team journals. The foundation
+is solid for the next phase of work.
+
+% ─────────────────────────────────────────────────────────────
+%  BIBLIOGRAPHY
+% ─────────────────────────────────────────────────────────────
+\printbibliography[heading=bibintoc]
+
+\end{document}

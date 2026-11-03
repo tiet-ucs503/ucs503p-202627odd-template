@@ -1,5 +1,5 @@
 \documentclass[11pt,a4paper]{article}
-\usepackage[margin=1in]{geometry}
+\usepackage[margin=0.85in]{geometry}
 \usepackage{hyperref}
 \usepackage{enumitem}
 \usepackage{graphicx}
@@ -13,8 +13,7 @@
 \makeatletter \newcommand{\BvrSetLabInstructor}[1]{%
   \gdef\Bvr@LabInstructor{#1}}
 % default
-\newcommand{\Bvr@LabInstructor}{Dr. Raghav %
-  B. Venkataramaiyer}
+\newcommand{\Bvr@LabInstructor}{Dr. Paramveer Sidhu}
 % public accessor
 \newcommand{\BvrLabInstructorValue}{\Bvr@LabInstructor}
 \makeatother
@@ -36,207 +35,191 @@
 \newcommand{\BvrHint}[1]{%
   {\normalfont\normalsize\itshape\hfill #1}}
 
+% Tighten list spacing to keep the proposal compact
+\setlist{itemsep=0pt, topsep=2pt, parsep=0pt}
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{8pt}{4pt}
+\titlespacing*{\subsection}{0pt}{6pt}{3pt}
+
 % -----------------------------------------------------
 
-\title{Grievance-Resolution System for a Tier-2/3 City}
+\title{SyncDrive}
 
-\BvrSetLabInstructor{Dr. Raghav B. Venkataramaiyer}
+\BvrSetLabInstructor{Dr. Paramveer Sidhu}
 
 \BvrSubtitle{%
+  Signal-Aware Navigation and Speed Optimization System \\
   Project Proposal for UCS503P  \\
   Submitted to: \BvrLabInstructorValue \\ \bfseries
   Thapar Institute of Engineering and Technology% 
 }
 
 \author{
-  Vidya Vaidyanathan, CSED%
-  \thanks{Roll No: \texttt{1024030xxx}, %
-    Email: \texttt{vvaidhanathan\_be24\@thapar.edu}}
+  Tarun Mahindra (1024030177)
   \and 
-  Bhanurekha Ganesan, CSED%
-  \thanks{Roll No: \texttt{1024030xxx}, %
-    Email: \texttt{bganesan\_be24\@thapar.edu}}
+  Parth Puri (1024030178)
+  \and
+  Adhiraj Kapur (1024031077)
 }
 
-\date{\today}
+\date{11 August 2026}
 
 \begin{document}
 \maketitle
 
 \section{Higher-order goal%
   \BvrHint{\ldots secondary framing}}
-This project aims to improve sustainable urban
-governance by reducing the time and effort required to
-resolve citizen issues. While the topic is broader than
-any single municipality, the immediate engineering
-objective is to translate \emph{efficient public
-  service delivery} into a measurable, deployable
-software solution.
+SyncDrive aims to reduce avoidable time and fuel loss in
+everyday urban commuting by making drivers aware of how
+their speed interacts with upcoming traffic signals. The
+engineering objective is to translate \emph{signal-aware
+  speed guidance} into a measurable, deployable software
+solution usable through a navigation application.
 
 \section{Time-to-value %
 \BvrHint{\ldots primary heuristic}}
 \begin{itemize}[leftmargin=0.7cm]
-    \item We will deliver meaningful increments quickly by prototyping the core user workflow and validating it with users within a short iteration window.
-    \item We will prioritize fast feedback over perfection by using weekly iterations (and targeting CI-backed automation early) to reduce release friction.
-    \item Success is defined by what can be delivered and measured in the first iteration, then improved based on user feedback.
+    \item Deliver meaningful increments quickly by prototyping the core route-and-speed-recommendation workflow on a single simulated corridor within a short iteration window.
+    \item Prioritize fast feedback over perfection using weekly iterations and early CI-backed automation.
+    \item Success in iteration one is a working speed recommendation for a route with simulated signals, improved thereafter based on testing.
 \end{itemize}
 
 \section{Problem Statement}
-Citizens in a tier-2/3 Indian city face delays and uncertainty when reporting local issues (e.g., streetlight outages, water leakage, garbage accumulation, road potholes). Common pain points include:
+Navigation apps such as Google Maps select routes using
+distance, travel time, and traffic, but do not account for
+how a driver's chosen speed interacts with signal timing.
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Fragmentation:} complaints are often made via multiple channels (calls, social media, paper forms), causing lost context.
-    \item \textbf{Low transparency:} citizens cannot easily see the status of their complaint (e.g., ``received'', ``assigned'', ``in progress'', ``resolved'').
-    \item \textbf{Slow coordination:} departments/field teams lack a unified, trackable workflow with clear ownership.
-    \item \textbf{Poor data quality:} duplicate or incomplete reports force rework and extend resolution time.
+    \item \textbf{Signal-blind routing:} a short, lightly congested route can still force repeated stops if driven at the speed limit.
+    \item \textbf{Avoidable stop-and-go driving:} repeated braking and waiting increases journey time even in light traffic.
+    \item \textbf{No dynamic speed guidance:} apps advise \emph{which road} to take, not \emph{how fast} to drive on it.
+    \item \textbf{No driver-level emergency coordination:} nearby drivers get no software guidance to help clear a path for an ambulance.
 \end{itemize}
-
-\textbf{Why this matters now (contextual relevance):} In an urban setting with limited staff bandwidth, even small process improvements can noticeably reduce resolution delays and repeated submissions.
+\textbf{Why this matters now:} in corridors with closely spaced signals, reducing unnecessary stopping can measurably cut journey time without changing road infrastructure.
 
 \section{Proposed Solution %
 \BvrHint{\ldots Software Proposition}}
 \subsection{Overview}
-Build a \textbf{web-based} ``Grievance-to-Resolution'' system with the following components:
+Build a \textbf{web/mobile-based} navigation system with:
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Citizen submission portal:} users submit an issue with photo (optional), category, and locality/ward.
-    \item \textbf{Automated triage:} basic duplicate detection and completeness checks.
-    \item \textbf{Department workflow:} assign issues to relevant department/team and update statuses.
-    \item \textbf{Status transparency:} citizens track status and receive notifications when resolved.
-    \item \textbf{Admin/ops dashboard:} performance summaries (resolution time, backlog).
+    \item \textbf{Driver interface:} source/destination entry; route view with upcoming signals.
+    \item \textbf{Signal timing store:} simulated/map-sourced signal location, cycle duration, expected green/red intervals.
+    \item \textbf{Speed optimization engine:} computes a dynamically updated, legal recommended speed to increase the likelihood of green-phase arrivals.
+    \item \textbf{Recommendation display:} e.g., ``Maintain 42 km/h for the next 800 m,'' always capped at the speed limit.
+    \item \textbf{Emergency coordination module:} adjusts nearby drivers' recommendations when a registered emergency vehicle approaches.
 \end{itemize}
 
 \subsection{Core workflow}
 \begin{enumerate}[leftmargin=0.7cm]
-    \item Citizen creates a complaint and receives a complaint ID immediately.
-    \item System validates completeness and suggests possible duplicates (lightweight similarity on text/category and approximate location).
-    \item Department staff update status (Received $\rightarrow$ Assigned $\rightarrow$ In Progress $\rightarrow$ Resolved).
-    \item Citizen views status updates and resolution notes.
+    \item Driver enters source/destination; a route is selected using distance, time, and traffic.
+    \item System identifies signals along the route and retrieves simulated/known timing.
+    \item Engine estimates arrival time per candidate speed and selects the legal speed minimizing expected waiting time across the route.
+    \item Recommendation recalculates as position, traffic, or emergency conditions change.
 \end{enumerate}
 
-\subsection{Operational constraints for an educational, tier-2/3 setting}
+\subsection{Operational constraints}
 \begin{itemize}[leftmargin=0.7cm]
-    \item Keep the solution usable on low-to-mid range devices via responsive web design.
-    \item Avoid dependence on advanced research algorithms; focus on workflow, automation, and system correctness.
-    \item Design for deployability using common web hosting and managed databases.
+    \item Recommended speed never exceeds the legal limit -- the system chooses \emph{which} legal speed, not whether to speed.
+    \item No guarantee of a green signal at every intersection; guidance is expressed as increased probability and reduced expected waiting time.
+    \item Real-time municipal signal-controller access is not assumed; simulated/public data is used and this limitation is stated explicitly.
 \end{itemize}
 
 \section{Solution Approach %
 \BvrHint{\ldots Engineering focus}}
-This is an engineering course project, so we focus on scalable administrative and workflow aspects rather than novel algorithm research.
+This is an engineering project, so we focus on a realistic, implementable design rather than novel traffic-prediction research.
 
-\subsection{Duplicate/quality assistance %
+\subsection{Speed optimization logic %
 \BvrHint{\ldots non-research}}
-Duplicate detection will be heuristic-based:
+For each upcoming signal:
 \begin{itemize}[leftmargin=0.7cm]
-    \item Normalize text (category + short description keywords).
-    \item Use a simple similarity measure (e.g., token overlap / TF-IDF cosine with threshold) without claiming state-of-the-art.
-    \item Show top candidate duplicates to staff for decision; never fully auto-delete or auto-reject.
+    \item Determine distance from the current position to the signal.
+    \item Retrieve the signal's current/predicted phase and cycle timing.
+    \item Estimate arrival time for candidate legal speeds ($\text{arrival time} = \text{distance}/\text{speed}$).
+    \item Estimate likely phase (green/red) and expected waiting time per candidate.
+    \item Select the legal speed minimizing a weighted cost over travel time, waiting time, and stop count, considering downstream signals.
+    \item Recompute whenever position, traffic, or signal data changes materially.
 \end{itemize}
+This is a prediction heuristic, not a guarantee of signal outcomes or a claim of novel research.
 
-\subsection{Web architecture %
+\subsection{System architecture %
 \BvrHint{\ldots web-based solution}}
-A typical 3-tier web architecture:
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Frontend:} responsive UI for citizens and staff (status pages, submission form, dashboard).
-    \item \textbf{Backend API:} authentication, complaint submission, status transitions, assignment logic.
-    \item \textbf{Database:} store users, complaints, status history, attachments metadata.
+    \item \textbf{Frontend:} map, route, signal markers, recommended speed, ETA, emergency notifications.
+    \item \textbf{Backend API:} route requests, signal-timing queries, optimization calculations, emergency events.
+    \item \textbf{Route/traffic services:} a mapping/routing API (e.g., OpenStreetMap-based, Mapbox) for road network, route, distance, coordinates; signal timing is simulated separately since such APIs rarely expose real-time signal-phase data.
+    \item \textbf{Database:} routes, simulated signal timing, requests, emergency events.
 \end{itemize}
 
 \subsection{CI/CD and fast delivery enabler}
-CI/CD will be used to:
 \begin{itemize}[leftmargin=0.7cm]
-    \item Automatically build and run tests on every change.
+    \item Build and test automatically on every change, including the optimization logic.
     \item Produce repeatable deployment artifacts to staging.
-    \item Enable safe and frequent releases of incremental features.
+    \item Enable safe, frequent releases of incremental features (multi-signal optimization, emergency coordination).
 \end{itemize}
 
 \section{Evaluation Criterion %
 \BvrHint{\ldots measurable and attributable}}
-We define success using measurable metrics tied to the core workflow.
+Success is measured by comparing the signal-aware strategy against a conventional constant-speed-limit strategy on identical simulated routes.
 
 \subsection{Primary evaluation metric}
-\textbf{Time-to-acknowledgement (TTA):} time between complaint submission and ``Received/Assigned'' status creation in the system.
-\begin{itemize}[leftmargin=0.7cm]
-    \item Target: median TTA $\le$ 2 hours during pilot window.
-    \item Attribution: measured from database timestamps (submission vs. first status update by staff).
-\end{itemize}
+\textbf{Total journey time:} time to traverse a test route source-to-destination. Objective: reduce total journey time relative to the conventional strategy, measured experimentally. Attribution: simulated start/end timestamps under identical test conditions.
 
 \subsection{Secondary evaluation metrics}
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Resolution time reduction:} reduce time-to-resolved compared to baseline process (even if baseline is collected via survey).
-    \item \textbf{Duplicate rate:} percentage of complaints flagged as duplicates and resolved without rework.
-    \item \textbf{User clarity:} citizen-reported clarity of status using a simple 1--5 feedback question.
-    \item \textbf{Reliability:} availability of staging/production for login and submission during business hours (e.g., $\ge$ 99\% uptime in pilot).
+    \item Average signal waiting time and number of complete stops per route.
+    \item Percentage of signals crossed during green phases.
+    \item Average speed and travel distance across strategies.
+    \item Emergency-vehicle travel-time improvement in the simulated coordination scenario.
 \end{itemize}
+No numerical improvement is assumed in advance; the prototype measures and compares these metrics experimentally.
 
 \subsection{Pilot validation plan %
 \BvrHint{\ldots high-level}}
 \begin{itemize}[leftmargin=0.7cm]
-    \item Recruit 10--20 pilot users (citizens) and 3--5 staff roles (department simulation if real staff unavailable).
-    \item Compare metrics before/after within the iteration window by logging baseline estimates via short interviews or existing process observations.
+    \item Define 3--5 test routes of varying length and signal density using simulated timing data.
+    \item Run each route under both strategies and log all metrics.
+    \item Gather informal driver feedback (5--10 participants) on clarity and usefulness.
 \end{itemize}
 
 \section{Scalability %
 \BvrHint{\ldots with foresight}}
-The proposition should scale in both theoretical and practical senses.
-
 \begin{enumerate}[leftmargin=0.7cm]
-    \item \textbf{Scalable (theoretically):} The system should support growth in number of complaints and concurrent dashboard usage by:
-    \begin{itemize}[leftmargin=0.7cm]
-        \item decoupling components (frontend/backend),
-        \item enabling pagination and indexing for common queries,
-        \item using stateless API design.
-    \end{itemize}
-    
-    \item \textbf{Operationally deployable (practically):} The system should run on common web hosting:
-    \begin{itemize}[leftmargin=0.7cm]
-        \item managed database,
-        \item containerized or platform-hosted deployment,
-        \item CI/CD pipeline for staging/production.
-    \end{itemize}
+    \item \textbf{Scalable (theoretically):} decoupled frontend/backend/optimization engine; indexed queries for signals/routes; stateless API design; caching of frequent route/signal data.
+    \item \textbf{Operationally deployable (practically):} managed database; containerized/platform-hosted deployment; CI/CD pipeline; modular services so signal, route, and emergency data scale independently.
 \end{enumerate}
 
 \section{Engine availability heuristic}
-A mature set of ``engines'' (tooling/services) is available to implement this as a web-based project:
-\begin{itemize}[leftmargin=0.7cm]
-    \item Web framework for REST APIs and templated/reactive pages.
-    \item Managed relational or document database.
-    \item Authentication approach (token-based or session-based).
-    \item Object storage for optional attachments (or local storage for pilot).
-    \item Test framework for unit/integration tests.
-    \item CI runner and staging deployment target.
-\end{itemize}
-We will use these mature components to focus on workflow design, correctness, and measurement rather than inventing new infrastructure.
+Mature tooling is available for this project: a web/mobile frontend framework; a backend REST framework; a mapping/routing API (road network, route, distance, coordinates -- not assumed to expose real-time signal phase); geolocation services; a managed database; a simulated signal-timing dataset built for the prototype; a test framework; and a CI/CD runner. We rely on these mature components to focus on optimization-logic correctness and workflow, not on inventing infrastructure or assuming access to real municipal signal controllers.
 
 \section{Project scope and deliverables %
 \BvrHint{\ldots iteration-friendly}}
 \subsection{Initial deliverable %
 \BvrHint{\ldots first iteration}}
 \begin{itemize}[leftmargin=0.7cm]
-    \item Citizen submission form + complaint ID generation
-    \item Staff workflow: update status and assignment
-    \item Citizen status page: view timeline/history
-    \item Basic logging and timestamps for TTA measurement
-    \item CI: build + backend unit tests + linting
-    \item CD to staging with a single command or pipeline job
+    \item Source/destination input and basic map interface; route generation via a routing API.
+    \item Simulated traffic-signal dataset for a test corridor.
+    \item Basic arrival-time calculation and speed recommendation for a single upcoming signal, capped at the speed limit.
+    \item Basic backend API with unit tests for the optimization logic; CI build + tests + linting.
 \end{itemize}
 
 \subsection{Subsequent deliverables}
 \begin{itemize}[leftmargin=0.7cm]
-    \item Lightweight duplicate suggestions with staff review
-    \item Notification layer (email/SMS optional in later iteration; can start with in-app notifications)
-    \item Admin dashboard for metrics and backlog
-    \item Improved search/filtering and indexed queries for scale readiness
+    \item Multi-signal optimization considering downstream signals.
+    \item Dynamic recalculation as the vehicle moves or conditions change.
+    \item Emergency-vehicle coordination module (simulated ambulance location, adjusted nearby recommendations).
+    \item Dashboard comparing signal-aware vs.\ conventional strategy; performance/metric logging; scalability improvements (caching, indexing).
 \end{itemize}
 
 \section{Risks and mitigations}
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Data privacy / consent:} minimize collected data; keep attachments optional; store only what is needed.
-    \item \textbf{Staff adoption:} provide an easy UI for status updates; keep workflow steps minimal; include shortcuts.
-    \item \textbf{Evaluation measurement ambiguity:} instrument timestamps and define clear status transitions before development begins.
-    \item \textbf{Operational issues in pilot:} use staging early; ensure CI/CD produces repeatable deployments.
+    \item \textbf{Signal data availability:} real-time phase data is rarely public. \emph{Mitigation:} simulated/controlled data, limitation stated clearly.
+    \item \textbf{Prediction uncertainty:} actual timing may differ from predicted. \emph{Mitigation:} express expected/estimated waiting time, not a guarantee; recalculate continuously.
+    \item \textbf{Mapping API limitations:} usage limits or missing traffic data. \emph{Mitigation:} fall back to open/simulated signal data.
+    \item \textbf{Safety:} must never encourage exceeding the speed limit. \emph{Mitigation:} engine constrains all speeds to the configured legal limit.
+    \item \textbf{Emergency-coordination realism:} real infrastructure/control is inaccessible. \emph{Mitigation:} simulated emergency-vehicle environment, framed as future-integrable rather than working today.
+    \item \textbf{Evaluation limitations:} a small prototype cannot reproduce city-scale traffic. \emph{Mitigation:} controlled simulations with clearly defined test scenarios.
 \end{itemize}
 
 \section{Summary}
-This project proposes a deployable web platform to reduce grievance handling delays in a tier-2/3 city context. It meets the course criteria by emphasizing time-to-value through rapid iterations, implementing CI/CD to support frequent safe releases, and using measurable evaluation criteria (especially time-to-acknowledgement). It remains focused on engineering workflow and scalability readiness rather than research-driven novelty.
+SyncDrive proposes a deployable navigation system that recommends a legal driving speed to reduce unnecessary signal stops, alongside conventional route selection. It emphasizes time-to-value through rapid iterations, CI/CD-backed releases, and measurable evaluation (primarily total journey time, plus waiting-time and stop-count metrics), while remaining realistic about data limitations and explicitly avoiding claims of guaranteed green signals, guaranteed ambulance priority, or control of real traffic infrastructure.
 
 \end{document}
