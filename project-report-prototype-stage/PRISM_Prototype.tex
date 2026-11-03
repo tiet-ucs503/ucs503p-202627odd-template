@@ -1,0 +1,675 @@
+\documentclass{tietreport}
+
+% Import images
+\usepackage{graphicx}
+
+% Bibliography configuration
+\usepackage[
+  date=year,
+  style=alphabetic,
+  backend=biber,
+  sorting=nty,
+  maxnames=5,
+  minnames=3,
+  maxalphanames=4,
+  minalphanames=3,
+  backref=true,
+  doi=false,
+  isbn=false,
+  url=false,
+  eprint=false
+]{biblatex}
+\addbibresource{references.bib}
+
+\setlength{\parindent}{0pt}
+%% ==================================================
+%% CUSTOMIZE THESE FIELDS FOR YOUR PROJECT
+%% ==================================================
+
+% Course/Lab header
+\TitlePageHeader{%
+  UCS503 - Software Engineering%
+}
+
+% Main project title
+\ProjectTitle{%
+  PRISM%
+}
+
+% Subtitle or project description
+\ProjectSubTitle{%
+  An Explainable Machine Learning Framework for District-Level Poverty and Development Risk Assessment in India%
+}
+
+% Student information (up to 4 students)
+\author{%
+  \texttt{1024160005} -  Amish Kapoor \\
+  \texttt{1024160009} -  Aryan Chaturvedi \\
+  \texttt{1024160003} -  Kushal \\
+}
+
+% Group number, degree, year, program
+\TitlePageSubText{%
+  Group: \texttt{L2(3P11)} BE Third Year, CSE%
+}
+
+% Faculty advisor/guide name
+\AdvisorName{%
+  Mr.Jeelani Asif%
+}
+
+% Evaluation period and department info
+\TitlePageFooterText{{%
+    \large Mid-Semester Evaluation \\[0.2cm]
+    \bfseries Computer Science and Engineering
+    Department%
+  } \\[0.15cm]
+  Thapar Institute of Engineering and Technology,
+  Patiala%
+}
+
+%% ==================================================
+
+\begin{document}
+
+% Generate title page
+\maketitle
+
+% Table of contents (auto-generated from chapters)
+\tableofcontents
+
+% ===== CHAPTER 1: INTRODUCTION =====
+
+\chapter{Introduction}
+
+\section{Background and Context}
+
+
+Poverty and uneven development remain significant challenges in India, where districts differ considerably in terms of education, healthcare, infrastructure, and household living conditions. Government development programmes aim to reduce these inequalities by directing resources towards regions that require greater attention. However, identifying such regions accurately requires reliable and comprehensive data.
+
+Traditional assessments of district-level development often depend on individual indicators or outdated datasets, such as Census 2011. Although these sources provide valuable information, they may not fully reflect recent changes in socioeconomic and health conditions. Additionally, relevant information is distributed across multiple government datasets, including the SDG India Index, Census, and National Family Health Survey (NFHS-5), making it difficult to obtain a unified view of district-level development.
+
+PRISM, which stands for Poverty Risk Identification through Statistical Mapping, proposes a data-driven machine learning framework to address this challenge. The project combines socioeconomic, health, demographic, and poverty-related indicators into a unified district-level dataset. Machine learning techniques are then used to identify development patterns, classify districts based on their development risk, and provide explanations for the resulting classifications.
+
+The proposed system focuses on data integration, clustering, classification, and explainability. Its results will be validated against the Government of India's Aspirational Districts Programme list to assess whether the identified districts align with an established development-focused government initiative. The objective is to develop a reproducible and interpretable system that can support evidence-based assessment of district-level development needs.
+
+\subsection{Problem Statement}
+
+Policymakers and development agencies face challenges in identifying districts that require greater development attention due to fragmented data sources, differences in district naming conventions, and the difficulty of analyzing multiple development indicators together. Census 2011, NFHS-5, and Multidimensional Poverty Index data provide valuable information about demographic conditions, healthcare, household amenities, and poverty. However, these datasets originate from different sources and must be cleaned, standardized, and integrated before they can be used for comprehensive district-level analysis.
+
+Another challenge is the identification of districts associated with the Aspirational Districts Programme. A machine learning model can assist in this classification, but its predictions should be evaluated against the official Aspirational Districts list. Additionally, classification results should be interpretable so that the major factors contributing to a district's predicted status can be understood.
+
+Therefore, there is a need for a unified and explainable machine learning framework that integrates Census 2011, NFHS-5, and MPI data, uses the Aspirational Districts list to create a target variable, and applies statistical and machine learning techniques to identify district-level development patterns and classify districts. PRISM addresses this problem through data fusion, preprocessing, clustering, classification, and feature-importance analysis.
+
+\section{Project Objectives}
+
+
+\begin{enumerate}
+    \item \textbf{To integrate multiple district-level datasets:} Combine Census 2011, NFHS-5, and Multidimensional Poverty Index data into a unified dataset using standardized state and district keys.
+
+    \item \textbf{To preprocess and ensure data quality:} Clean, normalize, and match district names across the different datasets to ensure accurate data integration and minimize inconsistencies.
+
+    \item \textbf{To analyze district-level development patterns:} Apply unsupervised machine learning techniques, including K-Means and hierarchical clustering, to group districts according to their demographic, socioeconomic, health, and poverty-related characteristics.
+
+    \item \textbf{To classify districts based on aspirational status:} Develop and compare supervised machine learning models, including Logistic Regression, Random Forest, and Support Vector Machine, using the \textit{is\_aspirational} target variable.
+
+    \item \textbf{To provide interpretable model predictions:} Identify the major features contributing to classification results through feature-importance analysis, enabling a better understanding of district-level development conditions.
+
+    \item \textbf{To evaluate the proposed framework:} Compare model predictions with the official Aspirational Districts list using appropriate classification metrics, including precision, recall, and F1-score.
+
+    \item \textbf{To develop a reproducible and accessible system:} Implement the data processing and machine learning pipeline using Python and open-source libraries, and present the results through a notebook or lightweight dashboard.
+\end{enumerate}
+
+% Document your SMART objectives (Specific,
+% Measurable, Achievable, Relevant, Time-bound)
+% clearly for your evaluators.
+
+% ===== CHAPTER 2: METHODOLOGY & DESIGN =====
+
+\chapter{Methodology and Design}
+
+\section{System Architecture}
+
+
+PRISM follows a modular, three-layer architecture consisting of the data layer, model layer, and presentation layer. The architecture is designed to integrate multiple district-level datasets, perform statistical and machine learning analysis, and generate interpretable results.
+
+The data layer is responsible for collecting and integrating Census 2011, NFHS-5, and Multidimensional Poverty Index (MPI) data. Census 2011 serves as the base dataset, while NFHS-5 and MPI provide additional health, nutrition, sanitation, and poverty-related indicators. The Aspirational Districts list is used to create the target variable, is\_aspirational.
+
+The model layer includes exploratory data analysis, data cleaning, feature engineering, clustering, classification, model evaluation, and explainability. Exploratory analysis is performed to understand the structure of the merged dataset, identify missing values, examine class imbalance, and detect relationships between numerical features. Data cleaning and feature selection are then carried out to prepare a reliable dataset for modeling.
+
+Unsupervised learning techniques, including K-Means and hierarchical clustering, are used to identify groups of districts with similar development characteristics. Supervised learning models, including Logistic Regression, Random Forest, and Support Vector Machine, are used to classify districts based on their aspirational status.
+
+The presentation layer provides visualizations, tables, and district-level summaries of the analysis. It presents clustering results, classification performance, and feature-importance information through a notebook or lightweight dashboard.
+
+The complete architecture follows a reproducible workflow in which preprocessing, model training, and evaluation can be repeated using the same input datasets and documented processing steps.
+
+\subsection{High-Level Design}
+
+The high-level design of PRISM is based on a sequential data processing and machine learning pipeline. The system begins with four major data sources: Census 2011, NFHS-5, Multidimensional Poverty Index (MPI), and the Aspirational Districts list.
+
+Census 2011 provides demographic, socioeconomic, workforce, and household-related information. NFHS-5 contributes health, nutrition, maternal and child health, immunisation, anaemia, and sanitation indicators. MPI provides multidimensional poverty measures, including headcount ratio, intensity, and MPI values for NFHS-4 and NFHS-5. The Aspirational Districts list provides the reference classification used to create the target variable.
+
+The datasets are cleaned and integrated using a standardized state and district key, dkey. This key helps distinguish districts with similar names across different states and supports reliable data merging. The NFHS-5 dataset is transformed from long format into a district-level format, where each district is represented by one row.
+
+After data integration, exploratory data analysis is performed to examine the dataset structure, missing values, numerical feature distributions, correlations, and the class balance of the target variable. Data cleaning includes handling missing values, converting suitable Census counts into rates, examining outliers, and removing unsuitable or redundant features.
+
+Feature engineering and selection are performed to prepare a manageable set of numerical features for modeling. Highly correlated and non-predictive identification columns are excluded from the modeling dataset while being retained for district-level reporting.
+
+The prepared features are scaled and used for unsupervised clustering through K-Means and hierarchical clustering. The resulting clusters are examined using clustering evaluation measures and district-level feature summaries.
+
+Supervised classification models, including Logistic Regression, Random Forest, and Support Vector Machine, are trained using the is\_aspirational target variable. Model performance is evaluated using precision, recall, F1-score, and confusion matrices. The predictions are compared with the official Aspirational Districts list.
+
+Finally, feature-importance analysis is performed to identify the major indicators contributing to the classification results. The results are presented through visualizations and district-level summaries to support an interpretable understanding of development patterns.
+
+\subsection{Technical Stack}
+
+\begin{itemize}
+    \item \textbf{Programming Language:} Python is used for data preprocessing, exploratory data analysis, feature engineering, machine learning, and visualization.
+
+    \item \textbf{Data Processing:} Pandas and NumPy are used for loading, cleaning, transforming, merging, and analyzing district-level datasets.
+
+    \item \textbf{Machine Learning:} Scikit-learn is used for data scaling, K-Means clustering, hierarchical clustering, Logistic Regression, Random Forest, Support Vector Machine, and model evaluation.
+
+    \item \textbf{Data Sources:} Census 2011, NFHS-5, Multidimensional Poverty Index (MPI), and the Aspirational Districts list are used for data integration and classification.
+
+    \item \textbf{Data Visualization:} Matplotlib and Seaborn are used to create graphs, charts, correlation visualizations, cluster summaries, and feature-importance plots.
+
+    \item \textbf{Development Environment:} Jupyter Notebook or Google Colab is used for interactive development, experimentation, and presentation of the machine learning workflow.
+
+    \item \textbf{Version Control:} Git may be used to track preprocessing scripts, experiments, and project development.
+\end{itemize}
+
+\section{Implementation Details}
+
+
+The implementation of PRISM is organized into a sequence of modules that transform raw district-level data into a unified dataset and subsequently apply statistical and machine learning techniques. The workflow includes exploratory data analysis, data cleaning, feature engineering, clustering, classification, evaluation, and explainability.
+
+The implementation emphasizes data quality and reproducibility. Each stage is designed to produce outputs that can be examined and evaluated before proceeding to the next stage. Identification columns such as state and district names are retained for reporting, while suitable numerical features are prepared for machine learning.
+
+The final outputs include district-level development clusters, classification results based on the aspirational status target, evaluation metrics, and feature-importance information.
+
+\subsection{Module 1: Core Functionality}
+
+
+The core functionality of PRISM involves data collection, integration, exploratory data analysis, data cleaning, and feature preparation.
+
+\textbf{Data Collection and Integration:}
+
+The Census 2011, NFHS-5, MPI, and Aspirational Districts datasets are loaded into Pandas DataFrames. Census 2011 serves as the base dataset, while NFHS-5 and MPI contribute additional development-related indicators. The Aspirational Districts list is used to create the binary target variable, is\_aspirational.
+
+\textbf{District Matching and Data Fusion:}
+
+The datasets are integrated using a standardized district key, dkey, created from state and district information. State and district names are normalized to reduce inconsistencies during merging. The NFHS-5 dataset is transformed from long format into a district-level format before integration.
+
+\textbf{Exploratory Data Analysis:}
+
+Exploratory data analysis is performed to understand the structure and quality of the merged dataset. This includes examining data types, descriptive statistics, missing values, numerical feature distributions, correlations, and the class balance of the target variable. The analysis helps identify potential data-quality issues before modeling.
+
+\textbf{Data Cleaning:}
+
+Missing values are examined and handled using a documented preprocessing strategy. Columns with excessive missingness may be excluded, while suitable numerical columns can be imputed using median values. Outliers are investigated to distinguish genuine district-level variations from possible data-entry errors.
+
+\textbf{Feature Engineering and Selection:}
+
+Relevant demographic, socioeconomic, health, nutrition, infrastructure, and poverty-related indicators are selected for modeling. Suitable Census count-based indicators are converted into rates where appropriate. Identification columns and highly redundant numerical features are excluded from the modeling dataset.
+
+The output of this module is a cleaned and prepared district-level dataset containing the selected features and the is\_aspirational target variable.
+
+\subsection{Module 2: Secondary Features}
+
+
+The secondary functionality of PRISM focuses on machine learning analysis, evaluation, explainability, and presentation of results.
+
+\textbf{Unsupervised Clustering:}
+
+K-Means clustering is applied to the prepared and scaled numerical features to group districts according to similarities in their demographic, socioeconomic, health, and poverty-related characteristics. Hierarchical clustering is used as an additional method for comparing district groupings. The number of clusters is selected using clustering evaluation techniques such as the elbow method and silhouette score.
+
+\textbf{Supervised Classification:}
+
+Logistic Regression, Random Forest, and Support Vector Machine models are trained to classify districts using the is\_aspirational target variable. Stratified cross-validation is used to obtain a more reliable estimate of model performance while accounting for the imbalance between aspirational and non-aspirational districts.
+
+\textbf{Model Evaluation:}
+
+The classification models are evaluated using precision, recall, F1-score, and confusion matrices. Accuracy is considered alongside these metrics but is not used as the sole evaluation measure because the target classes are imbalanced. Model predictions are compared with the official Aspirational Districts list to assess agreement with the reference classification.
+
+\textbf{Explainability:}
+
+Feature-importance analysis is performed to identify the major indicators contributing to classification results. Random Forest feature importance, and where appropriate permutation importance, can be used to examine the contribution of individual features. This helps provide an interpretable explanation of the factors associated with district classifications.
+
+\textbf{Validation and Robustness:}
+
+The pipeline is initially tested on a limited selection of states before being expanded to a larger set of districts. Model-flagged districts are compared with the official Aspirational Districts list, and mismatches are recorded for review. Additional checks may be performed to examine the stability of results when features or modeling choices are changed.
+
+\textbf{Visualization and Presentation:}
+
+The final results are presented through a map including charts, tables, cluster summaries, classification reports, and feature-importance visualizations. A notebook or lightweight dashboard can be used to allow users to explore district-level development patterns and understand model predictions.
+
+% ===== CHAPTER 3: RESULTS & EVALUATION =====
+
+\chapter{Results and Evaluation}
+
+\section{Testing Methodology}
+
+
+The testing methodology for PRISM focuses on evaluating the quality of the integrated dataset, the performance of clustering and classification models, and the interpretability of the resulting predictions. Testing is performed in multiple stages to ensure that the system produces reliable and reproducible results.
+
+\begin{itemize}
+    \item \textbf{Data Validation:} Verify that Census 2011, NFHS-5, MPI, and the Aspirational Districts datasets are correctly loaded, cleaned, and merged using the standardized district key, dkey. Check for duplicate districts, missing values, and inconsistencies in state and district names.
+
+    \item \textbf{Preprocessing Validation:} Verify that the NFHS-5 dataset is correctly transformed from long format into one row per district. Check the correctness of feature engineering, numerical transformations, and feature scaling.
+
+    \item \textbf{Clustering Testing:} Evaluate K-Means and hierarchical clustering using suitable clustering evaluation techniques, including the elbow method and silhouette score. Examine whether the resulting clusters represent meaningful differences in district-level development characteristics.
+
+    \item \textbf{Classification Testing:} Train and evaluate Logistic Regression, Random Forest, and Support Vector Machine models using the is\_aspirational target variable. Use stratified cross-validation to assess model performance while accounting for class imbalance.
+
+    \item \textbf{Model Evaluation:} Compare predicted district classifications with the official Aspirational Districts list using precision, recall, F1-score, and confusion matrices.
+
+    \item \textbf{Explainability Testing:} Examine feature-importance results to identify the indicators contributing to classification predictions. Verify that the reported features correspond to the input features used during model training.
+
+    \item \textbf{Reproducibility Testing:} Repeat the preprocessing and modeling workflow using documented steps and fixed random seeds where applicable. Check whether the results remain consistent across repeated runs.
+\end{itemize}
+
+\section{Performance Metrics}
+
+
+The performance of PRISM is evaluated using clustering and classification metrics. These metrics assess the quality of the identified district groups and the ability of the supervised learning models to classify districts according to their aspirational status.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Metric} & \textbf{Purpose} & \textbf{Achieved} \\
+\hline
+Silhouette Score & Evaluate clustering quality & To be measured \\
+\hline
+Accuracy & Overall classification correctness & To be measured \\
+\hline
+Precision & Correctness of positive predictions & To be measured \\
+\hline
+Recall & Identification of positive districts & To be measured \\
+\hline
+F1-Score & Balance between precision and recall & To be measured \\
+\hline
+\end{tabular}
+\caption{Performance Metrics Used in PRISM}
+\end{table}
+
+
+The clustering results are evaluated using the silhouette score, which measures the separation and cohesion of the identified clusters. The classification models are evaluated using accuracy, precision, recall, and F1-score. Confusion matrices are also used to examine the distribution of correct and incorrect predictions across the two target classes.
+
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} \\
+\hline
+Logistic Regression & -- & -- & -- & -- \\
+\hline
+Random Forest & -- & -- & -- & -- \\
+\hline
+Support Vector Machine & -- & -- & -- & -- \\
+\hline
+\end{tabular}
+\caption{Classification Model Comparison}
+\end{table}
+
+The final performance values will be recorded after the completion of model training and evaluation.
+
+
+\section{Analysis}
+
+
+The analysis of PRISM focuses on understanding the results obtained from data integration, clustering, classification, and explainability.
+
+\textbf{Data Integration and Preprocessing:}
+
+The integration of Census 2011, NFHS-5, and MPI data produces a unified district-level dataset containing demographic, socioeconomic, health, sanitation, and multidimensional poverty indicators. The Aspirational Districts list is used to create the is\_aspirational target variable. The standardized dkey helps ensure that districts with similar names across different states are correctly matched.
+
+\textbf{Clustering Analysis:}
+
+K-Means and hierarchical clustering are used to identify groups of districts with similar development characteristics. The resulting clusters are analyzed using feature summaries and clustering evaluation measures. These results help examine variations in district-level development conditions across the integrated dataset.
+
+\textbf{Classification Analysis:}
+
+Logistic Regression, Random Forest, and Support Vector Machine models are evaluated for their ability to classify districts according to the is\_aspirational target variable. Precision, recall, F1-score, and confusion matrices are used to examine the classification results. The performance of the models is compared to understand their behavior on the prepared dataset.
+
+\textbf{Explainability Analysis:}
+
+Feature-importance analysis is used to identify the indicators contributing to classification predictions. The results help explain the relationship between the input features and the predicted aspirational status of districts.
+
+\textbf{Objective Assessment:}
+
+The project objectives are assessed by examining whether the datasets were successfully integrated, the preprocessing pipeline was completed, meaningful district-level patterns were identified, and the classification models were evaluated. The final assessment is based on the actual experimental results obtained during implementation.
+
+\textbf{Limitations:}
+
+The analysis is subject to limitations associated with the availability and quality of the underlying datasets. Census 2011 provides historical demographic information, while NFHS-5 and MPI may use different survey periods and methodologies. Differences in data coverage, missing values, and district boundaries may affect the interpretation of the integrated dataset. Additionally, classification results indicate statistical associations with the target variable and should not be interpreted as proof of causation or as a direct measure of future poverty risk.
+
+% ===== CHAPTER 4: CONCLUSION =====
+
+\chapter{Conclusion}
+
+\section{Summary of Work}
+
+
+PRISM, which stands for Poverty Risk Identification through Statistical Mapping, was developed as a data-driven machine learning framework for analyzing district-level development conditions in India. The project integrates four major data sources: Census 2011, NFHS-5, Multidimensional Poverty Index (MPI) data, and the Aspirational Districts list.
+
+Census 2011 serves as the base dataset and provides demographic, socioeconomic, workforce, and household-related indicators. NFHS-5 contributes health, nutrition, maternal and child health, immunisation, anaemia, and sanitation indicators. MPI data provides multidimensional poverty measures, including MPI values, headcount ratios, and intensity measures. The Aspirational Districts list is used to create the binary target variable, is\_aspirational.
+
+The datasets are integrated using a standardized state and district key, dkey, to ensure accurate matching and avoid inconsistencies between districts with similar names. The NFHS-5 dataset is transformed from long format into a district-level format before being merged with the other datasets.
+
+The project workflow includes exploratory data analysis, data cleaning, feature engineering, feature selection, and feature scaling. Unsupervised machine learning techniques are used to identify groups of districts with similar development characteristics, while supervised learning models are used to classify districts according to their aspirational status.
+
+Finally, model evaluation and feature-importance analysis are used to assess classification performance and identify the indicators contributing to the predictions. The project provides a structured and reproducible approach to integrating government datasets and analyzing district-level development patterns.
+
+\section{Key Findings}
+
+
+\begin{itemize}
+    \item \textbf{Finding 1:} Integrating Census 2011, NFHS-5, and MPI data provides a comprehensive district-level dataset containing demographic, socioeconomic, health, sanitation, and multidimensional poverty indicators.
+
+    \item \textbf{Finding 2:} Standardizing state and district names and using the dkey helps improve the reliability of dataset integration, particularly for districts with similar names across different states.
+
+    \item \textbf{Finding 3:} Clustering techniques provide a way to examine similarities and differences between districts based on their development-related characteristics, while classification models support the analysis of aspirational district status.
+
+    \item \textbf{Finding 4:} Feature-importance analysis helps identify the indicators associated with classification predictions and improves the interpretability of the machine learning workflow.
+
+    \item \textbf{Finding 5:} The integration of multiple government datasets creates opportunities for more detailed district-level analysis than relying on a single source of information.
+\end{itemize}
+
+\section{Future Work and Recommendations}
+
+
+PRISM can be extended in several ways to improve its functionality, scalability, and practical usefulness.
+
+\begin{enumerate}
+    \item \textbf{Data Updates:} Incorporate newer government datasets and future survey releases to improve the timeliness of district-level development analysis.
+
+    \item \textbf{Additional Features:} Include further indicators related to education, healthcare, employment, infrastructure, and household conditions to expand the scope of the analysis.
+
+    \item \textbf{Advanced Machine Learning:} Explore additional classification and clustering techniques, hyperparameter tuning, and ensemble methods to evaluate alternative modeling approaches.
+
+    \item \textbf{Improved Explainability:} Incorporate advanced explainability techniques, such as SHAP, to provide more detailed explanations of individual district-level predictions.
+
+    \item \textbf{Geographical Visualization:} Develop interactive maps to display district-level clusters, classification results, and important development indicators.
+
+    \item \textbf{Scalability:} Improve the data processing pipeline to support larger datasets, additional indicators, and future district boundary changes.
+
+    \item \textbf{Dashboard Development:} Develop an interactive dashboard that allows users to explore district profiles, compare development indicators, and examine model predictions.
+
+    \item \textbf{Real-World Application:} Explore how the framework can support evidence-based development assessment and prioritization by government agencies and researchers.
+\end{enumerate}
+
+\section{Final Remarks}
+
+
+PRISM demonstrates the application of data integration, statistical analysis, and machine learning to the study of district-level development conditions in India. By combining Census 2011, NFHS-5, MPI, and Aspirational Districts data, the project establishes a structured framework for analyzing demographic, socioeconomic, health, and poverty-related indicators.
+
+The project also highlights the importance of data preprocessing, reliable district matching, and interpretable machine learning in developing meaningful analytical systems. The use of clustering, classification, and feature-importance analysis provides different perspectives on district-level development patterns.
+
+Although the framework is subject to limitations associated with data availability, survey periods, and district-level coverage, it provides a foundation for further research and development. Future improvements in data updates, geographical visualization, and model explainability can enhance its practical application.
+
+Overall, the project provides an opportunity to apply machine learning concepts to a real-world socioeconomic problem while developing skills in data engineering, exploratory analysis, model evaluation, and explainable artificial intelligence.
+
+% ===== BIBLIOGRAPHY =====
+
+% Print bibliography with heading in TOC
+\printbibliography[heading=bibintoc]
+
+\end{document}
+\documentclass{tietreport}
+
+% Import images
+\usepackage{graphicx}
+
+% Bibliography configuration
+\usepackage[
+  date=year,
+  style=alphabetic,
+  backend=biber,
+  sorting=nty,
+  maxnames=5,
+  minnames=3,
+  maxalphanames=4,
+  minalphanames=3,
+  backref=true,
+  doi=false,
+  isbn=false,
+  url=false,
+  eprint=false
+]{biblatex}
+\addbibresource{references.bib}
+
+%% ==================================================
+%% CUSTOMIZE THESE FIELDS FOR YOUR PROJECT
+%% ==================================================
+
+% Course/Lab header
+\TitlePageHeader{%
+  Your Course Code - Course Title%
+}
+
+% Main project title
+\ProjectTitle{%
+  Your Project Title Here%
+}
+
+% Subtitle or project description
+\ProjectSubTitle{%
+  A Descriptive Subtitle for Your Work%
+}
+
+% Student information (up to 4 students)
+\author{%
+  \texttt{102XXXXXXX} Student Name One \\
+  \texttt{102XXXXXXX} Student Name Two \\
+  \texttt{102XXXXXXX} Student Name Three \\
+  \texttt{102XXXXXXX} Student Name Four%
+}
+
+% Group number, degree, year, program
+\TitlePageSubText{%
+  Group: \texttt{XXXX} BE Third Year, CSE%
+}
+
+% Faculty advisor/guide name
+\AdvisorName{%
+  Dr. Faculty Member Name%
+}
+
+% Evaluation period and department info
+\TitlePageFooterText{{%
+    \large Mid-Semester Evaluation \\[0.2cm]
+    \bfseries Computer Science and Engineering
+    Department%
+  } \\[0.15cm]
+  Thapar Institute of Engineering and Technology,
+  Patiala%
+}
+
+%% ==================================================
+
+\begin{document}
+
+% Generate title page
+\maketitle
+
+% Table of contents (auto-generated from chapters)
+\tableofcontents
+
+% ===== CHAPTER 1: INTRODUCTION =====
+
+\chapter{Introduction}
+
+\section{Background and Context}
+
+Begin your introduction here. Provide context
+for your project and explain why it matters.
+This section should clearly establish the
+problem or opportunity your project addresses.
+
+\subsection{Problem Statement}
+
+Define the specific problem your project
+tackles. Be precise and provide relevant
+background information that helps readers
+understand the scope and significance.
+
+\section{Project Objectives}
+
+\begin{enumerate}
+  \item \textbf{Objective 1:} State your first
+    specific, measurable objective.
+  \item \textbf{Objective 2:} State your second
+    objective.
+  \item \textbf{Objective 3:} State your third
+    objective.
+\end{enumerate}
+
+Document your SMART objectives (Specific,
+Measurable, Achievable, Relevant, Time-bound)
+clearly for your evaluators.
+
+% ===== CHAPTER 2: METHODOLOGY & DESIGN =====
+
+\chapter{Methodology and Design}
+
+\section{System Architecture}
+
+Describe your overall system design. You can
+reference figures and tables in your document:
+
+\subsection{High-Level Design}
+
+Explain the major components and how they
+interact. This section demonstrates your
+understanding of the problem and your
+solution approach.
+
+\subsection{Technical Stack}
+
+\begin{itemize}
+  \item \textbf{Framework/Language:} List your
+    primary technologies.
+  \item \textbf{Database:} Specify database
+    systems if applicable.
+  \item \textbf{Tools:} List development and
+    testing tools used.
+  \item \textbf{Libraries:} Note key libraries
+    or frameworks.
+\end{itemize}
+
+\section{Implementation Details}
+
+\subsection{Module 1: Core Functionality}
+
+Describe the implementation of your first
+major module. Include technical details about
+algorithms, data structures, or design
+patterns used.
+
+\subsection{Module 2: Secondary Features}
+
+Continue documenting your implementation
+by module, demonstrating the complexity and
+depth of your work.
+
+% ===== CHAPTER 3: RESULTS & EVALUATION =====
+
+\chapter{Results and Evaluation}
+
+\section{Testing Methodology}
+
+Describe your testing strategy:
+
+\begin{itemize}
+  \item \textbf{Unit Testing:} How you tested
+    individual components.
+  \item \textbf{Integration Testing:} How you
+    verified components work together.
+  \item \textbf{Performance Testing:} How you
+    measured system performance.
+  \item \textbf{User Testing:} If applicable,
+    how users evaluated your system.
+\end{itemize}
+
+\section{Performance Metrics}
+
+Present your results clearly with tables and
+figures. For example:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|r|r|}
+  \hline
+  \textbf{Metric} & \textbf{Target} &
+  \textbf{Achieved} \\
+  \hline
+  Response Time & $< 100$ms & $85$ms \\
+  \hline
+  Accuracy & $> 95\%$ & $97.2\%$ \\
+  \hline
+  Throughput & $1000$ req/s & $1250$ req/s \\
+  \hline
+\end{tabular}
+\caption{Performance Results Summary}
+\label{tab:performance}
+\end{table}
+
+\section{Analysis}
+
+Analyze your results:
+
+\begin{itemize}
+  \item Did you meet your objectives?
+  \item Where did you exceed expectations?
+  \item What challenges did you encounter?
+  \item How did you resolve them?
+\end{itemize}
+
+% ===== CHAPTER 4: CONCLUSION =====
+
+\chapter{Conclusion}
+
+\section{Summary of Work}
+
+Summarize what you accomplished. Remind
+readers of your objectives and explain which
+ones you met.
+
+\section{Key Findings}
+
+\begin{itemize}
+  \item \textbf{Finding 1:} State a significant
+    result or insight from your work.
+  \item \textbf{Finding 2:} Describe another
+    important discovery.
+  \item \textbf{Finding 3:} Highlight any
+    unexpected results.
+\end{itemize}
+
+\section{Future Work and Recommendations}
+
+Discuss how others could extend or improve
+your work:
+
+\begin{enumerate}
+  \item Potential enhancements to your system~\cite{latex2e}
+  \item Alternative approaches worth exploring
+  \item Scalability improvements
+  \item Integration with other systems
+  \item Real-world deployment considerations
+\end{enumerate}
+
+\section{Final Remarks}
+
+Conclude with reflections on what you learned
+and the impact of your work.
+
+% ===== BIBLIOGRAPHY =====
+
+% Print bibliography with heading in TOC
+\printbibliography[heading=bibintoc]
+
+\end{document}
