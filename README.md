@@ -1,5 +1,7 @@
 # SyncDrive
 
+**Live demo: [https://parthpuri.github.io/SyncDrive/](https://parthpuri.github.io/SyncDrive/)**
+
 **Signal-Aware Navigation and Speed Optimization System**
 
 > Drive slower. Stop less. Arrive faster.
@@ -75,9 +77,9 @@ SyncDrive/
 │   └── 08-er.md                        ← Entity-Relationship diagram
 │
 ├── journals/
-│   ├── 1024030177-tarun/               ← 5 weekly entries (W1–W5)
+│   ├── 1024030177-tarun/               ← 7 weekly entries (W1–W7)
 │   ├── 1024030178-parth/               ← 7 weekly entries (W1–W7)
-│   └── 1024031077-adhiraj/             ← 5 weekly entries (W1–W5)
+│   └── 1024031077-adhiraj/             ← 7 weekly entries (W1–W7)
 │
 ├── project-proposal/
 │   ├── main.tex
@@ -176,7 +178,7 @@ All UML and architecture diagrams are in [`diagrams/`](./diagrams/README.md), re
 
 ## Journals
 
-Weekly development journals for each team member (Parth: W1–W7, others: W1–W5):
+Weekly development journals for each team member (W1–W7):
 
 - [Tarun's Journal](./journals/1024030177-tarun/index.md)
 - [Parth's Journal](./journals/1024030178-parth/index.md)
