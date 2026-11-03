@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Hero } from "@/components/landing/hero";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { ItineraryPreview } from "@/components/landing/itinerary-preview";
@@ -28,6 +29,7 @@ export default function Home() {
           Trip<span className="text-orange-600">Ease</span>
         </span>
         <nav className="flex items-center gap-3 text-sm">
+          <ThemeToggle />
           <Link
             href="/sign-in"
             className="rounded-full px-4 py-2 font-medium text-zinc-700 hover:bg-zinc-900/5 dark:text-zinc-300 dark:hover:bg-white/5"

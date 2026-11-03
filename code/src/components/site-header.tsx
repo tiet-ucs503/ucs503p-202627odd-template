@@ -8,6 +8,7 @@ import { useAuth } from "@/components/auth-provider";
 import { signOutUser } from "@/lib/services/auth";
 import { clearAllConversations } from "@/lib/travis-storage";
 import { Button } from "@/components/ui";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 /**
@@ -92,6 +93,8 @@ export function SiteHeader() {
               <span className="hidden text-zinc-500 lg:inline">
                 {user.displayName || user.email}
               </span>
+              <ThemeToggle />
+
               <Button
                 variant="secondary"
                 size="sm"

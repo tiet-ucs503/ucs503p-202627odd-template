@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
+/*
+ * Dark mode is keyed to `data-theme` on <html>, not to the device setting
+ * directly, so a person can override their device either way. The attribute
+ * is set before first paint (see `lib/theme.ts`).
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   --background: #fffaf5;
   --foreground: #1c1917;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -13,11 +21,11 @@
   --font-display: var(--font-fraunces);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0c0a09;
-    --foreground: #f5f0ea;
-  }
+[data-theme="dark"] {
+  --background: #0c0a09;
+  --foreground: #f5f0ea;
+  /* Scrollbars, form controls and the autofill tint follow the page. */
+  color-scheme: dark;
 }
 
 body {
