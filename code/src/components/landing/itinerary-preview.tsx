@@ -26,13 +26,13 @@ export function ItineraryPreview() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.5 }}
-        className="mx-auto max-w-2xl text-center"
+        className="max-w-xl"
       >
         <h2 className="font-display text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-50">
-          See it come together
+          A sample itinerary
         </h2>
         <p className="mt-3 text-zinc-600 dark:text-zinc-400">
-          A real example: 8 days across Bangkok and Phuket. Click a day to preview it.
+          Eight days across Bangkok and Phuket, built from demo data. Choose a day to see what is in it.
         </p>
       </motion.div>
 
@@ -41,11 +41,11 @@ export function ItineraryPreview() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6 }}
-        className="mx-auto mt-12 max-w-3xl overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-xl shadow-zinc-900/5 dark:border-zinc-800 dark:bg-zinc-900"
+        className="mt-10 overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-xl shadow-zinc-900/5 dark:border-zinc-800 dark:bg-zinc-900"
       >
         <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-5 dark:border-zinc-800">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">Thailand</p>
+            <p className="text-sm font-semibold text-orange-600">Thailand</p>
             <p className="text-sm text-zinc-500">8 days · 2 cities</p>
           </div>
           <div className="hidden items-center gap-2 text-sm text-zinc-400 sm:flex">

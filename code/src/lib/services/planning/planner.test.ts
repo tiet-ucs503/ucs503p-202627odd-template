@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { resolveCountry } from "@/lib/countries";
 import { planCitiesDeterministically } from "@/lib/services/planning/fallback-planner";
 import { validateCityAllocation } from "@/lib/services/planning/validate";
 import { splitDaysAcrossCities } from "@/lib/services/planning/split-days";
@@ -49,13 +50,47 @@ describe("fallback planner", () => {
     expect(longer.reduce((s, c) => s + c.days, 0)).toBe(6);
   });
 
-  it("does not invent city names for unknown destinations", () => {
+  it("splits a supported country across its real cities", () => {
     const cities = planCitiesDeterministically(request({ destination: "Italy" }));
-    // Earlier iterations produced "Italy City"/"Italy Coast", which look like
+    expect(cities.map((c) => c.name)).toEqual(["Rome", "Florence", "Venice"]);
+    expect(cities.reduce((sum, c) => sum + c.days, 0)).toBe(9);
+    expect(cities.every((c) => c.days >= 2)).toBe(true);
+  });
+
+  it("uses fewer cities on a short trip, so no stop gets less than two days", () => {
+    const short = planCitiesDeterministically(request({ destination: "Italy", dayCount: 4 }));
+    expect(short.map((c) => c.name)).toEqual(["Rome", "Florence"]);
+
+    const tiny = planCitiesDeterministically(request({ destination: "Italy", dayCount: 2 }));
+    expect(tiny).toHaveLength(1);
+    expect(tiny[0].days).toBe(2);
+  });
+
+  it("works from a place inside a supported country, as older trips store it", () => {
+    const cities = planCitiesDeterministically(request({ destination: "Goa, India" }));
+    expect(cities.map((c) => c.name)[0]).toBe("Delhi");
+  });
+
+  it("gives a one-city country one stop for the whole trip", () => {
+    const cities = planCitiesDeterministically(request({ destination: "Singapore", dayCount: 5 }));
+    expect(cities).toEqual([expect.objectContaining({ name: "Singapore", days: 5 })]);
+  });
+
+  it("does not invent city names for places it has no list for", () => {
+    const cities = planCitiesDeterministically(request({ destination: "Narnia" }));
+    // Earlier iterations produced "Narnia City"/"Narnia Coast", which look like
     // real places but aren't. One honest base is preferred over two fictions.
     expect(cities).toHaveLength(1);
-    expect(cities[0].name).toBe("Italy");
+    expect(cities[0].name).toBe("Narnia");
     expect(cities[0].days).toBe(9);
+  });
+
+  it("only ever names cities from the country's own list", () => {
+    for (const destination of ["France", "Japan", "Peru", "Kenya"]) {
+      const names = planCitiesDeterministically(request({ destination })).map((c) => c.name);
+      const known = resolveCountry(destination)!.cities.map((c) => c.name);
+      for (const name of names) expect(known, `${destination}: ${name}`).toContain(name);
+    }
   });
 });
 

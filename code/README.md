@@ -12,6 +12,12 @@ Tell TripEase where you want to go → it plans it → you explore it → edit i
 
 - **AI itinerary generation** — a destination, dates, budget and a handful of
   travel-style preferences turn into a full multi-city, day-by-day plan.
+- **Travis, the trip assistant** — for a traveller who hasn't decided yet. Ask
+  where to go this summer, or when somewhere usually costs less, and Travis
+  suggests up to three places with the best months to go; one click turns a
+  suggestion into a trip. Travis never states a price: cost is only ever
+  "lower", "typical" or "higher" for the time of year, with the reason (see
+  "Travis, the trip assistant" below).
 - **Budget-aware planning** — every hotel, meal and activity rolls up into a
   categorized budget (flights, hotels, food, activities, transport, shopping,
   misc, buffer) that recalculates on every edit, with deterministic "ways to
@@ -131,7 +137,9 @@ GROQ_MODEL=openai/gpt-oss-120b
 
 Server-only, never `NEXT_PUBLIC_`. `AI_PROVIDER=mock` runs a deterministic
 stand-in with no network or key; leaving it unset uses the deterministic
-planner directly.
+planner directly. The same variables switch on Travis (see "Travis, the trip
+assistant"): with a key it is a live assistant, with `mock` it is demo mode, and
+with neither it tells the traveller it is unavailable.
 
 Providers live behind one interface (`lib/services/ai/provider.ts`) and are
 chosen in `getAIProvider()`. The city planner depends on `AIProvider` and
@@ -155,6 +163,85 @@ Cities you keep hold on to their existing activities: only new or renamed
 cities (and extra days added to an existing one) cost a fresh places lookup,
 so editing the city list doesn't discard the rest of your work.
 
+## Travis, the trip assistant
+
+Travis is the chat on the **Ask Travis** page. It is for a traveller who
+hasn't decided where to go or when: it suggests places and the best time of
+year, says when that time usually costs less, and hands a chosen suggestion to
+the new-trip wizard. It works before a trip exists and, in this iteration,
+changes nothing. (Asking Travis to edit a trip from inside the trip page is
+the next step.)
+
+```
+question → /api/travis/chat → login → rate limit → Zod
+        → AI proposes → Zod → price guard (one retry) → dates worked out by us
+        → suggestion cards → "Plan this trip" → wizard, pre-filled
+```
+
+It follows the same rule as the city planner: **the AI proposes, TripEase
+decides.** The model only ever returns a short reply and up to three
+structured suggestions, and nothing it says reaches the page unchecked:
+
+- **No prices, ever.** The prompt forbids them, but a prompt is a request, not
+  a guarantee, so `services/travis/price-guard.ts` looks for money amounts
+  ("$300", "₹40,000", "5,000 INR", "2 lakh") in every piece of text. If it finds
+  one the model is asked again once; if it still quotes one, the sentence is
+  cut out. Cost is only ever *lower / typical / higher than the rest of that
+  destination's year*, with a seasonal reason. The check is narrow on purpose:
+  "7 days", "June 2027" and "25–30°C" are left alone.
+- **Dates are ours.** The model only says months ("November to February"). The
+  dates on a card are worked out by `services/travis/dates.ts` from those
+  months and today's date: never in the past, never sooner than 14 days away,
+  inside the window when the trip fits, otherwise the next year's. Models are
+  bad at calendars; this keeps them out of it.
+- **Destinations are plain names.** "Japan (Tokyo and surrounding)" becomes
+  "Japan", because the wizard passes the name straight to the city planner.
+- **Nothing is claimed that isn't known.** Travis says it can't see live fares
+  or availability, never claims to have searched or booked anything, and the
+  page labels cost and weather as a typical year, not live prices or a forecast.
+- **The conversation is untrusted input.** The client can only send `user` and
+  `assistant` messages (a `system` message is rejected), length and count are
+  capped, and an attempt to talk the model out of its rules stays in the user
+  role. Travis's own earlier turns carry the names of the places it suggested,
+  in a fixed format added by the server, so "which of those is cheapest?" works.
+
+**When Travis can't answer** — no AI configured, the model is busy or slow, or
+its answer is unusable — the page says so in plain words, offers *Try again*
+where that could help (never twice for the same message, and never for a quota
+or timeout, where asking again only costs more), and offers to plan the trip
+without Travis. The rest of TripEase doesn't depend on it. Unlike the city
+planner there is no deterministic fallback: a conversation can't be faked with
+rules, and pretending would be worse than saying so.
+
+**Privacy.** Nothing about a conversation is stored on the server and message
+text is never logged (only a failure category is). The conversation is kept in
+the browser tab's session storage so a refresh doesn't lose it, and is gone when
+the tab closes. Because a tab can outlive a person, it is stored under the
+signed-in account's id (so whoever signs in next on a shared machine never sees
+it) and is cleared on sign-out. Messages are sent to the AI provider (Groq) to
+be answered.
+
+**Limits.** Each person gets 20 messages per 10 minutes
+(`lib/server/rate-limit.ts`). That limiter lives in server memory, so on a
+serverless host each instance counts separately: it stops runaway loops and
+casual abuse, not a determined attacker, and the model provider's own quota is
+the real ceiling. Groq's free tier allows 8,000 tokens a minute for the whole
+project, which is roughly four Travis messages a minute, so several people
+using it at once will see "busy". Answers are capped at 1,500 tokens and the
+model is asked to think briefly, to stay inside that.
+
+**Demo mode.** With `AI_PROVIDER=mock`, Travis answers from a small catalogue of
+canned seasonality (`lib/mock-data/travis-demo.ts`) through the *same* pipeline,
+and the page says "Demo mode" so nobody mistakes it for a live assistant. With
+no `AI_PROVIDER` at all, Travis says it is unavailable. No new environment
+variables were added: it uses the same `AI_PROVIDER`, `GROQ_API_KEY` and
+`GROQ_MODEL` as the city planner.
+
+**Honest limits of the content.** Seasons, weather and cost labels come from
+the model's general knowledge. They are hedged and labelled, but they can be
+wrong and nothing checks them against data. Destination names aren't verified
+either; an invented place would only show up when the trip is planned.
+
 ## API security
 
 Every route that spends external quota requires a Firebase ID token:
@@ -165,6 +252,7 @@ Every route that spends external quota requires a Firebase ID token:
 | `/api/trips/generate` | Bearer ID token → 401 without one |
 | `/api/trips/rebuild` | Bearer ID token → 401 without one |
 | `/api/places/search` | Bearer ID token → 401 without one |
+| `/api/travis/chat` | Bearer ID token → 401 without one; 20 messages per 10 minutes per user → 429 |
 | `/api/places/photo` | HMAC-signed URL → 403 without a valid signature |
 
 The browser attaches the token via `lib/api-client.ts`; the server verifies
@@ -369,6 +457,10 @@ app works offline aside from Firebase:
   anything without a verifiable source carries no link and is tagged
   **"Demo data"** in the UI. Nothing is ever presented as a verified fact
   it isn't.
+- **Travis** answers from a small canned catalogue of seasons and cost
+  patterns (`lib/mock-data/travis-demo.ts`) when `AI_PROVIDER=mock`, through the
+  same checks as a live model, and the page says "Demo mode". With no AI
+  configured at all it says it is unavailable and points to planning by hand.
 - **Map view** is a real Leaflet/OpenStreetMap map either way — it needs no
   credentials — but in mock mode only the places that carry genuine
   coordinates get a pin (see "The map").
@@ -383,19 +475,22 @@ src/
   app/
     (auth)/                    sign-in, sign-up — redirect to /dashboard if signed in
     (app)/                     gated by <RequireAuth>
-      dashboard/                trip list + "create new trip"
+      dashboard/                trip list + the two ways to start a trip
+      travis/                   Ask Travis — the chat page
       trips/new/                the multi-step create-trip wizard
       trips/[tripId]/           the roadmap / budget / map trip view
     api/trips/plan/             city planning endpoint (AI, then validation, then fallback)
     api/trips/generate/         itinerary generation endpoint
     api/trips/rebuild/          rebuilds new or changed cities after "Edit cities"
+    api/travis/chat/            one turn of Travis (auth, rate limit, AI, checks)
     api/places/search/          server-side place search for the "replace with a real place" picker
     api/places/photo/           server-side proxy for Google Places photos (keeps the API key off the client)
     page.tsx                    landing page
   components/
     landing/                   hero, how-it-works, itinerary + budget previews, features, CTA
-    dashboard/                 trip card
-    trips/wizard/               wizard shell, steps, generation loader
+    dashboard/                 trip card, start card (the two ways to begin)
+    travis/                    chat container, message, suggestion card, composer
+    trips/wizard/               wizard shell, steps, generation loader, initial-data (draft → wizard)
     roadmap/                   trip header, city section, city manager ("Edit cities"), day view,
                                activity editor/row, hotel editor, place search,
                                travel-segment row + feasibility notes
@@ -407,11 +502,15 @@ src/
     firebase.ts                 SDK initialisation (+ emulator switch)
     collections.ts               Firestore collection paths
     date.ts, utils.ts            date + formatting helpers
-    draft-storage.ts             carries a trip idea from the landing page through sign-up
+    draft-storage.ts             carries a trip idea from the landing page or Travis into the wizard
+    travis-client.ts             sends a conversation to Travis (history → request messages)
+    travis-draft.ts              a Travis suggestion → a pre-filled wizard draft
+    travis-storage.ts            keeps the conversation in session storage, validated on read
     api-client.ts                attaches the Firebase ID token to API calls
     server/
       firebase-auth.ts           verifies Firebase ID tokens in the API routes
       photo-signing.ts           signs and checks /api/places/photo links
+      rate-limit.ts              per-user sliding-window limiter (best-effort, in memory)
     mock-data/                  curated destination content + city list, mock FX rates
     services/
       auth.ts                    the ONLY place Firebase Auth is touched (unchanged)
@@ -422,7 +521,13 @@ src/
         provider.ts               the AIProvider interface + shared planner prompt
         groq-provider.ts          Groq, with JSON-schema-constrained output
         mock-provider.ts          deterministic stand-in (tests, AI_PROVIDER=mock)
+        travis-prompt.ts          Travis's instructions + JSON schema, shared by all providers
         index.ts                  getAIProvider() — picks a provider from env vars
+      travis/
+        index.ts                  chatWithTravis() — AI, then checks, one retry
+        sanitize.ts               dedupe, plain destination names, derived dates, price redaction
+        price-guard.ts            recognises amounts of money in text
+        dates.ts                  best months → real dates; window labels
       planning/
         index.ts                  planCities() — AI, then validation, then fallback
         fallback-planner.ts       deterministic planner; never invents city names
@@ -447,7 +552,8 @@ src/
     validation/
       trip.ts                     Zod schemas for trip input and generated itineraries
       places.ts                   Zod schemas for the Place model + raw Google API responses
-  types/                        trip.ts, itinerary.ts, budget.ts, place.ts, planning.ts, travel.ts
+      travis.ts                   Zod schemas: the request into Travis, and the model's reply out
+  types/                        trip.ts, itinerary.ts, budget.ts, place.ts, planning.ts, travel.ts, travis.ts
 firestore.rules                 authorization layer, tested by tests/rules/
 ```
 
@@ -483,15 +589,17 @@ read-modify-write instead of a fan-out across subcollections.
 - Token revocation isn't detected (see "API security" above).
 - Costs are treated as a flat total for the travelling party rather than
   computed per-traveller (except flights, which scale by traveller count).
-- The AI only decides the city split (which cities, how many days each).
-  Individual activities, meals and hotels are still chosen by the
-  deterministic generator from the places provider, not by an LLM — see
-  "Mock mode" above.
-- `google-provider.ts` is implemented against the documented Places API
-  (New) `searchText`/details shapes and is fully wired up, but has **not been
-  exercised against a live API key** in this environment; the mock provider is
-  what every automated test and manual QA pass in this repo actually runs
-  against. Enabling Google mode is the one step that still needs manual
-  verification against a real key.
+- The AI decides the city split, and Travis suggests destinations and the
+  best months to go. Individual activities, meals and hotels are still chosen
+  by the deterministic generator from the places provider, not by an LLM — see
+  "Mock mode" above. Travis cannot yet change a trip.
+- Travis's seasons, weather and cost labels come from the model's general
+  knowledge and aren't checked against any data. There is no free source of
+  live flight or hotel prices, so costs stay estimates and Travis only ever
+  says lower, typical or higher. See "Travis, the trip assistant" for the
+  rate limits (including Groq's 8,000-tokens-a-minute free tier).
+- `google-provider.ts` has been used by hand against a live key (place search,
+  and generating trips for Thailand, Italy and Japan), but **no automated test
+  calls the real API**: the whole test suite runs against the mock provider.
 - The map's day line shows itinerary order only, and the city-transfer line is
   a straight connection between two cities — neither is a driving route.

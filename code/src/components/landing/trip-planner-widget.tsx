@@ -1,10 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { CountryCombobox } from "@/components/ui/country-combobox";
 import { Input } from "@/components/ui/input";
 import { saveDraft } from "@/lib/draft-storage";
 import { toDateInputValue } from "@/lib/date";
@@ -17,20 +16,30 @@ function defaultDates() {
   return { start: toDateInputValue(start), end: toDateInputValue(end) };
 }
 
+const labelClass = "text-sm font-medium text-zinc-800 dark:text-zinc-200";
+
+/**
+ * The start of a trip, on the landing page, before anyone has signed in. What
+ * is entered is kept in the tab (see `draft-storage`) across sign-up, so the
+ * wizard opens already filled in.
+ */
 export function TripPlannerWidget() {
   const router = useRouter();
-  const initial = defaultDates();
-  const [destination, setDestination] = useState("Thailand");
-  const [startDate, setStartDate] = useState(initial.start);
-  const [endDate, setEndDate] = useState(initial.end);
+  const [dates] = useState(defaultDates);
+  const [destination, setDestination] = useState("");
+  const [startDate, setStartDate] = useState(dates.start);
+  const [endDate, setEndDate] = useState(dates.end);
   const [budget, setBudget] = useState("150000");
   const [submitting, setSubmitting] = useState(false);
 
+  const ready = destination !== "" && endDate >= startDate;
+
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (!ready) return;
     setSubmitting(true);
     saveDraft({
-      destination: destination.trim() || "Thailand",
+      destination,
       startDate,
       endDate,
       budget: Number(budget) || 150000,
@@ -40,30 +49,28 @@ export function TripPlannerWidget() {
   }
 
   return (
-    <motion.form
+    <form
       onSubmit={handleSubmit}
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-      className="w-full max-w-md rounded-3xl border border-zinc-900/10 bg-white/90 p-5 shadow-xl shadow-orange-900/5 backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/90"
+      className="animate-drift-up w-full max-w-md rounded-3xl bg-white/50 p-6 text-zinc-900 shadow-2xl shadow-black/30 [animation-delay:250ms] dark:bg-zinc-900/60 dark:text-zinc-100"
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="hero-destination" className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            Where do you want to go?
-          </label>
-          <Input
-            id="hero-destination"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            placeholder="Thailand"
-            required
-          />
-        </div>
+      <h2 className="font-display text-2xl font-medium tracking-tight">
+        Plan your trip
+      </h2>
+      <p className="mt-1 text-sm text-zinc-500">
+        Pick a country, your dates and a budget.
+      </p>
+
+      <div className="mt-5 flex flex-col gap-4">
+        <CountryCombobox
+          id="hero-destination"
+          label="Where to?"
+          value={destination}
+          onChange={setDestination}
+        />
 
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="hero-start" className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            <label htmlFor="hero-start" className={labelClass}>
               From
             </label>
             <Input
@@ -75,7 +82,7 @@ export function TripPlannerWidget() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="hero-end" className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            <label htmlFor="hero-end" className={labelClass}>
               To
             </label>
             <Input
@@ -90,7 +97,7 @@ export function TripPlannerWidget() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="hero-budget" className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          <label htmlFor="hero-budget" className={labelClass}>
             Budget (₹)
           </label>
           <Input
@@ -100,18 +107,23 @@ export function TripPlannerWidget() {
             inputMode="numeric"
             value={budget}
             onChange={(e) => setBudget(e.target.value)}
-            placeholder="1,50,000"
+            placeholder="150000"
           />
         </div>
 
-        <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-          <Sparkles className="h-4 w-4" />
-          {submitting ? "Taking you there…" : "Create my itinerary"}
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={!ready || submitting}
+        >
+          {submitting ? "Taking you there…" : "Build my itinerary"}
         </Button>
         <p className="text-center text-xs text-zinc-500">
-          Free to try. Sign up in seconds to save your trip.
+          Free to try. You&apos;ll sign up next, and your trip is saved to your
+          account.
         </p>
       </div>
-    </motion.form>
+    </form>
   );
 }

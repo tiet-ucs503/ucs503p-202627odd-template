@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { latLngSchema, ratingSchema, sourceRefSchema } from "@/lib/validation/places";
 import { travelStyleSchema } from "@/lib/validation/shared";
+import { isSupportedCountry } from "@/lib/countries";
 
 export { travelStyleSchema };
 
@@ -22,6 +23,23 @@ export const tripDraftInputSchema = z.object({
   travelers: z.number().int().min(1).max(20),
   travelerType: travelerTypeSchema,
   preferences: z.array(travelStyleSchema).min(1).max(8),
+});
+
+/**
+ * A trip being created must be to one of the supported countries, exactly as
+ * the picker spells it. The picker already guarantees this; checking again here
+ * is what makes it a rule and not a suggestion, since a request can be made
+ * without the page.
+ *
+ * Deliberately not applied to `tripDraftInputSchema` itself: that is also what
+ * rebuilding a saved trip is checked against, and trips saved before the list
+ * existed ("Bali, Indonesia") must keep working.
+ */
+export const newTripInputSchema = tripDraftInputSchema.extend({
+  destination: z
+    .string()
+    .trim()
+    .refine(isSupportedCountry, { message: "Choose one of the supported countries." }),
 });
 
 const activityCategorySchema = z.enum([
@@ -120,4 +138,5 @@ export const generatedItinerarySchema = z.object({
   budget: budgetBreakdownSchema,
 });
 
+export type NewTripInputParsed = z.infer<typeof newTripInputSchema>;
 export type TripDraftInputParsed = z.infer<typeof tripDraftInputSchema>;

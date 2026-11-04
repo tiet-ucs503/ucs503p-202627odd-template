@@ -74,10 +74,15 @@ describe("planCities pipeline", () => {
     }
   });
 
-  it("keeps non-curated destinations honest", async () => {
+  it("plans a supported country across its real cities when there is no model", async () => {
     const plan = await planCities(request({ destination: "Italy" }), null);
-    expect(plan.cities).toEqual([
-      expect.objectContaining({ name: "Italy", days: 9 }),
-    ]);
+    expect(plan.source).toBe("fallback");
+    expect(plan.cities.map((c) => c.name)).toEqual(["Rome", "Florence", "Venice"]);
+    expect(plan.cities.reduce((sum, c) => sum + c.days, 0)).toBe(9);
+  });
+
+  it("keeps places it has no list for honest", async () => {
+    const plan = await planCities(request({ destination: "Narnia" }), null);
+    expect(plan.cities).toEqual([expect.objectContaining({ name: "Narnia", days: 9 })]);
   });
 });

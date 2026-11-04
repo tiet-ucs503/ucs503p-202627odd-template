@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
+import { ThemeSync } from "@/components/theme-toggle";
+import { themeInitScript } from "@/lib/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,18 +22,26 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "TripEase — Plan less. Travel more.",
+  title: "TripEase — a day-by-day plan for every trip",
   description:
-    "TripEase turns your destination, dates and budget into a personalized, editable day-by-day trip itinerary.",
+    "Choose a country, your dates and a budget, and TripEase builds an editable day-by-day itinerary with places to stay, things to do and a running cost.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
+    // `data-theme` is a server-side default; the script below corrects it before
+    // first paint, so React is told to accept whatever the DOM ends up with.
     <html
       lang="en"
+      data-theme="light"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-full flex flex-col font-sans">
+        <ThemeSync />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

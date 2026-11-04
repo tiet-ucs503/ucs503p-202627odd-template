@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
 import { ACTIVITY_CATEGORY_ICON } from "@/types/itinerary";
 import { roadmapElementId, type MapPoint } from "@/lib/services/map-points";
+import { isDarkPainted, subscribeToTheme } from "@/lib/theme";
 import { PlaceCard } from "./place-card";
 
 /**
@@ -33,8 +34,6 @@ const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const TILE_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
-const DARK_QUERY = "(prefers-color-scheme: dark)";
-
 /** How long the "use Ctrl to zoom" nudge stays up after a plain wheel. */
 const SCROLL_HINT_MS = 1600;
 /** Ignore wheel bursts closer together than this, so one flick is one zoom. */
@@ -56,20 +55,11 @@ function markerKind(point: MapPoint): keyof Omit<typeof MARKER_COLOR, "selected"
   return point.category === "food" ? "restaurant" : "attraction";
 }
 
-function subscribeToColorScheme(onChange: () => void): () => void {
-  const query = window.matchMedia(DARK_QUERY);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-
-/** The OS colour scheme is external state, so it's read through the store API
- *  rather than mirrored into React state inside an effect. */
+/** Which theme is painted is external state (the person's choice, or their
+ *  device), so it's read through the store API rather than mirrored into React
+ *  state inside an effect. */
 function useIsDark(): boolean {
-  return useSyncExternalStore(
-    subscribeToColorScheme,
-    () => window.matchMedia(DARK_QUERY).matches,
-    () => false,
-  );
+  return useSyncExternalStore(subscribeToTheme, isDarkPainted, () => false);
 }
 
 /**

@@ -1,93 +1,65 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { MapPin, Plane } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { countryByCode, type Country } from "@/lib/countries";
+import { HeroBackdrop } from "./hero-backdrop";
 import { TripPlannerWidget } from "./trip-planner-widget";
 
+/** The places the first screen drifts through, chosen for how they photograph. */
+const BACKDROP_CODES = ["JP", "IS", "MV", "IT", "PE", "NZ"];
+const BACKDROP: Country[] = BACKDROP_CODES.map((code) => countryByCode(code)).filter((c): c is Country => c !== null);
+
+/**
+ * The first screen: a photograph of somewhere you would like to be, what the
+ * product does in one sentence, and the form that starts a trip. The header
+ * sits on the photograph so nothing frames it away.
+ */
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-orange-50 via-amber-50/60 to-transparent dark:from-orange-950/30 dark:via-zinc-950 dark:to-transparent">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-24 right-[-10%] h-96 w-96 rounded-full bg-orange-200/50 blur-3xl dark:bg-orange-900/20"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute top-40 left-[-15%] h-72 w-72 rounded-full bg-teal-200/40 blur-3xl dark:bg-teal-900/10"
-      />
+    <section className="relative isolate flex min-h-[100svh] flex-col text-white">
+      <HeroBackdrop countries={BACKDROP} />
 
-      <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-14 px-6 pb-20 pt-16 sm:pt-24 lg:flex-row lg:items-start lg:gap-10 lg:pb-32">
-        <div className="flex max-w-xl flex-1 flex-col items-center text-center lg:items-start lg:text-left">
-          <motion.span
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full border border-orange-300/60 bg-white/70 px-3.5 py-1.5 text-xs font-medium text-orange-800 shadow-sm dark:border-orange-800/60 dark:bg-orange-950/40 dark:text-orange-300"
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
+        <span className="font-display text-xl font-semibold tracking-tight">
+          Trip<span className="text-orange-400">Ease</span>
+        </span>
+        <nav aria-label="Account" className="flex items-center gap-2 text-sm sm:gap-3">
+          <ThemeToggle onPhoto />
+          <Link href="/sign-in" className="rounded-full px-4 py-2 font-medium text-white/90 transition-colors hover:bg-white/15">
+            Sign in
+          </Link>
+          <Link
+            href="/sign-up"
+            className="rounded-full bg-white px-4 py-2 font-medium text-zinc-900 transition-colors hover:bg-orange-50"
           >
-            <Plane className="h-3.5 w-3.5" />
-            AI-powered trip planning
-          </motion.span>
+            Get started
+          </Link>
+        </nav>
+      </header>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-            className="font-display mt-5 text-4xl leading-[1.05] font-medium tracking-tight text-zinc-900 sm:text-5xl lg:text-6xl dark:text-zinc-50"
-          >
-            Plan less.
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-start justify-center gap-10 px-6 pb-20 pt-6 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
+        <div className="max-w-xl">
+          <h1 className="animate-drift-up font-display text-5xl leading-[1.02] font-medium tracking-tight sm:text-6xl lg:text-7xl">
+            Tell us where.
             <br />
-            <span className="text-orange-600">Travel more.</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-5 max-w-md text-lg text-zinc-600 dark:text-zinc-400"
-          >
-            TripEase turns your destination, dates and budget into a personalized
-            day-by-day adventure — complete with hotels, food, activities and a
-            budget that updates as you edit.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
-          >
-            <Link href="/sign-up">
-              <button className="inline-flex h-12 items-center justify-center rounded-full bg-orange-600 px-6 text-base font-medium text-white shadow-sm shadow-orange-600/20 transition-colors hover:bg-orange-700 active:scale-[0.98]">
-                Start planning
-              </button>
-            </Link>
-            <a
-              href="#how-it-works"
-              className="inline-flex h-12 items-center justify-center gap-1.5 rounded-full px-6 text-base font-medium text-zinc-700 transition-colors hover:bg-zinc-900/5 dark:text-zinc-300 dark:hover:bg-white/5"
-            >
-              <MapPin className="h-4 w-4" />
-              Explore how it works
+            We&apos;ll plan every day.
+          </h1>
+          <p className="animate-drift-up mt-6 max-w-md text-lg leading-relaxed text-white/85 [animation-delay:120ms]">
+            Choose a country, your dates and a budget. TripEase builds a day-by-day itinerary with places to stay
+            and eat and a running cost, and you can change any of it.
+          </p>
+          <div className="animate-drift-up mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-white/80 [animation-delay:200ms]">
+            <a href="#countries" className="underline decoration-white/40 underline-offset-4 transition-colors hover:text-white">
+              Browse the countries
             </a>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="mt-10 hidden items-center gap-6 text-sm text-zinc-500 sm:flex"
-          >
-            <span>🇹🇭 Thailand</span>
-            <span>🇮🇹 Italy</span>
-            <span>🇯🇵 Japan</span>
-            <span>🇮🇩 Bali</span>
-            <span className="text-zinc-400">…or anywhere you dream up</span>
-          </motion.div>
+            <a href="#how-it-works" className="underline decoration-white/40 underline-offset-4 transition-colors hover:text-white">
+              How it works
+            </a>
+          </div>
         </div>
 
-        <div className="flex w-full flex-1 justify-center lg:justify-end">
-          <TripPlannerWidget />
-        </div>
+        <TripPlannerWidget />
       </div>
     </section>
   );
