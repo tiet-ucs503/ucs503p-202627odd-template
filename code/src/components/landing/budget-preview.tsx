@@ -2,16 +2,18 @@
 
 import { motion } from "framer-motion";
 
+// An illustration of how a budget is laid out, not a quote. The total is added
+// up from the parts so the two can never disagree.
 const CATEGORIES = [
   { label: "Flights", amount: 35_000, color: "bg-orange-500" },
-  { label: "Hotels", amount: 42_000, color: "bg-amber-500" },
-  { label: "Food", amount: 18_000, color: "bg-teal-500" },
-  { label: "Activities", amount: 20_000, color: "bg-sky-500" },
-  { label: "Transport", amount: 10_000, color: "bg-violet-500" },
-  { label: "Buffer", amount: 10_000, color: "bg-zinc-400" },
+  { label: "Hotels", amount: 45_000, color: "bg-orange-500" },
+  { label: "Food", amount: 20_000, color: "bg-orange-500" },
+  { label: "Activities", amount: 22_000, color: "bg-orange-500" },
+  { label: "Transport", amount: 10_000, color: "bg-orange-500" },
+  { label: "Buffer", amount: 18_000, color: "bg-zinc-400" },
 ];
 
-const TOTAL = 150_000;
+const TOTAL = CATEGORIES.reduce((sum, category) => sum + category.amount, 0);
 const MAX = Math.max(...CATEGORIES.map((c) => c.amount));
 
 export function BudgetPreview() {
@@ -42,7 +44,7 @@ export function BudgetPreview() {
           className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-xl shadow-zinc-900/5 dark:border-zinc-800 dark:bg-zinc-900"
         >
           <div className="flex items-baseline justify-between">
-            <span className="text-sm text-zinc-500">Total trip budget</span>
+            <span className="text-sm text-zinc-500">Example: total budget</span>
             <span className="font-display text-2xl font-medium text-zinc-900 dark:text-zinc-50">
               ₹{TOTAL.toLocaleString("en-IN")}
             </span>

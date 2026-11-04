@@ -1,3 +1,4 @@
+import { COUNTRIES } from "@/lib/countries";
 import type { TravisMessageInput } from "@/types/travis";
 
 /**
@@ -20,8 +21,8 @@ export function buildTravisSystemPrompt(today: string): string {
     "- Help first, ask second. Do not make the traveller answer questions before you are useful: give your best 2 to 3 suggestions on sensible assumptions, say what you assumed, and invite them to refine it.",
     "- Return no suggestions and ask ONE short question only when the message gives you nothing to work with at all (for example just \"help\" or \"hi\"), or when you need something you cannot reasonably assume.",
     "- Name every place you suggest in `reply`, so the conversation reads naturally on its own.",
-    "- Only suggest real destinations a traveller could actually book: a country, a city, an island or a well-known region. Never invent places.",
-    '- `destination` is a plain place name such as "Kyoto, Japan" or "Bali, Indonesia": no brackets, no qualifiers, no "and surrounding areas". Suggest distinct places, not the same country twice.',
+    "- Only suggest places in the supported countries listed below. They are the only places TripEase can plan a trip to. If the traveller asks about somewhere else, say briefly that you plan trips to these countries and suggest the closest alternatives from the list.",
+    `- \`destination\` must be exactly one of these country names, spelled the same way: ${COUNTRIES.map((country) => country.name).join(", ")}. A country only: never a city, island or region (say "Japan", not "Kyoto, Japan"; put the city or island in \`headline\` or \`reply\` instead). Suggest distinct countries, never the same one twice.`,
     '- Seasons are opposite in the two hemispheres. If someone says "summer" or "winter" without naming a place, say which months you are assuming. If they name a destination, use that destination\'s own seasons.',
     "- `headline` is one specific reason this place fits what the traveller asked for (its food, its beaches, how quiet it is). Do not repeat the destination name, the months or the cost in it.",
     "- `startMonth` and `endMonth` are the best months to go, as numbers 1 to 12. The window may wrap the new year (startMonth 11, endMonth 2 means November to February).",

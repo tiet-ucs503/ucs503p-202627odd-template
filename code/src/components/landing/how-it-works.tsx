@@ -1,76 +1,52 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Compass, MapPinned, PencilRuler, Sparkles } from "lucide-react";
 
-const steps = [
+const STEPS = [
   {
-    number: "01",
-    title: "Tell us your trip",
-    description: "Destination, dates, budget and the kind of trip you want — beaches, food, culture, adventure.",
-    icon: Compass,
+    title: "Choose a country",
+    body: "Search the list, then add your dates, a budget and who is coming.",
   },
   {
-    number: "02",
-    title: "TripEase plans it",
-    description: "A complete day-by-day itinerary appears: cities, hotels, food, activities and costs.",
-    icon: Sparkles,
+    title: "Get a day-by-day plan",
+    body: "Cities to base yourself in, somewhere to stay in each, things to do every day, and what it adds up to.",
   },
   {
-    number: "03",
-    title: "Customize everything",
-    description: "Reorder, edit or replace any day, hotel or activity. Your budget updates as you go.",
-    icon: PencilRuler,
-  },
-  {
-    number: "04",
-    title: "Travel",
-    description: "Your roadmap stays saved and ready — pick up right where you left off, any time.",
-    icon: MapPinned,
+    title: "Change anything",
+    body: "Drag days around, swap a hotel, add or drop a stop. The budget and the travel-time checks recalculate as you edit.",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="mx-auto max-w-6xl px-6 py-24">
-      <motion.div
+    <section id="how-it-works" className="mx-auto max-w-6xl scroll-mt-8 px-6 py-24">
+      <motion.h2
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.5 }}
-        className="mx-auto max-w-2xl text-center"
+        className="font-display max-w-xl text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-50"
       >
-        <h2 className="font-display text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-50">
-          How TripEase works
-        </h2>
-        <p className="mt-3 text-zinc-600 dark:text-zinc-400">
-          From an idea to a fully-planned trip, in four steps.
-        </p>
-      </motion.div>
+        From a country to a trip you can edit
+      </motion.h2>
 
-      <div className="relative mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-        <div
-          aria-hidden
-          className="absolute top-8 left-0 right-0 hidden h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent lg:block dark:via-zinc-800"
-        />
-        {steps.map((step, i) => (
-          <motion.div
-            key={step.number}
-            initial={{ opacity: 0, y: 24 }}
+      <ol className="mt-14 grid gap-x-12 gap-y-10 border-t border-zinc-200 pt-10 md:grid-cols-3 dark:border-zinc-800">
+        {STEPS.map((step, i) => (
+          <motion.li
+            key={step.title}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.5, delay: i * 0.1 }}
-            className="relative flex flex-col items-start"
           >
-            <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-600 text-white shadow-lg shadow-orange-600/25">
-              <step.icon className="h-7 w-7" />
-            </div>
-            <span className="mt-4 font-display text-sm font-semibold text-orange-500">{step.number}</span>
-            <h3 className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-50">{step.title}</h3>
-            <p className="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">{step.description}</p>
-          </motion.div>
+            <span className="font-display text-5xl font-medium text-orange-600/80" aria-hidden="true">
+              {i + 1}
+            </span>
+            <h3 className="mt-3 text-lg font-semibold text-zinc-900 dark:text-zinc-50">{step.title}</h3>
+            <p className="mt-2 text-zinc-600 dark:text-zinc-400">{step.body}</p>
+          </motion.li>
         ))}
-      </div>
+      </ol>
     </section>
   );
 }

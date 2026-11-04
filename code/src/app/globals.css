@@ -85,8 +85,46 @@ body {
   }
 }
 
+/* Slides: a slow push-in on the photo, and the bar that counts down to the next one. */
+@keyframes push-in {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.07);
+  }
+}
+
+@keyframes slide-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes drift-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 200ms ease-out;
+}
+
+.animate-push-in {
+  animation: push-in 9s ease-out both;
+}
+
+.animate-drift-up {
+  animation: drift-up 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animate-scale-in {
@@ -172,6 +210,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .animate-push-in,
+  .animate-drift-up,
   .animate-fade-in,
   .animate-scale-in,
   .animate-rise-in,

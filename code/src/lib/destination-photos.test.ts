@@ -1,98 +1,90 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { COUNTRIES } from "@/lib/countries";
+import { COUNTRY_PHOTOS } from "@/lib/country-photos";
 import {
   ELSEWHERE_PHOTO,
   PLAN_PHOTO,
   TRAVIS_PHOTO,
+  photoForCountry,
   photoForTrip,
 } from "@/lib/destination-photos";
-import { PHOTO_CREDITS } from "@/lib/photo-credits";
 
-const named = (destination: string) => photoForTrip({ destination }).src;
+describe("every supported country", () => {
+  it("has its own photograph", () => {
+    for (const country of COUNTRIES) {
+      expect(COUNTRY_PHOTOS[country.code], country.name).toBeDefined();
+      expect(photoForCountry(country.code), country.name).not.toBe(ELSEWHERE_PHOTO);
+    }
+  });
+
+  it("has a photograph nobody else shares", () => {
+    const sources = COUNTRIES.map((country) => photoForCountry(country.code).src);
+    expect(new Set(sources).size).toBe(sources.length);
+  });
+
+  it("has a description that says what the picture shows", () => {
+    for (const country of COUNTRIES) {
+      expect(photoForCountry(country.code).alt.length, country.name).toBeGreaterThan(15);
+    }
+  });
+});
+
+describe("photoForCountry", () => {
+  it("ignores case, and falls back to a neutral landscape for an unknown code", () => {
+    expect(photoForCountry("jp")).toBe(photoForCountry("JP"));
+    expect(photoForCountry("ZZ")).toBe(ELSEWHERE_PHOTO);
+  });
+});
 
 describe("photoForTrip", () => {
-  it("finds the place from what the traveller typed", () => {
-    expect(named("Thailand")).toContain("thailand");
-    expect(named("Bali, Indonesia")).toContain("bali");
-    expect(named("Italy")).toContain("italy");
-    expect(named("Japan")).toContain("japan");
-    expect(named("Goa, India")).toContain("goa");
-    expect(named("Portugal")).toContain("portugal");
-  });
+  const japan = photoForCountry("JP");
 
-  it("ignores case and surrounding words", () => {
-    expect(named("  a week in KYOTO  ")).toContain("japan");
-    expect(named("Lisbon and the Algarve")).toContain("portugal");
-  });
-
-  it("matches whole words only", () => {
-    expect(photoForTrip({ destination: "Mogoa" })).toBe(ELSEWHERE_PHOTO);
-    expect(photoForTrip({ destination: "Baliwag" })).toBe(ELSEWHERE_PHOTO);
+  it("finds the country from what was typed, whatever its form", () => {
+    expect(photoForTrip({ destination: "Japan" })).toBe(japan);
+    expect(photoForTrip({ destination: "  a week in KYOTO  " })).toBe(japan);
+    expect(photoForTrip({ destination: "Bali, Indonesia" })).toBe(photoForCountry("ID"));
+    expect(photoForTrip({ destination: "Goa, India" })).toBe(photoForCountry("IN"));
   });
 
   it("never stands in a photo of one place for another", () => {
-    expect(photoForTrip({ destination: "Iceland" })).toBe(ELSEWHERE_PHOTO);
-    expect(photoForTrip({ destination: "Porto Alegre, Brazil" })).toBe(ELSEWHERE_PHOTO);
-    expect(photoForTrip({ destination: "India" })).toBe(ELSEWHERE_PHOTO);
+    expect(photoForTrip({ destination: "Narnia" })).toBe(ELSEWHERE_PHOTO);
+    expect(photoForTrip({ destination: "Argentina" })).toBe(ELSEWHERE_PHOTO);
+    expect(photoForTrip({ destination: "Mogoa" })).toBe(ELSEWHERE_PHOTO);
   });
 
   it("falls back to the cities the planner chose", () => {
-    const trip = {
-      destination: "Southeast Asia",
-      cities: [{ name: "Bangkok", country: "Thailand" }],
-    };
-    expect(photoForTrip(trip).src).toContain("thailand");
+    const trip = { destination: "Southeast Asia", cities: [{ name: "Bangkok", country: "Thailand" }] };
+    expect(photoForTrip(trip)).toBe(photoForCountry("TH"));
   });
 
   it("prefers the destination over a city, then a city over the title", () => {
+    expect(photoForTrip({ destination: "Japan", cities: [{ name: "Bangkok", country: "Thailand" }] })).toBe(japan);
     expect(
-      photoForTrip({ destination: "Japan", cities: [{ name: "Bangkok", country: "Thailand" }] }).src,
-    ).toContain("japan");
-    expect(
-      photoForTrip({ destination: "Asia", title: "Kyoto", cities: [{ name: "Bali", country: "Indonesia" }] })
-        .src,
-    ).toContain("bali");
+      photoForTrip({ destination: "Asia", title: "Kyoto", cities: [{ name: "Ubud", country: "Indonesia" }] }),
+    ).toBe(photoForCountry("ID"));
   });
 
   it("uses the title when nothing else says where", () => {
-    expect(photoForTrip({ destination: "Somewhere warm", title: "Weekend in Goa" }).src).toContain("goa");
+    expect(photoForTrip({ destination: "Somewhere warm", title: "Weekend in Goa" })).toBe(photoForCountry("IN"));
   });
 });
 
 describe("the files", () => {
   const publicDir = path.join(process.cwd(), "public");
+  const everyPhoto = [...Object.values(COUNTRY_PHOTOS), PLAN_PHOTO, TRAVIS_PHOTO, ELSEWHERE_PHOTO];
 
-  it("exist for every photo the app can show", () => {
-    const sources = [
-      ...["Thailand", "Bali", "Italy", "Japan", "Goa", "Portugal"].map(named),
-      PLAN_PHOTO.src,
-      TRAVIS_PHOTO.src,
-      ELSEWHERE_PHOTO.src,
-    ];
-    for (const src of sources) {
-      expect(existsSync(path.join(publicDir, src)), src).toBe(true);
+  it("exist for every photograph the app can show", () => {
+    for (const photo of everyPhoto) {
+      expect(existsSync(path.join(publicDir, photo.src)), photo.src).toBe(true);
     }
   });
 
-  it("are each credited, on the credits page and in the repository's list", () => {
-    const sources = [
-      ...["Thailand", "Bali", "Italy", "Japan", "Goa", "Portugal"].map(named),
-      PLAN_PHOTO.src,
-      TRAVIS_PHOTO.src,
-      ELSEWHERE_PHOTO.src,
-    ];
-    const slugs = PHOTO_CREDITS.map((credit) => credit.slug);
-    const markdown = readFileSync(path.join(publicDir, "images/CREDITS.md"), "utf8");
-
-    for (const src of sources) {
-      const slug = path.basename(src, ".jpg");
-      expect(slugs, `${slug} is on the credits page`).toContain(slug);
-      expect(markdown, `${slug} is in CREDITS.md`).toContain(`destinations/${slug}.jpg`);
-    }
-    // And no credit for a photo that isn't there any more.
-    for (const slug of slugs) {
-      expect(existsSync(path.join(publicDir, "images/destinations", `${slug}.jpg`)), slug).toBe(true);
-    }
+  it("have no leftover files that nothing shows", () => {
+    const used = new Set(everyPhoto.map((photo) => path.basename(photo.src)));
+    const dir = path.join(publicDir, "images/destinations");
+    const onDisk = readdirSync(dir);
+    expect(onDisk.filter((file) => !used.has(file))).toEqual([]);
   });
 });

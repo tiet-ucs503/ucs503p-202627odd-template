@@ -3,7 +3,7 @@ import { toDateInputValue } from "@/lib/date";
 import { MAX_HISTORY_MESSAGES } from "@/lib/validation/travis";
 import type { LlmTravisTurn } from "@/lib/validation/travis";
 import type { TravisMessageInput, TravisReply } from "@/types/travis";
-import { redactPrices, toReply, turnPriceClaims } from "./sanitize";
+import { redactPrices, toReply, turnPriceClaims, unsupportedDestinations } from "./sanitize";
 
 export { suggestDates, windowLabel } from "./dates";
 export { containsPriceClaim, findPriceClaims, stripPriceClaims } from "./price-guard";
@@ -20,9 +20,10 @@ export { containsPriceClaim, findPriceClaims, stripPriceClaims } from "./price-g
  * this throws, and the caller tells the traveller plainly — while the manual
  * way of planning a trip carries on working.
  *
- * Exactly one retry, and only for things a model can fix: unusable JSON, or
- * an amount of money in its answer. Never for auth, quota or timeouts, where
- * a second call just costs more and takes longer.
+ * Exactly one retry, and only for things a model can fix: unusable JSON, an
+ * amount of money in its answer, or a suggestion for somewhere that isn't one
+ * of the supported countries. Never for auth, quota or timeouts, where a
+ * second call just costs more and takes longer.
  */
 
 export interface TravisResult extends TravisReply {
@@ -34,6 +35,8 @@ export interface TravisResult extends TravisReply {
 
 const PRICE_REPAIR =
   "You stated amounts of money. You have no live prices, so you must not state any amount, fare or rate in any currency. Describe cost only as lower, typical or higher, with the seasonal reason.";
+const unsupportedRepair = (names: string[]) =>
+  `You suggested places TripEase cannot plan trips to: ${names.join(", ")}. Every suggestion's destination must be exactly one of the supported country names listed in your instructions. Replace those with supported countries.`;
 const SHAPE_REPAIR = "Your answer was not valid JSON in the required shape. Reply with JSON only, exactly matching the schema.";
 
 export async function chatWithTravis(
@@ -63,16 +66,22 @@ export async function chatWithTravis(
       throw error;
     }
 
-    if (turnPriceClaims(turn).length === 0) {
+    const priceClaims = turnPriceClaims(turn);
+    const unsupported = unsupportedDestinations(turn);
+    if (priceClaims.length === 0 && unsupported.length === 0) {
       return finish(turn, today, attempt, false);
     }
 
     if (attempt === 1) {
       priced = turn;
-      repairNote = PRICE_REPAIR;
+      repairNote = [priceClaims.length > 0 ? PRICE_REPAIR : "", unsupported.length > 0 ? unsupportedRepair(unsupported) : ""]
+        .filter(Boolean)
+        .join(" ");
       continue;
     }
-    return finish(redactPrices(turn), today, attempt, true);
+    // Still not right after the one retry: show what is usable. `redactPrices`
+    // cuts any amounts, and `toReply` leaves out anywhere unsupported.
+    return finish(redactPrices(turn), today, attempt, priceClaims.length > 0);
   }
 
   // Unreachable: the loop returns or throws on its second pass.

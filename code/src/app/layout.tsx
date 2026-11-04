@@ -22,9 +22,9 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "TripEase — Plan less. Travel more.",
+  title: "TripEase — a day-by-day plan for every trip",
   description:
-    "TripEase turns your destination, dates and budget into a personalized, editable day-by-day trip itinerary.",
+    "Choose a country, your dates and a budget, and TripEase builds an editable day-by-day itinerary with places to stay, things to do and a running cost.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

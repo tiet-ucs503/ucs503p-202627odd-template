@@ -1,5 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import type { Trip } from "@/types/trip";
 
@@ -22,7 +22,9 @@ function trip(id: string, title: string, startDate: string, endDate: string): Tr
 }
 
 const view = (trips: Trip[] | null, extra: Partial<Parameters<typeof DashboardView>[0]> = {}) =>
-  render(<DashboardView trips={trips} loadError={null} today={today} hour={9} {...extra} />);
+  render(
+    <DashboardView trips={trips} loadError={null} today={today} hour={9} onPlanCountry={vi.fn()} {...extra} />,
+  );
 
 describe("DashboardView", () => {
   it("offers both ways to start, whatever the trips", () => {
@@ -84,8 +86,27 @@ describe("DashboardView", () => {
     expect(screen.getByRole("link", { name: /Plan a trip/ })).toBeInTheDocument();
   });
 
-  it("credits its photographs", () => {
+  it("suggests where is good to go this month, named for the month", () => {
+    view([]); // today is in November
+    expect(screen.getByRole("heading", { name: "Good to go in November" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Destinations for November" })).toBeInTheDocument();
+  });
+
+  it("only offers countries whose weather is usually good in that month", () => {
     view([]);
-    expect(screen.getByRole("link", { name: "Photo credits" })).toHaveAttribute("href", "/credits");
+    const labels = screen
+      .getAllByRole("group", { hidden: true })
+      .map((slide) => slide.getAttribute("aria-label") ?? "");
+    expect(labels.length).toBeGreaterThanOrEqual(5);
+    // Thailand's window is Nov to Feb; Iceland's is Jun to Aug.
+    expect(labels.some((label) => label.includes("Thailand"))).toBe(true);
+    expect(labels.some((label) => label.includes("Iceland"))).toBe(false);
+  });
+
+  it("starts planning the country on screen", () => {
+    const onPlanCountry = vi.fn();
+    view([], { onPlanCountry });
+    fireEvent.click(screen.getByRole("button", { name: /^Plan / }));
+    expect(onPlanCountry).toHaveBeenCalledWith(expect.objectContaining({ name: "Thailand" }));
   });
 });

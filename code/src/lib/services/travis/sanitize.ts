@@ -1,3 +1,4 @@
+import { resolveCountry } from "@/lib/countries";
 import type { LlmTravisSuggestion, LlmTravisTurn } from "@/lib/validation/travis";
 import type { DestinationSuggestion, TravisReply } from "@/types/travis";
 import { suggestDates, windowLabel } from "./dates";
@@ -19,6 +20,15 @@ export function turnTexts(turn: LlmTravisTurn): string[] {
     ...turn.followUps,
     ...turn.suggestions.flatMap((s) => [s.headline, s.costReason, s.weatherNote, s.watchOut ?? ""]),
   ];
+}
+
+/**
+ * The suggestions that name somewhere TripEase can't plan a trip to. A model
+ * asked to stay inside a list will, now and then, suggest Santorini or
+ * Patagonia anyway, and a card for a trip that can't be planned is a dead end.
+ */
+export function unsupportedDestinations(turn: LlmTravisTurn): string[] {
+  return turn.suggestions.filter((s) => !resolveCountry(plainDestination(s.destination))).map((s) => s.destination);
 }
 
 /** Sentences in the turn that state an amount of money. Empty means clean. */
@@ -82,7 +92,8 @@ function toSuggestion(raw: LlmTravisSuggestion, index: number, today: string): D
     today,
   });
 
-  const destination = plainDestination(raw.destination);
+  // Callers have already dropped anything that isn't a supported country.
+  const destination = resolveCountry(plainDestination(raw.destination))?.name ?? plainDestination(raw.destination);
   return {
     id: `${slug(destination) || "place"}-${index}`,
     destination,
@@ -101,14 +112,16 @@ function toSuggestion(raw: LlmTravisSuggestion, index: number, today: string): D
   };
 }
 
-/** Normalise a (price-free) turn: dedupe places, derive windows and dates. */
+/** Normalise a (price-free) turn: supported countries only, once each, with derived windows and dates. */
 export function toReply(turn: LlmTravisTurn, today: string): TravisReply {
   const seen = new Set<string>();
   const suggestions: DestinationSuggestion[] = [];
 
   for (const raw of turn.suggestions) {
-    const key = plainDestination(raw.destination).toLowerCase();
-    if (seen.has(key)) continue; // the same place twice adds nothing
+    const country = resolveCountry(plainDestination(raw.destination));
+    if (!country) continue; // not somewhere a trip can be planned, so not offered
+    const key = country.code;
+    if (seen.has(key)) continue; // the same country twice adds nothing
     seen.add(key);
     suggestions.push(toSuggestion(raw, suggestions.length, today));
   }

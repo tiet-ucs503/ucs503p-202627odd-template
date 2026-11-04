@@ -1,11 +1,12 @@
 "use client";
 
 import { useId, useMemo } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { StartCard } from "@/components/dashboard/start-card";
 import { TripCard, TripCardSkeleton } from "@/components/dashboard/trip-card";
+import { DestinationSlides } from "@/components/destinations/destination-slides";
 import { Alert } from "@/components/ui";
+import { MONTH_FULL_NAMES, countriesForMonth, type Country } from "@/lib/countries";
 import { PLAN_PHOTO, TRAVIS_PHOTO } from "@/lib/destination-photos";
 import type { Trip } from "@/types/trip";
 
@@ -28,6 +29,7 @@ export function DashboardView({
   loadError,
   today,
   hour,
+  onPlanCountry,
 }: {
   firstName?: string;
   trips: Trip[] | null;
@@ -36,7 +38,13 @@ export function DashboardView({
   today: string;
   /** Local hour, 0 to 23, for the greeting. */
   hour: number;
+  /** Start planning a trip to this country. */
+  onPlanCountry: (country: Country) => void;
 }) {
+  const slidesId = useId();
+  const month = Number(today.slice(5, 7));
+  const seasonal = useMemo(() => countriesForMonth(month, { limit: 8, minimum: 5 }), [month]);
+  const allInSeason = seasonal.every((pick) => pick.inSeason);
   const { upcoming, past } = useMemo(() => {
     const list = trips ?? [];
     return {
@@ -109,12 +117,26 @@ export function DashboardView({
         </>
       )}
 
-      <p className="text-xs text-zinc-500">
-        Photos from Wikimedia Commons contributors.{" "}
-        <Link href="/credits" className="underline underline-offset-4 hover:text-zinc-700 dark:hover:text-zinc-300">
-          Photo credits
-        </Link>
-      </p>
+      <section className="flex flex-col gap-5" aria-labelledby={`${slidesId}-heading`}>
+        <div>
+          <h2
+            id={`${slidesId}-heading`}
+            className="font-display text-2xl font-medium tracking-tight text-zinc-900 dark:text-zinc-50"
+          >
+            {allInSeason ? `Good to go in ${MONTH_FULL_NAMES[month - 1]}` : "Ideas for your next trip"}
+          </h2>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            {allInSeason
+              ? "Places where the weather is usually at its best around now."
+              : "Few places are at their best this month, so here are some worth planning ahead for."}
+          </p>
+        </div>
+        <DestinationSlides
+          countries={seasonal.map((pick) => pick.country)}
+          onPlan={onPlanCountry}
+          label={`Destinations for ${MONTH_FULL_NAMES[month - 1]}`}
+        />
+      </section>
     </div>
   );
 }

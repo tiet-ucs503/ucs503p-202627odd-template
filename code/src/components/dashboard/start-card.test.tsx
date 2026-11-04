@@ -35,12 +35,9 @@ describe("StartCard", () => {
     expect(screen.getByText("Start planning")).toBeInTheDocument();
   });
 
-  it("treats its photo as decoration, so the link's name is just the words", () => {
-    render(
-      <StartCard href="/trips/new" title="Plan a trip" description="d" cta="Go" photo={PLAN_PHOTO} />,
-    );
-
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
-    expect(screen.getByRole("link")).toHaveAccessibleName("Plan a trip d Go");
+  it("describes its photo, with the photographer's credit, in the alt text", () => {
+    render(<StartCard href="/trips/new" title="Plan a trip" description="d" cta="Go" photo={PLAN_PHOTO} />);
+    expect(screen.getByRole("img")).toHaveAttribute("alt", PLAN_PHOTO.alt);
+    expect(PLAN_PHOTO.alt).toMatch(/photo/i);
   });
 });

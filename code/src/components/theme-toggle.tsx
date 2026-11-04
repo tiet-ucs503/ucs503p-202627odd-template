@@ -25,7 +25,14 @@ export function ThemeSync() {
  * page follows their device; after that it keeps what they chose. It shows the
  * theme you'd get (a moon in light mode), and its label says so in words.
  */
-export function ThemeToggle({ className }: { className?: string }) {
+export function ThemeToggle({
+  className,
+  onPhoto = false,
+}: {
+  className?: string;
+  /** Light-on-dark styling, for a button that sits over a photograph. */
+  onPhoto?: boolean;
+}) {
   const dark = useSyncExternalStore(subscribeToTheme, isDarkPainted, () => false);
   const Icon = dark ? Sun : Moon;
   const label = dark ? "Switch to light theme" : "Switch to dark theme";
@@ -37,7 +44,10 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={label}
       title={label}
       className={cn(
-        "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-200 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100",
+        "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2",
+        onPhoto
+          ? "border-white/40 text-white hover:bg-white/15 focus-visible:outline-white"
+          : "border-zinc-200 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-orange-600 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100",
         className,
       )}
     >

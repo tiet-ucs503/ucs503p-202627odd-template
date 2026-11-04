@@ -22,12 +22,22 @@ describe("buildInitialWizardData", () => {
       { destination: "Bali, Indonesia", startDate: "2027-04-01", endDate: "2027-04-08", preferences: ["beaches", "relaxation"] },
       defaults,
     );
+    // The draft named a place inside a country; the field takes the country.
     expect(data).toMatchObject({
-      destination: "Bali, Indonesia",
+      destination: "Indonesia",
       startDate: "2027-04-01",
       endDate: "2027-04-08",
       preferences: ["beaches", "relaxation"],
     });
+  });
+
+  it("keeps a supported country exactly as given", () => {
+    expect(buildInitialWizardData({ destination: "Japan" }, defaults).destination).toBe("Japan");
+  });
+
+  it("empties a destination that is not a supported country, instead of showing something the picker cannot", () => {
+    expect(buildInitialWizardData({ destination: "Narnia" }, defaults).destination).toBe("");
+    expect(buildInitialWizardData({ destination: "   " }, defaults).destination).toBe("");
   });
 
   it("leaves budget, currency and party size at their defaults when the draft does not say", () => {

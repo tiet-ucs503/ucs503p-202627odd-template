@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { TravisChat } from "@/components/travis/travis-chat";
+import { COUNTRIES } from "@/lib/countries";
 
 export const metadata: Metadata = {
   title: "Ask Travis · TripEase",
@@ -13,7 +14,8 @@ export default function TravisPage() {
           Ask Travis
         </h1>
         <p className="mt-1.5 text-sm text-zinc-500">
-          Not sure where to go, or when? Talk it through, then turn a suggestion into a trip.
+          Not sure where to go, or when? Talk it through, then turn a suggestion into a trip. Travis suggests from
+          the {COUNTRIES.length} countries TripEase plans trips to.
         </p>
       </header>
       <TravisChat />

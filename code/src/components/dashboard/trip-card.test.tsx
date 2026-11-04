@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TripCard } from "@/components/dashboard/trip-card";
+import { ELSEWHERE_PHOTO, photoForCountry } from "@/lib/destination-photos";
 import type { Trip } from "@/types/trip";
 
 const deleteTrip = vi.fn();
@@ -68,13 +69,14 @@ describe("TripCard", () => {
     expect(screen.getByText(/^1 traveller ·/)).toBeInTheDocument();
   });
 
-  it("shows a photo of the place as decoration, with a neutral one for places it has no picture of", () => {
+  it("shows a photo of the place, described in its alt text, and a neutral one for places it has no picture of", () => {
     const { container, rerender } = render(<TripCard trip={trip()} today={today} />);
-    expect(container.querySelector("img")?.getAttribute("src")).toContain("thailand");
-    expect(container.querySelector("img")).toHaveAttribute("alt", "");
+    const shown = () => decodeURIComponent(container.querySelector("img")?.getAttribute("src") ?? "");
+    expect(shown()).toContain(photoForCountry("TH").src);
+    expect(container.querySelector("img")?.getAttribute("alt")).toBe(photoForCountry("TH").alt);
 
-    rerender(<TripCard trip={trip({ destination: "Iceland", title: "A week in Iceland" })} today={today} />);
-    expect(container.querySelector("img")?.getAttribute("src")).toContain("elsewhere");
+    rerender(<TripCard trip={trip({ destination: "Narnia", title: "A week in Narnia" })} today={today} />);
+    expect(shown()).toContain(ELSEWHERE_PHOTO.src);
   });
 });
 

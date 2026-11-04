@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Minus, Plus } from "lucide-react";
 import { Chip, SelectField, TextField } from "@/components/ui";
+import { CountryCombobox } from "@/components/ui/country-combobox";
+import { COUNTRIES } from "@/lib/countries";
 import { cn, formatMoney } from "@/lib/utils";
 import { TRAVEL_STYLES, TRAVELER_TYPES, type TravelerType, type TravelStyle } from "@/types/itinerary";
 import { StepHeading } from "./wizard-shell";
@@ -20,23 +22,31 @@ export interface WizardData {
 
 type SetData = (patch: Partial<WizardData> | ((prev: WizardData) => Partial<WizardData>)) => void;
 
+/** The countries shown as one-tap choices under the search box. */
+const QUICK_PICKS = COUNTRIES.slice(0, 6);
+
 export function DestinationStep({ data, setData }: { data: WizardData; setData: SetData }) {
-  const popular = ["Thailand", "Bali, Indonesia", "Italy", "Japan", "Goa, India", "Vietnam"];
   return (
     <div>
-      <StepHeading title="Where do you want to go?" subtitle="Type a country, city or region." />
-      <TextField
+      <StepHeading
+        title="Where do you want to go?"
+        subtitle={`Search ${COUNTRIES.length} countries, or a city in one of them.`}
+      />
+      <CountryCombobox
         id="destination"
         label="Destination"
-        placeholder="Thailand"
         value={data.destination}
-        onChange={(e) => setData({ destination: e.target.value })}
+        onChange={(destination) => setData({ destination })}
         autoFocus
       />
       <div className="mt-4 flex flex-wrap gap-2">
-        {popular.map((place) => (
-          <Chip key={place} selected={data.destination === place} onClick={() => setData({ destination: place })}>
-            {place}
+        {QUICK_PICKS.map((country) => (
+          <Chip
+            key={country.code}
+            selected={data.destination === country.name}
+            onClick={() => setData({ destination: country.name })}
+          >
+            {country.name}
           </Chip>
         ))}
       </div>

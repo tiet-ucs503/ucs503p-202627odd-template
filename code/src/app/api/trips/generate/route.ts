@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authErrorResponse, requireUser } from "@/lib/server/firebase-auth";
 import { generateItinerary } from "@/lib/services/itinerary-generator";
 import { planCities, validateCityAllocation } from "@/lib/services/planning";
-import { generatedItinerarySchema, tripDraftInputSchema } from "@/lib/validation/trip";
+import { generatedItinerarySchema, newTripInputSchema } from "@/lib/validation/trip";
 import { cityPlanSchema } from "@/lib/validation/planning";
 import { dayCountInclusive, parseDateInput } from "@/lib/date";
 
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Request body must be JSON." }, { status: 400 });
   }
 
-  const parsedInput = tripDraftInputSchema.safeParse(body);
+  const parsedInput = newTripInputSchema.safeParse(body);
   if (!parsedInput.success) {
     return NextResponse.json(
       { error: "Invalid trip details.", issues: parsedInput.error.issues },

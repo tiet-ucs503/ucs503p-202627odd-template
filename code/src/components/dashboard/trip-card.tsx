@@ -42,7 +42,7 @@ export function TripCard({ trip, today }: { trip: Trip; today: string }) {
       <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-zinc-200 dark:bg-zinc-800">
         <Image
           src={photo.src}
-          alt=""
+          alt={photo.alt}
           fill
           sizes="(min-width: 1152px) 360px, (min-width: 640px) 33vw, 100vw"
           style={{ objectPosition: photo.position }}

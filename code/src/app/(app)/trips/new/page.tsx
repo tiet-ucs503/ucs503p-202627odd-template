@@ -19,6 +19,7 @@ import { buildInitialWizardData, startingStep } from "@/components/trips/wizard/
 import { WizardShell } from "@/components/trips/wizard/wizard-shell";
 import { postAuthenticated } from "@/lib/api-client";
 import { clearDraft, clearDraftOrigin, readDraft, readDraftOrigin } from "@/lib/draft-storage";
+import { isSupportedCountry } from "@/lib/countries";
 import { toDateInputValue } from "@/lib/date";
 import { saveGeneratedTrip } from "@/lib/services/trips";
 import type { CityPlan } from "@/types/planning";
@@ -39,7 +40,7 @@ function initialData(): WizardData {
 function stepIsValid(step: number, data: WizardData): boolean {
   switch (step) {
     case 0:
-      return data.destination.trim().length >= 2;
+      return isSupportedCountry(data.destination);
     case 1:
       return Boolean(data.startDate && data.endDate && data.endDate >= data.startDate);
     case 2:

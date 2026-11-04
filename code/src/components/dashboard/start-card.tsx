@@ -11,8 +11,7 @@ import type { DestinationPhoto } from "@/lib/destination-photos";
  * without having to guess what the difference is.
  *
  * The photo is the card; the text sits on a dark fade at the bottom so it
- * reads on any picture. The photo is decorative (the words say everything), so
- * it has no alt text, and the whole tile is one link.
+ * reads on any picture. The whole tile is one link.
  */
 export function StartCard({
   href,
@@ -34,7 +33,7 @@ export function StartCard({
     >
       <Image
         src={photo.src}
-        alt=""
+        alt={photo.alt}
         fill
         // The first thing on the page, so it loads first (Next 16's replacement for `priority`).
         loading="eager"

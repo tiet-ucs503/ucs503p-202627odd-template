@@ -66,7 +66,7 @@ describe("a normal answer", () => {
     expect(result.reply).toBe("Bali suits that well in the dry season.");
     expect(result.suggestions).toHaveLength(1);
     expect(result.suggestions[0]).toMatchObject({
-      destination: "Bali, Indonesia",
+      destination: "Indonesia", // the country, which is what the wizard's picker holds
       windowLabel: "Jun–Aug",
       costOutlook: "typical",
       suggestedDays: 8,
@@ -125,10 +125,20 @@ describe("a normal answer", () => {
     expect(result.suggestions.map((s) => s.destination)).toEqual(["Japan"]);
   });
 
-  it("keeps a name that is nothing but a qualifier rather than emptying it", async () => {
-    const provider = new ScriptedProvider([turn({ suggestions: [suggestion({ destination: "(Bali)" })] })]);
-    const result = await chatWithTravis(ask("Bali"), provider, TODAY);
-    expect(result.suggestions[0].destination).toBe("(Bali)");
+  it("turns a place inside a supported country into that country", async () => {
+    const provider = new ScriptedProvider([
+      turn({ suggestions: [suggestion({ destination: "Kyoto, Japan" }), suggestion({ destination: "Goa" })] }),
+    ]);
+    const result = await chatWithTravis(ask("Anywhere"), provider, TODAY);
+    expect(result.suggestions.map((s) => s.destination)).toEqual(["Japan", "India"]);
+  });
+
+  it("treats a city and its country as the same place", async () => {
+    const provider = new ScriptedProvider([
+      turn({ suggestions: [suggestion({ destination: "Bali, Indonesia" }), suggestion({ destination: "Indonesia" })] }),
+    ]);
+    const result = await chatWithTravis(ask("Anywhere"), provider, TODAY);
+    expect(result.suggestions.map((s) => s.destination)).toEqual(["Indonesia"]);
   });
 
   it("removes repeated styles and repeated follow-ups", async () => {
@@ -223,6 +233,58 @@ describe("when the model quotes a price", () => {
     const sneaky = turn({ followUps: ["Is it under $500?", "What about June?"] });
     const result = await chatWithTravis(ask("Bali"), new ScriptedProvider([sneaky, sneaky]), TODAY);
     expect(result.followUps).toEqual(["What about June?"]);
+  });
+});
+
+describe("when the model suggests somewhere that is not supported", () => {
+  const patagonia = suggestion({ destination: "Patagonia" });
+
+  it("asks again, naming the place, and uses the corrected answer", async () => {
+    const provider = new ScriptedProvider([
+      turn({ suggestions: [patagonia] }),
+      turn({ suggestions: [suggestion({ destination: "Peru" })] }),
+    ]);
+    const result = await chatWithTravis(ask("Somewhere wild"), provider, TODAY);
+
+    expect(result.attempts).toBe(2);
+    expect(provider.repairNotes[1]).toContain("Patagonia");
+    expect(result.suggestions.map((s) => s.destination)).toEqual(["Peru"]);
+  });
+
+  it("leaves it out, rather than offering a trip that cannot be planned, if it does it again", async () => {
+    const provider = new ScriptedProvider([
+      turn({ suggestions: [patagonia, suggestion({ destination: "Chile" })] }),
+      turn({ suggestions: [patagonia, suggestion({ destination: "Japan" })] }),
+    ]);
+    const result = await chatWithTravis(ask("Somewhere wild"), provider, TODAY);
+
+    expect(result.attempts).toBe(2);
+    expect(result.suggestions.map((s) => s.destination)).toEqual(["Japan"]);
+    expect(result.redacted).toBe(false);
+  });
+
+  it("still returns the reply, with no cards, if nothing it suggested is supported", async () => {
+    const provider = new ScriptedProvider([turn({ suggestions: [patagonia] }), turn({ suggestions: [patagonia] })]);
+    const result = await chatWithTravis(ask("Somewhere wild"), provider, TODAY);
+    expect(result.suggestions).toEqual([]);
+    expect(result.reply).toBeTruthy();
+  });
+
+  it("makes one repair call for a price and an unsupported place together, not two", async () => {
+    const provider = new ScriptedProvider([
+      turn({ reply: "Patagonia is about $900.", suggestions: [patagonia] }),
+      turn({ suggestions: [suggestion({ destination: "Peru" })] }),
+    ]);
+    const result = await chatWithTravis(ask("Somewhere wild"), provider, TODAY);
+
+    expect(result.attempts).toBe(2);
+    expect(provider.repairNotes[1]).toMatch(/amounts of money/);
+    expect(provider.repairNotes[1]).toContain("Patagonia");
+  });
+
+  it("does not retry when every suggestion is supported", async () => {
+    const provider = new ScriptedProvider([turn({ suggestions: [suggestion({ destination: "Japan" })] })]);
+    expect((await chatWithTravis(ask("Japan"), provider, TODAY)).attempts).toBe(1);
   });
 });
 

@@ -49,8 +49,8 @@ export const DEMO_DESTINATIONS: DemoDestination[] = [
   },
   {
     keywords: ["bali", "indonesia"],
-    destination: "Bali, Indonesia",
-    headline: "Rice terraces, surf beaches and a strong food and wellness scene.",
+    destination: "Indonesia",
+    headline: "Bali: rice terraces, surf beaches and a strong food and wellness scene.",
     suggestedDays: 8,
     styles: ["beaches", "relaxation", "nature"],
     weatherNote: "The dry season, April to October, usually has the sunniest days.",
@@ -112,8 +112,8 @@ export const DEMO_DESTINATIONS: DemoDestination[] = [
   },
   {
     keywords: ["goa"],
-    destination: "Goa, India",
-    headline: "Easy beaches, seafood and a relaxed pace, reachable without a long flight.",
+    destination: "India",
+    headline: "Goa: easy beaches, seafood and a relaxed pace, reachable without a long flight.",
     suggestedDays: 5,
     styles: ["beaches", "nightlife", "relaxation"],
     weatherNote: "November to February is usually dry and pleasantly warm.",

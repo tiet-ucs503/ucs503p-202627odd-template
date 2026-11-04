@@ -1,3 +1,4 @@
+import { resolveCountry } from "@/lib/countries";
 import type { DraftOrigin, PartialDraft } from "@/lib/draft-storage";
 import { TRAVEL_STYLES, TRAVELER_TYPES } from "@/types/itinerary";
 import type { WizardData } from "./steps";
@@ -29,7 +30,10 @@ export function buildInitialWizardData(draft: PartialDraft | null, defaults: Wiz
       : 2;
 
   return {
-    destination: typeof draft?.destination === "string" ? draft.destination : "",
+    // Only a supported country can fill the field. A draft from before the list
+    // existed ("Bali, Indonesia") becomes the country it names; anything that is
+    // not a country becomes empty rather than a value the picker can't show.
+    destination: (typeof draft?.destination === "string" && resolveCountry(draft.destination)?.name) || "",
     startDate: draft?.startDate ?? defaults.startDate,
     endDate: draft?.endDate ?? defaults.endDate,
     budget: typeof draft?.budget === "number" && draft.budget > 0 ? String(draft.budget) : "150000",
