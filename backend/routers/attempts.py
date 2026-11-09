@@ -5,7 +5,7 @@ from typing import Optional
 
 import models, schemas
 from database import get_db
-from routers.eye_tracking import get_user_latest_telemetry, get_user_eye_history
+from routers.eye_tracking import get_user_latest_telemetry, get_user_eye_history, record_question_attempt
 
 router = APIRouter(
     prefix="/attempts",
@@ -53,17 +53,20 @@ def analyze_behavior(attempt_id: int, user_id: int = 1, score: int = 10, time_ta
             "eye_gaze_stability": metrics.get("gaze_stability", 0.90)
         }
         
-        # 3. Retrieve historical eye tracking records
+        # 3. Retrieve historical question attempts
         history = get_user_eye_history(user_id)
         full_history = history + [current_record]
         
         # 4. Predict probability using pre-trained Knowledge Tracing LSTM
-        probability = predict_risk(full_history)
+        probability = float(predict_risk(full_history))
+
+        # 5. Record this completed attempt in the student's telemetry history
+        record_question_attempt(user_id, current_record)
         
-        # 5. Adaptive difficulty calibration
-        if probability < 0.40:
+        # 6. Adaptive difficulty calibration based on both mastery probability & cognitive state
+        if probability < 0.45 or cognitive_state in ["Drifting", "Overwhelmed"]:
             difficulty = "easy"
-        elif probability > 0.80:
+        elif probability > 0.75 and cognitive_state == "Focused":
             difficulty = "hard"
         else:
             difficulty = "medium"

@@ -22,9 +22,9 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel }: MissionPl
   const currentUserId = user?.userId || 1;
   
   const [phase, setPhase] = useState<'briefing' | 'combat' | 'victory' | 'defeat'>('combat');
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<Question[]>(() => generateQuestions(bossId || 'goblin', 7));
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [loadingQuestion, setLoadingQuestion] = useState<boolean>(true);
+  const [loadingQuestion, setLoadingQuestion] = useState<boolean>(false);
   
   const [villainHealth, setVillainHealth] = useState(100);
   const [playerHealth, setPlayerHealth] = useState(100);
@@ -749,7 +749,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel }: MissionPl
             <div>Blink: <span className="text-white font-bold">{eyeMetrics.blinkRate}/m</span></div>
             <div>Gaze: <span className="text-white font-bold">{eyeMetrics.gazeStability}%</span></div>
             <div className="hidden sm:block border-l border-white/10 pl-3">
-              AI Risk Predictor: <span className="text-yellow-400 font-bold">{Math.round(predictedRisk * 100)}%</span>
+              Predicted Mastery: <span className="text-yellow-400 font-bold">{Math.round(predictedRisk * 100)}%</span>
             </div>
           </div>
         </div>

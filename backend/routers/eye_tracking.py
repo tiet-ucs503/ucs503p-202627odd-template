@@ -91,13 +91,16 @@ class UserTelemetrySession:
             "blink_count": 0,
             "avg_ear": 0.28,
         }
-        self.history: List[Dict] = []
+        # Question attempt history for Knowledge Tracing (NOT video frames)
+        self.attempt_history: List[Dict] = []
         self.last_updated = time.time()
 
-    def _append_history(self, row: Dict) -> None:
-        self.history.append(row)
-        if len(self.history) > MAX_HISTORY:
-            self.history.pop(0)
+    def record_attempt(self, attempt_row: Dict) -> None:
+        """Records an actual answered question attempt to the student's history."""
+        with self.lock:
+            self.attempt_history.append(attempt_row)
+            if len(self.attempt_history) > MAX_HISTORY:
+                self.attempt_history.pop(0)
 
     def update_with_frame(
         self,
@@ -109,18 +112,6 @@ class UserTelemetrySession:
             result = self.tracker.process_frame(bgr_image)
             self.latest_result = result
             self.last_updated = time.time()
-
-            m = result.get("metrics", {})
-            self._append_history({
-                "attention_state_eye": result.get("attention_state", "Focused"),
-                "eye_blink_rate": m.get("blink_rate", 20.0),
-                "eye_pupil_dilation": m.get("pupil_dilation", 0.0),
-                "eye_fixation_duration": m.get("fixation_duration", 300.0),
-                "eye_saccade_rate": m.get("saccade_rate", 2.0),
-                "eye_gaze_stability": m.get("gaze_stability", 1.0),
-                "correct": correct if correct is not None else DEFAULT_CORRECT,
-                "response_time_s": response_time_s if response_time_s is not None else DEFAULT_RESPONSE_TIME_S,
-            })
             return result
 
     def set_simulated_state(
@@ -144,23 +135,35 @@ class UserTelemetrySession:
                 "avg_ear": 0.28,
             }
             self.last_updated = time.time()
-            self._append_history({
+
+    def get_lstm_sequence(self) -> List[Dict]:
+        """
+        Builds the sequence for the Deep Knowledge Tracing LSTM:
+        Combines past answered questions with live cognitive telemetry.
+        """
+        with self.lock:
+            state = self.latest_result.get("attention_state", "Focused")
+            m = self.latest_result.get("metrics", {})
+            current_snapshot = {
                 "attention_state_eye": state,
-                "eye_blink_rate": m["blink_rate"],
-                "eye_pupil_dilation": m["pupil_dilation"],
-                "eye_fixation_duration": m["fixation_duration"],
-                "eye_saccade_rate": m["saccade_rate"],
-                "eye_gaze_stability": m["gaze_stability"],
-                "correct": DEFAULT_CORRECT,
-                "response_time_s": DEFAULT_RESPONSE_TIME_S,
-            })
+                "eye_blink_rate": m.get("blink_rate", 18.0),
+                "eye_pupil_dilation": m.get("pupil_dilation", 5.0),
+                "eye_fixation_duration": m.get("fixation_duration", 400.0),
+                "eye_saccade_rate": m.get("saccade_rate", 1.8),
+                "eye_gaze_stability": m.get("gaze_stability", 0.92),
+                "correct": 1,
+                "response_time_s": 15.0,
+            }
+            if not self.attempt_history:
+                return [current_snapshot]
+            return list(self.attempt_history) + [current_snapshot]
 
     def snapshot(self) -> Dict:
         """Consistent copy of state for reading outside the lock."""
         with self.lock:
             return {
                 "latest_result": self.latest_result,
-                "history": list(self.history),
+                "history": list(self.attempt_history),
                 "last_updated": self.last_updated,
             }
 
@@ -202,13 +205,17 @@ def get_user_eye_history(user_id: int) -> List[Dict]:
     return get_or_create_session(user_id).snapshot()["history"]
 
 
-def _safe_predict(history: List[Dict]) -> float:
-    """LSTM inference that never takes the endpoint down."""
-    if not history:
-        return FALLBACK_RISK
+def record_question_attempt(user_id: int, attempt_record: Dict) -> None:
+    """Stores an actual question attempt into the user's DKT session history."""
+    get_or_create_session(user_id).record_attempt(attempt_record)
+
+
+def _safe_predict(session: UserTelemetrySession) -> float:
+    """LSTM inference that uses real question attempts plus live optical telemetry."""
     try:
         from ml.attention_model import predict_risk
-        return float(predict_risk(history))
+        seq = session.get_lstm_sequence()
+        return float(predict_risk(seq))
     except Exception:
         logger.exception("predict_risk failed; using fallback")
         return FALLBACK_RISK
@@ -284,7 +291,7 @@ def process_client_frame(
             correct=payload.correct,
             response_time_s=payload.response_time_s,
         )
-        prob = _safe_predict(session.snapshot()["history"])
+        prob = _safe_predict(session)
         return {
             "success": True,
             "user_id": payload.user_id,
@@ -298,7 +305,7 @@ def process_client_frame(
             "success": False,
             "error": "Frame processing failed",  # details are in server logs, not sent to the client
             "telemetry": snap["latest_result"],
-            "predicted_probability": round(_safe_predict(snap["history"]), 3),
+            "predicted_probability": round(_safe_predict(session), 3),
         }
 
 
@@ -340,5 +347,5 @@ def simulate_state(
         "success": True,
         "message": f"User {payload.user_id} cognitive state set to {payload.state}",
         "telemetry": snap["latest_result"],
-        "predicted_probability": round(_safe_predict(snap["history"]), 3),
+        "predicted_probability": round(_safe_predict(session), 3),
     }
