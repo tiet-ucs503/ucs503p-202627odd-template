@@ -1,0 +1,7 @@
+
+Parth Arora: Backend and Database (FR-1, FR-2, FR-3 foundation)
+W1: Set up the Node/Express project structure with route → service layering. Design the Prisma schema for User, Mission, Question, MissionAttempt, TopicMastery, HintHistory, LearningReport and Badge, then run the first migrations and seed data.
+W2: Build authentication (registration, login, salted password hashes, JWT) and role-based access control for Student, Teacher and Parent. Add the teacher/parent-to-student linking.
+W3: Build mission selection and question delivery by topic and difficulty. Build the answer submission endpoint with verification and attempt logging (correctness, time, hints).
+W4: Add the async job/queue that calls the AI layer without blocking the next question. Build the Reward, Progress and Report services and the dashboard read endpoints (they must work without the AI layer).
+W5: Add indexing and pagination, then handle security hardening, HTTPS config and deployment. Fix integration bugs.

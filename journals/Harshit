@@ -1,0 +1,6 @@
+Harshit Negi: Frontend (React 18 + Vite)
+W1: Set up the Vite/React project, routing, and a shared theme and component library. Make wireframes for all screens.
+W2: Build the login/register screens with role-based redirects and the connection to the auth API. Build the student home and mission selection page.
+W3: Build the mission play screen (question display, answer submit, timer, feedback). Add the “Ask Gwen” hint panel (use mock responses until Raghu’s API is ready).
+W4: Build the rewards UI (points, level, badges, progress) and the student progress view. Build the Teacher and Parent dashboards with learning report views.
+W5: Polish the UI with game-style visuals, make it responsive for mobile, and handle loading and error states. Run UI tests and fix bugs.

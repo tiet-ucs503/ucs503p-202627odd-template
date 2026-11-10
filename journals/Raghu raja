@@ -1,0 +1,6 @@
+Raghu Raja: Gwen AI Tutor / RAG (FR-4)
+W1: Collect and curate syllabus-aligned content (definitions, formulas, worked examples) by topic. Choose the vector store and embedding approach.
+W2: Build the ingestion pipeline (chunking, embedding, indexing) and the retrieval step with a test set of queries.
+W3: Build the Gwen hint and explanation generator on top of retrieval, with grounding prompts and graduated hints (nudge → hint → full explanation). Expose it as an API.
+W4: Integrate with the backend. Store each hint in the hint history and add mistake analysis for wrong answers. Connect Harshit’s hint panel to the real API.
+W5: Evaluate answer correctness and syllabus relevance on a test set. Handle fallbacks when the AI is down or slow, and document the RAG pipeline.

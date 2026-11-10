@@ -1,0 +1,6 @@
+Ramneek Kaur: Memory, Adaptive Difficulty and LSTM (FR-3, FR-5)
+W1: Define the short-term and long-term memory structures and the mastery update formula. Write the spec for adaptive rules (when to promote, when to remediate).
+W2: Implement mastery updates after each attempt and the memory read/write logic with Parth’s tables. Generate a simulated interaction dataset (response time, correctness, hints).
+W3: Build the rule-based adaptive difficulty engine (increase after strong performance, remediate after repeated errors) and connect it to question selection.
+W4: Train the LSTM on the Question → Response Time → Correctness → Hint Usage sequences. Run it asynchronously through the queue.
+W5: Evaluate accuracy and reduction in repeated mistakes. Tune the thresholds, and write the testing report and the evaluation section of the project documentation.

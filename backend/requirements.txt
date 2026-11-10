@@ -1,0 +1,9 @@
+fastapi[standard]
+pydantic
+sqlalchemy
+mediapipe
+opencv-python
+torch
+groq
+python-dotenv
+
