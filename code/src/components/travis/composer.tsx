@@ -6,6 +6,12 @@ import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { MAX_USER_MESSAGE_CHARS } from "@/lib/validation/travis";
 
+/** Size a textarea to its text, up to a ceiling, after which it scrolls inside. */
+function fitToText(element: HTMLTextAreaElement) {
+  element.style.height = "auto";
+  element.style.height = `${Math.min(element.scrollHeight, MAX_HEIGHT_PX)}px`;
+}
+
 /** Show the character count only when it starts to matter. */
 const COUNTER_FROM = 800;
 const MAX_HEIGHT_PX = 160;
@@ -28,11 +34,25 @@ export function Composer({ onSend, disabled }: { onSend: (text: string) => void;
 
   // Grow with the text, up to a ceiling, then scroll inside the box.
   useLayoutEffect(() => {
+    if (ref.current) fitToText(ref.current);
+  }, [value]);
+
+  // The height depends on how wide the box is, and on first mount the layout
+  // around it may not have settled: measured then, the placeholder wraps in a
+  // sliver of width and the box is stuck at its maximum height. So it is fitted
+  // again whenever its width changes, not only when the text does.
+  useEffect(() => {
     const element = ref.current;
     if (!element) return;
-    element.style.height = "auto";
-    element.style.height = `${Math.min(element.scrollHeight, MAX_HEIGHT_PX)}px`;
-  }, [value]);
+    let width = element.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (element.clientWidth === width) return;
+      width = element.clientWidth;
+      fitToText(element);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
   // Focus on desktop only: on a phone it would throw the keyboard up before
   // the traveller has read a word of the page.
@@ -60,7 +80,7 @@ export function Composer({ onSend, disabled }: { onSend: (text: string) => void;
       </label>
       <div
         className={cn(
-          "flex items-end gap-2 rounded-2xl border bg-white p-2 transition-colors dark:bg-zinc-900",
+          "flex items-end gap-2 rounded-3xl border bg-white p-2 pl-3 shadow-lg shadow-zinc-900/5 transition-colors dark:bg-zinc-900",
           "focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/25",
           tooLong ? "border-red-400" : "border-zinc-300 dark:border-zinc-700",
         )}
@@ -70,7 +90,7 @@ export function Composer({ onSend, disabled }: { onSend: (text: string) => void;
           ref={ref}
           rows={1}
           value={value}
-          placeholder="Ask where or when to go"
+          placeholder="Where should I go, and when?"
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={(event) => {
             // `isComposing` keeps Enter from sending while an input method
@@ -80,10 +100,10 @@ export function Composer({ onSend, disabled }: { onSend: (text: string) => void;
               submit();
             }
           }}
-          className="max-h-40 min-h-9 flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100"
+          className="max-h-40 min-h-9 flex-1 resize-none bg-transparent px-1 py-2 text-[15px] text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100"
         />
         <Button type="submit" size="icon" aria-label="Send message" disabled={!canSend}>
-          <ArrowUp className="h-4 w-4" />
+          <ArrowUp className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
 

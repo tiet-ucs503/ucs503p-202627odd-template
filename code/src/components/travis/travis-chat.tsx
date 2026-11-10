@@ -1,29 +1,36 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { Alert, Button, Chip } from "@/components/ui";
+import { Alert, Button } from "@/components/ui";
 import { ApiError } from "@/lib/api-client";
+import { photoForCountry } from "@/lib/destination-photos";
 import { askTravis } from "@/lib/travis-client";
 import { startTripFromSuggestion } from "@/lib/travis-draft";
 import { clearConversation, loadConversation, saveConversation } from "@/lib/travis-storage";
 import type { DestinationSuggestion, TravisChatMessage, TravisResponse } from "@/types/travis";
 import { Composer } from "./composer";
+import { TravisAvatar } from "./travis-avatar";
 import { TravisMessage } from "./travis-message";
 
 /**
  * Things worth asking, for someone staring at an empty box. Each is a real
  * question Travis can answer, covering the two jobs it has: where to go, and
- * when it costs less.
+ * when it costs less. `code` picks the photograph on its card; it does not
+ * change what is asked.
  */
-export const STARTER_PROMPTS = [
-  "Where should I go this summer?",
-  "When is the cheapest time to visit Japan?",
-  "A week somewhere warm in December",
-  "Long weekend ideas for food lovers",
-];
+const STARTERS = [
+  { prompt: "Where should I go this summer?", code: "CH" },
+  { prompt: "When is the cheapest time to visit Japan?", code: "JP" },
+  { prompt: "A week somewhere warm in December", code: "MV" },
+  { prompt: "Long weekend ideas for food lovers", code: "IT" },
+] as const;
+
+export const STARTER_PROMPTS: string[] = STARTERS.map((starter) => starter.prompt);
 
 interface ChatError {
   message: string;
@@ -195,6 +202,16 @@ function Conversation({ ask }: { ask: Ask }) {
         </Alert>
       ) : null}
 
+      {/* Where it can be found: at the top of a conversation, not at the foot of a long one. */}
+      {messages.length > 0 ? (
+        <div className="flex justify-end">
+          <Button variant="ghost" size="sm" onClick={startOver} disabled={pending}>
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+            Start a new conversation
+          </Button>
+        </div>
+      ) : null}
+
       <div
         role="log"
         aria-live="polite"
@@ -220,14 +237,18 @@ function Conversation({ ask }: { ask: Ask }) {
         )}
 
         {pending ? (
-          <div className="flex gap-3">
-            <div
-              aria-hidden="true"
-              className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-zinc-900 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900"
-            >
-              T
-            </div>
-            <p className="pt-1 text-sm text-zinc-500 motion-safe:animate-pulse">Travis is thinking…</p>
+          <div className="flex items-center gap-3">
+            <TravisAvatar />
+            <p className="text-sm text-zinc-500">Travis is thinking…</p>
+            <span aria-hidden="true" className="flex gap-1">
+              {[0, 150, 300].map((delay) => (
+                <span
+                  key={delay}
+                  style={{ animationDelay: `${delay}ms` }}
+                  className="h-1.5 w-1.5 rounded-full bg-zinc-400 motion-safe:animate-bounce"
+                />
+              ))}
+            </span>
           </div>
         ) : null}
       </div>
@@ -250,19 +271,9 @@ function Conversation({ ask }: { ask: Ask }) {
         </div>
       ) : null}
 
-      {/* Part of the conversation, not of the always-visible bar: it is rarely
-          wanted, and on a phone every row of the bar is a row of screen lost. */}
-      {messages.length > 0 ? (
-        <div className="flex justify-end">
-          <Button variant="ghost" size="sm" onClick={startOver} disabled={pending}>
-            Start a new conversation
-          </Button>
-        </div>
-      ) : null}
-
       <div ref={bottomRef} />
 
-      <div className="sticky bottom-0 -mx-1 bg-background px-1 pb-4 pt-3">
+      <div className="sticky bottom-0 -mx-1 bg-background px-1 pb-4 pt-3 before:pointer-events-none before:absolute before:inset-x-0 before:-top-6 before:h-6 before:bg-gradient-to-t before:from-background before:to-transparent">
         <Composer onSend={send} disabled={pending} />
       </div>
     </div>
@@ -271,27 +282,52 @@ function Conversation({ ask }: { ask: Ask }) {
 
 function EmptyState({ onPick, disabled }: { onPick: (text: string) => void; disabled: boolean }) {
   return (
-    <div className="flex flex-col gap-5">
-      <p className="max-w-xl text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-        Tell me roughly when you want to travel and what you enjoy, and I&apos;ll suggest places, the best time of
-        year to go, and when it usually costs less. I can&apos;t see live fares or availability, so I&apos;ll
-        always say when something is a typical pattern rather than a price.
-      </p>
+    <div className="flex flex-col gap-8 pt-2">
       <div>
-        <p className="mb-2 text-sm font-medium text-zinc-800 dark:text-zinc-200">Try asking</p>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Example questions">
-          {STARTER_PROMPTS.map((prompt) => (
-            <Chip
-              key={prompt}
-              disabled={disabled}
-              className="disabled:cursor-not-allowed disabled:opacity-50"
-              onClick={() => onPick(prompt)}
-            >
-              {prompt}
-            </Chip>
-          ))}
+        <h2 className="font-display text-2xl font-medium tracking-tight text-zinc-900 sm:text-3xl dark:text-zinc-50">
+          Where are you thinking of going?
+        </h2>
+        <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+          Tell me roughly when you want to travel and what you enjoy, and I&apos;ll suggest places, the best time
+          of year to go, and when it usually costs less.
+        </p>
+      </div>
+
+      <div>
+        <p className="mb-3 text-sm font-medium text-zinc-800 dark:text-zinc-200">Try asking</p>
+        <div className="grid gap-3 sm:grid-cols-2" role="group" aria-label="Example questions">
+          {STARTERS.map(({ prompt, code }) => {
+            const photo = photoForCountry(code);
+            return (
+              <button
+                key={prompt}
+                type="button"
+                disabled={disabled}
+                onClick={() => onPick(prompt)}
+                className="group flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white p-2 pr-4 text-left transition-all hover:border-orange-400 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-orange-500"
+              >
+                {/* Decoration: the question beside it is the button's name. */}
+                <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-200 dark:bg-zinc-800">
+                  <Image
+                    src={photo.src}
+                    alt=""
+                    fill
+                    sizes="56px"
+                    style={{ objectPosition: photo.position }}
+                    className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-110"
+                  />
+                </span>
+                <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{prompt}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
+
+      <p className="max-w-xl text-xs leading-relaxed text-zinc-500">
+        I can&apos;t see live fares or availability, so I&apos;ll always say when something is a typical pattern
+        rather than a price.
+      </p>
     </div>
   );
 }

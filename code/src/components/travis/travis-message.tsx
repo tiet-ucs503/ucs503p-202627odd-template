@@ -3,13 +3,13 @@
 import { Chip } from "@/components/ui";
 import type { DestinationSuggestion, TravisChatMessage } from "@/types/travis";
 import { SuggestionCard } from "./suggestion-card";
+import { TravisAvatar } from "./travis-avatar";
 
 /**
  * One turn of the conversation.
  *
  * A traveller's words sit in a quiet bubble on the right. Travis's sit on the
- * page itself, with its suggestion cards underneath — there is no chat-bot
- * avatar or decoration, just a plain "T" so it's clear who is speaking. Each
+ * page itself beside its monogram, with its suggestion cards underneath. Each
  * turn also carries a visually hidden "You said" / "Travis said", because the
  * alignment that tells sighted people who is talking tells a screen reader
  * nothing.
@@ -31,7 +31,7 @@ export function TravisMessage({
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md border border-orange-100 bg-orange-50 px-4 py-2.5 text-sm text-zinc-900 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-zinc-100">
+        <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md border border-orange-100 bg-orange-50 px-4 py-2.5 text-[15px] leading-relaxed text-zinc-900 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-zinc-100">
           <span className="sr-only">You said: </span>
           {message.content}
         </div>
@@ -44,15 +44,10 @@ export function TravisMessage({
 
   return (
     <div className="flex gap-3">
-      <div
-        aria-hidden="true"
-        className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-zinc-900 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900"
-      >
-        T
-      </div>
+      <TravisAvatar className="mt-0.5" />
 
       <div className="min-w-0 flex-1">
-        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-zinc-800 dark:text-zinc-200">
+        <p className="max-w-prose whitespace-pre-wrap pt-1 text-base leading-relaxed text-zinc-800 dark:text-zinc-200">
           <span className="sr-only">Travis said: </span>
           {message.content}
         </p>
