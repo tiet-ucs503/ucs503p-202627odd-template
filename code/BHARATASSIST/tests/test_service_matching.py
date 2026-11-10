@@ -613,6 +613,55 @@ class DynamicServiceMatchingTestSuite(unittest.TestCase):
         self.assertTrue("not yet eligible" in ans.lower() or "threshold" in ans.lower())
 
 
+    def test_land_registration_matches_property_registration(self):
+        """User asks 'land registration' -> Correctly matches Property Registration, never PAN Card."""
+        res = self.client.post("/api/assistant", json={
+            "question": "land registration",
+            "language": "English"
+        })
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertTrue(data.get("success"))
+        self.assertTrue(data.get("grounded"))
+        self.assertEqual(data.get("context_service"), "Property Registration")
+        self.assertNotIn("### 🏛️ PAN Card Application", data.get("answer", ""))
+        self.assertTrue(any("ngdrs.gov.in" in s.get("source_url", "") for s in data.get("sources", [])))
+
+    def test_what_documents_required_for_land_registration(self):
+        """User asks 'what documents are required for land registration' -> Property Registration docs, never PAN Card Application."""
+        res = self.client.post("/api/assistant", json={
+            "question": "what documents are required for land registration",
+            "language": "English"
+        })
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertTrue(data.get("success"))
+        self.assertTrue(data.get("grounded"))
+        self.assertEqual(data.get("context_service"), "Property Registration")
+        self.assertNotIn("### 🏛️ PAN Card Application", data.get("answer", ""))
+        self.assertTrue("sale deed" in data.get("answer", "").lower() or "stamp duty" in data.get("answer", "").lower())
+
+    def test_utility_connection_discrimination(self):
+        """Utility applications match their respective services, not PAN Card."""
+        res_elec = self.client.post("/api/assistant", json={
+            "question": "electricity connection application",
+            "language": "English"
+        })
+        self.assertEqual(res_elec.status_code, 200)
+        data_elec = res_elec.get_json()
+        self.assertEqual(data_elec.get("context_service"), "Electricity Connection or Bill Payment")
+        self.assertNotIn("pan card", data_elec.get("answer", "").lower())
+
+        res_water = self.client.post("/api/assistant", json={
+            "question": "water connection application",
+            "language": "English"
+        })
+        self.assertEqual(res_water.status_code, 200)
+        data_water = res_water.get_json()
+        self.assertEqual(data_water.get("context_service"), "Water Connection or Bill Payment")
+        self.assertNotIn("pan card", data_water.get("answer", "").lower())
+
+
 if __name__ == "__main__":
     unittest.main()
 

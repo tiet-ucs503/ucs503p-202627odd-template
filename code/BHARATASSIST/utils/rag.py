@@ -49,10 +49,17 @@ def _get_embedder():
     global _embedder
 
     if _embedder is None:
-
-        _embedder = SentenceTransformer(
-            "sentence-transformers/LaBSE"
-        )
+        os.environ.setdefault("HF_HUB_OFFLINE", "1")
+        os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+        try:
+            _embedder = SentenceTransformer(
+                "sentence-transformers/LaBSE",
+                local_files_only=True
+            )
+        except Exception:
+            _embedder = SentenceTransformer(
+                "sentence-transformers/LaBSE"
+            )
 
     return _embedder
 

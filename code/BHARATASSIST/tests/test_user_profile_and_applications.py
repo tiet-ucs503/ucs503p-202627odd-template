@@ -1,6 +1,11 @@
 import json
+import os
 import sqlite3
+import sys
 import unittest
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from app import app, DB_PATH, init_users_table
 
 class UserProfileAndApplicationsTestCase(unittest.TestCase):

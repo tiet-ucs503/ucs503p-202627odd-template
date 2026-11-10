@@ -130,8 +130,83 @@ CORE_SERVICE_SYNONYMS = {
     "gst": ["gst", "gstin", "goods and services tax registration"],
     "fssai": ["fssai", "food licence", "food license", "foscos"],
     "fir": ["fir", "police complaint", "lost report"],
-    "property_reg": ["property registration", "registry", "sale deed"],
-    "land_record": ["land record", "jamabandi", "khata", "khasra", "ror", "land mutation"],
+    "property_reg": [
+        "property registration", "land registration", "land registry", "property registry",
+        "registry", "sale deed", "sale deed registration", "plot registration", "flat registration",
+        "deed registration", "sub registrar", "sub-registrar", "sro", "ngdrs", "bhu panjikaran",
+        "bhumi panjikaran", "bhumi registration", "zameen registry", "jamin registry",
+        "रजिस्ट्री", "जमीन रजिस्ट्री", "भूमि पंजीकरण", "प्लॉट रजिस्ट्री"
+    ],
+    "land_record": [
+        "land record", "land records", "jamabandi", "khata", "khasra", "khatauni", "khatoni",
+        "ror", "record of rights", "bhulekh", "bhu-naksha", "bhunaksha", "cadastral map",
+        "land map", "bhu naksha", "fard", "भूलेख", "जमाबंदी", "खसरा", "खतौनी"
+    ],
+    "land_mutation": [
+        "land mutation", "property mutation", "mutation", "mutation of land", "namantaran",
+        "dakhil kharij", "dakhil-kharij", "नामान्तरण", "दाखिल खारिज", "म्यूटेशन"
+    ],
+    "encumbrance": [
+        "encumbrance certificate", "encumbrance cert", "ec certificate", "non encumbrance",
+        "भारमुक्त प्रमाण पत्र"
+    ],
+    "property_tax": [
+        "property tax", "house tax", "municipal property tax", "गृह कर", "संपत्ति कर"
+    ],
+    "building_plan": [
+        "building plan", "building plan approval", "naksha pass", "house map approval",
+        "भवन निर्माण अनुमति"
+    ],
+    "electricity": [
+        "electricity connection", "electricity bill", "power connection", "bijli connection",
+        "बिजली कनेक्शन", "बिजली बिल"
+    ],
+    "water": [
+        "water connection", "water bill", "jal connection", "paani connection",
+        "पानी कनेक्शन", "जल कनेक्शन"
+    ],
+    "lpg": [
+        "ujjwala", "pm ujjwala", "lpg connection", "gas connection", "cooking gas",
+        "उज्ज्वला", "गैस कनेक्शन"
+    ],
+    "digilocker": [
+        "digilocker", "digital locker", "digi locker", "डीजीलॉकर"
+    ],
+    "pmay": [
+        "pmay", "pm awas", "pradhan mantri awas", "housing scheme", "pmay urban",
+        "pmay gramin", "आवास योजना", "पीएम आवास"
+    ],
+    "kcc": [
+        "kisan credit card", "kcc", "kisan card", "किसान क्रेडिट कार्ड"
+    ],
+    "fasal_bima": [
+        "fasal bima", "pmfby", "crop insurance", "krishi bima", "फसल बीमा"
+    ],
+    "rti": [
+        "rti", "right to information", "सूचना का अधिकार", "आरटीआई"
+    ],
+    "tan": [
+        "tan application", "tan card", "tax deduction account number", "टैन"
+    ],
+    "itr": [
+        "income tax return", "itr filing", "tax return", "आयकर रिटर्न"
+    ],
+    "police_verification": [
+        "police clearance", "pcc", "character certificate", "police verification",
+        "tenant verification", "चरित्र प्रमाण पत्र"
+    ],
+    "skill_india": [
+        "skill india", "pmkvy", "vocational training", "kaushal vikas", "कौशल विकास"
+    ],
+    "employment_exchange": [
+        "employment exchange", "national career service", "रोजगार मेला", "रोजगार कार्यालय"
+    ],
+    "e_challan": [
+        "echallan", "e-challan", "traffic challan", "challan payment", "चालान"
+    ],
+    "abha": [
+        "abha card", "abha health id", "health id", "आयुष्मान भारत हेल्थ अकाउंट", "आभा"
+    ],
     "cpgrams": ["cpgrams", "pgportal", "public grievance", "grievance portal", "central grievance", "शिकायत"],
     "consumer_forum": ["consumer court", "consumer forum", "consumer complaint", "edaakhil", "e-daakhil", "consumer helpline"],
     "cyber_crime": ["cyber crime", "cyber fraud", "online fraud", "1930", "cyber helpline", "cyber police", "cyber complaint"],
@@ -2138,85 +2213,102 @@ def extract_matched_service_intent(
                 continue
 
         score = 0.0
+        v_score = chroma_score_map.get(name_lower, 0.0)
 
-        # Exact / substring match on full service name
+        # Name / Phrase matching
+        name_parts = [p.strip() for p in re.split(r'\s+(?:or|/)\s+', name_lower) if len(p.strip()) >= 3]
+
+        stop_words = {"and", "or", "for", "the", "in", "of", "to", "card", "service", "services", "portal", "online", "how", "i", "do", "can", "get", "my", "a", "an", "is", "what", "where"}
+        overlap = name_tokens.intersection(query_tokens)
+        significant_overlap = [w for w in overlap if w not in stop_words]
+
+        # Has base topical relevance?
+        has_topical_relevance = False
+
+        # Exact / substring match on full service name or key name segments
         if name_lower in q_lower:
-            score += 4.0
-        elif len(name_tokens.intersection(query_tokens)) > 0:
-            # Word overlap with name
-            overlap = name_tokens.intersection(query_tokens)
-            # Penalize generic stop words
-            significant_overlap = [w for w in overlap if w not in {"and", "or", "for", "the", "in", "of", "to", "card", "service", "registration", "application", "license", "licence", "permit", "certificate", "portal", "online"}]
-            score += len(significant_overlap) * 1.5
+            score += 5.0
+            has_topical_relevance = True
+        elif any(part in q_lower for part in name_parts):
+            score += 4.5
+            has_topical_relevance = True
+        elif len(significant_overlap) > 0:
+            score += len(significant_overlap) * 2.0
+            has_topical_relevance = True
 
         # Check domain synonyms & entity overlap
         if user_entities and not user_entities.isdisjoint(svc_entities):
             score += 6.0
+            has_topical_relevance = True
         else:
             for canonical, syn_list in CORE_SERVICE_SYNONYMS.items():
                 user_has_syn = any(re.search(rf"\b{re.escape(syn)}\b", q_lower) for syn in syn_list)
                 svc_has_syn = any(re.search(rf"\b{re.escape(syn)}\b", name_lower) for syn in syn_list)
                 if user_has_syn and svc_has_syn:
+                    score += 4.0
+                    has_topical_relevance = True
+
+        if v_score >= 0.35:
+            has_topical_relevance = True
+
+        # ONLY apply action congruence bonus if the service has base topical relevance to the query!
+        if has_topical_relevance:
+            if "new_application" in detected_actions:
+                if any(w in name_lower for w in ["enrolment", "fresh", "application", "new", "learner", "registration", "register", "incorporation"]):
+                    if not any(w in name_lower for w in ["update", "correction", "change", "duplicate", "renewal", "link", "transfer"]):
+                        score += 5.0
+                if any(w in name_lower for w in ["update", "correction", "change", "duplicate", "renewal", "link", "transfer"]):
+                    score -= 4.0
+
+            if any(act in ["update", "correction"] for act in detected_actions):
+                if any(w in name_lower for w in ["update", "correction", "change", "reprint", "modification", "re-issue", "reissue", "shift"]):
+                    score += 5.0
+                if any(w in name_lower for w in ["application (fresh)", "fresh application"]):
+                    score -= 4.0
+                elif name_lower.endswith("application") and not any(w in name_lower for w in ["update", "correction", "change", "reprint"]):
+                    score -= 3.0
+
+            if "renewal" in detected_actions:
+                if any(w in name_lower for w in ["renewal", "re-issue", "reissue"]):
+                    score += 5.0
+                if any(w in name_lower for w in ["application (fresh)", "fresh application", "learner"]):
+                    score -= 4.0
+                elif name_lower.endswith("application") and not any(w in name_lower for w in ["renewal", "re-issue"]):
+                    score -= 3.0
+
+            if "replacement" in detected_actions:
+                if any(w in name_lower for w in ["duplicate", "replacement", "reprint", "pvc"]):
+                    score += 5.0
+                if any(w in name_lower for w in ["application (fresh)", "fresh application"]):
+                    score -= 4.0
+                elif name_lower.endswith("application") and not any(w in name_lower for w in ["duplicate", "reprint", "replacement", "pvc"]):
+                    score -= 3.0
+
+            if "status_check" in detected_actions:
+                if any(w in name_lower for w in ["status", "track", "tracking", "appointment"]):
+                    score += 4.0
+
+            if "grievance" in detected_actions:
+                if any(w in name_lower for w in ["grievance", "complaint", "cyber crime", "consumer", "police", "fir", "redressal", "cpgrams"]):
+                    score += 5.0
+
+            if "transfer" in detected_actions:
+                if "transfer" in name_lower:
+                    score += 4.0
+
+            if "linking" in detected_actions:
+                if "link" in name_lower:
+                    score += 4.0
+
+            # Address specific boosting
+            if any(w in q_lower for w in ["address", "residence", "shift", "relocate"]):
+                if any(w in name_lower for w in ["address", "shift"]):
                     score += 3.0
 
-        # Action congruence bonus & penalty
-        if "new_application" in detected_actions:
-            if any(w in name_lower for w in ["enrolment", "fresh", "application", "new", "learner"]):
-                if not any(w in name_lower for w in ["update", "correction", "change", "duplicate", "renewal", "link", "transfer"]):
-                    score += 5.0
-            if any(w in name_lower for w in ["update", "correction", "change", "duplicate", "renewal", "link", "transfer"]):
-                score -= 4.0
-
-        if any(act in ["update", "correction"] for act in detected_actions):
-            if any(w in name_lower for w in ["update", "correction", "change", "reprint", "modification", "re-issue", "reissue", "shift"]):
-                score += 5.0
-            if any(w in name_lower for w in ["application (fresh)", "fresh application"]):
-                score -= 4.0
-            elif name_lower.endswith("application") and not any(w in name_lower for w in ["update", "correction", "change", "reprint"]):
-                score -= 3.0
-
-        if "renewal" in detected_actions:
-            if any(w in name_lower for w in ["renewal", "re-issue", "reissue"]):
-                score += 5.0
-            if any(w in name_lower for w in ["application (fresh)", "fresh application", "learner"]):
-                score -= 4.0
-            elif name_lower.endswith("application") and not any(w in name_lower for w in ["renewal", "re-issue"]):
-                score -= 3.0
-
-        if "replacement" in detected_actions:
-            if any(w in name_lower for w in ["duplicate", "replacement", "reprint", "pvc"]):
-                score += 5.0
-            if any(w in name_lower for w in ["application (fresh)", "fresh application"]):
-                score -= 4.0
-            elif name_lower.endswith("application") and not any(w in name_lower for w in ["duplicate", "reprint", "replacement", "pvc"]):
-                score -= 3.0
-
-        if "status_check" in detected_actions:
-            if any(w in name_lower for w in ["status", "track", "tracking", "appointment"]):
-                score += 4.0
-
-        if "grievance" in detected_actions:
-            if any(w in name_lower for w in ["grievance", "complaint", "cyber crime", "consumer", "police", "fir", "redressal", "cpgrams"]):
-                score += 5.0
-
-        if "transfer" in detected_actions:
-            if "transfer" in name_lower:
-                score += 4.0
-
-        if "linking" in detected_actions:
-            if "link" in name_lower:
-                score += 4.0
-
-        # Address specific boosting
-        if any(w in q_lower for w in ["address", "residence", "shift", "relocate"]):
-            if any(w in name_lower for w in ["address", "shift"]):
-                score += 3.0
-
         # Blend with Chroma vector score if available
-        v_score = chroma_score_map.get(name_lower, 0.0)
         score += (v_score * 3.0)
 
-        if score > 1.5:
+        if score > 1.5 and has_topical_relevance:
             scored_candidates.append({
                 "service": svc,
                 "score": score,

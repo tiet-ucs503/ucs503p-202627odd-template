@@ -7,6 +7,13 @@ import os
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    from app import app
+    test_client = app.test_client()
+except Exception:
+    test_client = None
+
 BASE_URL = "http://127.0.0.1:5000"
 
 ADVANCED_BENCHMARK_CASES = [
@@ -296,9 +303,14 @@ for item in ADVANCED_BENCHMARK_CASES:
     }
 
     try:
-        res = session.post(f"{BASE_URL}/api/assistant", json=payload, timeout=10)
-        status_code = res.status_code
-        data = res.json()
+        if test_client:
+            res = test_client.post("/api/assistant", json=payload)
+            status_code = res.status_code
+            data = res.get_json() or {}
+        else:
+            res = session.post(f"{BASE_URL}/api/assistant", json=payload, timeout=10)
+            status_code = res.status_code
+            data = res.json()
         answer = data.get("answer", "")
         context_service = data.get("context_service")
         grounded = data.get("grounded", False)
