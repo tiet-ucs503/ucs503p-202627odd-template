@@ -6,6 +6,7 @@ import {
   countryByCode,
   isBestMonth,
   isSupportedCountry,
+  monthInWindow,
   normalise,
   resolveCountry,
   searchCountries,
@@ -202,5 +203,19 @@ describe("countriesForMonth", () => {
 describe("countriesForMonth limits", () => {
   it("never returns more than the limit, even when padding", () => {
     expect(countriesForMonth(8, { minimum: 10, limit: 2 })).toHaveLength(2);
+  });
+});
+
+describe("monthInWindow", () => {
+  it("includes both ends of an ordinary window", () => {
+    expect([3, 4, 5, 6].map((m) => monthInWindow(m, 4, 5))).toEqual([false, true, true, false]);
+  });
+
+  it("includes both ends of a window that crosses New Year", () => {
+    expect([10, 11, 12, 1, 2, 3].map((m) => monthInWindow(m, 11, 2))).toEqual([false, true, true, true, true, false]);
+  });
+
+  it("is a single month when the ends are the same", () => {
+    expect([8, 9, 10].map((m) => monthInWindow(m, 9, 9))).toEqual([false, true, false]);
   });
 });

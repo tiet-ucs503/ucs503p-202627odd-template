@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { formatSuggestedRange, SuggestionCard } from "@/components/travis/suggestion-card";
+import { formatSuggestedRange, MonthStrip, SuggestionCard } from "@/components/travis/suggestion-card";
+import { photoForCountry } from "@/lib/destination-photos";
 import type { DestinationSuggestion } from "@/types/travis";
 
 function suggestion(overrides: Partial<DestinationSuggestion> = {}): DestinationSuggestion {
@@ -97,5 +98,58 @@ describe("SuggestionCard", () => {
   it("is a labelled article, so each card is a landmark of its own", () => {
     render(<SuggestionCard suggestion={suggestion()} onPlan={vi.fn()} />);
     expect(screen.getByRole("article", { name: "Bali, Indonesia" })).toBeInTheDocument();
+  });
+});
+
+describe("MonthStrip", () => {
+  const filled = (container: HTMLElement) =>
+    [...container.querySelectorAll('[aria-hidden="true"] > span:first-child')].map((segment) => segment.className.includes("bg-orange-500"));
+
+  it("fills in the best months and leaves the rest empty", () => {
+    const { container } = render(<MonthStrip startMonth={4} endMonth={6} />);
+    expect(filled(container)).toEqual([false, false, false, true, true, true, false, false, false, false, false, false]);
+  });
+
+  it("fills in a window that crosses New Year at both ends of the year", () => {
+    const { container } = render(<MonthStrip startMonth={11} endMonth={2} />);
+    expect(filled(container)).toEqual([true, true, false, false, false, false, false, false, false, false, true, true]);
+  });
+
+  it("fills in a single month", () => {
+    const { container } = render(<MonthStrip startMonth={9} endMonth={9} />);
+    expect(filled(container).filter(Boolean)).toHaveLength(1);
+  });
+
+  it("describes itself as a sentence, not as twelve letters", () => {
+    render(<MonthStrip startMonth={11} endMonth={2} />);
+    expect(screen.getByRole("img", { name: "Best months: November to February" })).toBeInTheDocument();
+    render(<MonthStrip startMonth={9} endMonth={9} />);
+    expect(screen.getByRole("img", { name: "Best month: September" })).toBeInTheDocument();
+  });
+});
+
+describe("SuggestionCard photograph", () => {
+  it("shows a photograph of the country, described in its alt text", () => {
+    const { container } = render(<SuggestionCard suggestion={suggestion({ destination: "Japan" })} onPlan={vi.fn()} />);
+    const img = container.querySelector("img");
+    expect(decodeURIComponent(img?.getAttribute("src") ?? "")).toContain(photoForCountry("JP").src);
+    expect(img?.getAttribute("alt")).toBe(photoForCountry("JP").alt);
+  });
+
+  it("recognises a place inside a country, as older saved conversations name it", () => {
+    const { container } = render(<SuggestionCard suggestion={suggestion({ destination: "Bali, Indonesia" })} onPlan={vi.fn()} />);
+    expect(decodeURIComponent(container.querySelector("img")?.getAttribute("src") ?? "")).toContain(photoForCountry("ID").src);
+  });
+
+  it("has no photograph, rather than a wrong one, for somewhere it does not know", () => {
+    const { container } = render(<SuggestionCard suggestion={suggestion({ destination: "Narnia" })} onPlan={vi.fn()} />);
+    expect(container.querySelector("img")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Narnia" })).toBeInTheDocument();
+  });
+
+  it("keeps the facts and the way to plan the trip either way", () => {
+    render(<SuggestionCard suggestion={suggestion({ destination: "Narnia" })} onPlan={vi.fn()} />);
+    expect(screen.getByText("Best time to go")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Plan this trip to Narnia" })).toBeInTheDocument();
   });
 });

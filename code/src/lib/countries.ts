@@ -311,7 +311,7 @@ export function isSupportedCountry(name: string): boolean {
   return COUNTRIES.some((country) => country.name === name);
 }
 
-const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+export const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /** "Nov–Feb". */
 export function bestMonthsLabel(country: Country): string {
@@ -319,10 +319,14 @@ export function bestMonthsLabel(country: Country): string {
   return from === to ? MONTH_NAMES[from - 1] : `${MONTH_NAMES[from - 1]}–${MONTH_NAMES[to - 1]}`;
 }
 
+/** Whether a 1-based month falls inside a window that may cross New Year (11 to 2). */
+export function monthInWindow(month: number, from: number, to: number): boolean {
+  return from <= to ? month >= from && month <= to : month >= from || month <= to;
+}
+
 /** Whether a 1-based month falls inside the country's best window. */
 export function isBestMonth(country: Country, month: number): boolean {
-  const { from, to } = country.bestMonths;
-  return from <= to ? month >= from && month <= to : month >= from || month <= to;
+  return monthInWindow(month, country.bestMonths.from, country.bestMonths.to);
 }
 
 export const MONTH_FULL_NAMES = [
