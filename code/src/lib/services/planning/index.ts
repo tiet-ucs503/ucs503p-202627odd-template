@@ -32,9 +32,6 @@ export async function planCities(
     return fallbackPlan(request, "No planning model configured.");
   }
 
-  // A stand-in provider doesn't actually reason, so its output is recorded as
-  // fallback planning rather than passed off as AI planning.
-  const sourceForProvider = provider.simulated ? "fallback" : "ai";
   let repairNote: string | undefined;
 
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -54,9 +51,9 @@ export async function planCities(
         return {
           destination: request.destination,
           cities: proposal.cities,
-          source: sourceForProvider,
+          source: "ai",
           plannerVersion: `${provider.name}:${provider.model}`,
-          fallbackReason: provider.simulated ? "Simulated planner (AI_PROVIDER=mock)." : null,
+          fallbackReason: null,
         };
       }
 

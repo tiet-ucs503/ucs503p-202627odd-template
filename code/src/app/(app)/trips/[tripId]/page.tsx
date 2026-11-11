@@ -5,8 +5,13 @@ import Link from "next/link";
 import { ArrowLeft, Map as MapIcon, Pencil } from "lucide-react";
 import { Alert, Button, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
 import { CityManagerDialog } from "@/components/roadmap/city-manager-dialog";
-import { CitySection } from "@/components/roadmap/city-section";
 import { TripHeader } from "@/components/roadmap/trip-header";
+import { DayPanel } from "@/components/plan/day-panel";
+import { DayStrip } from "@/components/plan/day-strip";
+import { StaysPanel } from "@/components/plan/stays-panel";
+import { TripAgentPanel } from "@/components/trip-agent/trip-agent-panel";
+import { TravisBanner } from "@/components/trip-agent/travis-banner";
+import { TravisLauncher } from "@/components/trip-agent/travis-launcher";
 import { BudgetPanel } from "@/components/budget/budget-panel";
 import { TripMap } from "@/components/maps/trip-map";
 import { buildSavingsSuggestions } from "@/lib/services/budget-engine";
@@ -14,7 +19,6 @@ import { analyzeTrip } from "@/lib/services/feasibility";
 import { subscribeToTrip, updateTripItinerary } from "@/lib/services/trips";
 import {
   addActivity,
-  applySuggestion,
   deleteActivity,
   reorderActivities,
   updateActivity,
@@ -27,16 +31,20 @@ import type { Activity, City } from "@/types/itinerary";
 import type { SavingsSuggestion } from "@/types/budget";
 import type { CityAllocation } from "@/types/planning";
 import type { GeneratedItinerary, Trip } from "@/types/trip";
+import type { TripAgentFocus, TripPatch } from "@/types/trip-agent";
 
 export default function TripPage({ params }: { params: Promise<{ tripId: string }> }) {
   const { tripId } = use(params);
   const [trip, setTrip] = useState<Trip | null | undefined>(undefined);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [expandedDayId, setExpandedDayId] = useState<string | null>(null);
+  const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
   const [mapMode, setMapMode] = useState<MapFilterMode>("all");
   const [mapOpenOnMobile, setMapOpenOnMobile] = useState(false);
   const [editingCities, setEditingCities] = useState(false);
+  const [agentOpen, setAgentOpen] = useState(false);
+  const [agentFocus, setAgentFocus] = useState<TripAgentFocus | null>(null);
+  const [agentPrompt, setAgentPrompt] = useState<{ text: string; nonce: number } | null>(null);
 
   useEffect(() => {
     return subscribeToTrip(
@@ -45,7 +53,7 @@ export default function TripPage({ params }: { params: Promise<{ tripId: string 
         setTrip(next);
         setLoadError(null);
         if (next && next.days.length > 0) {
-          setExpandedDayId((cur) => cur ?? next.days[0].id);
+          setSelectedDayId((cur) => cur ?? next.days[0].id);
         }
       },
       (err) => setLoadError(err.message),
@@ -62,20 +70,30 @@ export default function TripPage({ params }: { params: Promise<{ tripId: string 
   const feasibility = useMemo(() => (trip ? analyzeTrip(trip) : null), [trip]);
 
   /**
-   * Selecting a place from the map has to reveal it in the roadmap: expand
-   * the day it lives in, then scroll it into view once that day has rendered.
-   * Selecting from the roadmap runs through the same path — the day is
-   * already open, and `block: "nearest"` means an already-visible row doesn't
+   * Selecting a place from the map has to reveal it in the plan: show the day
+   * it lives in, then scroll it into view once that day has rendered.
+   * Selecting from the plan runs through the same path: the day is already
+   * showing, and `block: "nearest"` means an already-visible row doesn't
    * jump around.
    */
   const handleSelectPlace = useCallback(
     (id: string | null) => {
       setSelectedPlaceId(id);
       if (!id || !trip) return;
-      if (!id.startsWith("hotel:")) {
-        const day = trip.days.find((d) => d.activities.some((a) => a.id === id));
-        if (day) setExpandedDayId(day.id);
+
+      if (id.startsWith("hotel:")) {
+        // A hotel belongs to a city, and is shown above that city's days.
+        const cityId = id.slice("hotel:".length);
+        setSelectedDayId((current) => {
+          const currentDay = trip.days.find((d) => d.id === current);
+          if (currentDay?.cityId === cityId) return current;
+          return trip.days.filter((d) => d.cityId === cityId).sort((a, b) => a.dayNumber - b.dayNumber)[0]?.id ?? current;
+        });
+        return;
       }
+
+      const day = trip.days.find((d) => d.activities.some((a) => a.id === id));
+      if (day) setSelectedDayId(day.id);
     },
     [trip],
   );
@@ -95,16 +113,20 @@ export default function TripPage({ params }: { params: Promise<{ tripId: string 
     [trip],
   );
 
-  // The map's city/day filters follow whichever day the roadmap has open,
-  // rather than duplicating the roadmap's navigation with its own pickers.
+  // The map's city/day filters follow whichever day is showing, rather than
+  // duplicating the plan's navigation with its own pickers.
   const focusedDay = useMemo(
-    () => trip?.days.find((d) => d.id === expandedDayId) ?? trip?.days[0] ?? null,
-    [trip, expandedDayId],
+    () => trip?.days.find((d) => d.id === selectedDayId) ?? trip?.days[0] ?? null,
+    [trip, selectedDayId],
   );
   const mapFilter = useMemo<MapFilter>(
     () => ({ mode: mapMode, dayId: focusedDay?.id ?? null, cityId: focusedDay?.cityId ?? null }),
     [mapMode, focusedDay],
   );
+
+  const orderedDays = useMemo(() => (trip ? [...trip.days].sort((a, b) => a.dayNumber - b.dayNumber) : []), [trip]);
+  const focusedIndex = focusedDay ? orderedDays.findIndex((d) => d.id === focusedDay.id) : -1;
+  const focusedCity = focusedDay ? (sortedCities.find((c) => c.id === focusedDay.cityId) ?? null) : null;
 
   if (loadError) {
     return <Alert>Couldn&apos;t load this trip: {loadError}</Alert>;
@@ -125,6 +147,36 @@ export default function TripPage({ params }: { params: Promise<{ tripId: string 
 
   async function persist(patch: Partial<Pick<Trip, "cities" | "days" | "budget">>) {
     await updateTripItinerary(tripId, patch);
+  }
+
+  /**
+   * Saves a confirmed change from Travis, or the undo of one. Cities, days,
+   * budget and the trip's length move in one write, so the roadmap, budget and
+   * map never disagree about what the trip is.
+   */
+  async function handleApplyAgentPatch(patch: TripPatch) {
+    await updateTripItinerary(tripId, patch);
+    // A selection or open day that belonged to something removed would now dangle.
+    setSelectedPlaceId(null);
+    setSelectedDayId((current) => (current && patch.days.some((d) => d.id === current) ? current : (patch.days[0]?.id ?? null)));
+  }
+
+  /** Choosing a day by hand. A place selected on the map belonged to another day, so it is let go. */
+  function selectDay(dayId: string) {
+    setSelectedDayId(dayId);
+    setSelectedPlaceId(null);
+  }
+
+  /** "Ask Travis" from a day, a city or a place: open the panel already looking at it. */
+  function askTravis(focus: TripAgentFocus) {
+    setAgentFocus(focus);
+    setAgentOpen(true);
+  }
+
+  /** Open Travis, optionally with a question already asked (a chip on the page). */
+  function openTravis(text?: string) {
+    if (text) setAgentPrompt({ text, nonce: Date.now() });
+    setAgentOpen(true);
   }
 
   function handleAddActivity(dayId: string, activity: Activity) {
@@ -156,12 +208,6 @@ export default function TripPage({ params }: { params: Promise<{ tripId: string 
     if (!trip) return;
     const { cities, budget } = updateHotel(trip, cityId, patch);
     persist({ cities, budget });
-  }
-
-  function handleApplySuggestion(suggestion: SavingsSuggestion) {
-    if (!trip) return;
-    const result = applySuggestion(trip, suggestion);
-    if (result) persist(result);
   }
 
   /**
@@ -204,13 +250,19 @@ export default function TripPage({ params }: { params: Promise<{ tripId: string 
       },
     });
 
-    // A selection or open day belonging to a removed city would now dangle.
+    // A selection or chosen day belonging to a removed city would now dangle.
     setSelectedPlaceId(null);
-    setExpandedDayId(itinerary.days[0]?.id ?? null);
+    setSelectedDayId(itinerary.days[0]?.id ?? null);
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div
+      className={cn(
+        "flex flex-col gap-8",
+        // Beside the open panel rather than under it, wherever the page is wide enough to have both.
+        agentOpen && "xl:pr-[max(0px,calc(26rem_-_(100vw_-_72rem)/2))]",
+      )}
+    >
       <Link
         href="/dashboard"
         className="inline-flex w-fit items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
@@ -221,14 +273,18 @@ export default function TripPage({ params }: { params: Promise<{ tripId: string 
 
       <TripHeader trip={trip} />
 
-      <Tabs defaultValue="roadmap">
+      {/* Travis belongs to the trip, so he sits with its header. While the chat is open the card is not needed. */}
+      {agentOpen ? null : <TravisBanner destination={trip.destination} onOpen={() => openTravis()} onAsk={openTravis} />}
+
+      <Tabs defaultValue="itinerary">
         <TabsList>
-          <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
+          <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
+          <TabsTrigger value="stays">Stays &amp; transport</TabsTrigger>
           <TabsTrigger value="budget">Budget</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="roadmap" className="mt-6 focus:outline-none">
-          <div className="mb-4 flex items-center gap-2">
+        <TabsContent value="itinerary" className="mt-6 focus:outline-none">
+          <div className="mb-5 flex items-center gap-2">
             <Button variant="secondary" size="sm" onClick={() => setEditingCities(true)}>
               <Pencil className="h-3.5 w-3.5" />
               Edit cities
@@ -244,7 +300,15 @@ export default function TripPage({ params }: { params: Promise<{ tripId: string 
             </Button>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)]">
+          <DayStrip
+            cities={sortedCities}
+            days={trip.days}
+            selectedDayId={focusedDay?.id ?? null}
+            plans={feasibility?.days}
+            onSelect={selectDay}
+          />
+
+          <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)]">
             <aside className={cn("order-1 lg:order-2", !mapOpenOnMobile && "hidden lg:block")}>
               <TripMap
                 trip={trip}
@@ -256,33 +320,60 @@ export default function TripPage({ params }: { params: Promise<{ tripId: string 
               />
             </aside>
 
-            <div className="order-2 flex min-w-0 flex-col gap-10 lg:order-1">
-              {sortedCities.map((city) => (
-                <CitySection
-                  key={city.id}
-                  city={city}
-                  days={trip.days.filter((d) => d.cityId === city.id).sort((a, b) => a.dayNumber - b.dayNumber)}
+            <div className="order-2 min-w-0 lg:order-1">
+              {focusedDay && focusedCity ? (
+                <DayPanel
+                  city={focusedCity}
+                  day={focusedDay}
+                  previous={orderedDays[focusedIndex - 1] ?? null}
+                  next={orderedDays[focusedIndex + 1] ?? null}
+                  cityNameOf={(cityId) => sortedCities.find((c) => c.id === cityId)?.name ?? ""}
                   currency={trip.currency}
-                  expandedDayId={expandedDayId}
-                  dayPlans={feasibility?.days}
+                  plan={feasibility?.days[focusedDay.id] ?? null}
                   selectedPlaceId={selectedPlaceId}
                   onSelectPlace={handleSelectPlace}
-                  onToggleDay={(dayId) => setExpandedDayId((cur) => (cur === dayId ? null : dayId))}
-                  onEditHotel={(patch) => handleEditHotel(city.id, patch)}
+                  onSelectDay={selectDay}
+                  onEditHotel={(patch) => handleEditHotel(focusedCity.id, patch)}
                   onAddActivity={handleAddActivity}
                   onEditActivity={handleEditActivity}
                   onDeleteActivity={handleDeleteActivity}
                   onReorderActivities={handleReorder}
+                  onAskTravis={askTravis}
                 />
-              ))}
+              ) : null}
             </div>
           </div>
         </TabsContent>
 
+        <TabsContent value="stays" className="mt-6 focus:outline-none">
+          <StaysPanel
+            cities={sortedCities}
+            days={trip.days}
+            currency={trip.currency}
+            plans={feasibility?.days}
+            selectedPlaceId={selectedPlaceId}
+            onEditHotel={handleEditHotel}
+          />
+        </TabsContent>
+
         <TabsContent value="budget" className="mt-6 max-w-2xl focus:outline-none">
-          <BudgetPanel budget={trip.budget} suggestions={suggestions} onApplySuggestion={handleApplySuggestion} />
+          <BudgetPanel budget={trip.budget} suggestions={suggestions} onAskTravis={openTravis} />
         </TabsContent>
       </Tabs>
+
+      <TripAgentPanel
+        key={trip.id}
+        trip={trip}
+        open={agentOpen}
+        onOpenChange={setAgentOpen}
+        focus={agentFocus}
+        onClearFocus={() => setAgentFocus(null)}
+        onApply={handleApplyAgentPatch}
+        prompt={agentPrompt}
+        onPromptSent={() => setAgentPrompt(null)}
+      />
+
+      {agentOpen ? null : <TravisLauncher onOpen={() => openTravis()} />}
 
       <CityManagerDialog
         open={editingCities}

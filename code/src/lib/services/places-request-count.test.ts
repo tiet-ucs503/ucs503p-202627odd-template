@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { generateItinerary } from "@/lib/services/itinerary-generator";
-import { MockPlacesProvider } from "@/lib/services/places/mock-provider";
+import { MockPlacesProvider } from "@/test-support/places/mock-provider";
 import type { PlaceSearchParams, PlacesProvider } from "@/lib/services/places/provider";
 import type { Place } from "@/types/place";
 import type { CityPlan } from "@/types/planning";

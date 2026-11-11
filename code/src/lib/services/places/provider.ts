@@ -2,12 +2,12 @@ import type { TravelStyle } from "@/types/itinerary";
 import type { Place, PlaceType } from "@/types/place";
 
 export interface PlaceSearchParams {
-  /** A city (or, for a generic fallback, a whole destination) name, e.g. "Bangkok". */
+  /** A city name, e.g. "Bangkok". */
   destination: string;
   /** The country the destination is in, when known — improves query precision for a live provider. */
   country?: string;
   type: PlaceType;
-  /** Used to rank/bias results (mock: matches curated style tags; google: biases the query text). */
+  /** Biases the query text, so a food lover's attractions lean toward food. */
   preferences?: TravelStyle[];
   /** Restaurants only — narrows to places suited to that meal. */
   mealType?: "breakfast" | "lunch" | "dinner";
@@ -23,18 +23,18 @@ export interface PlaceSearchParams {
 }
 
 /**
- * Every travel-data source — the built-in mock content or a live API —
- * implements this one interface. The itinerary generator and the search API
- * route only ever talk to a `PlacesProvider`, so switching providers (see
- * `getPlacesProvider` in `./index.ts`) never requires touching the
- * generator, the roadmap, or the map.
+ * Every travel-data source implements this one interface. The itinerary
+ * generator and the search API route only ever talk to a `PlacesProvider`, so
+ * switching providers (see `getPlacesProvider` in `./index.ts`) never requires
+ * touching the generator, the plan, or the map.
  *
- * Implementations must not throw for ordinary "no results" cases — they
- * return an empty array. They throw `PlacesProviderError` only for genuine
- * failures (bad key, quota, network, malformed response) so callers can
- * decide between falling back to mock content and surfacing a message.
+ * Implementations must not throw for ordinary "no results" cases: they return
+ * an empty array. They throw `PlacesProviderError` only for genuine failures
+ * (bad key, quota, network, malformed response), which callers surface to the
+ * traveller. There is no stand-in content to fall back to.
  */
 export interface PlacesProvider {
+  /** `google` in the product. Tests use a double that calls itself `mock`. */
   readonly name: "mock" | "google";
   searchPlaces(params: PlaceSearchParams): Promise<Place[]>;
   /**

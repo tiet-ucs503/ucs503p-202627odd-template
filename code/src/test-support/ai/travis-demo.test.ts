@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_DESTINATIONS } from "@/lib/mock-data/travis-demo";
-import { MockAIProvider } from "@/lib/services/ai";
+import { DEMO_DESTINATIONS } from "@/test-support/ai/travis-demo";
+import { MockAIProvider } from "@/test-support/ai/mock-provider";
 import { containsPriceClaim } from "@/lib/services/travis/price-guard";
 import { travelStyleSchema } from "@/lib/validation/shared";
 

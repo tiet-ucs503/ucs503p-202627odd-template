@@ -84,8 +84,9 @@ export function computeBudgetBreakdown(input: ComputeBudgetInput): BudgetBreakdo
 /**
  * Deterministic, explainable "ways to save" — no real recommendation model,
  * just a handful of rules over the itinerary that has already been built.
- * Each suggestion is actionable: applying it (see `applySuggestion` in the
- * budget UI) performs the exact edit it describes.
+ * A suggestion is advice, with the words to ask Travis to act on it. It never
+ * edits the trip itself: a cheaper hotel or tour has to be a real one, found by
+ * the places provider and confirmed by the traveller.
  */
 export function buildSavingsSuggestions(
   cities: City[],
@@ -105,9 +106,10 @@ export function buildSavingsSuggestions(
       id: `hotel-${priciestHotel.id}`,
       kind: "hotel-downgrade",
       title: `Switch to a more modest hotel in ${priciestHotel.name}`,
-      description: `Move from ${priciestHotel.hotel.name} to a 3-star alternative for the same nights.`,
+      description: `Move from ${priciestHotel.hotel.name} to a cheaper, well-rated hotel for the same nights.`,
       estimatedSavings: savings,
       targetId: priciestHotel.id,
+      askTravis: `Find me a cheaper, well-rated hotel in ${priciestHotel.name}`,
     });
   }
 
@@ -124,6 +126,7 @@ export function buildSavingsSuggestions(
       description: "A shared/group version of this activity instead of a private one.",
       estimatedSavings: savings,
       targetId: nonEssential.activity.id,
+      askTravis: `Replace ${nonEssential.activity.name} with a cheaper, well-rated alternative`,
     });
   }
 
@@ -134,6 +137,7 @@ export function buildSavingsSuggestions(
       title: "Choose local restaurants over hotel dining",
       description: "Swap one hotel/rooftop meal per city for a local restaurant.",
       estimatedSavings: Math.round(budget.categories.food * 0.15),
+      askTravis: "Replace hotel meals with well-rated local restaurants",
     });
   }
 

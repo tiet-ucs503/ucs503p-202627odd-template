@@ -2,12 +2,13 @@
 
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { Plus } from "lucide-react";
+import { MessageCircle, Plus } from "lucide-react";
 import { Fragment, useState } from "react";
 import { Button } from "@/components/ui";
 import { formatDateLong, formatMoney } from "@/lib/utils";
 import type { Activity, TripDay } from "@/types/itinerary";
 import type { DayPlan } from "@/types/travel";
+import type { TripAgentFocus } from "@/types/trip-agent";
 import { DayTimeSummary, FeasibilityNotes } from "./feasibility-notes";
 import { TravelSegmentRow } from "./travel-segment-row";
 import {
@@ -40,6 +41,7 @@ export function DayView({
   onEditActivity,
   onDeleteActivity,
   onReorder,
+  onAskTravis,
 }: {
   day: TripDay;
   cityName: string;
@@ -53,6 +55,8 @@ export function DayView({
   onEditActivity: (activityId: string, patch: Partial<Activity>) => void;
   onDeleteActivity: (activityId: string) => void;
   onReorder: (orderedIds: string[]) => void;
+  /** Open Travis looking at this day, or at one of its places. */
+  onAskTravis?: (focus: TripAgentFocus) => void;
 }) {
   const [editing, setEditing] = useState<Activity | null>(null);
   const [adding, setAdding] = useState(false);
@@ -122,6 +126,7 @@ export function DayView({
                     }
                     onEdit={() => setEditing(activity)}
                     onDelete={() => onDeleteActivity(activity.id)}
+                    onAskTravis={onAskTravis ? () => onAskTravis({ activityId: activity.id }) : undefined}
                   />
                 </Fragment>
               ))}
@@ -133,11 +138,17 @@ export function DayView({
 
       {plan ? <FeasibilityNotes feasibility={plan.feasibility} /> : null}
 
-      <div className="mt-2">
+      <div className="mt-2 flex flex-wrap gap-1">
         <Button variant="ghost" size="sm" onClick={() => setAdding(true)}>
           <Plus className="h-3.5 w-3.5" />
           Add activity
         </Button>
+        {onAskTravis ? (
+          <Button variant="ghost" size="sm" onClick={() => onAskTravis({ dayId: day.id })}>
+            <MessageCircle className="h-3.5 w-3.5" />
+            Ask Travis about this day
+          </Button>
+        ) : null}
       </div>
 
       {editing ? (

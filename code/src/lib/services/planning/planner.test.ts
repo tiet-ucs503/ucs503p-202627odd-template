@@ -29,9 +29,9 @@ describe("fallback planner", () => {
     }
   });
 
-  it("keeps the curated multi-city split for a curated destination", () => {
+  it("splits Thailand across its real cities", () => {
     const cities = planCitiesDeterministically(request({ destination: "Thailand" }));
-    expect(cities.map((c) => c.name)).toEqual(["Bangkok", "Phuket"]);
+    expect(cities.map((c) => c.name)).toEqual(["Bangkok", "Phuket", "Chiang Mai"]);
     expect(cities.reduce((sum, c) => sum + c.days, 0)).toBe(9);
   });
 
@@ -44,9 +44,9 @@ describe("fallback planner", () => {
     expect(single).toHaveLength(1);
     expect(single[0].days).toBe(1);
 
-    // Long enough to justify the move, so both cities come back.
+    // Long enough to justify the moves, so every city comes back.
     const longer = planCitiesDeterministically(request({ destination: "Thailand", dayCount: 6 }));
-    expect(longer).toHaveLength(2);
+    expect(longer).toHaveLength(3);
     expect(longer.reduce((s, c) => s + c.days, 0)).toBe(6);
   });
 

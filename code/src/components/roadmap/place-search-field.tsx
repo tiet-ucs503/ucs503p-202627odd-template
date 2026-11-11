@@ -11,8 +11,7 @@ import type { Place, PlaceType } from "@/types/place";
  * Lets a traveller replace an activity with a *real* place instead of typing
  * a free-text name. Calls `/api/places/search`, which runs the configured
  * provider server-side — this component never talks to a provider or sees an
- * API key. In mock mode the same route returns curated demo places, so the
- * picker works with or without credentials.
+ * API key. Results are real places, best rated first.
  */
 export function PlaceSearchField({
   destination,
@@ -51,7 +50,7 @@ export function PlaceSearchField({
       setNotice(body.notice ?? null);
     } catch (err) {
       setError(
-        err instanceof ApiError && err.status === 401
+        err instanceof ApiError
           ? err.message
           : "Couldn't search for places right now. You can still type a name yourself.",
       );
@@ -112,7 +111,7 @@ export function PlaceSearchField({
               >
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{place.name}</span>
-                  {place.isDemoData ? <Badge tone="amber">Demo</Badge> : null}
+                  {place.isDemoData ? <Badge tone="amber">Not verified</Badge> : null}
                   {place.rating ? (
                     <span className="inline-flex items-center gap-0.5 text-xs text-zinc-500">
                       <Star className="h-3 w-3 fill-amber-400 text-amber-400" />

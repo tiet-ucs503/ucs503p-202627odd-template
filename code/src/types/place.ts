@@ -1,7 +1,7 @@
 import type { ActivityCategory, TravelStyle } from "./itinerary";
 
 /**
- * The travel-data model shared by every places provider (mock or live).
+ * The travel-data model shared by every places provider.
  * `lib/services/places/*` is the only code that produces `Place` values;
  * the itinerary generator converts them into `Activity`/`Hotel` records
  * (see `placeToActivity`/`placeToHotel` in `itinerary-generator.ts`), and
@@ -22,11 +22,10 @@ export interface Rating {
 }
 
 /**
- * A cost estimate attached to a place. `isEstimate` is true for essentially
- * every value in this app today (mock content is a realistic guess; a
- * provider like Google Places only ever returns a coarse `priceLevel`
- * enum, never an exact amount) — it exists so the UI can say "estimated"
- * rather than imply a verified, bookable price.
+ * A cost estimate attached to a place. `isEstimate` is true for every value in
+ * this app today (a provider like Google Places only ever returns a coarse
+ * `priceLevel` enum, never an exact amount), and it exists so the UI can say
+ * "estimated" rather than imply a verified, bookable price.
  */
 export interface PriceInfo {
   amount: number;
@@ -41,6 +40,10 @@ export interface PriceInfo {
  * "the traveller replaced this with something else entirely".
  */
 export interface SourceRef {
+  /**
+   * `google` for every place TripEase finds. `mock` is only ever read, from trips
+   * saved by an earlier version that had built-in sample places; nothing writes it.
+   */
   provider: "mock" | "google";
   /**
    * The provider's own stable id for this place (a Google `places/…` id).
@@ -59,7 +62,7 @@ export interface SourceRef {
 }
 
 export interface Place {
-  /** Provider-namespaced, e.g. "mock:grand-palace" or "google:ChIJ...". */
+  /** Provider-namespaced, e.g. "google:ChIJ...". */
   id: string;
   type: PlaceType;
   name: string;
@@ -81,7 +84,12 @@ export interface Place {
   /** Restaurants only: which itinerary meal slots this place suits. */
   mealTypes: ("breakfast" | "lunch" | "dinner")[] | null;
   source: SourceRef;
-  /** True when the place itself (not just its price) is placeholder/demo content. */
+  /**
+   * True when the place is not backed by a real source: something the traveller
+   * typed in, or sample content in a trip saved by an earlier version. Always
+   * false for a place found by the places provider. (The name is kept because it
+   * is stored on every saved trip.)
+   */
   isDemoData: boolean;
 }
 
@@ -94,18 +102,18 @@ export type HotelPlace = Place & { type: "hotel" };
  * a second persisted "verified" boolean alongside `isDemoData` could drift
  * out of sync with it, and there'd be no way to tell which one was right.
  *
- * - `live`  — a real place fetched from a live provider (Google Places).
- * - `cited` — a real place from curated content that cites a real source
- *             (e.g. a Wikipedia article for a famous landmark).
- * - `demo`  — placeholder/demo content, or something the traveller typed in.
+ * - `live`       a real place fetched from a live provider (Google Places).
+ * - `cited`      a place whose source link points at a real page.
+ * - `unverified` something the traveller typed in, or sample content from a trip
+ *                saved by an earlier version.
  */
-export type PlaceVerification = "live" | "cited" | "demo";
+export type PlaceVerification = "live" | "cited" | "unverified";
 
 export function verificationOf(input: {
   isDemoData: boolean;
   source?: SourceRef | null;
 }): PlaceVerification {
-  if (input.isDemoData) return "demo";
+  if (input.isDemoData) return "unverified";
   if (input.source?.provider === "google") return "live";
-  return input.source?.sourceUrl ? "cited" : "demo";
+  return input.source?.sourceUrl ? "cited" : "unverified";
 }

@@ -1,9 +1,10 @@
 /**
  * Provider failures are classified rather than thrown as raw strings so the
- * layers above can react sensibly: the itinerary generator falls back to
- * mock content for any of them, and the search API route turns the code
- * into a friendly, non-leaky message for the UI (a raw Google error body
- * can contain project ids and key hints — never show it to a user).
+ * layers above can react sensibly. TripEase has no stand-in data: when the
+ * places service fails, or has nothing for somewhere, the traveller is told so,
+ * in words that say what to do, and the trip is not built from invented places.
+ * The API routes turn the code into a friendly, non-leaky message (a raw Google
+ * error body can contain project ids and key hints, so it is never shown).
  */
 export type PlacesErrorCode =
   | "missing-key"
@@ -11,7 +12,9 @@ export type PlacesErrorCode =
   | "quota-exceeded"
   | "network"
   | "malformed-response"
-  | "provider-error";
+  | "provider-error"
+  /** The service answered, but has nothing for what was asked (a hotel, or any sights, in a city). */
+  | "no-results";
 
 export class PlacesProviderError extends Error {
   constructor(
@@ -31,20 +34,34 @@ export function codeForHttpStatus(status: number): PlacesErrorCode {
   return "provider-error";
 }
 
-/** A short, safe message for end users — never includes upstream response text. */
+/** A short, safe message for end users: never includes upstream response text. */
 export function friendlyPlacesMessage(code: PlacesErrorCode): string {
   switch (code) {
     case "missing-key":
-      return "Live place search isn't configured. Showing demo places instead.";
+      return "Place search isn't set up on this server, so TripEase can't look up real places right now.";
     case "invalid-key":
-      return "Live place search is misconfigured. Showing demo places instead.";
+      return "Place search is misconfigured on this server, so TripEase can't look up real places right now.";
     case "quota-exceeded":
-      return "Live place search has hit its usage limit for now. Showing demo places instead.";
+      return "Place search has hit its usage limit for now. Try again in a little while.";
     case "network":
       return "Couldn't reach the place search service. Check your connection and try again.";
     case "malformed-response":
-      return "Got an unexpected response from the place search service.";
+      return "Got an unexpected response from the place search service. Try again.";
+    case "no-results":
+      return "The place search service has no places for that. Try a different search.";
     default:
-      return "Place search is temporarily unavailable.";
+      return "Place search is temporarily unavailable. Try again in a moment.";
+  }
+}
+
+/** The HTTP status a route should answer with for this failure. */
+export function statusForPlacesError(code: PlacesErrorCode): number {
+  switch (code) {
+    case "no-results":
+      return 422;
+    case "malformed-response":
+      return 502;
+    default:
+      return 503;
   }
 }

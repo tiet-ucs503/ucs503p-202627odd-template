@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MockAIProvider } from "@/lib/services/ai/mock-provider";
+import { MockAIProvider } from "@/test-support/ai/mock-provider";
 import { planCities } from "@/lib/services/planning";
 import type { CityPlanRequest } from "@/types/planning";
 
@@ -25,20 +25,17 @@ describe("planCities pipeline", () => {
   it("falls back deterministically when no provider is configured", async () => {
     const plan = await planCities(request(), null);
     expect(plan.source).toBe("fallback");
-    expect(plan.cities.map((c) => `${c.name}:${c.days}`)).toEqual(["Bangkok:4", "Phuket:5"]);
+    // Thailand's real cities, from the country list: nothing is invented.
+    expect(plan.cities.map((c) => c.name)).toEqual(["Bangkok", "Phuket", "Chiang Mai"]);
+    expect(plan.cities.reduce((sum, c) => sum + c.days, 0)).toBe(9);
   });
 
   it("accepts a valid proposal in a single call", async () => {
     const provider = new MockAIProvider("valid");
     const plan = await planCities(request(), provider);
     expect(provider.calls).toBe(1);
-    expect(plan.cities.map((c) => `${c.name}:${c.days}`)).toEqual(["Bangkok:4", "Phuket:5"]);
-  });
-
-  it("records a simulated provider as fallback, not as AI planning", async () => {
-    // A stand-in didn't reason about anything; the trip must not claim it did.
-    const plan = await planCities(request(), new MockAIProvider("valid"));
-    expect(plan.source).toBe("fallback");
+    expect(plan.source).toBe("ai");
+    expect(plan.cities.reduce((sum, c) => sum + c.days, 0)).toBe(9);
   });
 
   it("repairs an invalid allocation with exactly one retry", async () => {

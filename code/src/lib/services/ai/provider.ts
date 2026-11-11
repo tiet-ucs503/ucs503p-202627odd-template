@@ -2,6 +2,8 @@ import type { CityPlanRequest } from "@/types/planning";
 import type { LlmCityPlan } from "@/lib/validation/planning";
 import type { TravisMessageInput } from "@/types/travis";
 import type { LlmTravisTurn } from "@/lib/validation/travis";
+import type { LlmTripEdit } from "@/lib/validation/trip-agent";
+import type { AgentTrip, CityTopPlaces, TripAgentFocus, TripAgentMessageInput } from "@/types/trip-agent";
 
 /**
  * The reasoning layer's provider seam.
@@ -16,7 +18,8 @@ import type { LlmTravisTurn } from "@/lib/validation/travis";
  * `services/planning` before it can influence a trip.
  */
 
-export type AIProviderName = "groq" | "mock";
+/** A vendor name, for logs and for recording how a plan was made. */
+export type AIProviderName = string;
 
 export type AIFailureCode =
   | "not-configured"
@@ -37,6 +40,18 @@ export class AIProviderError extends Error {
   }
 }
 
+/** What the trip agent is asked: the trip as it is now, the conversation about it, and where the traveller is looking. */
+export interface TripEditRequest {
+  /** `YYYY-MM-DD`. Supplied by us so the model never has to guess the date. */
+  today: string;
+  trip: AgentTrip;
+  /** Oldest first; the last entry is the traveller's newest request. */
+  messages: TripAgentMessageInput[];
+  focus?: TripAgentFocus;
+  /** Real top-rated places in the relevant cities, looked up when the question is about what to see or eat. */
+  grounding?: CityTopPlaces[];
+}
+
 /** What Travis is asked: the conversation so far, and today's date as the server knows it. */
 export interface TravisRequest {
   /** Oldest first; the last entry is the traveller's newest message. */
@@ -49,13 +64,6 @@ export interface AIProvider {
   readonly name: AIProviderName;
   /** Identifier of the model actually used, for reporting and logs. */
   readonly model: string;
-  /**
-   * True for stand-ins that don't actually reason. Plans from these are
-   * recorded as `fallback` rather than `ai`, so a trip never claims to have
-   * been AI-planned when it wasn't.
-   */
-  readonly simulated: boolean;
-
   /**
    * Propose a city allocation. `repairNote` carries the previous attempt's
    * validation failures so a retry is a correction, not a re-roll.
@@ -72,6 +80,14 @@ export interface AIProvider {
    * the traveller finally sees is decided later, in `services/travis`.
    */
   converse(request: TravisRequest, repairNote?: string): Promise<LlmTravisTurn>;
+
+  /**
+   * One turn of the trip agent: a *proposal* of operations to change an existing
+   * trip, already parsed through `llmTripEditSchema`. Same contract as the
+   * others: it decides nothing. `services/trip-agent` validates every operation,
+   * finds the real places, and the traveller confirms before anything is saved.
+   */
+  proposeTripEdit(request: TripEditRequest, repairNote?: string): Promise<LlmTripEdit>;
 }
 
 /**

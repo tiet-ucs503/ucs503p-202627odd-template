@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { analyzeTrip, cityAnchor } from "@/lib/services/feasibility/engine";
 import { haversineKm, isValidCoordinate } from "@/lib/services/feasibility/geo";
 import { generateItinerary } from "@/lib/services/itinerary-generator";
-import { MockPlacesProvider } from "@/lib/services/places/mock-provider";
+import { MockPlacesProvider } from "@/test-support/places/mock-provider";
 import type { CityPlan } from "@/types/planning";
 import type { GeneratedItinerary, Trip, TripDraftInput } from "@/types/trip";
 

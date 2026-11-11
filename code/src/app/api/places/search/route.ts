@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authErrorResponse, requireUser } from "@/lib/server/firebase-auth";
-import { getMockPlacesProvider, getPlacesProvider, placesProviderStatus } from "@/lib/services/places";
-import { friendlyPlacesMessage, PlacesProviderError } from "@/lib/services/places/errors";
+import { getPlacesProvider } from "@/lib/services/places";
+import { friendlyPlacesMessage, PlacesProviderError, statusForPlacesError } from "@/lib/services/places/errors";
+import { topRated } from "@/lib/services/places/ranking";
 import { placeSearchRequestSchema, placeSchema } from "@/lib/validation/places";
-import type { Place } from "@/types/place";
 
 /**
  * POST /api/places/search
@@ -12,6 +12,10 @@ import type { Place } from "@/types/place";
  * activity. Runs server-side for the same reason trip generation does: the
  * provider key is read from `process.env` here and never reaches the
  * browser. Components call this route; they never touch a provider directly.
+ *
+ * Results are real places, best rated first. If the places service can't be
+ * reached, or isn't set up, the answer is an error that says so: there is no
+ * stand-in list to fall back to.
  */
 export async function POST(request: NextRequest) {
   // Authenticated: every call here can hit a paid Places search.
@@ -34,36 +38,23 @@ export async function POST(request: NextRequest) {
   }
 
   const { query, destination, country, type, currency, limit } = parsed.data;
-  const params = { destination, country, type, currency, limit, query };
-  const status = placesProviderStatus();
 
-  let places: Place[] = [];
-  let notice: string | null = null;
-
+  let places;
   try {
-    places = await getPlacesProvider().searchPlaces(params);
+    places = await getPlacesProvider().searchPlaces({ destination, country, type, currency, query, limit: 20 });
   } catch (error) {
-    // A live-provider failure degrades to demo results rather than an error
-    // screen — the traveller can still pick something and keep planning.
     const code = error instanceof PlacesProviderError ? error.code : "provider-error";
-    console.error("[places] search failed", error);
-    notice = friendlyPlacesMessage(code);
-    places = await getMockPlacesProvider().searchPlaces(params);
+    console.error(`[places] search failed (${code})`);
+    return NextResponse.json({ error: friendlyPlacesMessage(code), code }, { status: statusForPlacesError(code) });
   }
 
-  if (places.length === 0 && status.live) {
-    places = await getMockPlacesProvider().searchPlaces(params);
-    notice = notice ?? "No live matches for that search — showing demo places instead.";
-  }
-
-  // Validate our own normalized shape before it leaves the server: a mapping
-  // bug in a provider should fail here, not corrupt a saved itinerary.
-  const validated = places.filter((place) => placeSchema.safeParse(place).success);
+  // Best rated first, so the top of the list is where to look. Validate our own
+  // normalized shape before it leaves the server: a mapping bug in a provider
+  // should fail here, not corrupt a saved itinerary.
+  const validated = topRated(places, limit ?? 8).filter((place) => placeSchema.safeParse(place).success);
 
   return NextResponse.json({
     places: validated,
-    provider: status.provider,
-    live: status.live,
-    notice,
+    notice: validated.length === 0 ? "No places matched that search. Try different words." : null,
   });
 }

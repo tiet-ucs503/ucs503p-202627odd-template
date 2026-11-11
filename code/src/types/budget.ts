@@ -44,4 +44,10 @@ export interface SavingsSuggestion {
   estimatedSavings: number;
   kind: "hotel-downgrade" | "activity-swap" | "food-swap" | "transport-swap";
   targetId?: string;
+  /**
+   * What to ask Travis to carry this out. A suggestion never edits the trip
+   * itself: swapping a hotel or a tour needs a real alternative, which Travis
+   * finds through the places provider and the traveller confirms.
+   */
+  askTravis: string;
 }

@@ -1,9 +1,8 @@
 import { addDaysIso } from "@/lib/utils";
-import { findDestinationTemplate } from "@/lib/mock-data/destinations";
-import { fromInr } from "@/lib/mock-data/fx";
+import { fromInr } from "@/lib/fx";
 import { getPlacesProvider } from "@/lib/services/places";
 import { PlacesProviderError } from "@/lib/services/places/errors";
-import { MockPlacesProvider } from "@/lib/services/places/mock-provider";
+import { pickHotel, rankByQuality, withoutDuplicates } from "@/lib/services/places/ranking";
 import type { PlaceSearchParams, PlacesProvider } from "@/lib/services/places/provider";
 import { computeBudgetBreakdown } from "@/lib/services/budget-engine";
 import {
@@ -23,44 +22,24 @@ import type { GeneratedItinerary, TripDraftInput } from "@/types/trip";
 
 /**
  * Turns a validated city plan into a full itinerary. This is the one place
- * trip content gets generated — components never build itineraries
- * themselves, and never call a places provider directly. Every
- * hotel/attraction/restaurant/nightlife recommendation is fetched through
- * `PlacesProvider.searchPlaces` (see `lib/services/places`) rather than read
- * out of hardcoded destination data — swapping the mock provider for a live
- * one (Google Places today, anything else later) changes recommendation
- * quality but touches nothing
- * in this file's callers. The shape returned here (`GeneratedItinerary`,
- * validated by `@/lib/validation/trip`) is also exactly what a real
- * LLM-backed planner would need to produce, so a future AI-generated
- * itinerary (as opposed to an AI-assisted places search) fits the same seam.
+ * trip content gets generated: components never build itineraries themselves,
+ * and never call a places provider directly. Every hotel, sight, restaurant and
+ * nightlife recommendation is fetched through `PlacesProvider.searchPlaces`
+ * (Google Places) and chosen on its real ratings.
+ *
+ * There is no stand-in content. If the places service fails, or has no hotel or
+ * nothing to see in a city, this throws a `PlacesProviderError` and the traveller
+ * is told, rather than being handed a trip built from invented places. Only
+ * genuinely optional parts (restaurants, nightlife) may come back empty, and a
+ * day without them is simply a lighter day.
  */
 
-const MOCK_FALLBACK = new MockPlacesProvider();
-
-/**
- * A live provider can legitimately come back empty (no hotels indexed for a
- * tiny town) or fail outright (bad key, quota, network blip). Rather than
- * let a gap in one provider call break the whole trip, fall back to the mock
- * provider for that one search — mock content always has *something* for any
- * destination. Every place still carries its own `source`/`isDemoData`, so a
- * hybrid itinerary (mostly-real with a mock-filled gap) is never
- * misrepresented as fully verified.
- */
-async function searchWithFallback(provider: PlacesProvider, params: PlaceSearchParams): Promise<Place[]> {
-  if (provider.name === "mock") return provider.searchPlaces(params);
-
-  try {
-    const results = await provider.searchPlaces(params);
-    if (results.length > 0) return results;
-  } catch (error) {
-    const code = error instanceof PlacesProviderError ? error.code : "unknown";
-    console.warn(`[places] live search failed (${code}) for ${params.destination}/${params.type}; using mock data.`);
-  }
-  return MOCK_FALLBACK.searchPlaces(params);
+/** Search, letting a real failure through. An empty answer is a normal answer. */
+export async function searchPlaces(provider: PlacesProvider, params: PlaceSearchParams): Promise<Place[]> {
+  return provider.searchPlaces(params);
 }
 
-function makeId(prefix: string): string {
+export function makeId(prefix: string): string {
   const rand =
     typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID().slice(0, 8)
@@ -83,7 +62,7 @@ function unusedFrom(pool: Place[], startIndex: number, used: Set<string>): Place
 
 /** Turn a `Place` into an itinerary `Activity`. Duration falls back to a sane default
  *  when a provider (Google Places) doesn't supply one. */
-function placeToActivity(place: Place, time: string, fallbackDurationMinutes = 90): Activity {
+export function placeToActivity(place: Place, time: string, fallbackDurationMinutes = 90): Activity {
   return {
     id: makeId("act"),
     name: place.name,
@@ -104,23 +83,16 @@ function placeToActivity(place: Place, time: string, fallbackDurationMinutes = 9
   };
 }
 
-function placeToHotel(place: Place | null, cityName: string, nights: number, currency: string): Hotel {
-  if (!place) {
-    // No provider returned anything at all (shouldn't happen — the mock
-    // fallback always has content — but a Hotel needs a definite price).
-    return {
-      name: `${cityName} hotel (demo)`,
-      pricePerNight: fromInr(3_500, currency),
-      currency,
-      nights,
-      referenceUrl: null,
-      isDemoData: true,
-      priceIsEstimate: true,
-    };
-  }
+/**
+ * A hotel from a real place. Google gives a coarse price level, never an
+ * amount, so the nightly price is an estimate derived from it. When even that is
+ * missing a flat estimate is used, and either way the hotel says so
+ * (`priceIsEstimate`). The name, location, rating and link are the real place's.
+ */
+export function placeToHotel(place: Place, nights: number, currency: string): Hotel {
   return {
     name: place.name,
-    pricePerNight: place.price?.amount ?? fromInr(3_500, currency),
+    pricePerNight: place.price?.amount ?? fromInr(UNKNOWN_HOTEL_PRICE_INR, currency),
     currency,
     nights,
     referenceUrl: place.source.sourceUrl,
@@ -134,16 +106,11 @@ function placeToHotel(place: Place | null, cityName: string, nights: number, cur
   };
 }
 
-function rankByPreference(places: Place[], preferences: string[]): Place[] {
-  return [...places].sort((a, b) => {
-    const aScore = a.styleTags.filter((s) => preferences.includes(s)).length;
-    const bScore = b.styleTags.filter((s) => preferences.includes(s)).length;
-    return bScore - aScore;
-  });
-}
+/** Used only when the provider doesn't say what a hotel costs. A labelled estimate, not data. */
+const UNKNOWN_HOTEL_PRICE_INR = 3_500;
 
 interface CityPlaces {
-  hotel: Place | null;
+  hotel: Place;
   attractions: Place[];
   lunch: Place[];
   dinner: Place[];
@@ -151,46 +118,61 @@ interface CityPlaces {
   nightlife: Place[];
 }
 
+/** Hotels are a share of a trip's budget, not all of it. This is the most of it one night may take. */
+const HOTEL_SHARE_OF_BUDGET = 0.4;
+
 async function fetchCityPlaces(
   provider: PlacesProvider,
   cityName: string,
   country: string,
   preferences: TripDraftInput["preferences"],
   currency: string,
+  /** What a night in a hotel may cost, from the trip's budget. Null when it can't be told. */
+  maxHotelPerNight: number | null,
 ): Promise<CityPlaces> {
   const base = { destination: cityName, country, currency } satisfies Partial<PlaceSearchParams>;
 
-  // One restaurant search per city, not one per meal. Breakfast, lunch and
-  // dinner queries return heavily overlapping results from a live provider
-  // anyway, so three searches bought variety we can get locally — at three
-  // times the quota cost. Four searches per city instead of six.
+  // One restaurant search per city, not one per meal: breakfast, lunch and
+  // dinner queries return heavily overlapping results anyway. A search is billed
+  // per request, not per result, so each asks for as many as the provider gives
+  // (up to 20) and the best are chosen here, on rating, rather than taking
+  // whatever came first.
   const [hotels, attractions, restaurants, nightlife] = await Promise.all([
-    searchWithFallback(provider, { ...base, type: "hotel", limit: 1 }),
-    searchWithFallback(provider, { ...base, type: "attraction", preferences, limit: 14 }),
-    searchWithFallback(provider, { ...base, type: "restaurant", limit: 12 }),
-    searchWithFallback(provider, { ...base, type: "nightlife", limit: 4 }),
+    searchPlaces(provider, { ...base, type: "hotel", limit: 20 }),
+    searchPlaces(provider, { ...base, type: "attraction", preferences, limit: 20 }),
+    searchPlaces(provider, { ...base, type: "restaurant", limit: 20 }),
+    searchPlaces(provider, { ...base, type: "nightlife", limit: 10 }),
   ]);
 
-  const meals = partitionRestaurants(restaurants);
+  const hotel = pickHotel(hotels, maxHotelPerNight);
+  if (!hotel) {
+    throw new PlacesProviderError("no-results", `No hotels were found in ${cityName}.`);
+  }
+  if (attractions.length === 0) {
+    // A city with nothing to see is almost always a name the service doesn't know.
+    throw new PlacesProviderError("no-results", `Nothing to see was found in ${cityName}.`);
+  }
+
+  // Best first, so the days are built from the best places and the three meal
+  // pools (dealt out below) are each of similar quality.
+  const meals = partitionRestaurants(rankByQuality(withoutDuplicates(restaurants)));
 
   return {
-    hotel: hotels[0] ?? null,
-    attractions: rankByPreference(attractions, preferences),
+    hotel,
+    attractions: rankByQuality(withoutDuplicates(attractions), preferences),
     ...meals,
-    nightlife,
+    nightlife: rankByQuality(withoutDuplicates(nightlife)),
   };
 }
 
 /**
  * Split one restaurant result set into the three meal pools a day needs.
  *
- * Two kinds of result arrive here. Curated mock content is already tagged with
- * the meals it suits, so those tags are honoured and the demo itinerary comes
- * out exactly as before. Live results carry no meal semantics — Google doesn't
- * say whether somewhere is a breakfast place — so rather than inventing that
- * distinction they're dealt round-robin into three *disjoint* pools. Disjoint
- * matters: it's what structurally prevents the same restaurant turning up as
- * breakfast, lunch and dinner on one day.
+ * Google doesn't say whether somewhere is a breakfast place, so rather than
+ * inventing that distinction the restaurants (best first) are dealt round-robin
+ * into three *disjoint* pools. Disjoint matters: it's what structurally prevents
+ * the same restaurant turning up as breakfast, lunch and dinner on one day.
+ * A result that does carry meal tags is still put where its tags say.
  *
  * A pool that would come out empty falls back to the whole list, so a city
  * with only one or two known restaurants still gets meals rather than blank
@@ -254,6 +236,8 @@ function estimateTransferCostInr(mode: string, distanceKm: number | null, travel
   }
 }
 
+/** Sights planned per full day: a morning one and an afternoon one. */
+const ATTRACTIONS_PER_DAY = 2;
 const BREAKFAST_MINUTES = 45;
 const LUNCH_MINUTES = 60;
 const DINNER_MINUTES = 90;
@@ -308,7 +292,11 @@ function buildDaysForCity(
 
   // Attractions are grouped so each day's stops sit near each other, rather
   // than sending the traveller back and forth across the city every day.
-  const attractionsByDay = clusterByDay(places.attractions, city.dayCount, 2);
+  // Grouping looks only at where places are, not how good they are, so it is
+  // given just the best ones the trip has room for (already ranked, best first).
+  // Otherwise a mediocre place at the edge of town could take a day's slot from a
+  // far better one.
+  const attractionsByDay = clusterByDay(places.attractions.slice(0, city.dayCount * ATTRACTIONS_PER_DAY), city.dayCount, ATTRACTIONS_PER_DAY);
 
   for (let i = 0; i < city.dayCount; i++) {
     const date = addDaysIso(city.startDate, i);
@@ -340,7 +328,9 @@ function buildDaysForCity(
         ),
         currency: city.hotel.currency,
         referenceUrl: null,
-        isDemoData: true,
+        // A travel step the app works out itself, not a place: its figures are
+        // estimates (`priceIsEstimate`, and "estimated" in the description).
+        isDemoData: false,
         priceIsEstimate: true,
       });
     }
@@ -453,9 +443,12 @@ function buildDaysForCity(
   return days;
 }
 
-function flightTierPerTraveler(destination: string): number {
-  return findDestinationTemplate(destination)?.flightTierPerTraveler ?? 25_000;
-}
+/**
+ * A round-trip flight is the one big cost with no free source of live prices, so
+ * it is a flat, labelled estimate per traveller. It is shown as an estimate
+ * everywhere, and replacing it needs a fares provider, not a change here.
+ */
+const FLIGHT_ESTIMATE_PER_TRAVELER_INR = 25_000;
 
 /** Match a planned city to one already in the trip, by name. Renaming a city
  *  therefore counts as a different place and correctly gets fresh lookups. */
@@ -496,6 +489,11 @@ export async function generateItinerary(
     Math.round((new Date(input.endDate).getTime() - new Date(input.startDate).getTime()) / 86_400_000) + 1,
   );
 
+  // What one night may cost, so a hotel is chosen to fit the trip rather than
+  // being the best-rated one in the city whatever it charges.
+  const totalNights = Math.max(1, dayCount - 1);
+  const maxHotelPerNight = input.budget > 0 ? (input.budget * HOTEL_SHARE_OF_BUDGET) / totalNights : null;
+
   const cities: City[] = [];
   const days: TripDay[] = [];
   let cursorDate = input.startDate;
@@ -521,12 +519,10 @@ export async function generateItinerary(
     const needsPlaces = !previous || reusableDays < count;
 
     const places = needsPlaces
-      ? await fetchCityPlaces(provider, allocation.name, country, input.preferences, input.currency)
+      ? await fetchCityPlaces(provider, allocation.name, country, input.preferences, input.currency, maxHotelPerNight)
       : null;
 
-    const hotel = previous
-      ? { ...previous.hotel, nights }
-      : placeToHotel(places!.hotel, allocation.name, nights, input.currency);
+    const hotel = previous ? { ...previous.hotel, nights } : placeToHotel(places!.hotel, nights, input.currency);
 
     const city: City = {
       id: previous?.id ?? makeId("city"),
@@ -563,7 +559,7 @@ export async function generateItinerary(
     dayOffset += count;
   }
 
-  const flightCostTotal = fromInr(flightTierPerTraveler(input.destination) * input.travelers, input.currency);
+  const flightCostTotal = fromInr(FLIGHT_ESTIMATE_PER_TRAVELER_INR * input.travelers, input.currency);
 
   const budget = computeBudgetBreakdown({
     cities,

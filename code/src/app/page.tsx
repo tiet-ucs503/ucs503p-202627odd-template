@@ -3,12 +3,10 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
-import { BudgetPreview } from "@/components/landing/budget-preview";
 import { CountryRail } from "@/components/landing/country-rail";
 import { FinalCta } from "@/components/landing/final-cta";
 import { Hero } from "@/components/landing/hero";
 import { HowItWorks } from "@/components/landing/how-it-works";
-import { ItineraryPreview } from "@/components/landing/itinerary-preview";
 import { WhyItHoldsUp } from "@/components/landing/why-it-holds-up";
 import { saveDraft } from "@/lib/draft-storage";
 
@@ -36,13 +34,11 @@ export default function Home() {
         }}
       />
       <HowItWorks />
-      <ItineraryPreview />
-      <BudgetPreview />
       <WhyItHoldsUp />
       <FinalCta />
 
       <footer className="border-t border-zinc-200 py-8 text-center text-xs text-zinc-500 dark:border-zinc-800">
-        TripEase is a student project. Prices and hotel and restaurant names are demo data unless linked to a source.
+        TripEase is a student project. Places come from Google Maps. Prices are estimates, not quotes.
       </footer>
     </div>
   );

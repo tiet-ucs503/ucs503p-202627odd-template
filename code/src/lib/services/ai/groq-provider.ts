@@ -1,6 +1,7 @@
 import type { ZodType } from "zod";
 import { llmCityPlanSchema, type LlmCityPlan } from "@/lib/validation/planning";
 import { llmTravisTurnSchema, type LlmTravisTurn } from "@/lib/validation/travis";
+import { llmTripEditSchema, type LlmTripEdit } from "@/lib/validation/trip-agent";
 import type { CityPlanRequest } from "@/types/planning";
 import {
   AIProviderError,
@@ -9,8 +10,10 @@ import {
   CITY_PLANNER_SYSTEM_PROMPT,
   type AIProvider,
   type TravisRequest,
+  type TripEditRequest,
 } from "./provider";
 import { buildTravisMessages, TRAVIS_JSON_SCHEMA } from "./travis-prompt";
+import { buildTripEditMessages, TRIP_EDIT_JSON_SCHEMA } from "./trip-edit-prompt";
 
 /**
  * Groq-hosted models via their OpenAI-compatible chat-completions endpoint.
@@ -64,7 +67,6 @@ interface StructuredSpec<T> {
 
 export class GroqAIProvider implements AIProvider {
   readonly name = "groq" as const;
-  readonly simulated = false;
   readonly model: string;
 
   private readonly baseUrl: string;
@@ -112,6 +114,21 @@ export class GroqAIProvider implements AIProvider {
       maxTokens: 1500,
       reasoningEffort: "low",
     });
+  }
+
+  async proposeTripEdit(request: TripEditRequest, repairNote?: string): Promise<LlmTripEdit> {
+    return this.structured(
+      buildTripEditMessages(request.today, request.trip, request.messages, request.focus, repairNote, request.grounding),
+      {
+        name: "trip_edit",
+        schema: TRIP_EDIT_JSON_SCHEMA,
+        parser: llmTripEditSchema,
+        // Edits should be repeatable: the same request on the same trip, the same change.
+        temperature: 0.2,
+        maxTokens: 1500,
+        reasoningEffort: "low",
+      },
+    );
   }
 
   /** Ask for JSON in `spec.schema`'s shape and return it only if it parses and validates. */
