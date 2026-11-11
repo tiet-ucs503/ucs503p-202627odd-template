@@ -1,5 +1,11 @@
+#!/usr/bin/env python3
 import sys
+import os
 from pathlib import Path
+
+# Prefer Apple's Git on macOS when launching VersionVault.
+if sys.platform == "darwin":
+    os.environ["PATH"] = "/usr/bin:" + os.environ.get("PATH", "")
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
