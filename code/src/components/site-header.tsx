@@ -7,6 +7,7 @@ import { Plus } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { signOutUser } from "@/lib/services/auth";
 import { clearAllConversations } from "@/lib/travis-storage";
+import { clearAllTripChats } from "@/lib/trip-agent-storage";
 import { Button } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ export function SiteHeader() {
       // A tab can outlive a person. Whatever was said to Travis should not be
       // waiting for the next account that signs in here.
       clearAllConversations();
+      clearAllTripChats();
       router.replace("/sign-in");
     } catch {
       // Signing out failed (usually the network), so the person is still

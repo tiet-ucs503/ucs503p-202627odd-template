@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authErrorResponse, requireUser } from "@/lib/server/firebase-auth";
 import { generateItinerary } from "@/lib/services/itinerary-generator";
+import { friendlyPlacesMessage, PlacesProviderError, statusForPlacesError } from "@/lib/services/places/errors";
 import { validateCityAllocation } from "@/lib/services/planning";
 import { cityAllocationSchema } from "@/lib/validation/planning";
 import { citySchema, generatedItinerarySchema, tripDaySchema, tripDraftInputSchema } from "@/lib/validation/trip";
@@ -85,6 +86,13 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ itinerary: validated.data });
   } catch (error) {
+    if (error instanceof PlacesProviderError) {
+      console.error(`[places] trip rebuild failed (${error.code})`);
+      return NextResponse.json(
+        { error: friendlyPlacesMessage(error.code), code: error.code },
+        { status: statusForPlacesError(error.code) },
+      );
+    }
     console.error("Trip rebuild failed", error);
     return NextResponse.json({ error: "Something went wrong while updating your trip." }, { status: 500 });
   }

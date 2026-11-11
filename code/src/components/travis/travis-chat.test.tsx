@@ -41,7 +41,6 @@ function response(overrides: Partial<TravisResponse> = {}): TravisResponse {
     reply: "Bali suits that well.",
     suggestions: [suggestion()],
     followUps: ["What about somewhere cheaper?"],
-    mode: "live",
     ...overrides,
   };
 }
@@ -459,33 +458,14 @@ describe("keeping the conversation", () => {
   });
 });
 
-describe("demo mode", () => {
-  it("says so when the answers come from the built-in stand-in", async () => {
-    render(<TravisChat ask={vi.fn().mockResolvedValue(response({ mode: "demo" }))} />);
-    type("hello");
-    fireEvent.click(sendButton());
-
-    expect(await screen.findByText(/Demo mode/)).toBeInTheDocument();
-  });
-
-  it("says nothing of the kind for a live answer", async () => {
-    render(<TravisChat ask={vi.fn().mockResolvedValue(response({ mode: "live" }))} />);
+describe("there is no demo mode", () => {
+  it("never shows a demo-mode notice: an answer is a real model's or there is none", async () => {
+    render(<TravisChat ask={vi.fn().mockResolvedValue(response())} />);
     type("hello");
     fireEvent.click(sendButton());
 
     await screen.findByText("Bali suits that well.");
-    expect(screen.queryByText(/Demo mode/)).not.toBeInTheDocument();
-  });
-
-  it("keeps saying so after a reload", async () => {
-    const { unmount } = render(<TravisChat ask={vi.fn().mockResolvedValue(response({ mode: "demo" }))} />);
-    type("hello");
-    fireEvent.click(sendButton());
-    await screen.findByText(/Demo mode/);
-    unmount();
-
-    render(<TravisChat ask={vi.fn()} />);
-    expect(screen.getByText(/Demo mode/)).toBeInTheDocument();
+    expect(screen.queryByText(/Demo mode/i)).not.toBeInTheDocument();
   });
 });
 

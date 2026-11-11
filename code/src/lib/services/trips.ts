@@ -172,7 +172,15 @@ export function deleteTrip(tripId: string): Promise<void> {
  */
 export function updateTripItinerary(
   tripId: string,
-  patch: { cities?: City[]; days?: TripDay[]; budget?: BudgetBreakdown; planning?: CityPlan },
+  patch: {
+    cities?: City[];
+    days?: TripDay[];
+    budget?: BudgetBreakdown;
+    planning?: CityPlan;
+    /** Changing the trip's length moves its last day and its day count. */
+    endDate?: string;
+    dayCount?: number;
+  },
 ): Promise<void> {
   return updateDoc(doc(db, COLLECTIONS.trips, tripId), {
     ...patch,

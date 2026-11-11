@@ -2,7 +2,8 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthError, requireUser } from "@/lib/server/firebase-auth";
-import { AIProviderError, getAIProvider, MockAIProvider, type AIProvider } from "@/lib/services/ai";
+import { AIProviderError, getAIProvider, type AIProvider } from "@/lib/services/ai";
+import { MockAIProvider } from "@/test-support/ai/mock-provider";
 import { POST } from "./route";
 
 vi.mock("@/lib/server/firebase-auth", async (importOriginal) => {
@@ -70,21 +71,9 @@ describe("a good request", () => {
     expect(body.suggestions[0].startDate > today).toBe(true);
   });
 
-  it("says the answer is demo data when the stand-in produced it", async () => {
-    const body = await (await post(ask("Bali"))).json();
-    expect(body.mode).toBe("demo");
-  });
-
-  it("says the answer is live when a real model produced it", async () => {
-    const live: AIProvider = Object.assign(new MockAIProvider(), { simulated: false as never });
-    mockedGetProvider.mockReturnValue(live);
-    const body = await (await post(ask("Bali"))).json();
-    expect(body.mode).toBe("live");
-  });
-
   it("does not echo anything but the structured answer", async () => {
     const body = await (await post(ask("Bali"))).json();
-    expect(Object.keys(body).sort()).toEqual(["followUps", "mode", "reply", "suggestions"]);
+    expect(Object.keys(body).sort()).toEqual(["followUps", "reply", "suggestions"]);
   });
 });
 

@@ -142,8 +142,8 @@ export function PlaceCard({
       </div>
 
       <div className="border-t border-zinc-100 px-3.5 py-1.5 dark:border-zinc-800">
-        {point.verification === "demo" ? (
-          <Badge tone="amber">Demo data</Badge>
+        {point.verification === "unverified" ? (
+          <Badge tone="amber">Not verified</Badge>
         ) : (
           <span className="text-[10px] uppercase tracking-wide text-zinc-400">
             {point.verification === "live" ? "Live place data" : "Cited source"}

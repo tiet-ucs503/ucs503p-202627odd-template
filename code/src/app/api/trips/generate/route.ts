@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authErrorResponse, requireUser } from "@/lib/server/firebase-auth";
 import { generateItinerary } from "@/lib/services/itinerary-generator";
+import { friendlyPlacesMessage, PlacesProviderError, statusForPlacesError } from "@/lib/services/places/errors";
 import { planCities, validateCityAllocation } from "@/lib/services/planning";
 import { generatedItinerarySchema, newTripInputSchema } from "@/lib/validation/trip";
 import { cityPlanSchema } from "@/lib/validation/planning";
@@ -85,6 +86,15 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ itinerary: parsedOutput.data, plan });
   } catch (error) {
+    // The places service is the only source of places, so when it can't help the
+    // traveller is told that, in words, instead of getting a trip made of guesses.
+    if (error instanceof PlacesProviderError) {
+      console.error(`[places] itinerary generation failed (${error.code})`);
+      return NextResponse.json(
+        { error: friendlyPlacesMessage(error.code), code: error.code },
+        { status: statusForPlacesError(error.code) },
+      );
+    }
     console.error("Itinerary generation failed", error);
     return NextResponse.json(
       { error: "Something went wrong while planning your trip." },

@@ -12,7 +12,7 @@ const POINTS = [
   },
   {
     title: "No invented prices.",
-    body: "Estimates are labelled as estimates. A hotel or restaurant we cannot verify is marked as demo data, not passed off as real.",
+    body: "Estimates are labelled as estimates. Hotels, sights and restaurants are real places from Google Maps, chosen by their ratings, and anything we cannot verify is marked as not verified.",
   },
   {
     title: "Everything stays editable.",

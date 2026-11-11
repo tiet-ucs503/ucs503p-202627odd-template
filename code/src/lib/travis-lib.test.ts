@@ -132,7 +132,7 @@ describe("toRequestMessages", () => {
 
   it("never sends the display-only fields", () => {
     const result = toRequestMessages([
-      message({ id: "1", role: "assistant", content: "x", followUps: ["a"], mode: "demo", suggestions: [suggestion()] }),
+      message({ id: "1", role: "assistant", content: "x", followUps: ["a"], suggestions: [suggestion()] }),
     ]);
     expect(result[0]).not.toHaveProperty("followUps");
     expect(result[0]).not.toHaveProperty("mode");
@@ -212,7 +212,7 @@ describe("conversation storage", () => {
   it("round-trips a conversation, suggestions included", () => {
     const conversation = [
       message({ id: "1", content: "somewhere warm" }),
-      message({ id: "2", role: "assistant", content: "Bali.", suggestions: [suggestion()], followUps: ["Cheaper?"], mode: "demo" }),
+      message({ id: "2", role: "assistant", content: "Bali.", suggestions: [suggestion()], followUps: ["Cheaper?"] }),
     ];
     saveConversation("u1", conversation);
     expect(loadConversation("u1")).toEqual(conversation);

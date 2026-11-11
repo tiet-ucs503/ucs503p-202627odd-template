@@ -1,9 +1,11 @@
-import { DEMO_DESTINATIONS, type DemoDestination } from "@/lib/mock-data/travis-demo";
+import { DEMO_DESTINATIONS, type DemoDestination } from "@/test-support/ai/travis-demo";
 import { planCitiesDeterministically } from "@/lib/services/planning/fallback-planner";
 import { llmCityPlanSchema, type LlmCityPlan } from "@/lib/validation/planning";
 import { llmTravisTurnSchema, type LlmTravisTurn } from "@/lib/validation/travis";
+import type { LlmTripEdit } from "@/lib/validation/trip-agent";
 import type { CityPlanRequest } from "@/types/planning";
-import { AIProviderError, type AIProvider, type TravisRequest } from "./provider";
+import { demoTripEdit } from "./mock-trip-edit";
+import { AIProviderError, type AIProvider, type TravisRequest, type TripEditRequest } from "@/lib/services/ai/provider";
 
 /**
  * A stand-in AI provider: no network, no key, deterministic output.
@@ -57,7 +59,6 @@ function monthInWindow(month: number, startMonth: number, endMonth: number): boo
 export class MockAIProvider implements AIProvider {
   readonly name = "mock" as const;
   readonly model = "mock";
-  readonly simulated = true;
 
   /** How many times `planCities` has been called — lets tests assert retry counts. */
   calls = 0;
@@ -118,6 +119,24 @@ export class MockAIProvider implements AIProvider {
     }
 
     return llmTravisTurnSchema.parse(turn);
+  }
+
+  /** How many times `proposeTripEdit` has been called, and the repair notes it received. */
+  editCalls = 0;
+  editRepairNotes: (string | undefined)[] = [];
+
+  async proposeTripEdit(request: TripEditRequest, repairNote?: string): Promise<LlmTripEdit> {
+    this.editCalls += 1;
+    this.editRepairNotes.push(repairNote);
+
+    if (this.behaviour === "error") {
+      throw new AIProviderError("quota", "Simulated provider failure.");
+    }
+    if (this.behaviour === "malformed") {
+      throw new AIProviderError("malformed-json", "Simulated malformed response.");
+    }
+
+    return demoTripEdit(request.trip, request.messages.at(-1)?.content ?? "", request.focus);
   }
 
   /** Pick destinations by keyword and answer from the canned catalogue. */

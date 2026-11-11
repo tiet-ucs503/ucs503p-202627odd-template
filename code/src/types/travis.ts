@@ -70,12 +70,7 @@ export interface TravisReply {
   followUps: string[];
 }
 
-/** `demo` means the canned stand-in answered, not a language model. */
-export type TravisMode = "live" | "demo";
-
-export interface TravisResponse extends TravisReply {
-  mode: TravisMode;
-}
+export type TravisResponse = TravisReply;
 
 /** A message as kept in the browser and shown on screen. */
 export interface TravisChatMessage {
@@ -85,6 +80,4 @@ export interface TravisChatMessage {
   /** Present on Travis's messages only. */
   suggestions?: DestinationSuggestion[];
   followUps?: string[];
-  /** Which kind of answer this was, so a demo-mode notice survives a page refresh. */
-  mode?: TravisMode;
 }

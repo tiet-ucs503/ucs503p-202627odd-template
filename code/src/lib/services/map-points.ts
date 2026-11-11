@@ -5,8 +5,8 @@ import type { Trip } from "@/types/trip";
 /**
  * Turns a saved trip into the flat list of mappable points the map renders.
  *
- * Pure and provider-agnostic: the map never knows whether a coordinate came
- * from Google or from curated demo content, only that it exists. Places
+ * Pure and provider-agnostic: the map never knows where a coordinate came
+ * from, only that it exists. Places
  * without a real coordinate are simply not mapped — we never place a pin at
  * a guessed position to make the map look fuller.
  */

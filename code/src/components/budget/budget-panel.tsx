@@ -12,11 +12,12 @@ const CHART_COLOR = "#ea580c";
 export function BudgetPanel({
   budget,
   suggestions,
-  onApplySuggestion,
+  onAskTravis,
 }: {
   budget: BudgetBreakdown;
   suggestions: SavingsSuggestion[];
-  onApplySuggestion: (suggestion: SavingsSuggestion) => void;
+  /** Open Travis with this already asked. */
+  onAskTravis: (text: string) => void;
 }) {
   const overBy = budget.estimatedTotal - budget.total;
   const remaining = budget.total - budget.estimatedTotal;
@@ -128,11 +129,11 @@ export function BudgetPanel({
                   <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{s.title}</p>
                   <p className="text-xs text-zinc-500">{s.description}</p>
                   <Badge tone="green" className="mt-1.5">
-                    Save {formatMoney(s.estimatedSavings, budget.currency)}
+                    Est. saving {formatMoney(s.estimatedSavings, budget.currency)}
                   </Badge>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => onApplySuggestion(s)}>
-                  Apply
+                <Button size="sm" variant="outline" onClick={() => onAskTravis(s.askTravis)}>
+                  Ask Travis
                 </Button>
               </li>
             ))}

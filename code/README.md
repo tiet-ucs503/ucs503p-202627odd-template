@@ -22,20 +22,27 @@ Tell TripEase where you want to go → it plans it → you explore it → edit i
   categorized budget (flights, hotels, food, activities, transport, shopping,
   misc, buffer) that recalculates on every edit, with deterministic "ways to
   save" suggestions when a trip goes over budget.
-- **Interactive roadmap** — a visual, per-city timeline of days rather than a
-  wall of text; expand any day to see its full schedule.
+- **One day at a time** — the trip page shows a strip of every day, grouped by
+  city, and one chosen day in full (its city, hotel, timeline and travel times)
+  with the map beside it. Hotels and city-to-city travel are on a Stays &
+  transport tab, and the budget on its own.
+- **Change a trip by asking** — on a trip's page, ask Travis to make it
+  longer or shorter, add, remove or swap a city, or change a place or a hotel.
+  It proposes; the app finds the real places and re-checks the days and the
+  budget; you see exactly what would change and confirm before anything is
+  saved, and can undo it (see "The trip agent" below).
 - **Editable itinerary** — add, edit, delete and drag-to-reorder activities;
   change a city's hotel; all changes save immediately.
-- **Destination recommendations** — hotels, attractions, restaurants and
-  nightlife come from a swappable places provider (an offline curated/mock
-  dataset by default, or live Google Places when configured — see "Places
-  data provider" below). Real places link to a genuine reference; anything
-  without a verifiable source is clearly labelled "Demo data" rather than
-  presented as fact.
+- **Real recommendations, chosen by rating** — hotels, attractions,
+  restaurants and nightlife are real places from Google Places, picked by
+  their actual ratings and review counts (see "How the best places are
+  chosen"). There is no sample data: if place search isn't set up, or has
+  nothing for a city, the app says so instead of inventing places. Anything the
+  traveller typed in by hand is labelled "Not verified".
 - **Interactive map** — a real Leaflet/OpenStreetMap map of the itinerary's
-  own places, linked both ways with the roadmap: pick an activity and the map
-  centres on it, click a marker and the roadmap opens that day and highlights
-  it. Filters follow the roadmap (whole trip / current city / current day),
+  own places, linked both ways with the plan: pick an activity and the map
+  centres on it, click a marker and the plan shows that day and highlights
+  it. Filters follow the day on screen (whole trip / current city / current day),
   and a day's stops are joined in itinerary order.
 - **Feasibility checking** — every day is measured against the clock: time at
   places, plus estimated travel between them, plus a realistic buffer. Days
@@ -87,6 +94,11 @@ npm run dev                  # http://localhost:3000
 ### Environment variables
 
 See `.env.example`. Only the six `NEXT_PUBLIC_FIREBASE_*` values are required.
+Planning a trip needs `GOOGLE_PLACES_API_KEY` (a Places API (New) key): every
+place comes from it, and there is no built-in sample data. The optional AI
+settings are `AI_PROVIDER` (`groq` or `gemini`), the matching key (`GROQ_API_KEY` or `GEMINI_API_KEY`, optionally `GROQ_MODEL` or
+`GEMINI_MODEL`) and `TRIP_AGENT_PROVIDER`, which lets the trip agent use a
+different provider from everything else. All are server-only.
 Trip generation needs no API key by default — see "Places data provider" below.
 
 ## How a trip gets planned
@@ -135,11 +147,11 @@ GROQ_API_KEY=gsk_...
 GROQ_MODEL=openai/gpt-oss-120b
 ```
 
-Server-only, never `NEXT_PUBLIC_`. `AI_PROVIDER=mock` runs a deterministic
-stand-in with no network or key; leaving it unset uses the deterministic
-planner directly. The same variables switch on Travis (see "Travis, the trip
-assistant"): with a key it is a live assistant, with `mock` it is demo mode, and
-with neither it tells the traveller it is unavailable.
+Server-only, never `NEXT_PUBLIC_`. Leaving it unset uses the rule-based planner
+directly (real cities from the country list). The same variables switch on
+Travis (see "Travis, the trip assistant"): with a key it is a live assistant,
+and without one it tells the traveller it is unavailable. There is no stand-in
+model.
 
 Providers live behind one interface (`lib/services/ai/provider.ts`) and are
 chosen in `getAIProvider()`. The city planner depends on `AIProvider` and
@@ -230,17 +242,90 @@ project, which is roughly four Travis messages a minute, so several people
 using it at once will see "busy". Answers are capped at 1,500 tokens and the
 model is asked to think briefly, to stay inside that.
 
-**Demo mode.** With `AI_PROVIDER=mock`, Travis answers from a small catalogue of
-canned seasonality (`lib/mock-data/travis-demo.ts`) through the *same* pipeline,
-and the page says "Demo mode" so nobody mistakes it for a live assistant. With
-no `AI_PROVIDER` at all, Travis says it is unavailable. No new environment
-variables were added: it uses the same `AI_PROVIDER`, `GROQ_API_KEY` and
-`GROQ_MODEL` as the city planner.
+**No demo mode.** An answer is a real model's, or there isn't one: with no
+`AI_PROVIDER` Travis says he is unavailable. He uses the same `AI_PROVIDER`,
+`GROQ_API_KEY` and `GROQ_MODEL` as the city planner.
 
 **Honest limits of the content.** Seasons, weather and cost labels come from
 the model's general knowledge. They are hedged and labelled, but they can be
 wrong and nothing checks them against data. Destination names aren't verified
 either; an invented place would only show up when the trip is planned.
+
+## The trip agent
+
+The assistant on a trip's page (the "Change with Travis" button). The rule that
+shapes all of it: **the model proposes, TripEase decides, and the traveller
+confirms.** The model never edits a trip.
+
+```
+request + the trip as it is now
+  -> /api/trips/agent -> login -> rate limit -> Zod
+  -> model proposes { reply, operations[] }           (never the trip itself)
+  -> each operation checked: allowed kind, ids exist, limits hold
+  -> real places found through the places provider
+  -> days rebuilt, budget recomputed, every day re-checked
+  -> a change set: lines, warnings, before/after, the new itinerary
+  -> the traveller sees it and presses Apply  -> the browser saves it
+```
+
+**Questions as well as changes.** The same conversation answers questions
+about the destination (the weather for the trip's dates, what to pack, local
+food, famous sights and customs, recommendations) in a friendly voice, with no
+operations and so nothing to confirm. These answers are the model's general
+knowledge: weather is "what is usual", never a forecast, the model is told not
+to claim it looked anything up or to invent hours, addresses or prices, and the
+price guard cuts any sentence that states an amount. After a recommendation it
+offers to add it, and only changes the trip when asked.
+
+**Recommendations come from real, top-rated places.** When a question is about
+what to see or eat, `trip-agent/recommendations.ts` first looks up the
+best-rated sights and restaurants in the relevant cities (the one being looked
+at, a city the message names, or the first few), through the places provider,
+and hands them to the model with the question. The prompt tells it to recommend
+from that list and to quote a rating only from it. It is best effort: if the
+lookup fails, Travis still answers from what he knows and quotes no ratings.
+
+**Finding Travis.** `components/trip-agent/travis-banner.tsx` is the card under the
+trip header (a sentence on what Travis is for and three questions that open the
+chat already asked) and `travis-launcher.tsx` the button that stays on screen.
+
+**Seven operations, and nothing else.** `remove_activity`, `move_activity`,
+`replace_activity`, `add_activity`, `change_hotel`, `set_cities` and
+`set_trip_length`. A place is asked for by a short search phrase and found by
+the places provider; the model never writes an address, a link or a price.
+Changes of length or cities go through the same `generateItinerary` the wizard
+uses, so activities the traveller edited stay in a city that stays.
+
+**What is refused, and told in words:** an id that is not in the trip, a place
+that cannot be found, a length outside 1 to 30 days, more than 8 cities, a
+length shorter than the number of cities, and a request that changes nothing.
+The model is asked again once, naming the problem; it is never asked again for
+a timeout or quota failure. After that the traveller is told what could not be
+done and the trip is unchanged. Its sentence never states a price (the same
+price guard as Travis).
+
+**Why the route saves nothing.** The server has no database access, so the
+trip travels with the request and the proposal travels back. Saving a confirmed
+change is the browser's own Firestore write, under the traveller's own
+permissions. A forged trip in a request can therefore only produce a proposal
+for the sender's own data.
+
+**Stale proposals.** A proposal carries a fingerprint of the trip it was worked
+out against (`tripVersion`). If the trip changes before the traveller applies
+it, the card says so and offers no Apply. Undo is offered only while the trip
+still has the version the change produced, so it can never erase later edits.
+
+**Conversations.** One per trip, in this tab's session storage, under the
+account and the trip, cleared on sign-out (`lib/trip-agent-storage.ts`). A
+proposal's itinerary is never stored; one that was waiting at reload comes back
+as "not applied".
+
+**Providers.** `AI_PROVIDER` picks Groq or Gemini for everything;
+`TRIP_AGENT_PROVIDER` overrides it for the agent alone.
+
+Code: `lib/services/trip-agent/` (engine, runner, version), `lib/services/ai/`
+(prompt, providers), `lib/validation/trip-agent.ts`, `components/trip-agent/`,
+`components/plan/` (the day strip and day view).
 
 ## API security
 
@@ -253,6 +338,7 @@ Every route that spends external quota requires a Firebase ID token:
 | `/api/trips/rebuild` | Bearer ID token → 401 without one |
 | `/api/places/search` | Bearer ID token → 401 without one |
 | `/api/travis/chat` | Bearer ID token → 401 without one; 20 messages per 10 minutes per user → 429 |
+| `/api/trips/agent` | Bearer ID token → 401 without one; 30 requests per 10 minutes per user → 429; changes nothing (no database access) |
 | `/api/places/photo` | HMAC-signed URL → 403 without a valid signature |
 
 The browser attaches the token via `lib/api-client.ts`; the server verifies
@@ -276,32 +362,27 @@ and rejects unsigned ones.
 ## Places data provider
 
 `src/lib/services/places/` is a small provider abstraction with one interface
-(`PlacesProvider`, with `searchPlaces` + `getPlaceDetails`) and two
-implementations:
+(`PlacesProvider`, with `searchPlaces` + `getPlaceDetails`) and one
+implementation, **`google-provider.ts`**: live results from the Places API (New)
+`searchText` endpoint.
 
-- **`mock-provider.ts`** (default, no setup required) — offline, curated
-  content for Thailand (Bangkok + Phuket) plus a generic fallback for any
-  other destination. This is what the app runs on out of the box.
-- **`google-provider.ts`** — live results from the Places API (New)
-  `searchText` endpoint.
+`getPlacesProvider()` (`src/lib/services/places/index.ts`) returns it when
+`GOOGLE_PLACES_API_KEY` is set and **throws `PlacesProviderError("missing-key")`
+when it isn't**. There is no mock to fall back to. (The test double that stands
+in for Google in tests lives in `src/test-support/`, and a lint rule makes
+importing it from product code an error.)
 
-`getPlacesProvider()` (`src/lib/services/places/index.ts`) picks between
-them based on environment variables and always falls back to mock data if
-anything is missing or fails, so **the app never requires an API key to
-work**.
-
-### Using live Google Places data (optional)
+### Setting up Google Places (required)
 
 1. In the [Google Cloud console](https://console.cloud.google.com/), enable
    the **Places API (New)** on a project and create an API key. Restrict the
    key to the Places API and, ideally, to your server's IP/referrer.
 2. Add to `.env.local` (**not** `.env.example` — never commit a real key):
    ```
-   PLACES_PROVIDER=google
    GOOGLE_PLACES_API_KEY=your-key-here
    ```
-3. Restart the dev server. Newly generated trips will now pull real hotels,
-   attractions, restaurants and nightlife for the destination.
+3. Restart the dev server. Generated trips pull real hotels, attractions,
+   restaurants and nightlife for the destination.
 
 **This key is server-only.** It's read from `process.env` (no
 `NEXT_PUBLIC_` prefix) only in server code: `getPlacesProvider()` (used by
@@ -313,12 +394,39 @@ reason: a raw Google photo URL needs the key attached as a query
 parameter, so the app fetches it server-side and relays the image bytes
 instead of ever putting that URL in front of a client.
 
-If a live search comes back empty for a city, or fails outright (bad key,
-quota, network), the generator transparently fills that one gap from the mock
-provider rather than failing the whole trip — every place still carries its
-own source, so a hybrid itinerary is never misrepresented as fully verified.
-The same fallback applies to the in-app place search, which additionally
-shows the traveller a plain-language notice about what happened.
+### When the places service can't help
+
+The generator never fills a gap with invented places. A failed search (bad key,
+quota, network) is reported to the traveller in plain words, with the right
+status (503, or 502 for an unexpected response), and no trip is built. The same
+goes for a city with no hotels or nothing to see (422), which is almost always a
+city name Google doesn't know. Only restaurants and nightlife may come back
+empty, and a day without them is simply a lighter day. The in-app place search
+answers a failure the same way, with an error and no results.
+
+### How the best places are chosen
+
+A search returns places in the order the provider thinks fits the words, which
+is not the same as best, so `places/ranking.ts` chooses:
+
+- **Each search asks for a full page (up to 20).** A search is billed per
+  request, not per result, so this costs nothing extra and gives the ranking
+  something to choose from.
+- **Score = rating pulled toward a typical rating until it has enough reviews**
+  (a Bayesian average, 4.2 and 150 reviews). A 5.0 from nine reviews does not
+  beat a 4.7 from twelve thousand. A place with no rating ranks below every
+  rated one and is never given a rating.
+- **Travel styles only break close calls**: a matching style is worth 0.15 of a
+  rating point, never enough to beat a clearly better place.
+- **Only the best go into the days.** Sights are grouped by where they are, not
+  how good they are, so the generator hands the grouping just the top-ranked
+  ones the trip has room for. (Without that, a mediocre place at the edge of
+  town could take a day's slot from a far better one; there is a test that
+  fails without the fix.)
+- **The hotel is the best-rated one that fits the budget**, passing over one
+  whose price level puts a night above 40% of the trip's budget spread over its
+  nights. Google gives a price level, never a price, so the nightly price is an
+  estimate and says so.
 
 Provider responses are cached in-process for 10 minutes
 (`places/cache.ts`), so regenerating a similar trip doesn't re-bill the same
@@ -344,15 +452,14 @@ prices. An estimated cost is never presented as a Google price.
 The map is Leaflet via `react-leaflet`, rendering **OpenStreetMap** tiles.
 
 - **No API key.** That's the reason for this choice over the Google Maps
-  JS API: the map has to work in mock mode, where there are no credentials
-  at all. OSM's tile usage policy expects light, attributed use, which suits
+  JS API: the map needs no credentials at all. OSM's tile usage policy expects light, attributed use, which suits
   this app's scale; a production deployment with real traffic should move to
   a paid tile host (only two constants in `leaflet-map.tsx` would change).
 - **Markers come from the itinerary itself** (`lib/services/map-points.ts`),
   never a separate dataset — so they reflect the traveller's edits live.
-- **Only real coordinates are plotted.** Demo hotels and generic restaurants
-  have no verifiable position, so they get no pin, and the map says how many
-  places that affects rather than inventing locations to look fuller.
+- **Only real coordinates are plotted.** A place without a real position (one
+  the traveller typed in) gets no pin, and the map says how many places that
+  affects rather than inventing locations to look fuller.
 - **The dashed day line is itinerary order, not a route.** No routing/
   directions API is involved, and the UI says so.
 - Dark mode dims the tiles rather than inverting them (inverting OSM's light
@@ -436,37 +543,38 @@ Merges to `main` deploy to a staging environment on **Vercel**.
   project settings (Production + Preview), pointing at the `tripease-staging`
   Firebase project.
 
-## Mock mode: what's real, what's demo
+## What's real, and what's an estimate
 
-By default there's no AI provider or Places API key configured — the whole
-app works offline aside from Firebase:
+There is no demo or synthetic data anywhere in the product. What each part is:
 
+- **Places** are real, from Google Places, with their real ratings, coordinates,
+  addresses and links. Without a key the app says place search isn't set up and
+  builds no trip.
 - **Itinerary generation** (`src/lib/services/itinerary-generator.ts`) is
   deterministic: it takes the validated city plan (see "How a trip gets
-  planned") and asks the active **places provider** (see above) for each
-  city's hotel, attractions, restaurants and nightlife. With the mock
-  provider, Thailand (Bangkok + Phuket) is curated with real, well-known
-  attractions; any other destination falls back to a generic template.
-- **Every place carries its own provenance** (`Activity.source` /
-  `Hotel.source`, see `src/types/place.ts`): `isDemoData` says whether the
-  place itself is real, `priceIsEstimate` says whether its cost is a
-  verified number or an inferred guess (true for essentially everything
-  today — Google Places only ever returns a coarse price *level*, never an
-  exact amount). Real, well-known landmarks link to a genuine reference
-  (Wikipedia in mock mode, a Google Maps/website link in Google mode);
-  anything without a verifiable source carries no link and is tagged
-  **"Demo data"** in the UI. Nothing is ever presented as a verified fact
-  it isn't.
-- **Travis** answers from a small canned catalogue of seasons and cost
-  patterns (`lib/mock-data/travis-demo.ts`) when `AI_PROVIDER=mock`, through the
-  same checks as a live model, and the page says "Demo mode". With no AI
-  configured at all it says it is unavailable and points to planning by hand.
-- **Map view** is a real Leaflet/OpenStreetMap map either way — it needs no
-  credentials — but in mock mode only the places that carry genuine
-  coordinates get a pin (see "The map").
-- **Budget numbers** are computed from whatever the places provider
-  returned (see `src/lib/services/budget-engine.ts`) — realistic in shape,
-  not live/bookable prices, even when the underlying places are real.
+  planned") and builds each city's days from the best-rated places the
+  provider returned.
+- **Provenance** is on every place (`Activity.source` / `Hotel.source`, see
+  `src/types/place.ts`). `isDemoData` is kept because it is stored on every saved
+  trip, but it now means "not verified": it is true only for something the
+  traveller typed in, or for sample places in a trip saved by an earlier
+  version. The UI says **"Not verified"**.
+- **Prices are estimates.** Google gives a coarse price *level* for a hotel,
+  never an amount, so a hotel's nightly price, and every flight, meal and
+  activity cost, is an estimate (`priceIsEstimate`) and is labelled one. A flight
+  is one flat estimate per traveller, and a hotel with no price level gets a flat
+  estimate. They are not data.
+- **Travis** needs a real model. With no AI configured he says he is unavailable
+  and points to planning by hand.
+- **Budget numbers** are computed from what the places provider returned (see
+  `src/lib/services/budget-engine.ts`): realistic in shape, not live or bookable
+  prices, even though the places are real.
+- **The map** is a real Leaflet/OpenStreetMap map and needs no credentials.
+- **Tests** use doubles in `src/test-support/` (a rated-places provider, a
+  stand-in model, a nine-day trip fixture). They are synthetic by necessity, since
+  a test cannot call Google. A lint rule (`no-restricted-imports`) makes
+  importing them from product code a build error, and the production output was
+  checked to contain none of the old sample places.
 
 ## Project layout
 
@@ -478,11 +586,12 @@ src/
       dashboard/                trip list + the two ways to start a trip
       travis/                   Ask Travis — the chat page
       trips/new/                the multi-step create-trip wizard
-      trips/[tripId]/           the roadmap / budget / map trip view
+      trips/[tripId]/           the trip view: day strip, one day, map, stays, budget, Travis panel
     api/trips/plan/             city planning endpoint (AI, then validation, then fallback)
     api/trips/generate/         itinerary generation endpoint
     api/trips/rebuild/          rebuilds new or changed cities after "Edit cities"
     api/travis/chat/            one turn of Travis (auth, rate limit, AI, checks)
+    api/trips/agent/            one turn of the trip agent: proposes a change, saves nothing
     api/places/search/          server-side place search for the "replace with a real place" picker
     api/places/photo/           server-side proxy for Google Places photos (keeps the API key off the client)
     page.tsx                    landing page
@@ -490,8 +599,10 @@ src/
     landing/                   hero, how-it-works, itinerary + budget previews, features, CTA
     dashboard/                 trip card, start card (the two ways to begin)
     travis/                    chat container, message, suggestion card, composer
+    trip-agent/                the "Change this trip" panel and the card that previews a change
+    plan/                      day strip, day panel (city + hotel + one day), stays & transport
     trips/wizard/               wizard shell, steps, generation loader, initial-data (draft → wizard)
-    roadmap/                   trip header, city section, city manager ("Edit cities"), day view,
+    roadmap/                   trip header, city manager ("Edit cities"), day view,
                                activity editor/row, hotel editor, place search,
                                travel-segment row + feasibility notes
     budget/                    budget panel + chart
@@ -506,12 +617,15 @@ src/
     travis-client.ts             sends a conversation to Travis (history → request messages)
     travis-draft.ts              a Travis suggestion → a pre-filled wizard draft
     travis-storage.ts            keeps the conversation in session storage, validated on read
+    trip-agent-client.ts         sends a trip and a request to the trip agent
+    trip-agent-storage.ts        one conversation per account and trip, in session storage
+    trip-agent-focus.ts          what the traveller pointed at ("Day 3 - Phuket")
     api-client.ts                attaches the Firebase ID token to API calls
     server/
       firebase-auth.ts           verifies Firebase ID tokens in the API routes
       photo-signing.ts           signs and checks /api/places/photo links
       rate-limit.ts              per-user sliding-window limiter (best-effort, in memory)
-    mock-data/                  curated destination content + city list, mock FX rates
+    fx.ts                       static, approximate exchange rates (estimates, labelled as such)
     services/
       auth.ts                    the ONLY place Firebase Auth is touched (unchanged)
       trips.ts                   the ONLY place Firestore trip docs are touched
@@ -520,9 +634,15 @@ src/
       ai/
         provider.ts               the AIProvider interface + shared planner prompt
         groq-provider.ts          Groq, with JSON-schema-constrained output
-        mock-provider.ts          deterministic stand-in (tests, AI_PROVIDER=mock)
+        gemini-provider.ts        Gemini (generateContent), JSON output
         travis-prompt.ts          Travis's instructions + JSON schema, shared by all providers
+        trip-edit-prompt.ts       the trip agent's instructions, the trip as the model sees it
         index.ts                  getAIProvider() — picks a provider from env vars
+      trip-agent/
+        index.ts                  runTripAgent() — AI proposes, checks, one repair retry
+        recommendations.ts        looks up real top-rated places to ground Travis's recommendations
+        apply.ts                  the engine: operations -> a change set (places, days, budget, warnings)
+        version.ts                tripVersion(): detects a trip that changed after a proposal
       travis/
         index.ts                  chatWithTravis() — AI, then checks, one retry
         sanitize.ts               dedupe, plain destination names, derived dates, price redaction
@@ -544,11 +664,11 @@ src/
         index.ts                  barrel export
       places/
         provider.ts               the PlacesProvider interface every provider implements
-        mock-provider.ts          offline provider backed by lib/mock-data
         google-provider.ts        live provider backed by the Places API (New)
         cache.ts                  in-process TTL cache so repeat searches aren't re-billed
+        ranking.ts                chooses the best places from real ratings (Bayesian score, hotel vs budget)
         errors.ts                 typed provider failures + user-safe messages
-        index.ts                  getPlacesProvider() — picks a provider from env vars
+        index.ts                  getPlacesProvider() — Google Places, or an error when there is no key
     validation/
       trip.ts                     Zod schemas for trip input and generated itineraries
       places.ts                   Zod schemas for the Place model + raw Google API responses
@@ -580,9 +700,9 @@ read-modify-write instead of a fan-out across subcollections.
   component, by mode), not quoted fares. They're labelled as estimates
   everywhere they appear.
 - A day's travel is only counted between places that actually have
-  coordinates. Demo hotels and generic restaurants have none, so a mock-mode
-  trip under-counts its own travel; the day says how many places that
-  affects rather than inventing positions.
+  coordinates. A place the traveller typed in has none, so a day with one
+  under-counts its own travel; the day says how many places that affects rather
+  than inventing positions.
 - Without an AI key, non-curated destinations get a single base city rather
   than a multi-city route. That's the honest fallback, not a bug — but it
   does mean the AI planner is what makes the app genuinely multi-country.
@@ -592,14 +712,26 @@ read-modify-write instead of a fan-out across subcollections.
 - The AI decides the city split, and Travis suggests destinations and the
   best months to go. Individual activities, meals and hotels are still chosen
   by the deterministic generator from the places provider, not by an LLM — see
-  "Mock mode" above. Travis cannot yet change a trip.
+  "What's real, and what's an estimate" above. Travis can change a trip when asked, but only by
+  proposing changes that the app checks and the traveller confirms (see "The
+  trip agent").
 - Travis's seasons, weather and cost labels come from the model's general
   knowledge and aren't checked against any data. There is no free source of
   live flight or hotel prices, so costs stay estimates and Travis only ever
   says lower, typical or higher. See "Travis, the trip assistant" for the
   rate limits (including Groq's 8,000-tokens-a-minute free tier).
+- **The Gemini provider has not been run against the live API.** It is tested
+  against a replaced `fetch` (the request it builds, how each failure is
+  classified), because no key was available where it was written. Groq's
+  trip-agent calls have not been run live either. The first live run needs
+  one real request per provider.
 - `google-provider.ts` has been used by hand against a live key (place search,
   and generating trips for Thailand, Italy and Japan), but **no automated test
-  calls the real API**: the whole test suite runs against the mock provider.
+  calls the real API**: the tests use a double that returns rated places the way
+  Google does. How well the ranking chooses on live data has not been measured.
+- **There is no sample data, so no key means no trip.** Without a Google Places
+  key the app cannot plan a trip and says so. Trips saved by an earlier version
+  may still contain sample places; they open and edit, are marked "Not verified",
+  and the fix is to plan them again.
 - The map's day line shows itinerary order only, and the city-transfer line is
   a straight connection between two cities — neither is a driving route.

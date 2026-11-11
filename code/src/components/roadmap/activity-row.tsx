@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ExternalLink, GripVertical, MapPin, Pencil, Star, Trash2 } from "lucide-react";
+import { ExternalLink, GripVertical, MapPin, MessageCircle, Pencil, Star, Trash2 } from "lucide-react";
 import { ACTIVITY_CATEGORY_ICON, type Activity } from "@/types/itinerary";
 import { Badge } from "@/components/ui";
 import { cn, formatMoney } from "@/lib/utils";
@@ -13,12 +13,15 @@ export function ActivityRow({
   onSelect,
   onEdit,
   onDelete,
+  onAskTravis,
 }: {
   activity: Activity;
   selected?: boolean;
   onSelect?: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  /** Open Travis already looking at this place. */
+  onAskTravis?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: activity.id,
@@ -67,11 +70,11 @@ export function ActivityRow({
         />
       ) : null}
 
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span aria-hidden>{ACTIVITY_CATEGORY_ICON[activity.category]}</span>
           <span className="font-medium text-zinc-900 dark:text-zinc-100">{activity.name}</span>
-          {activity.isDemoData ? <Badge tone="amber">Demo data</Badge> : null}
+          {activity.isDemoData ? <Badge tone="amber">Not verified</Badge> : null}
           {activity.rating ? (
             <span className="inline-flex items-center gap-0.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
               <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
@@ -139,6 +142,18 @@ export function ActivityRow({
             )}
           >
             <MapPin className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
+        {onAskTravis ? (
+          <button
+            onClick={(event) => {
+              event.stopPropagation();
+              onAskTravis();
+            }}
+            aria-label={`Ask Travis about ${activity.name}`}
+            className="rounded-full p-1.5 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 dark:hover:bg-zinc-700"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
           </button>
         ) : null}
         <button

@@ -153,7 +153,6 @@ function Conversation({ ask }: { ask: Ask }) {
         content: response.reply,
         suggestions: response.suggestions,
         followUps: response.followUps,
-        mode: response.mode,
       };
       setMessages((current) => [...current, reply]);
     } catch (caught) {
@@ -192,16 +191,9 @@ function Conversation({ ask }: { ask: Ask }) {
   );
 
   const latestAssistantId = [...messages].reverse().find((m) => m.role === "assistant")?.id;
-  const inDemoMode = messages.some((m) => m.mode === "demo");
 
   return (
     <div className="flex flex-col gap-6">
-      {inDemoMode ? (
-        <Alert tone="info">
-          Demo mode: these answers come from built-in sample data rather than a live assistant.
-        </Alert>
-      ) : null}
-
       {/* Where it can be found: at the top of a conversation, not at the foot of a long one. */}
       {messages.length > 0 ? (
         <div className="flex justify-end">

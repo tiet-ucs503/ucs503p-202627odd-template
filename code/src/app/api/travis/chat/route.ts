@@ -81,7 +81,6 @@ export async function POST(request: NextRequest) {
       reply: result.reply,
       suggestions: result.suggestions,
       followUps: result.followUps,
-      mode: provider.simulated ? "demo" : "live",
     };
     return NextResponse.json(response);
   } catch (error) {

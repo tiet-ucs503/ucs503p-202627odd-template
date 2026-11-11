@@ -15,8 +15,7 @@ import { PlaceCard } from "./place-card";
  * `window` at module scope.
  *
  * Tiles come from OpenStreetMap, which needs no API key — that's deliberate:
- * the map has to keep working in mock mode, where there are no credentials
- * of any kind. Attribution is required by the tile providers' terms and is
+ * the map needs no credentials of any kind. Attribution is required by the tile providers' terms and is
  * rendered by Leaflet in the corner.
  */
 

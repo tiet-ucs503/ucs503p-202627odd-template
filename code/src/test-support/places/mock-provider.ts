@@ -3,11 +3,11 @@ import {
   GENERIC_ACTIVITY_BANK,
   type ActivityTemplate,
   type CityTemplate,
-} from "@/lib/mock-data/destinations";
-import { fromInr } from "@/lib/mock-data/fx";
+} from "@/test-support/places/destinations";
+import { fromInr } from "@/lib/fx";
 import type { TravelStyle } from "@/types/itinerary";
 import type { LatLng, Place, PlaceType } from "@/types/place";
-import type { PlaceSearchParams, PlacesProvider } from "./provider";
+import type { PlaceSearchParams, PlacesProvider } from "@/lib/services/places/provider";
 
 /**
  * Offline, deterministic provider backed by the curated content in

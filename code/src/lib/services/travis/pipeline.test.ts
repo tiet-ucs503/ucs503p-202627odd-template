@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { AIProviderError, MockAIProvider, type AIProvider, type TravisRequest } from "@/lib/services/ai";
+import { AIProviderError, type AIProvider, type TravisRequest } from "@/lib/services/ai";
+import { MockAIProvider } from "@/test-support/ai/mock-provider";
 import { chatWithTravis } from "@/lib/services/travis";
 import type { LlmTravisTurn } from "@/lib/validation/travis";
 import type { TravisMessageInput } from "@/types/travis";
@@ -18,6 +19,10 @@ class ScriptedProvider implements AIProvider {
   constructor(private readonly script: (LlmTravisTurn | AIProviderError)[]) {}
 
   async planCities(): Promise<never> {
+    throw new Error("not used");
+  }
+
+  async proposeTripEdit(): Promise<never> {
     throw new Error("not used");
   }
 

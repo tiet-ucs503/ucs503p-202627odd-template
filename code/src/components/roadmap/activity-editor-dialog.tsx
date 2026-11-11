@@ -83,7 +83,7 @@ export function activityFromForm(value: ActivityFormValue, currency: string): Ac
     isDemoData: true,
     priceIsEstimate: false,
   };
-  // Typed by hand = demo data. Picked from search = whatever that place really is.
+  // Typed by hand = not verified. Picked from search = whatever that place really is.
   return value.place ? { ...base, ...placeMetadataPatch(value.place, value.estimatedCost) } : base;
 }
 

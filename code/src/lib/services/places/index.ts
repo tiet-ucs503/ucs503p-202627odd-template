@@ -1,49 +1,37 @@
 import { GooglePlacesProvider } from "./google-provider";
-import { MockPlacesProvider } from "./mock-provider";
+import { PlacesProviderError } from "./errors";
 import type { PlacesProvider } from "./provider";
 
 export type { Place, PlaceType, LatLng, Rating, PriceInfo, SourceRef } from "@/types/place";
 export type { PlaceSearchParams, PlacesProvider } from "./provider";
-export { PlacesProviderError, friendlyPlacesMessage } from "./errors";
+export { PlacesProviderError, friendlyPlacesMessage, statusForPlacesError } from "./errors";
 
 /**
  * The one place a provider gets chosen. Everything else in the app depends
- * only on the `PlacesProvider` interface, so adding a third provider later
- * means adding a branch here — no other file needs to change.
+ * only on the `PlacesProvider` interface, so adding another provider later
+ * means adding a branch here and nothing else changes.
  *
- * `PLACES_PROVIDER=google` + a real `GOOGLE_PLACES_API_KEY` switches to live
- * data; anything else (including a missing key) uses the offline mock
- * provider, so the app always works without any external credentials.
+ * There is no stand-in. Every hotel, sight and restaurant in TripEase comes from
+ * Google Places, so without `GOOGLE_PLACES_API_KEY` this throws
+ * `PlacesProviderError("missing-key")` and the routes tell the traveller that
+ * place search isn't available, instead of building a trip out of invented
+ * places. (Tests use their own double, in `src/test-support`.)
  *
- * Server-only: `GOOGLE_PLACES_API_KEY` has no `NEXT_PUBLIC_` prefix, so
- * calling this from a client component would silently get you the mock
- * provider. Call it from route handlers/server code only.
+ * Server-only: the key has no `NEXT_PUBLIC_` prefix, so calling this from a
+ * client component would fail. Call it from route handlers and server code.
  */
 export function getPlacesProvider(): PlacesProvider {
-  const wantsGoogle = process.env.PLACES_PROVIDER === "google";
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-
-  if (wantsGoogle && apiKey) {
-    return new GooglePlacesProvider(apiKey);
+  if (!apiKey) {
+    throw new PlacesProviderError("missing-key", "GOOGLE_PLACES_API_KEY is not set.");
   }
-  if (wantsGoogle && !apiKey) {
-    console.warn(
-      "[places] PLACES_PROVIDER=google but GOOGLE_PLACES_API_KEY is not set — falling back to mock data.",
-    );
-  }
-  return new MockPlacesProvider();
-}
-
-/** The always-available fallback, used when a live search comes back empty or fails. */
-export function getMockPlacesProvider(): PlacesProvider {
-  return new MockPlacesProvider();
+  return new GooglePlacesProvider(apiKey);
 }
 
 /**
- * Whether live data is actually configured. Safe to send to the client — it
- * reports only *that* a provider is configured, never the key itself.
+ * Whether place search is configured. Safe to send to the client: it reports
+ * only *that* a key exists, never the key itself.
  */
-export function placesProviderStatus(): { provider: "mock" | "google"; live: boolean } {
-  const live = process.env.PLACES_PROVIDER === "google" && Boolean(process.env.GOOGLE_PLACES_API_KEY);
-  return { provider: live ? "google" : "mock", live };
+export function placesConfigured(): boolean {
+  return Boolean(process.env.GOOGLE_PLACES_API_KEY);
 }

@@ -1,4 +1,4 @@
-import { fromInr } from "@/lib/mock-data/fx";
+import { fromInr } from "@/lib/fx";
 import { signPhotoName } from "@/lib/server/photo-signing";
 import {
   googlePlaceDetailsSchema,

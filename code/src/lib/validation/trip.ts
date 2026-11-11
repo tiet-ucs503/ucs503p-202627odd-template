@@ -8,7 +8,7 @@ export { travelStyleSchema };
 /**
  * Zod schemas mirror the types in `@/types`. The itinerary generator's output
  * is validated against `generatedItinerarySchema` before it ever reaches the
- * client or Firestore — a malformed AI/mock response should fail loudly in
+ * client or Firestore — a malformed AI response should fail loudly in
  * the API route rather than silently corrupting a saved trip.
  */
 

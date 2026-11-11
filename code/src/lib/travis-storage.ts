@@ -47,7 +47,6 @@ const messageSchema = z.object({
   content: z.string(),
   suggestions: z.array(suggestionSchema).optional(),
   followUps: z.array(z.string()).optional(),
-  mode: z.enum(["live", "demo"]).optional(),
 });
 
 type Uid = string | null | undefined;

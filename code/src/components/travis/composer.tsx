@@ -13,7 +13,7 @@ function fitToText(element: HTMLTextAreaElement) {
 }
 
 /** Show the character count only when it starts to matter. */
-const COUNTER_FROM = 800;
+const COUNTER_FROM_RATIO = 0.8;
 const MAX_HEIGHT_PX = 160;
 
 /**
@@ -24,12 +24,31 @@ const MAX_HEIGHT_PX = 160;
  * held back — so a traveller can keep typing their next question instead of
  * watching a locked box.
  */
-export function Composer({ onSend, disabled }: { onSend: (text: string) => void; disabled: boolean }) {
+export function Composer({
+  onSend,
+  disabled,
+  placeholder = "Where should I go, and when?",
+  label = "Message Travis",
+  maxChars = MAX_USER_MESSAGE_CHARS,
+  inputId = "travis-message",
+  hint = true,
+}: {
+  onSend: (text: string) => void;
+  disabled: boolean;
+  placeholder?: string;
+  /** The accessible name of the box; it has no visible label. */
+  label?: string;
+  maxChars?: number;
+  /** Two composers on one page need different ids for their labels to point at the right box. */
+  inputId?: string;
+  /** Show the "Enter to send" line. A narrow panel has no room for it. */
+  hint?: boolean;
+}) {
   const [value, setValue] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
 
   const trimmed = value.trim();
-  const tooLong = value.length > MAX_USER_MESSAGE_CHARS;
+  const tooLong = value.length > maxChars;
   const canSend = !disabled && trimmed.length > 0 && !tooLong;
 
   // Grow with the text, up to a ceiling, then scroll inside the box.
@@ -75,8 +94,8 @@ export function Composer({ onSend, disabled }: { onSend: (text: string) => void;
       }}
       aria-busy={disabled}
     >
-      <label htmlFor="travis-message" className="sr-only">
-        Message Travis
+      <label htmlFor={inputId} className="sr-only">
+        {label}
       </label>
       <div
         className={cn(
@@ -86,11 +105,11 @@ export function Composer({ onSend, disabled }: { onSend: (text: string) => void;
         )}
       >
         <textarea
-          id="travis-message"
+          id={inputId}
           ref={ref}
           rows={1}
           value={value}
-          placeholder="Where should I go, and when?"
+          placeholder={placeholder}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={(event) => {
             // `isComposing` keeps Enter from sending while an input method
@@ -108,12 +127,12 @@ export function Composer({ onSend, disabled }: { onSend: (text: string) => void;
       </div>
 
       <div className="mt-1.5 flex items-center justify-between gap-3 px-1 text-xs text-zinc-500">
-        <span className="hidden sm:inline">Enter to send · Shift+Enter for a new line</span>
-        {value.length >= COUNTER_FROM ? (
+        {hint ? <span className="hidden sm:inline">Enter to send · Shift+Enter for a new line</span> : <span />}
+        {value.length >= maxChars * COUNTER_FROM_RATIO ? (
           <span className={cn("ml-auto tabular-nums", tooLong && "font-medium text-red-600 dark:text-red-400")}>
             {tooLong
-              ? `${value.length - MAX_USER_MESSAGE_CHARS} over the limit`
-              : `${value.length} / ${MAX_USER_MESSAGE_CHARS}`}
+              ? `${value.length - maxChars} over the limit`
+              : `${value.length} / ${maxChars}`}
           </span>
         ) : null}
       </div>

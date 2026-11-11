@@ -137,15 +137,15 @@ describe("provenance", () => {
     expect(screen.queryByText(/Open in Google Maps/)).not.toBeInTheDocument();
   });
 
-  it("labels demo content as demo content", () => {
-    renderCard({ verification: "demo" });
-    expect(screen.getByText("Demo data")).toBeInTheDocument();
+  it("says so when a place is not verified", () => {
+    renderCard({ verification: "unverified" });
+    expect(screen.getByText("Not verified")).toBeInTheDocument();
   });
 
   it("says when a place came from a live provider", () => {
     renderCard();
     expect(screen.getByText(/Live place data/)).toBeInTheDocument();
-    expect(screen.queryByText("Demo data")).not.toBeInTheDocument();
+    expect(screen.queryByText("Not verified")).not.toBeInTheDocument();
   });
 });
 
