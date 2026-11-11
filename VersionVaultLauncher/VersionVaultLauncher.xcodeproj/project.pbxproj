@@ -47,11 +47,21 @@
 			);
 			target = 0E2CDB283058751800C1A32C /* VersionVaultFinderExtension */;
 		};
+		B23106AA30A4CEEE00D23778 /* Exceptions for "VersionVaultLauncher" folder in "VersionVaultLauncher" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 0E2CDB16305874F600C1A32C /* VersionVaultLauncher */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0E2CDB19305874F600C1A32C /* VersionVaultLauncher */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B23106AA30A4CEEE00D23778 /* Exceptions for "VersionVaultLauncher" folder in "VersionVaultLauncher" target */,
+			);
 			path = VersionVaultLauncher;
 			sourceTree = "<group>";
 		};
@@ -365,6 +375,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VersionVaultLauncher/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -397,6 +408,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VersionVaultLauncher/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

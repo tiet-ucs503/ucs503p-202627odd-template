@@ -4,7 +4,14 @@ import FinderSync
 
 class FinderSync: FIFinderSync {
 
-    private let appGroup = "group.com.versionvault.shared"
+    private let appGroup: String = {
+        guard let identifier = Bundle.main.object(
+            forInfoDictionaryKey: "VersionVaultAppGroup"
+        ) as? String, !identifier.isEmpty else {
+            fatalError("VersionVaultAppGroup is missing from Info.plist")
+        }
+        return identifier
+    }()
 
     override init() {
 
