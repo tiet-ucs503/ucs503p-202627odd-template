@@ -816,6 +816,44 @@
                     </li>
 
 
+                    <!-- SMART ELIGIBILITY CHECKER -->
+
+                    <li class="nav-item">
+
+                        <a
+                            class="nav-link nav-link-custom
+                            {% if request.endpoint == 'eligibility_checker' %}active{% endif %}"
+                            href="{{ url_for('eligibility_checker') }}"
+                        >
+
+                            <i class="fa-solid fa-wand-magic-sparkles text-saffron"></i>
+
+                            <span>Eligibility Checker</span>
+
+                        </a>
+
+                    </li>
+
+
+                    <!-- DOCUMENT READINESS CHECKER -->
+
+                    <li class="nav-item">
+
+                        <a
+                            class="nav-link nav-link-custom
+                            {% if request.endpoint in ['document_readiness', 'document_readiness_print'] %}active{% endif %}"
+                            href="{{ url_for('document_readiness') }}"
+                        >
+
+                            <i class="fa-solid fa-clipboard-check text-green"></i>
+
+                            <span>Doc Readiness</span>
+
+                        </a>
+
+                    </li>
+
+
                     <!-- DOCUMENT SIMPLIFIER -->
 
                     <li class="nav-item">

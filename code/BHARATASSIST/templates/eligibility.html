@@ -1,0 +1,971 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Scheme Eligibility Checker — BharatAssist{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* =========================================================
+       SMART SCHEME ELIGIBILITY CHECKER STYLING
+       ========================================================= */
+    .eligibility-shell {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.05), 0 2px 8px rgba(15, 23, 42, 0.02);
+    }
+
+    .eligibility-header {
+        padding: 30px;
+        background: linear-gradient(135deg, rgba(255, 153, 51, 0.08), rgba(255, 255, 255, 0.98) 45%, rgba(19, 136, 8, 0.06));
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .header-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fff;
+        border: 1px solid #fed7aa;
+        color: #c2410c;
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+    }
+
+    .category-card {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 14px 16px;
+        background: #ffffff;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 100%;
+        user-select: none;
+    }
+
+    .category-card:hover {
+        border-color: #ff9933;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(255, 153, 51, 0.12);
+    }
+
+    .category-card.active {
+        border-color: #0b3b60;
+        background: linear-gradient(145deg, #0b3b60, #134e7c);
+        color: #ffffff;
+        box-shadow: 0 8px 20px rgba(11, 59, 96, 0.22);
+    }
+
+    .category-card.active .cat-icon {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+    }
+
+    .category-card.active .cat-desc {
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .cat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: #f1f5f9;
+        color: #0b3b60;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+    }
+
+    .scheme-result-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 22px;
+        background: #ffffff;
+        transition: all 0.25s ease;
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .scheme-result-card:hover {
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+        border-color: #cbd5e1;
+    }
+
+    .scheme-result-card.status-confirmed {
+        border-left: 6px solid #16a34a;
+    }
+
+    .scheme-result-card.status-potential {
+        border-left: 6px solid #2563eb;
+    }
+
+    .scheme-result-card.status-followup {
+        border-left: 6px solid #ea580c;
+        background: #fffbf7;
+    }
+
+    .scheme-result-card.status-ineligible {
+        border-left: 6px solid #94a3b8;
+        background: #f8fafc;
+        opacity: 0.85;
+    }
+
+    .qualification-banner {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 0.88rem;
+        color: #166534;
+        margin-bottom: 14px;
+    }
+
+    .benefits-banner {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 0.88rem;
+        color: #854d0e;
+        margin-bottom: 14px;
+    }
+
+    .statutory-alert {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e40af;
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 0.86rem;
+        line-height: 1.5;
+    }
+
+    .chip-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 600;
+    }
+
+    .badge-confirmed { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .badge-potential { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+    .badge-followup { background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }
+    .badge-ineligible { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+    .compare-bar {
+        position: sticky;
+        bottom: 20px;
+        z-index: 1040;
+        background: #0b3b60;
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 12px 22px;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+    .table-compare th {
+        background: #f8fafc;
+        color: #0b3b60;
+        font-weight: 700;
+        font-size: 0.85rem;
+        width: 22%;
+    }
+
+    .table-compare td {
+        font-size: 0.86rem;
+        line-height: 1.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- BREADCRUMB -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb" style="font-size: 0.82rem;">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-decoration-none text-muted">Home</a></li>
+            <li class="breadcrumb-item active text-navy fw-semibold" aria-current="page">Smart Eligibility Checker</li>
+        </ol>
+    </nav>
+
+    <!-- MAIN SHELL -->
+    <div class="eligibility-shell mb-4">
+
+        <!-- HEADER -->
+        <div class="eligibility-header">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <span class="header-badge mb-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Citizen Pre-Screening Engine
+                    </span>
+                    <h2 class="h3 fw-bold text-navy mb-1">Smart Government Scheme Eligibility Checker</h2>
+                    <p class="text-muted mb-0" style="font-size: 0.95rem;">
+                        Identify central & state schemes you may qualify for based on age, income, occupation and citizen profile.
+                    </p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('services') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                        <i class="fa-solid fa-book-open me-1"></i> Full Directory
+                    </a>
+                    <a href="{{ url_for('assistant') }}" class="btn btn-tricolor btn-sm rounded-pill px-3">
+                        <i class="fa-solid fa-robot me-1"></i> Ask AI Assistant
+                    </a>
+                </div>
+            </div>
+
+            <!-- STATUTORY DISCLAIMER -->
+            <div class="statutory-alert mt-3 d-flex align-items-start gap-2">
+                <i class="fa-solid fa-shield-halved mt-1 text-primary"></i>
+                <div>
+                    <strong>Official Pre-Screening Disclaimer:</strong> BharatAssist evaluates criteria against published government guidelines to indicate potential qualification. It does <em>not</em> guarantee official sanction or government approval. Final decisions are made solely by designated government officers upon physical verification of original documents.
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 p-md-5">
+
+            <!-- STEP 1: SELECT CATEGORY OR SPECIFIC SCHEME -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold text-navy mb-0">
+                        <span class="badge bg-navy text-white rounded-circle me-1" style="width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem;">1</span>
+                        Select Category or Scheme of Interest
+                    </h5>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" id="toggleSpecificScheme">
+                        <label class="form-check-label text-muted" for="toggleSpecificScheme" style="font-size: 0.82rem;">
+                            Check a specific scheme directly
+                        </label>
+                    </div>
+                </div>
+
+                <!-- SPECIFIC SCHEME PICKER (Hidden by default) -->
+                <div id="specificSchemeContainer" class="p-3 mb-3 bg-light rounded-3 border" style="display: none;">
+                    <label class="form-label fw-semibold text-navy" for="specificSchemeSelect" style="font-size: 0.88rem;">
+                        <i class="fa-solid fa-magnifying-glass text-saffron me-1"></i> Select Specific Service / Scheme (226 available):
+                    </label>
+                    <select id="specificSchemeSelect" class="form-select">
+                        <option value="">-- Choose a specific scheme from catalog --</option>
+                        {% for svc in all_services %}
+                        <option value="{{ svc.id }}">{{ svc.name }} ({{ svc.category }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- CATEGORY CARDS GRID -->
+                <div class="row g-2 g-md-3" id="categoryGrid">
+                    {% for key, cat in category_groups.items() %}
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <div class="category-card {% if key == 'all' %}active{% endif %}" data-cat="{{ key }}">
+                            <div class="cat-icon">
+                                <i class="fa-solid {{ cat.icon }}"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                                <div class="fw-bold text-truncate" style="font-size: 0.85rem;">{{ cat.name }}</div>
+                                <div class="cat-desc text-truncate" style="font-size: 0.72rem; color: #64748b;">{{ cat.description }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- STEP 2: DYNAMIC QUESTIONNAIRE -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold text-navy mb-0">
+                        <span class="badge bg-navy text-white rounded-circle me-1" style="width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem;">2</span>
+                        Citizen Profile Questions
+                    </h5>
+                    <span class="text-muted" style="font-size: 0.78rem;">
+                        <i class="fa-solid fa-filter me-1"></i> Dynamically filtered for your selected domain
+                    </span>
+                </div>
+
+                <div class="card border p-3 p-md-4 bg-light rounded-3 shadow-none">
+                    <form id="eligibilityForm">
+                        <div class="row g-3" id="dynamicQuestionsContainer">
+                            <!-- Dynamic questions populated via JavaScript -->
+                            <div class="col-12 text-center py-4 text-muted">
+                                <i class="fa-solid fa-circle-notch fa-spin me-2 text-saffron"></i> Loading relevant questions...
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 pt-3 border-top">
+                            <div class="text-muted" style="font-size: 0.78rem;">
+                                <i class="fa-solid fa-lock text-success me-1"></i> Data entered here stays strictly local in your session.
+                            </div>
+                            <button type="submit" class="btn btn-tricolor px-4 py-2 fw-semibold rounded-pill shadow-sm" id="btnSubmitCheck">
+                                <i class="fa-solid fa-check-double me-1"></i> Check My Scheme Eligibility
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- STEP 3: RESULTS CONTAINER -->
+            <div id="resultsContainer" style="display: none;">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom">
+                    <div>
+                        <h4 class="fw-bold text-navy mb-1" id="resultsTitle">Evaluation Results</h4>
+                        <p class="text-muted mb-0" id="resultsSubtitle" style="font-size: 0.85rem;"></p>
+                    </div>
+
+                    <!-- SUMMARY COUNTERS / FILTERS -->
+                    <div class="d-flex flex-wrap gap-2" id="filterChips">
+                        <button type="button" class="btn btn-sm btn-outline-dark rounded-pill active" data-filter="all" id="chipAll">
+                            All Matches (<span id="cntAll">0</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-success rounded-pill" data-filter="confirmed" id="chipConfirmed">
+                            Confirmed (<span id="cntConfirmed">0</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" data-filter="potential" id="chipPotential">
+                            Potentially Eligible (<span id="cntPotential">0</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning rounded-pill" data-filter="followup" id="chipFollowup">
+                            Follow-up Needed (<span id="cntFollowup">0</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" data-filter="ineligible" id="chipIneligible">
+                            Ineligible (<span id="cntIneligible">0</span>)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- NO MATCH EXPLANATION (When 0 eligible) -->
+                <div id="noMatchCallout" class="p-4 rounded-3 border mb-4" style="display: none; background: #fff7ed; border-color: #ffedd5;">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="p-2 rounded-circle bg-warning bg-opacity-25 text-warning-emphasis">
+                            <i class="fa-solid fa-triangle-exclamation fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-navy" id="noMatchTitle">No Matching Schemes Found</h5>
+                            <p class="text-muted mb-3" id="noMatchReason" style="font-size: 0.92rem;"></p>
+                            <h6 class="fw-bold text-navy" style="font-size: 0.85rem;">Recommended Next Steps:</h6>
+                            <ul class="mb-3 text-muted ps-3" id="noMatchSteps" style="font-size: 0.86rem;"></ul>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="resetForm()">
+                                    <i class="fa-solid fa-rotate-left me-1"></i> Try Different Parameters
+                                </button>
+                                <a href="{{ url_for('assistant') }}" class="btn btn-sm btn-tricolor rounded-pill">
+                                    <i class="fa-solid fa-comments me-1"></i> Consult AI Civic Assistant
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARDS LIST -->
+                <div id="schemesList">
+                    <!-- Populated by JS -->
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FLOATING COMPARE BAR -->
+    <div class="compare-bar" id="compareBar">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-code-compare fs-5 text-warning"></i>
+            <div>
+                <strong id="compareCountText">0 schemes selected for comparison</strong>
+                <div style="font-size: 0.74rem; color: #cbd5e1;">Select 2 to 4 schemes to compare side-by-side.</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-light btn-sm fw-semibold rounded-pill px-3" id="btnOpenCompare">
+                <i class="fa-solid fa-table-columns me-1"></i> Compare Side-by-Side
+            </button>
+            <button type="button" class="btn btn-outline-light btn-sm rounded-pill" id="btnClearCompare">
+                Clear
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- SIDE-BY-SIDE SCHEME COMPARISON MODAL -->
+<div class="modal fade" id="compareModal" tabindex="-1" aria-labelledby="compareModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-navy text-white py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-code-compare text-saffron"></i>
+                    <h5 class="modal-title fw-bold mb-0" id="compareModalLabel">Scheme Comparison Matrix</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="p-3 bg-light border-bottom text-muted" style="font-size: 0.8rem;">
+                    <i class="fa-solid fa-shield-halved text-primary me-1"></i>
+                    <strong>Statutory Disclaimer:</strong> Side-by-side evaluation is for pre-application citizen reference. All final entitlements are subject to official portal verification and statutory sanction.
+                </div>
+                <div class="table-responsive p-3">
+                    <table class="table table-bordered table-hover align-middle mb-0 table-compare" id="compareTable">
+                        <tbody id="compareTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer py-2 bg-light">
+                <button type="button" class="btn btn-secondary rounded-pill btn-sm px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // State management
+    let currentCategory = "all";
+    let currentServiceId = null;
+    let statesDistrictsData = {};
+    let selectedForCompare = new Set();
+    let currentResults = null;
+    let activeFilter = "all";
+
+    // Preloaded user defaults if authenticated
+    const initialUser = {
+        state: {{ (current_user.state if current_user and current_user.state else '') | tojson }},
+        district: {{ (current_user.district if current_user and current_user.district else '') | tojson }}
+    };
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        // Load Indian states and districts JSON
+        try {
+            const res = await fetch("/static/india_states_districts.json");
+            if (res.ok) {
+                statesDistrictsData = await res.json();
+            }
+        } catch (e) {
+            console.warn("Could not load states JSON:", e);
+        }
+
+        // Category selection cards
+        document.querySelectorAll(".category-card").forEach(card => {
+            card.addEventListener("click", () => {
+                document.querySelectorAll(".category-card").forEach(c => c.classList.remove("active"));
+                card.classList.add("active");
+                currentCategory = card.getAttribute("data-cat");
+                currentServiceId = null;
+                document.getElementById("toggleSpecificScheme").checked = false;
+                document.getElementById("specificSchemeContainer").style.display = "none";
+                document.getElementById("specificSchemeSelect").value = "";
+                loadQuestions(currentCategory, null);
+            });
+        });
+
+        // Toggle specific scheme
+        const toggleSpecific = document.getElementById("toggleSpecificScheme");
+        const specificContainer = document.getElementById("specificSchemeContainer");
+        const specificSelect = document.getElementById("specificSchemeSelect");
+
+        toggleSpecific.addEventListener("change", () => {
+            if (toggleSpecific.checked) {
+                specificContainer.style.display = "block";
+            } else {
+                specificContainer.style.display = "none";
+                currentServiceId = null;
+                specificSelect.value = "";
+                loadQuestions(currentCategory, null);
+            }
+        });
+
+        specificSelect.addEventListener("change", () => {
+            const sId = specificSelect.value;
+            if (sId) {
+                currentServiceId = parseInt(sId);
+                loadQuestions(null, currentServiceId);
+            } else {
+                currentServiceId = null;
+                loadQuestions(currentCategory, null);
+            }
+        });
+
+        // Filter chips
+        document.querySelectorAll("#filterChips button").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll("#filterChips button").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                activeFilter = btn.getAttribute("data-filter");
+                renderFilteredCards();
+            });
+        });
+
+        // Compare bar controls
+        document.getElementById("btnClearCompare").addEventListener("click", () => {
+            selectedForCompare.clear();
+            updateCompareBar();
+            renderFilteredCards();
+        });
+
+        document.getElementById("btnOpenCompare").addEventListener("click", openComparisonModal);
+
+        // Submit form
+        document.getElementById("eligibilityForm").addEventListener("submit", handleEligibilitySubmit);
+
+        // Initial questions load
+        loadQuestions(currentCategory, null);
+    });
+
+    async function loadQuestions(categoryKey, serviceId) {
+        const container = document.getElementById("dynamicQuestionsContainer");
+        container.innerHTML = `
+            <div class="col-12 text-center py-4 text-muted">
+                <i class="fa-solid fa-circle-notch fa-spin me-2 text-saffron"></i> Loading relevant questions...
+            </div>
+        `;
+
+        let url = `/api/eligibility/questions?`;
+        if (serviceId) {
+            url += `service_id=${serviceId}`;
+        } else {
+            url += `category=${encodeURIComponent(categoryKey || "all")}`;
+        }
+
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.questions && data.questions.length > 0) {
+                renderQuestions(data.questions);
+            } else {
+                container.innerHTML = `<div class="col-12 text-danger">Failed to load questions. Please refresh.</div>`;
+            }
+        } catch (err) {
+            container.innerHTML = `<div class="col-12 text-danger">Error: ${err.message}</div>`;
+        }
+    }
+
+    function renderQuestions(questions) {
+        const container = document.getElementById("dynamicQuestionsContainer");
+        container.innerHTML = "";
+
+        questions.forEach(q => {
+            const col = document.createElement("div");
+            col.className = q.type === "textarea" ? "col-12" : "col-md-6";
+
+            let fieldHtml = "";
+            const isReq = q.required ? '<span class="text-danger">*</span>' : '';
+            const helpText = q.help ? `<div class="form-text" style="font-size: 0.72rem;">${q.help}</div>` : '';
+
+            if (q.type === "select_state") {
+                const stateOpts = Object.keys(statesDistrictsData).sort().map(st => {
+                    const sel = (initialUser.state && initialUser.state === st) ? 'selected' : '';
+                    return `<option value="${st}" ${sel}>${st}</option>`;
+                }).join("");
+
+                fieldHtml = `
+                    <label class="form-label fw-semibold text-navy mb-1" style="font-size: 0.84rem;">
+                        ${q.label} ${isReq}
+                    </label>
+                    <select class="form-select form-select-sm" name="${q.id}" id="inputState" ${q.required ? 'required' : ''}>
+                        <option value="">-- Select State / UT --</option>
+                        ${stateOpts}
+                    </select>
+                    ${helpText}
+                `;
+            } else if (q.type === "select_district") {
+                fieldHtml = `
+                    <label class="form-label fw-semibold text-navy mb-1" style="font-size: 0.84rem;">
+                        ${q.label} ${isReq}
+                    </label>
+                    <select class="form-select form-select-sm" name="${q.id}" id="inputDistrict" ${q.required ? 'required' : ''} ${initialUser.state ? '' : 'disabled'}>
+                        <option value="">-- Select District --</option>
+                    </select>
+                    ${helpText}
+                `;
+            } else if (q.type === "select") {
+                const opts = (q.options || []).map(opt => `<option value="${opt.value}">${opt.label}</option>`).join("");
+                fieldHtml = `
+                    <label class="form-label fw-semibold text-navy mb-1" style="font-size: 0.84rem;">
+                        ${q.label} ${isReq}
+                    </label>
+                    <select class="form-select form-select-sm" name="${q.id}" ${q.required ? 'required' : ''}>
+                        <option value="">-- Please Select --</option>
+                        ${opts}
+                    </select>
+                    ${helpText}
+                `;
+            } else if (q.type === "number") {
+                fieldHtml = `
+                    <label class="form-label fw-semibold text-navy mb-1" style="font-size: 0.84rem;">
+                        ${q.label} ${isReq}
+                    </label>
+                    <input type="number" class="form-control form-control-sm" name="${q.id}" placeholder="${q.placeholder || ''}" min="${q.min || 0}" max="${q.max || 999999999}" ${q.required ? 'required' : ''}>
+                    ${helpText}
+                `;
+            } else {
+                fieldHtml = `
+                    <label class="form-label fw-semibold text-navy mb-1" style="font-size: 0.84rem;">
+                        ${q.label} ${isReq}
+                    </label>
+                    <input type="text" class="form-control form-control-sm" name="${q.id}" placeholder="${q.placeholder || ''}" ${q.required ? 'required' : ''}>
+                    ${helpText}
+                `;
+            }
+
+            col.innerHTML = fieldHtml;
+            container.appendChild(col);
+        });
+
+        // Hook up State -> District cascading
+        const stateEl = document.getElementById("inputState");
+        const distEl = document.getElementById("inputDistrict");
+        if (stateEl && distEl) {
+            stateEl.addEventListener("change", () => {
+                populateDistricts(stateEl.value, "");
+            });
+            if (initialUser.state) {
+                populateDistricts(initialUser.state, initialUser.district);
+            }
+        }
+    }
+
+    function populateDistricts(stName, preselect = "") {
+        const distEl = document.getElementById("inputDistrict");
+        if (!distEl) return;
+        distEl.innerHTML = '<option value="">-- Select District --</option>';
+        if (stName && statesDistrictsData[stName]) {
+            distEl.disabled = false;
+            statesDistrictsData[stName].forEach(d => {
+                const opt = document.createElement("option");
+                opt.value = d;
+                opt.textContent = d;
+                if (d === preselect) opt.selected = true;
+                distEl.appendChild(opt);
+            });
+        } else {
+            distEl.disabled = true;
+        }
+    }
+
+    async function handleEligibilitySubmit(e) {
+        e.preventDefault();
+        const btn = document.getElementById("btnSubmitCheck");
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin me-1"></i> Evaluating Criteria...`;
+
+        const form = document.getElementById("eligibilityForm");
+        const formData = new FormData(form);
+        const userProfile = {};
+        formData.forEach((val, key) => {
+            if (val.trim()) userProfile[key] = val.trim();
+        });
+
+        const payload = {
+            category: currentCategory,
+            service_id: currentServiceId,
+            profile: userProfile
+        };
+
+        try {
+            const res = await fetch("/api/eligibility/check", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            currentResults = data;
+            displayResults(data);
+        } catch (err) {
+            alert("Error running eligibility check: " + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    function displayResults(data) {
+        const container = document.getElementById("resultsContainer");
+        container.style.display = "block";
+
+        const summary = data.summary || {};
+        document.getElementById("resultsTitle").textContent = `Eligibility Results for ${summary.category_name || 'Selected Category'}`;
+        document.getElementById("resultsSubtitle").textContent = `Evaluated ${summary.total_evaluated || 0} government services against your profile criteria.`;
+
+        // Update counts
+        const totalMatches = (summary.confirmed_eligible_count || 0) + (summary.potentially_eligible_count || 0);
+        document.getElementById("cntAll").textContent = totalMatches;
+        document.getElementById("cntConfirmed").textContent = summary.confirmed_eligible_count || 0;
+        document.getElementById("cntPotential").textContent = summary.potentially_eligible_count || 0;
+        document.getElementById("cntFollowup").textContent = summary.insufficient_info_count || 0;
+        document.getElementById("cntIneligible").textContent = summary.ineligible_count || 0;
+
+        // No match callout
+        const noMatchCallout = document.getElementById("noMatchCallout");
+        if (data.no_match_explanation) {
+            noMatchCallout.style.display = "block";
+            document.getElementById("noMatchTitle").textContent = data.no_match_explanation.title;
+            document.getElementById("noMatchReason").textContent = data.no_match_explanation.reason;
+            const stepsList = document.getElementById("noMatchSteps");
+            stepsList.innerHTML = (data.no_match_explanation.remediation || []).map(r => `<li>${r}</li>`).join("");
+        } else {
+            noMatchCallout.style.display = "none";
+        }
+
+        renderFilteredCards();
+
+        // Smooth scroll to results
+        container.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderFilteredCards() {
+        if (!currentResults) return;
+        const listEl = document.getElementById("schemesList");
+        listEl.innerHTML = "";
+
+        let cardsToRender = [];
+        const confirmed = currentResults.confirmed_eligible || [];
+        const potential = currentResults.potentially_eligible || [];
+        const followup = currentResults.insufficient_info || [];
+        const ineligible = currentResults.ineligible || [];
+
+        if (activeFilter === "all") {
+            cardsToRender = [...confirmed, ...potential, ...followup];
+        } else if (activeFilter === "confirmed") {
+            cardsToRender = confirmed;
+        } else if (activeFilter === "potential") {
+            cardsToRender = potential;
+        } else if (activeFilter === "followup") {
+            cardsToRender = followup;
+        } else if (activeFilter === "ineligible") {
+            cardsToRender = ineligible;
+        }
+
+        if (cardsToRender.length === 0 && !currentResults.no_match_explanation) {
+            listEl.innerHTML = `
+                <div class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-inbox fs-2 mb-2 text-secondary"></i>
+                    <p>No schemes currently in this tab.</p>
+                </div>
+            `;
+            return;
+        }
+
+        cardsToRender.forEach(svc => {
+            const card = createSchemeCard(svc);
+            listEl.appendChild(card);
+        });
+    }
+
+    function createSchemeCard(svc) {
+        const div = document.createElement("div");
+        div.className = `scheme-result-card status-${svc.status === 'confirmed_eligible' ? 'confirmed' : (svc.status === 'potentially_eligible' ? 'potential' : (svc.status === 'insufficient_info' ? 'followup' : 'ineligible'))}`;
+        div.id = `scheme_card_${svc.service_id}`;
+
+        let badgeClass = "badge-confirmed";
+        if (svc.status === "potentially_eligible") badgeClass = "badge-potential";
+        else if (svc.status === "insufficient_info") badgeClass = "badge-followup";
+        else if (svc.status === "ineligible") badgeClass = "badge-ineligible";
+
+        const isChecked = selectedForCompare.has(svc.service_id) ? "checked" : "";
+
+        // Build documents list
+        const docsHtml = (svc.documents_list || []).slice(0, 4).map(d => `<span class="badge bg-light text-dark border me-1 mb-1" style="font-size: 0.73rem;"><i class="fa-solid fa-file-check text-muted me-1"></i>${d}</span>`).join("");
+
+        // Follow up questions block if insufficient info
+        let followupHtml = "";
+        if (svc.status === "insufficient_info" && svc.follow_up_questions && svc.follow_up_questions.length > 0) {
+            followupHtml = `
+                <div class="p-3 mt-3 bg-white border border-warning rounded-3">
+                    <div class="fw-bold text-navy mb-2" style="font-size: 0.85rem;">
+                        <i class="fa-solid fa-circle-question text-warning me-1"></i> Information needed to verify this scheme:
+                    </div>
+                    <ul class="mb-2 ps-3 text-muted" style="font-size: 0.82rem;">
+                        ${svc.follow_up_questions.map(q => `<li>${q}</li>`).join("")}
+                    </ul>
+                    <button type="button" class="btn btn-sm btn-outline-warning rounded-pill py-1 px-3" onclick="focusFollowupInput()">
+                        <i class="fa-solid fa-pen-to-square me-1"></i> Complete in Profile Form &uarr;
+                    </button>
+                </div>
+            `;
+        }
+
+        div.innerHTML = `
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <input class="form-check-input compare-checkbox mt-0" type="checkbox" data-id="${svc.service_id}" ${isChecked} title="Select to compare">
+                    <h5 class="fw-bold text-navy mb-0">${svc.name}</h5>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="chip-badge ${badgeClass}">${svc.status_badge}</span>
+                    <span class="badge bg-light text-muted border" style="font-size: 0.72rem;">${svc.category}</span>
+                </div>
+            </div>
+
+            <!-- WHY QUALIFIED BANNER -->
+            <div class="${svc.status === 'ineligible' ? 'bg-light text-secondary border' : 'qualification-banner'} mt-2">
+                <i class="fa-solid ${svc.status === 'ineligible' ? 'fa-circle-xmark text-danger' : 'fa-circle-check text-success'} me-1"></i>
+                <strong>${svc.status === 'ineligible' ? 'Disqualification Reason:' : 'Why You May Qualify:'}</strong>
+                <span>${svc.why_qualified}</span>
+            </div>
+
+            <!-- KEY BENEFITS -->
+            ${svc.benefits ? `
+            <div class="benefits-banner">
+                <i class="fa-solid fa-gift text-warning me-1"></i>
+                <strong>Key Entitlements / Benefits:</strong>
+                <span>${svc.benefits}</span>
+            </div>
+            ` : ''}
+
+            <!-- ELIGIBILITY CONDITIONS & REQUIRED DOCUMENTS -->
+            <div class="row g-2 mt-1 mb-2" style="font-size: 0.84rem;">
+                <div class="col-md-6">
+                    <div class="text-muted fw-semibold mb-1"><i class="fa-solid fa-gavel text-primary me-1"></i> Official Conditions:</div>
+                    <div class="p-2 bg-light rounded text-secondary" style="font-size: 0.8rem; min-height: 48px;">
+                        ${svc.eligibility_text}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-muted fw-semibold mb-1"><i class="fa-solid fa-folder-closed text-saffron me-1"></i> Required Documents:</div>
+                    <div>${docsHtml}</div>
+                </div>
+            </div>
+
+            <!-- FOLLOW UP BLOCK -->
+            ${followupHtml}
+
+            <!-- FOOTER WITH PORTAL LINK & VERIFICATION DATE -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 pt-2 border-top" style="font-size: 0.78rem;">
+                <div class="text-muted">
+                    <i class="fa-solid fa-calendar-check text-success me-1"></i>
+                    Source: <span class="fw-semibold">${svc.verification_status}</span>
+                    &bull; Last Verified: <span class="fw-semibold">${svc.last_verified}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="/services#service_${svc.service_id}" class="btn btn-sm btn-outline-secondary rounded-pill py-1 px-3">
+                        <i class="fa-solid fa-info-circle me-1"></i> View Steps & Fees
+                    </a>
+                    ${svc.source_url ? `
+                    <a href="${svc.source_url}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-tricolor rounded-pill py-1 px-3">
+                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Official Portal
+                    </a>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        // Checkbox event
+        const cb = div.querySelector(".compare-checkbox");
+        cb.addEventListener("change", (e) => {
+            const sid = parseInt(e.target.getAttribute("data-id"));
+            if (e.target.checked) {
+                if (selectedForCompare.size >= 4) {
+                    e.target.checked = false;
+                    alert("You can compare a maximum of 4 schemes simultaneously.");
+                    return;
+                }
+                selectedForCompare.add(sid);
+            } else {
+                selectedForCompare.delete(sid);
+            }
+            updateCompareBar();
+        });
+
+        return div;
+    }
+
+    function updateCompareBar() {
+        const bar = document.getElementById("compareBar");
+        const count = selectedForCompare.size;
+        if (count > 0) {
+            bar.style.display = "flex";
+            document.getElementById("compareCountText").textContent = `${count} scheme${count > 1 ? 's' : ''} selected for comparison`;
+        } else {
+            bar.style.display = "none";
+        }
+    }
+
+    async function openComparisonModal() {
+        if (selectedForCompare.size < 2) {
+            alert("Please select at least 2 schemes to view the side-by-side comparison matrix.");
+            return;
+        }
+
+        const modalEl = document.getElementById("compareModal");
+        const modal = new bootstrap.Modal(modalEl);
+        const tbody = document.getElementById("compareTableBody");
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4"><i class="fa-solid fa-circle-notch fa-spin me-2 text-saffron"></i> Loading comparison matrix...</td></tr>`;
+        modal.show();
+
+        try {
+            const res = await fetch("/api/eligibility/compare", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ service_ids: Array.from(selectedForCompare) })
+            });
+            const data = await res.json();
+            if (data.schemes && data.fields) {
+                renderComparisonTable(data.fields, data.schemes);
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-danger p-3">${data.error || 'Failed to compare schemes.'}</td></tr>`;
+            }
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-danger p-3">Error: ${err.message}</td></tr>`;
+        }
+    }
+
+    function renderComparisonTable(fields, schemes) {
+        const tbody = document.getElementById("compareTableBody");
+        tbody.innerHTML = "";
+
+        fields.forEach(field => {
+            const tr = document.createElement("tr");
+            const th = document.createElement("th");
+            th.textContent = field.label;
+            tr.appendChild(th);
+
+            schemes.forEach(sc => {
+                const td = document.createElement("td");
+                let val = sc[field.key] || "—";
+                if (field.key === "name") {
+                    td.innerHTML = `<strong class="text-navy">${val}</strong>`;
+                } else if (field.key === "source_url" && val !== "—") {
+                    td.innerHTML = `<a href="${val}" target="_blank" rel="noopener noreferrer" class="btn btn-xs btn-outline-primary rounded-pill py-0 px-2" style="font-size: 0.76rem;"><i class="fa-solid fa-external-link me-1"></i> Visit Official Portal</a>`;
+                } else if (field.key === "benefits") {
+                    td.innerHTML = `<span class="text-warning-emphasis fw-semibold">${val}</span>`;
+                } else {
+                    td.textContent = val;
+                }
+                tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    function focusFollowupInput() {
+        document.getElementById("eligibilityForm").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function resetForm() {
+        document.getElementById("eligibilityForm").reset();
+        document.getElementById("resultsContainer").style.display = "none";
+        loadQuestions(currentCategory, currentServiceId);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+</script>
+{% endblock %}

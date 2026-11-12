@@ -32,7 +32,7 @@ else:
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-from utils import llm, rag, redact, metrics, matcher
+from utils import llm, rag, redact, metrics, matcher, eligibility, readiness
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "bharatassist-citizen-privacy-shield-secret-2026")
@@ -3169,6 +3169,225 @@ def debug_services():
         "count": len(result),
         "services": result
     })
+
+
+# ============================================================
+# FEATURE 1: SMART GOVERNMENT SCHEME ELIGIBILITY CHECKER
+# ============================================================
+
+@app.route("/eligibility", methods=["GET"])
+def eligibility_checker():
+    """Smart Government Scheme Eligibility Checker page."""
+    category_groups = eligibility.CATEGORY_GROUPS
+    current_user = get_current_user_record()
+    all_services = get_all_services()
+    return render_template(
+        "eligibility.html",
+        category_groups=category_groups,
+        current_user=current_user,
+        all_services=all_services
+    )
+
+
+@app.route("/api/eligibility/questions", methods=["GET"])
+def api_eligibility_questions():
+    """Return dynamic questions relevant to selected category or specific service."""
+    category = request.args.get("category", "all")
+    service_id_raw = request.args.get("service_id")
+    service_data = None
+    service_id = None
+    if service_id_raw and str(service_id_raw).isdigit():
+        service_id = int(service_id_raw)
+        service_data = get_service_by_id(service_id)
+
+    questions = eligibility.get_questions_for_category(
+        category_key=category,
+        service_id=service_id,
+        service_data=service_data
+    )
+    return jsonify({"questions": questions, "category": category, "service_id": service_id})
+
+
+@app.route("/api/eligibility/check", methods=["POST"])
+def api_eligibility_check():
+    """Evaluate citizen answers against catalog eligibility conditions."""
+    data = request.get_json(silent=True) or {}
+    category = data.get("category", "all")
+    service_id_raw = data.get("service_id")
+    service_id = int(service_id_raw) if service_id_raw and str(service_id_raw).isdigit() else None
+    user_profile = data.get("profile") or {}
+
+    curr = get_current_user_record()
+    if curr:
+        if not user_profile.get("state") and curr.get("state"):
+            user_profile["state"] = curr["state"]
+        if not user_profile.get("district") and curr.get("district"):
+            user_profile["district"] = curr["district"]
+
+    results = eligibility.match_schemes(
+        user_profile=user_profile,
+        category_key=category,
+        service_id=service_id,
+        db_path=DB_PATH
+    )
+    return jsonify(results)
+
+
+@app.route("/api/eligibility/compare", methods=["POST"])
+def api_eligibility_compare():
+    """Generate side-by-side comparison matrix for selected schemes."""
+    data = request.get_json(silent=True) or {}
+    service_ids = data.get("service_ids") or []
+    if not isinstance(service_ids, list) or len(service_ids) < 1:
+        return jsonify({"error": "Please provide a list of service IDs to compare."}), 400
+
+    matrix = eligibility.build_comparison_matrix(service_ids, db_path=DB_PATH)
+    return jsonify(matrix)
+
+
+# ============================================================
+# FEATURE 2: DOCUMENT READINESS CHECKER
+# ============================================================
+
+@app.route("/document-readiness", methods=["GET"])
+def document_readiness():
+    """Document Readiness Checker page."""
+    all_services = get_all_services()
+    current_user = get_current_user_record()
+    service_id = request.args.get("service_id")
+    selected_service = None
+    if service_id and str(service_id).isdigit():
+        selected_service = get_service_by_id(int(service_id))
+    return render_template(
+        "readiness.html",
+        all_services=all_services,
+        current_user=current_user,
+        selected_service=selected_service
+    )
+
+
+@app.route("/api/readiness/requirements/<int:service_id>", methods=["GET"])
+def api_readiness_requirements(service_id):
+    """Retrieve checklist of required documents for a service."""
+    service = get_service_by_id(service_id)
+    if not service:
+        return jsonify({"success": False, "error": "Service not found in catalog."}), 404
+
+    documents = readiness.parse_service_documents(service)
+    is_unverified = bool(documents and documents[0].get("is_unverified_fallback"))
+
+    return jsonify({
+        "success": True,
+        "service_id": service["id"],
+        "service_name": service["name"],
+        "category": service["category"],
+        "state": service.get("state"),
+        "source_url": service.get("source_url"),
+        "last_verified": service.get("last_verified") or "Periodic verification pending",
+        "is_unverified_fallback": is_unverified,
+        "documents": documents,
+        "disclaimer": readiness.STATUTORY_DOCUMENT_DISCLAIMER
+    })
+
+
+@app.route("/api/readiness/upload", methods=["POST"])
+def api_readiness_upload():
+    """Upload a document file, extract text via OCR/readers, and analyze for readiness issues."""
+    if "file" not in request.files:
+        return jsonify({"success": False, "error": "No file uploaded."}), 400
+
+    file = request.files["file"]
+    if not file or not file.filename:
+        return jsonify({"success": False, "error": "Empty filename."}), 400
+
+    doc_id = request.form.get("doc_id", "doc_0")
+    doc_name = request.form.get("doc_name", "")
+    applicant_name = request.form.get("applicant_name")
+
+    if not applicant_name:
+        curr = get_current_user_record()
+        if curr and curr.get("name"):
+            applicant_name = curr["name"]
+
+    try:
+        extracted_text = ""
+        try:
+            extracted_text = extract_text_from_file(file)
+        except Exception as ocr_err:
+            file.seek(0)
+            raw_bytes = file.read()
+            try:
+                extracted_text = raw_bytes.decode("utf-8", errors="ignore")
+            except Exception:
+                extracted_text = ""
+            if not extracted_text.strip():
+                return jsonify({
+                    "success": False,
+                    "error": f"OCR extraction error: {str(ocr_err)}. Please upload a clearer PDF or TXT file."
+                }), 400
+
+        analysis = readiness.analyze_document_text(
+            text=extracted_text,
+            doc_name=doc_name,
+            applicant_name=applicant_name
+        )
+
+        return jsonify({
+            "success": True,
+            "doc_id": doc_id,
+            "doc_name": doc_name,
+            "analysis": analysis,
+            "disclaimer": readiness.STATUTORY_DOCUMENT_DISCLAIMER
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Document processing failed: {str(e)}"}), 500
+
+
+@app.route("/api/readiness/evaluate", methods=["POST"])
+def api_readiness_evaluate():
+    """Evaluate overall document checklist readiness."""
+    data = request.get_json(silent=True) or {}
+    service_id = data.get("service_id")
+    if not service_id:
+        return jsonify({"success": False, "error": "Missing service_id parameter."}), 400
+
+    service = get_service_by_id(int(service_id))
+    if not service:
+        return jsonify({"success": False, "error": "Service not found in catalog."}), 404
+
+    documents_status = data.get("documents") or []
+    applicant_profile = data.get("applicant_profile") or {}
+    if not applicant_profile.get("name"):
+        curr = get_current_user_record()
+        if curr and curr.get("name"):
+            applicant_profile["name"] = curr["name"]
+
+    summary = readiness.evaluate_overall_readiness(
+        service=service,
+        documents_status=documents_status,
+        applicant_profile=applicant_profile
+    )
+    return jsonify({"success": True, "evaluation": summary})
+
+
+@app.route("/document-readiness/print/<int:service_id>", methods=["GET"])
+def document_readiness_print(service_id):
+    """Printable checklist view for citizens to download or print."""
+    service = get_service_by_id(service_id)
+    if not service:
+        return render_template("service_details.html", service=None, error="Service not found."), 404
+
+    documents = readiness.parse_service_documents(service)
+    current_user = get_current_user_record()
+    return render_template(
+        "readiness_print.html",
+        service=service,
+        documents=documents,
+        current_user=current_user,
+        now=datetime.now().strftime("%d %B %Y"),
+        disclaimer=readiness.STATUTORY_DOCUMENT_DISCLAIMER
+    )
 
 
 # ============================================================
