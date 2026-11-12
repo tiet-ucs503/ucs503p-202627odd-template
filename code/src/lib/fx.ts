@@ -15,3 +15,13 @@ export function fromInr(amountInInr: number, currency: string): number {
   const rate = RATES_PER_INR[currency] ?? 1;
   return Math.round(amountInInr * rate);
 }
+
+/**
+ * The reverse of `fromInr`: what an amount in `currency` is worth in rupees.
+ * Uses the same static, approximate rates, so a figure shown next to it is an
+ * estimate, never a quote. An unknown currency is treated as INR, as in `fromInr`.
+ */
+export function toInr(amount: number, currency: string): number {
+  const rate = RATES_PER_INR[currency] ?? 1;
+  return Math.round(amount / rate);
+}

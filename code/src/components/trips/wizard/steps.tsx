@@ -5,6 +5,7 @@ import { Minus, Plus } from "lucide-react";
 import { Chip, SelectField, TextField } from "@/components/ui";
 import { CountryCombobox } from "@/components/ui/country-combobox";
 import { COUNTRIES } from "@/lib/countries";
+import { toInr } from "@/lib/fx";
 import { cn, formatMoney } from "@/lib/utils";
 import { TRAVEL_STYLES, TRAVELER_TYPES, type TravelerType, type TravelStyle } from "@/types/itinerary";
 import { StepHeading } from "./wizard-shell";
@@ -121,6 +122,12 @@ export function BudgetStep({ data, setData }: { data: WizardData; setData: SetDa
       <p className="mt-4 font-display text-3xl font-medium text-orange-600">
         {formatMoney(Number(data.budget) || 0, data.currency)}
       </p>
+      {data.currency !== "INR" && Number(data.budget) > 0 && (
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400" data-testid="budget-inr">
+          ≈ {formatMoney(toInr(Number(data.budget), data.currency), "INR")}
+          <span className="ml-1">(approximate rate)</span>
+        </p>
+      )}
     </div>
   );
 }
@@ -208,7 +215,14 @@ export function ReviewStep({ data }: { data: WizardData }) {
         <Row label="Destination" value={data.destination || "—"} big />
         <Row label="Dates" value={`${data.startDate || "—"} → ${data.endDate || "—"}`} />
         <Row label="Travellers" value={`${data.travelers} (${data.travelerType})`} />
-        <Row label="Budget" value={formatMoney(Number(data.budget) || 0, data.currency)} />
+        <Row
+          label="Budget"
+          value={
+            data.currency !== "INR" && Number(data.budget) > 0
+              ? `${formatMoney(Number(data.budget), data.currency)} (≈ ${formatMoney(toInr(Number(data.budget), data.currency), "INR")})`
+              : formatMoney(Number(data.budget) || 0, data.currency)
+          }
+        />
         <Row label="Style" value={styleLabels || "No preferences selected"} />
       </div>
     </div>

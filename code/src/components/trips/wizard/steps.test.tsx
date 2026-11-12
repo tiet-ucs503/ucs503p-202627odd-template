@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
-import { DestinationStep, type WizardData } from "@/components/trips/wizard/steps";
+import { BudgetStep, DestinationStep, type WizardData } from "@/components/trips/wizard/steps";
 import { COUNTRIES } from "@/lib/countries";
 
 const EMPTY: WizardData = {
@@ -64,5 +64,36 @@ describe("DestinationStep", () => {
   it("still points to Travis for someone who has not decided", () => {
     render(<Harness />);
     expect(screen.getByRole("link", { name: "Ask Travis" })).toHaveAttribute("href", "/travis");
+  });
+});
+
+function BudgetHarness({ currency, budget }: { currency: string; budget: string }) {
+  const [data, setData] = useState<WizardData>({ ...EMPTY, currency, budget });
+  return (
+    <BudgetStep data={data} setData={(patch) => setData((prev) => ({ ...prev, ...(typeof patch === "function" ? patch(prev) : patch) }))} />
+  );
+}
+
+describe("BudgetStep rupee preview", () => {
+  it("shows the rupee equivalent next to a foreign-currency budget", () => {
+    render(<BudgetHarness currency="USD" budget="3614" />);
+    expect(screen.getByTestId("budget-inr")).toHaveTextContent("₹2,99,962");
+  });
+
+  it("does not repeat the amount when the budget is already in rupees", () => {
+    render(<BudgetHarness currency="INR" budget="500000" />);
+    expect(screen.queryByTestId("budget-inr")).not.toBeInTheDocument();
+  });
+
+  it("hides the preview until an amount is entered", () => {
+    render(<BudgetHarness currency="EUR" budget="" />);
+    expect(screen.queryByTestId("budget-inr")).not.toBeInTheDocument();
+  });
+
+  it("updates the preview when the currency changes", () => {
+    render(<BudgetHarness currency="USD" budget="1000" />);
+    expect(screen.getByTestId("budget-inr")).toHaveTextContent("₹83,000");
+    fireEvent.change(screen.getByLabelText("Currency"), { target: { value: "GBP" } });
+    expect(screen.getByTestId("budget-inr")).toHaveTextContent("₹1,05,000");
   });
 });
