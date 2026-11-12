@@ -9,7 +9,9 @@
 
 **BharatAssist** is an AI-powered, privacy-first civic guidance and application tracking platform designed for Indian citizens. It bridges the accessibility gap in government services by providing:
 - Source-grounded AI guidance in **12 Indian languages** with Speech-to-Text and Text-to-Speech.
-- Step-by-step procedure and document checklists for **200+ government services**.
+- Step-by-step procedure and document checklists for **226 government services**.
+- **Smart Government Scheme Eligibility Checker** (`/eligibility`) with dynamic domain questions and multi-scheme comparison.
+- **Document Readiness Checker** (`/document-readiness`) with multi-format OCR defect detection (expiry, blur, name mismatch, missing fields).
 - An **authenticated citizen portal** with localized profile preferences, personal application tracking, persistent interactive checklist progress, conversation thread history, and strict **Zero-LLM privacy isolation**.
 
 ---
@@ -54,23 +56,38 @@
 - **Auto-Status Progression**: Ticking the first checkbox automatically advances the application from `Not started` to `In progress`.
 - **Auto-Completion & "Submitted" Offer**: When all documents and steps are ticked (100%), a celebratory banner automatically appears allowing the user to mark the application as `"Submitted"` in a single click.
 
-### 4. 💬 Persistent Chat History & Conversation Threads
+### 4. 🎯 Smart Government Scheme Eligibility Checker (`/eligibility`)
+- **Dynamic Question Generation**: Asks only domain-relevant questions (e.g., land size for farmers, school level for students, age 60+ for pensioners).
+- **Automated Catalog Matching**: Matches citizen profile against 226 services with 4-tier output (`Confirmed Eligible`, `Potentially Eligible`, `Follow-up Needed`, `Ineligible`).
+- **Scheme Comparison**: Compare 2 to 4 schemes side-by-side in a structured comparison matrix.
+- **Empathetic No-Match Handling**: Explains reasons for disqualification with 4 clear remediation steps.
+- **Statutory Non-Guarantee Disclaimer**: Never guarantees government approval; official determination remains with statutory authorities.
+
+### 5. 📑 Document Readiness Checker (`/document-readiness`)
+- **Checklist Generation**: Pre-submission checklist for any of the 226 services.
+- **Unverified Catalog Fallbacks**: Generates standard documentation suite with advisory badge for generic entries.
+- **Multi-Format OCR**: Extracts text from PDF, DOCX, TXT, PNG, JPG, and WEBP.
+- **Automated Defect Detection**:
+  - *Expired Documents*: Date regex comparison against current date.
+  - *Blurry / Unreadable Scans*: Flags scans with $<3$ words or high noise.
+  - *Name Inconsistencies*: Cross-checks document holder name with applicant name.
+  - *Missing Mandatory Identifiers*: Detects missing PAN, Aadhaar, DL, or Voter ID numbers.
+- **Readiness Gauge**: Overall score (0–100%) and grading (`Ready`, `Partially ready`, `Not ready`).
+- **Printable Checklist**: Dedicated print view (`/document-readiness/print/<id>`) formatted for A4 printing (`window.print()`).
+
+### 6. 💬 Persistent Chat History & Conversation Threads
 - **Threaded Conversations**: Saves citizen interactions grouped by conversation threads in SQLite (`chat_conversations` and `chat_history`).
 - **Thread Title Generation**: Automatically titled using the citizen's initial question.
-- **Thread Review & Continuation**:
-  - View full past dialogues in an interactive modal.
-  - One-click **"Continue"** button loads past messages into the AI Assistant (`/assistant?c=<thread_id>`) for follow-up questions.
-  - Delete unwanted threads permanently.
-- **Zero Impact on AI Decision Core**: Conversation state is stored locally without modifying the underlying RAG pipeline.
+- **Thread Review & Continuation**: View full past dialogues in an interactive modal, continue threads, or delete them.
 
-### 5. 🤖 Multilingual Civic AI Assistant (`/assistant`)
-- **12 Indian Languages**: UI localization and prompt engineering for English, Hindi (हिंदी), Punjabi (ਪੰਜਾਬੀ), Bengali (বাংলা), Marathi (मराठी), Gujarati (ગુજરાતી), Tamil (தமிழ்), Telugu (తెలుగు), Kannada (ಕನ್ನಡ), Malayalam (മലയാളം), Odia (ଓଡ଼ିଆ), and Urdu (اردو).
+### 7. 🤖 Multilingual Civic AI Assistant (`/assistant`)
+- **12 Indian Languages**: UI localization and prompt engineering for English, Hindi, Punjabi, Bengali, Marathi, Gujarati, Tamil, Telugu, Kannada, Malayalam, Odia, and Urdu.
 - **Voice-to-Text (STT)**: Dual-layer audio input using the browser Web Speech API with fallback to Gemini multimodal audio transcription (`/api/speech-to-text`).
 - **Auto-Read (TTS)**: High-quality spoken responses powered by neural speech synthesis (`/api/text-to-speech`).
 - **Strictly Grounded RAG**: Top-K chunk retrieval from ChromaDB over verified civic procedures, preventing hallucinations.
 
-### 6. 🛡️ Zero-LLM Privacy Shield
-- **PII Scrubbing**: Regex masking of Aadhaar numbers (12-digit UIDAI), PAN cards, phone numbers, and emails before sending queries to LLMs.
+### 8. 🛡️ Zero-LLM Privacy Shield
+- **PII Scrubbing**: Regex masking of Aadhaar numbers, PAN cards, phone numbers, and emails before sending queries to LLMs.
 - **Credential Isolation**: Passwords, OTPs, mobile numbers, and personal application checklists are stored strictly in local SQLite and encrypted session cookies — **never** transmitted to public LLM endpoints.
 
 ---
@@ -86,11 +103,24 @@ All tables are managed locally in SQLite with automatic schema migration on star
 | **`user_step_progress`**| Individual document & step checkbox states | `id`, `application_id`, `item_id` (`doc_0`, `step_1`), `item_type`, `completed` (1/0), `updated_at` |
 | **`chat_conversations`**| Conversation threads | `id` (token), `user_id`, `user_phone`, `title`, `created_at`, `updated_at` |
 | **`chat_history`** | Message turns within threads | `id`, `conversation_id`, `user_id`, `user_phone`, `question`, `answer`, `language`, `sources_json`, `created_at` |
-| **`services`** | Catalog of 200+ government services | `id`, `name`, `category`, `state`, `eligibility`, `documents_required`, `steps`, `fees`, `processing_time`, `source_url` |
+| **`services`** | Catalog of 226 government services | `id`, `name`, `category`, `state`, `eligibility`, `documents_required`, `steps`, `fees`, `processing_time`, `source_url`, `last_verified` |
 
 ---
 
 ## 📡 REST API Reference
+
+### Eligibility Checker & Document Readiness
+| Method | Endpoint | Description | Auth Required |
+|---|---|---|---|
+| `GET` | `/eligibility` | Render Smart Scheme Eligibility Checker | No |
+| `GET` | `/api/eligibility/questions` | Get dynamic questions by category or service ID | No |
+| `POST`| `/api/eligibility/check` | Match citizen profile against catalog eligibility criteria | No |
+| `POST`| `/api/eligibility/compare` | Generate side-by-side comparison matrix (2–4 schemes) | No |
+| `GET` | `/document-readiness` | Render Document Readiness Checker interface | No |
+| `GET` | `/api/readiness/requirements/<id>` | Retrieve parsed document checklist for a service | No |
+| `POST`| `/api/readiness/upload` | Upload document file, run OCR, and extract defect diagnostics | No |
+| `POST`| `/api/readiness/evaluate` | Evaluate overall checklist readiness (score & next steps) | No |
+| `GET` | `/document-readiness/print/<id>` | Clean printable / downloadable checklist view | No |
 
 ### Profile & Account Management
 | Method | Endpoint | Description | Auth Required |
@@ -141,12 +171,8 @@ All tables are managed locally in SQLite with automatic schema migration on star
 - **Python 3.11+**
 - A **Google Gemini API Key** (from [Google AI Studio](https://aistudio.google.com/))
 
-### 2. Clone and Setup
+### 2. Setup
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/bharatassist.git
-cd bharatassist
-
 # Create and activate virtual environment
 python -m venv venv
 venv\Scripts\activate      # Windows
@@ -157,19 +183,13 @@ pip install -r requirements.txt
 ```
 
 ### 3. Environment Configuration
-Create a `.env` file in the root directory:
+Create a `.env` file in `code/BHARATASSIST`:
 ```env
 FLASK_SECRET_KEY=bharatassist-citizen-privacy-shield-secret-2026
 GEMINI_API_KEY=your_actual_gemini_api_key_here
 ```
 
-### 4. Database Setup & Seeding
-```bash
-# Populate database with 200+ civic services and initial schema
-python seed_data.py
-```
-
-### 5. Run the Application
+### 4. Run the Application
 ```bash
 python app.py
 ```
@@ -177,69 +197,22 @@ Open **[http://127.0.0.1:5000](http://127.0.0.1:5000)** in your browser.
 
 ---
 
-## 🔑 Demo Account Credentials (For Immediate Testing)
-
-A pre-configured citizen account is available with sample applications, checklist ticks, and chat history:
-- **URL**: [http://127.0.0.1:5000/login](http://127.0.0.1:5000/login)
-- **Mobile Number**: `9876543210`
-- **Password**: `Citizen@123`
-
-*(You can also register a new account or log in via OTP — the 6-digit verification code is displayed on-screen for testing).*
-
----
-
 ## 🧪 Testing
 
-Execute the automated integration test suite covering profile updates, application tracking, checklist step toggling, chat history threading, and permanent account deletion:
+Execute the automated test suites covering eligibility checking, document readiness, OCR diagnostics, profile updates, and service matching:
 
 ```bash
-# Run User Profile & Applications integration suite
-python -m unittest tests.test_user_profile_and_applications -v
+# Run all unit tests (136 tests)
+python -m unittest discover -s tests -p "test_*.py"
 
-# Run full project endpoint tests
-python -m unittest tests.test_all_endpoints -v
-```
+# Run Feature 1 (Eligibility Checker) test suite
+python -m unittest discover -s tests -p "test_eligibility.py"
 
----
+# Run Feature 2 (Document Readiness Checker) test suite
+python -m unittest discover -s tests -p "test_readiness.py"
 
-## 📂 Project Directory Structure
-
-```
-BHARATASSIST/
-│
-├── app.py                     # Main Flask Application & API Routes
-├── bharatassist.db            # SQLite Database (users, applications, chat, services)
-├── seed_data.py               # Database initialization and seeding script
-├── requirements.txt           # Project dependencies
-├── .env                       # Environment configuration
-│
-├── static/
-│   ├── style.css              # Custom styles & design tokens
-│   └── india_states_districts.json # Indian states & districts mapping
-│
-├── templates/
-│   ├── base.html              # Base layout with navbar & user dropdown
-│   ├── index.html             # Homepage / Hero portal
-│   ├── login.html             # Citizen sign-in & registration
-│   ├── profile.html           # Citizen Profile (view, edit, delete account)
-│   ├── applications.html      # "My Applications" dashboard
-│   ├── application_checklist.html # Step-by-step checklist tracker
-│   ├── chat_history.html      # Past AI conversation threads
-│   ├── assistant.html         # Multilingual civic AI assistant
-│   ├── services.html          # Government services directory
-│   ├── service_details.html   # Service details with "Save to My Applications"
-│   └── simplify.html          # Plain-language document simplifier
-│
-├── utils/
-│   ├── llm.py                 # Gemini model calls, multilingual prompts & TTS
-│   ├── rag.py                 # ChromaDB vector retrieval pipeline
-│   ├── redact.py              # Zero-LLM PII regex redactor
-│   ├── matcher.py             # Rule-based service matching & grounding
-│   └── metrics.py             # Civic grounding and evaluation metrics
-│
-└── tests/
-    ├── test_user_profile_and_applications.py # Profile, checklist, & chat tests
-    └── test_all_endpoints.py                 # Full suite endpoint tests
+# Run Service Matching & Grounding test suite
+python -m unittest discover -s tests -p "test_service_matching.py"
 ```
 
 ---
