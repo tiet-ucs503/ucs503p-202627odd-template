@@ -1,5 +1,5 @@
 import type { BudgetBreakdown, BudgetCategory, SavingsSuggestion } from "@/types/budget";
-import type { City, TripDay } from "@/types/itinerary";
+import type { ActivityCategory, City, TripDay } from "@/types/itinerary";
 import { fromInr } from "@/lib/fx";
 
 /**
@@ -15,6 +15,10 @@ import { fromInr } from "@/lib/fx";
 const DAILY_TRANSPORT_INR = 500;
 const MIN_BUFFER_INR = 3_000;
 const PRICEY_ACTIVITY_INR = 1_500;
+
+// A shared tour is something you buy for a sight or an activity. It makes no
+// sense for a meal, a transfer between cities, a night out or a shopping stop.
+const SHARED_TOUR_CATEGORIES: ActivityCategory[] = ["sightseeing", "culture", "adventure", "beach", "relaxation"];
 
 const ACTIVITY_CATEGORY_TO_BUDGET: Record<string, BudgetCategory> = {
   food: "food",
@@ -104,7 +108,8 @@ export function buildSavingsSuggestions(
   const overBy = budget.estimatedTotal - budget.total;
   if (overBy <= 0) return suggestions;
 
-  const priciestHotel = [...cities].sort(
+  // A city with no nights has no hotel to save on.
+  const priciestHotel = cities.filter((c) => c.hotel.nights > 0).sort(
     (a, b) => b.hotel.pricePerNight * b.hotel.nights - a.hotel.pricePerNight * a.hotel.nights,
   )[0];
   if (priciestHotel && priciestHotel.hotel.pricePerNight > 0) {
@@ -122,7 +127,10 @@ export function buildSavingsSuggestions(
 
   const allActivities = days.flatMap((d) => d.activities.map((a) => ({ dayId: d.id, activity: a })));
   const nonEssential = allActivities
-    .filter(({ activity }) => activity.category !== "food" && activity.estimatedCost > fromInr(PRICEY_ACTIVITY_INR, budget.currency))
+    .filter(
+      ({ activity }) =>
+        SHARED_TOUR_CATEGORIES.includes(activity.category) && activity.estimatedCost > fromInr(PRICEY_ACTIVITY_INR, budget.currency),
+    )
     .sort((a, b) => b.activity.estimatedCost - a.activity.estimatedCost)[0];
   if (nonEssential) {
     const savings = Math.round(nonEssential.activity.estimatedCost * 0.6);
