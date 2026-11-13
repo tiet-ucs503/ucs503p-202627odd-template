@@ -68,9 +68,9 @@ export default function Hero({ setView }: { setView: (view: string) => void }) {
           {/* Stats */}
           <div className="mt-12 flex gap-8">
             {[
-              { n: '60+', l: 'Math Missions' },
+              { n: '6', l: 'Maths Topics' },
               { n: '6', l: 'Epic Boss Battles' },
-              { n: '100%', l: 'ADHD Friendly' },
+              { n: '3', l: 'Difficulty Levels' },
             ].map((s) => (
               <div key={s.l}>
                 <div className="font-comic text-3xl text-hero-500">{s.n}</div>

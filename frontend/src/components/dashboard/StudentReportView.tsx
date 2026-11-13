@@ -1,6 +1,7 @@
 import { Target, Clock, Eye, Award, CheckCircle2, XCircle, Zap, BookOpen, HelpCircle, ListChecks, ShieldCheck } from 'lucide-react';
 import type { StudentReport } from '@/lib/api';
-import TrendCharts, { formatDay } from '@/components/dashboard/TrendCharts';
+import TrendCharts from '@/components/dashboard/TrendCharts';
+import { formatDay } from '@/lib/dates';
 
 // One student's report, as seen by a linked parent or teacher.
 //

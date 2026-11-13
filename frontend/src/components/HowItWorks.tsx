@@ -10,7 +10,7 @@ const steps = [
   {
     icon: BookOpen,
     title: 'Math Challenge',
-    text: 'Engage villains in high-stakes combat. Use your intelligence to solve multiple-choice and fill-in-the-blank puzzles to weaken their defenses.',
+    text: 'Engage villains in high-stakes combat. Use your intelligence to solve multiple-choice problems to weaken their defenses. Questions get harder as you improve.',
   },
   {
     icon: Trophy,
@@ -20,7 +20,7 @@ const steps = [
   {
     icon: Rocket,
     title: 'Unlock Rewards',
-    text: "Earn Spider Points to unlock rare Spider-Suits, upgrade your web-shooters, and boost your Spider-Sense Level.",
+    text: "Earn Spider Points for every answer, a bonus for each win, and unlock the next villain when you defeat one.",
   },
 ];
 

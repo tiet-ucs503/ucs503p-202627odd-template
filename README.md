@@ -1,217 +1,169 @@
-# MathVerse AI 🕷️📐
-### *A Gamified, AI-Powered Mathematics Learning Platform with Real-Time Cognitive Eye-Tracking & Adaptive Knowledge Tracing*
+# MathVerse
 
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/Frontend-React_18_%2B_TypeScript-61DAFB.svg?logo=react&logoColor=black)](https://react.dev)
-[![PyTorch](https://img.shields.io/badge/ML-PyTorch_LSTM-EE4C2C.svg?logo=pytorch&logoColor=white)](https://pytorch.org)
-[![MediaPipe](https://img.shields.io/badge/Vision-MediaPipe_478_Landmarks-007ACC.svg?logo=google&logoColor=white)](https://developers.google.com/mediapipe)
-[![TailwindCSS](https://img.shields.io/badge/UI-Tailwind_CSS-38B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
-[![License](https://img.shields.io/badge/License-Academic_Use-blue.svg)](#)
+Maths practice as superhero boss battles, with questions that adapt to how well
+a student knows each topic and progress reports for parents and teachers.
 
----
+Built for UCS503P Software Engineering (2026-27 ODD), Thapar Institute of
+Engineering and Technology, Patiala.
 
-## 🌟 Overview
+## What it does
 
-**MathVerse AI** is an intelligent, gamified learning system designed specifically to support middle-school and high-school students, particularly those with **Attention-Deficit/Hyperactivity Disorder (ADHD)** and math anxiety. By transforming abstract algebraic concepts into narrative superhero boss battles against classic Spider-Man villains (Green Goblin, Doctor Octopus, Mysterio, Venom, Lizard, and Kingpin), MathVerse AI captures and retains learner focus.
+- **Students** fight six bosses, one per maths topic: linear equations, area and
+  perimeter, sequences, percentages, exponents and roots, and ratios. Each boss
+  is beaten with seven correct answers.
+- **Questions adapt.** Each topic has easy, medium and hard questions. The next
+  question's level depends on the student's mastery of that topic.
+- **Hints on request.** Every question has a hint. If an AI key is configured,
+  the hint is reworded in character; otherwise the built-in hint is shown.
+- **Parents and teachers** link to a student with a code the student shares, and
+  see accuracy, practice over time, mastery per topic, and earned badges. A
+  parent can link several children; a teacher can link a class.
+- **Optional attention estimate.** A student may switch on their webcam. The
+  browser then estimates how often they were facing the screen. It is separate
+  from everything academic and the game is identical without it.
 
-Under the hood, MathVerse AI features a multimodal AI pipeline combining **real-time computer vision eye-tracking** and a **Deep Knowledge Tracing (DKT) recurrent neural network** (`AdaptiveDifficultyLSTM`). The platform dynamically monitors cognitive attention states, calculates continuous student mastery probability ($P(\text{Correct})$), dynamically adapts curriculum question difficulty, and provides scaffolded hints through an AI tutor persona, **Spider-Gwen**.
+## What the "AI" parts really are
 
----
+| Part | What it is | What it is not |
+|---|---|---|
+| Mastery | Bayesian Knowledge Tracing: one probability per student per topic, updated from right and wrong answers only | Not a neural network; parameters are standard defaults, not fitted to data |
+| Questions | Generated from random numbers with computed answers, checked by tests | Not written by a language model |
+| Hints | A verified built-in hint, optionally reworded by a language model (Groq) | The model does not write the maths and the game does not depend on it |
+| Attention estimate | MediaPipe face landmarks running in the browser: face present, head facing the screen, blink rate | Not eye tracking, not a medical or ADHD assessment, and never used for scoring |
 
-## 🚀 Core Features & Technical Innovations
+More detail, including the mastery formulas and a worked example, is in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). How data and the camera are handled
+is in [docs/PRIVACY.md](docs/PRIVACY.md).
 
-### 1. 👁️ Real-Time Computer Vision Eye-Tracking Engine
-* **478 3D Facial Landmarks:** Powered by Google MediaPipe Tasks `FaceLandmarker` with custom low-level C-binding integration and high-speed in-memory tensor processing.
-* **Clinical ADHD Biomarkers Extracted:**
-  * **Eye Aspect Ratio (EAR) & Blink Rate:** Tracks physiological blink frequencies and fatigue.
-  * **Pupil Dilation Proxy:** Dynamic iris-to-interocular distance ratio tracking cognitive load.
-  * **Fixation Duration & Saccadic Velocity:** Distinguishes focused reading from rapid, erratic attention shifts.
-  * **Gaze Stability:** Center-proximity tracking measuring visual drift from the problem workspace.
-* **Soft Multi-Metric Cognitive Classification:** Classifies student mental engagement into 4 validated states:
-  * 🟢 **Focused:** Stable gaze, normal blink frequency, high problem engagement.
-  * 🟡 **Drifting:** Visual fixation away from the task canvas, elongated intervals between saccades.
-  * 🔴 **Impulsive:** Rapid saccades, low fixation duration, erratic option selections.
-  * 🟣 **Overwhelmed:** Extreme fixation or prolonged pupil dilation indicating high cognitive overload.
-* **Privacy-First Architecture:** Video frames are analyzed locally in-memory and discarded immediately; only numerical telemetry metrics are tracked.
+## Tech stack
 
-### 2. 🧠 Deep Knowledge Tracing (DKT) LSTM Model
-* **Model Architecture:** Custom `AdaptiveDifficultyLSTM` implemented in PyTorch (`input_size=11, hidden_size=32`).
-* **11-Dimensional Multi-Modal Sequence Vector:**
-  * Performance signals: Question correctness ($0$ or $1$) and response time in seconds.
-  * Cognitive signals: One-hot encoded cognitive state vector (`Focused`, `Drifting`, `Impulsive`, `Overwhelmed`).
-  * Optical telemetry: Blink rate, pupil dilation proxy, median fixation duration, saccade frequency, and gaze stability ratio.
-* **Temporal Sequence Processing:** Tracks historical question attempts and predicts the student's mastery probability ($0.0 - 1.0$) for the next problem.
+| Area | Tools |
+|---|---|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, MediaPipe Tasks Vision |
+| Backend | Python 3.10+, FastAPI, SQLAlchemy, SQLite, bcrypt, JWT |
+| Tests | pytest (backend), Vitest and React Testing Library (frontend) |
 
-### 3. 🎯 Truly Adaptive Difficulty & Spider-Gwen RAG Tutor
-* **Bidirectional Dynamic Calibration:**
-  * If $P(\text{Correct}) < 0.45$ OR cognitive state is `Drifting` / `Overwhelmed` $\rightarrow$ Dynamically scales to **Easy** with structural hints to prevent frustration and burnout.
-  * If $P(\text{Correct}) > 0.75$ AND cognitive state is `Focused` $\rightarrow$ Challenges the student with **Hard** problems and combo rewards.
-  * Otherwise $\rightarrow$ Balances at **Medium**.
-* **Spider-Gwen Scaffolded Hints:** Contextually grounded in the current mathematical topic (linear equations, area/perimeter, number sequences, radicals, ratios) and calibrated to the student's immediate attention state.
+## Run it locally
 
-### 4. 🎮 Full Gamification & Battle Mechanics
-* **Interactive Spider-Man HUD:** Dynamic health bars, web strike combos, Spider-Sense timers, audio cues (Web-Shooter, Goblin Laugh, victory fanfare), and real-time biometric metrics.
-* **Student Progression & Mastery Tracking:** Persistent user leveling, Spider-Points, and topic mastery retention stored in SQLite via SQLAlchemy.
-* **Teacher & Parental Analytics Dashboard:** Visualizes cognitive distribution charts, mastery progression, and mission performance history.
+You need Python 3.10 or newer and Node.js 18 or newer.
 
----
-
-## 🏗️ System Architecture
-
-```mermaid
-flowchart TD
-    subgraph Browser ["Frontend (React 18 + TypeScript + Vite)"]
-        Cam["Webcam Stream (HTML5 Video & Canvas)"]
-        HUD["Battle HUD & Telemetry Status"]
-        Quiz["Holographic Math Canvas"]
-        Gwen["Spider-Gwen Hint Dialogue"]
-    end
-
-    subgraph Backend ["FastAPI Backend Services (Port 8001)"]
-        ET["/eye-track/frame\nMediaPipe 478 Landmark Engine"]
-        DKT["LSTM Knowledge Tracing\nAdaptiveDifficultyLSTM"]
-        RAG["RAG Tutor & Curriculum Service"]
-        DB[(SQLite / SQLAlchemy DB\nUsers, Attempts, Mastery)]
-    end
-
-    Cam -->|1.2s Base64 Frame| ET
-    ET -->|Biometrics: Blink, Gaze, Pupil| DKT
-    Quiz -->|Answer & Time Taken| DKT
-    DKT -->|Mastery Probability P(Correct)| RAG
-    RAG -->|Adaptive Difficulty & Question| Quiz
-    RAG -->|Cognitive State Hint| Gwen
-    DKT -->|Predicted Mastery %| HUD
-    Quiz -->|Attempt Results| DB
-```
-
----
-
-## 🛠️ Tech Stack
-
-| Domain | Technologies |
-| :--- | :--- |
-| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, Lucide React, HTML5 Canvas, Web Audio API |
-| **Backend** | Python 3.13, FastAPI, Uvicorn, SQLAlchemy, Pydantic, SQLite |
-| **Machine Learning** | PyTorch (`AdaptiveDifficultyLSTM`), NumPy, SciPy |
-| **Computer Vision** | Google MediaPipe Tasks (`FaceLandmarker`), OpenCV (`cv2`) |
-| **Security & Auth** | JWT Authentication, Bcrypt Password Hashing, CORS Middleware |
-
----
-
-## 📁 Repository Structure
-
-```
-Mathverse-ai_2026-27/
-├── backend/
-│   ├── main.py                     # FastAPI server entry point & route definitions
-│   ├── database.py                 # SQLite engine & database session management
-│   ├── models.py                   # SQLAlchemy ORM models (User, MissionAttempt, TopicMastery)
-│   ├── schemas.py                  # Pydantic request & response validation schemas
-│   ├── face_landmarker.task        # MediaPipe 3.7MB pre-trained 478 landmark model
-│   ├── ml/
-│   │   ├── eye_tracker.py          # MediaPipe vision engine, EAR, iris, & ADHD classifier
-│   │   ├── attention_model.py      # AdaptiveDifficultyLSTM definition & inference
-│   │   ├── train_lstm.py           # DKT LSTM training pipeline & synthetic sequence generator
-│   │   └── lstm_weights.pt         # Pre-trained PyTorch LSTM weights
-│   ├── routers/
-│   │   ├── attempts.py             # Attempt submission, behavior analysis, & adaptive engine
-│   │   ├── eye_tracking.py         # Frame streaming, telemetry sessions, & state simulation
-│   │   ├── missions.py             # Villain profiles, levels, & mission catalog
-│   │   ├── users.py                # User profiles, mastery analytics, & leveling
-│   │   ├── auth.py                 # User authentication, registration, & JWT tokens
-│   │   └── reports.py              # Parent/Teacher analytics & PDF report generation
-│   └── services/
-│       └── rag_tutor.py            # RAG problem generator & Spider-Gwen adaptive tutor
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── MissionPlayer.tsx   # Interactive battle arena, webcam integration, & HUD
-│   │   │   ├── Navbar.tsx          # Navigation header & user status
-│   │   │   ├── ParentDashboard.tsx # Cognitive & mastery analytics view
-│   │   │   ├── ProfileModal.tsx    # User avatar & rank modal
-│   │   │   └── Reveal.tsx          # Motion animations
-│   │   ├── context/
-│   │   │   ├── AuthContext.tsx     # Session & JWT token state
-│   │   │   └── GameContext.tsx     # Spider-Points, level, & mission progress
-│   │   ├── lib/
-│   │   │   └── api.ts              # Axios / Fetch client wrappers
-│   │   ├── App.tsx                 # Core layout & route coordinator
-│   │   └── main.tsx                # React DOM entrypoint
-│   ├── package.json                # Frontend dependencies
-│   └── vite.config.ts              # Vite server & port configuration
-├── docs/                           # Documentation and guides
-├── journals/                       # Team weekly development logs
-├── project-proposal/               # LaTeX project proposal documentation
-└── README.md                       # Comprehensive project documentation
-```
-
----
-
-## ⚡ Quick Start Guide
-
-### Prerequisites
-* **Python:** 3.10 to 3.13
-* **Node.js:** v18.x or later (with `npm`)
-* **Webcam:** Working USB or integrated laptop camera (for eye-tracking telemetry)
-
----
-
-### 1. Backend Setup
+### 1. Backend
 
 ```bash
-# Navigate to the backend directory
 cd backend
-
-# Create and activate a Python virtual environment
 python -m venv venv
+```
 
-# Windows:
-venv\Scripts\activate
-# Linux/macOS:
-source venv/bin/activate
+Activate the environment: `venv\Scripts\activate` on Windows, or
+`source venv/bin/activate` on macOS and Linux. Then:
 
-# Install required dependencies
+```bash
 pip install -r requirements.txt
+```
 
-# Start the FastAPI server on port 8001
+Create `backend/.env` by copying `backend/.env.example`, and set
+`JWT_SECRET_KEY` to a long random string. This prints one:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Start the server:
+
+```bash
 uvicorn main:app --port 8001 --reload
 ```
-* Backend API will be available at: **`http://localhost:8001`**
-* Interactive Swagger Docs: **`http://localhost:8001/docs`**
 
----
+The API is at `http://localhost:8001` and its interactive docs at
+`http://localhost:8001/docs`. The database file `backend/mathverse.db` is
+created on first start.
 
-### 2. Frontend Setup
+### 2. Frontend
+
+In a second terminal:
 
 ```bash
-# In a new terminal, navigate to the frontend directory
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start Vite development server
 npm run dev
 ```
-* Frontend application will be available at: **`http://localhost:5173`**
 
----
+Open `http://localhost:5173`.
 
-## 🎮 How to Play & Test Live
+### 3. Optional settings (`backend/.env`)
 
-1. Open **`http://localhost:5173`** in your browser.
-2. Sign up or log in as a student (or click **Quick Start**).
-3. Select **Mission 01: Green Goblin Attack**.
-4. When prompted by the browser, click **Allow** for Camera access.
-5. Watch the top HUD:
-   * **OPTICS: LIVE** activates in green.
-   * **COGNITION** will dynamically display `Focused`, `Drifting`, `Impulsive`, or `Overwhelmed` based on your face landmarks and iris positions.
-   * **Predicted Mastery** reflects real-time probability computed by the LSTM model.
-   * Answer correctly to trigger Spider-Man's **Web Strike**; wrong answers trigger the villain's counter-attack!
-   * Click **Request Gwen's Intel** for adaptive AI scaffolding hints.
+| Setting | Effect |
+|---|---|
+| `DEMO_MODE=true` | Shows one-click demo buttons on the sign-in dialog. Run `python seed.py --demo` once first to create the three demo accounts with sample data. Off by default. |
+| `GROQ_API_KEY=...` | Lets a language model reword hints in character. Without it the built-in hints are used. |
+| `CORS_ORIGINS=...` | Comma-separated frontend addresses allowed to call the API. |
 
----
+## Try it
 
-## 👥 Academic & Course Information
-* **Course:** UCS503P - Software Engineering Project (2026-27 ODD)
-* **Institution:** Computer Science and Engineering Department, Thapar Institute of Engineering and Technology, Patiala
+1. Sign up as a student and start the first mission. Choose whether to use the
+   camera; either choice gives the same game.
+2. Answer a few questions. The level (easy, medium, hard) follows your answers.
+3. Open your dashboard and copy your link code.
+4. In another browser profile, sign up as a parent and enter that code to see
+   the report.
+
+## Tests
+
+```bash
+cd backend
+pytest
+```
+
+```bash
+cd frontend
+npm run test
+npm run typecheck
+npm run lint
+npm run build
+```
+
+The backend suite covers sign-in and access control, the demo-login
+restrictions, the game rules, the mastery model, the correctness of every
+question type at every level, hints, and reports checked against hand-computed
+values. The frontend suite covers the camera consent flow (declining, denial,
+switching off mid-mission, and that no image is ever uploaded) and the
+dashboards. The same checks run in GitHub Actions on every push.
+
+## Project layout
+
+```
+backend/
+  main.py            app and routes wiring
+  config.py          settings from environment / .env
+  models.py          database tables
+  schemas.py         request and response shapes
+  security.py        password hashing and login tokens
+  deps.py            who is calling and what they may see
+  seed.py            demo accounts (--demo) and database reset (--reset)
+  routers/           auth, sessions (gameplay), guardians, reports
+  services/          questions, mastery, hints, attention, game rules, report builder
+  tests/
+frontend/src/
+  lib/api.ts         the one client for the backend
+  lib/attention/     in-browser camera tracking and its summary
+  context/           sign-in state and game progress
+  components/        screens; dashboard/ holds the report and charts
+docs/
+  ARCHITECTURE.md    how it works and how to explain it
+  PRIVACY.md         what is collected and what is not
+  AUDIT_AND_PLAN.md  the audit this version was built from
+journals/, project-proposal/, project-report-prototype-stage/, srs/   coursework
+```
+
+## Known limits
+
+- The attention estimate has been tested with a simulated camera. Its
+  thresholds have not been tuned on real webcams.
+- Mastery parameters are textbook defaults; with them, mastery moves quickly.
+- The camera choice is made by whoever is using the device. This is suitable
+  for a course demo; see "Before real deployment" in
+  [docs/PRIVACY.md](docs/PRIVACY.md).
+- Fonts are loaded from Google Fonts.
+- Spider-Man and related characters belong to Marvel. They are used here in a
+  non-commercial course project; the project is not affiliated with or endorsed
+  by Marvel and should not be deployed publicly as it stands.

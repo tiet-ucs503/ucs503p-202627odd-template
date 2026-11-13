@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { DailyPoint } from '@/lib/api';
+import { formatDay } from '@/lib/dates';
 
 // Two small charts of the last 14 days, each with its own scale:
 // questions answered per day (bars) and accuracy on the days practised (line).
@@ -15,12 +16,6 @@ const PAD = { top: 14, right: 12, bottom: 28, left: 34 };
 const PLOT_W = W - PAD.left - PAD.right;
 const PLOT_H = H - PAD.top - PAD.bottom;
 
-const parseDay = (iso: string) => {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d);
-};
-export const formatDay = (iso: string) =>
-  parseDay(iso).toLocaleDateString([], { month: 'short', day: 'numeric' });
 
 /** A round number at or above the largest value, so the top gridline is easy to read. */
 function niceMax(value: number): number {

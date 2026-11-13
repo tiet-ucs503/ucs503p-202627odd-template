@@ -129,7 +129,7 @@ export default function Missions({ setView }: { setView: (v: string) => void }) 
               <p className="text-sm text-gray-400 mt-2">{m.topic}</p>
 
               <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4">
-                <span className="text-xs font-bold text-hero-400">+{m.sp} Spider Points</span>
+                <span className="text-xs font-bold text-hero-400">Win bonus: 300+ Spider Points</span>
               </div>
 
               <button 

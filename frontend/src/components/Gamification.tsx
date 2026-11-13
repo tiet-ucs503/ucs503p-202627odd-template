@@ -11,18 +11,18 @@ const features = [
   },
   {
     icon: Flame,
-    title: 'Spider-Sense Streaks',
-    text: 'Patrol daily to keep your Spider-Sense sharp. Your combo multipliers decay if you abandon the city.',
+    title: 'Combo Streaks',
+    text: 'Answer correctly several times in a row to build a combo. Every step of the streak adds bonus Spider Points.',
   },
   {
     icon: Award,
-    title: 'Power Upgrades & Badges',
-    text: "Earn Spider Points to unlock enhanced abilities. Earn exclusive Villain Defeated Badges for conquering tricky chapters.",
+    title: 'Points & Badges',
+    text: "Earn Spider Points for every answer and a badge for each villain you defeat.",
   },
   {
     icon: Users2,
     title: 'Gwen\'s Research Lab',
-    text: 'When a villain\'s defense seems unbreakable, Gwen Stacy analyzes their patterns to provide you with the exact hints needed to win.',
+    text: "Stuck on a question? Ask Gwen Stacy for a hint that points you to the next step without giving the answer away.",
   },
 ];
 

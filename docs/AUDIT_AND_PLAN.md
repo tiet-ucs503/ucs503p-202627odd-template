@@ -1,5 +1,7 @@
 # MathVerse — Audit and Cleanup Plan
 
+> **Status:** all five phases (A–E) have been carried out. This document is kept as the record of what was found in the original code and what was agreed. For how the system works now, see [ARCHITECTURE.md](ARCHITECTURE.md) and [PRIVACY.md](PRIVACY.md). File paths and line numbers in section 2 refer to the code as it was before the cleanup.
+
 ## Context
 
 MathVerse (FastAPI + SQLite backend, React/Vite frontend) was built over many AI-tool sessions. It boots, but the four weak areas (backend, eye tracking, ML, parent dashboard) are held together by hardcoded values, unauthenticated endpoints and metrics that are not real. This document is the audit plus a phased plan. **No source code has been changed.** On approval, step 0 is to save this file as `docs/AUDIT_AND_PLAN.md` on a new branch, then build one phase at a time, stopping after each with a summary and test steps.

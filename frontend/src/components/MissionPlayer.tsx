@@ -37,6 +37,26 @@ const FEEDBACK_MS = 2200;
 // unavailable: the student asked for it but it could not be used
 type CameraState = 'off' | 'starting' | 'on' | 'unavailable';
 
+/** A short "whoosh" for a correct answer, made in the browser so no sound file is fetched. */
+function playStrikeSound() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(900, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.18);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.2);
+    osc.onended = () => ctx.close();
+  } catch {
+    /* no audio available: the sound is optional */
+  }
+}
+
 type Phase = 'loading' | 'combat' | 'victory' | 'defeat' | 'error';
 type Feedback = { kind: 'strike' | 'counter' | 'timeout'; text: string };
 
@@ -103,7 +123,6 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
   const advanceTimer = useRef<number>();
   const started = useRef(false);
 
-  const strikeAudio = useRef<HTMLAudioElement>(null);
   const laughAudio = useRef<HTMLAudioElement>(null);
   const drottoAudio = useRef<HTMLAudioElement>(null);
   const drottoLosingAudio = useRef<HTMLAudioElement>(null);
@@ -189,7 +208,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
       setBestStreak((best) => Math.max(best, res.session.streak));
 
       if (res.correct) {
-        playSound(strikeAudio);
+        playStrikeSound();
         if (bossId === 'doc-ock') playSound(drottoLosingAudio);
         setFeedback({
           kind: 'strike',
@@ -360,13 +379,11 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
 
   return (
     <div className="fixed inset-0 z-50 bg-black overflow-hidden font-sans">
-      <audio ref={strikeAudio} src="https://actions.google.com/sounds/v1/foley/swoosh.ogg" preload="auto" />
       <audio ref={laughAudio} src="/green_goblin_laugh.mp3" preload="auto" />
       <audio ref={drottoAudio} src="/drotto.wav" preload="auto" />
       <audio ref={drottoLosingAudio} src="/drottoloosing.wav" preload="auto" />
       <audio ref={victoryAudio} src="/spiderman-meme-song.mp3" preload="auto" />
 
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=3228&auto=format&fit=crop')] bg-cover bg-center opacity-20 filter grayscale blur-[2px]" />
       <div className="absolute inset-0 bg-gradient-to-b from-hero-900/40 via-ink-950/80 to-black" />
       <div className="absolute inset-0 halftone opacity-30 pointer-events-none" />
 

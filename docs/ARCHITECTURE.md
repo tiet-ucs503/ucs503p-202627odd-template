@@ -165,3 +165,59 @@ of the student's own resting head position, which is learned from the first
 five seconds. It is head direction, not eye tracking, and not a medical
 assessment. When the camera is off the values are stored as NULL, which means
 "not measured" and is never treated as zero.
+
+## Data model
+
+```
+users ──< guardian_links >── users      a parent or teacher linked to a student (many-to-many)
+users ──< play_sessions ──< attempts    one mission, and each question served in it
+users ──< topic_mastery                 one row per student per topic
+```
+
+| Table | What a row is | Notable columns |
+|---|---|---|
+| `users` | An account | `role` (student, parent, teacher), `link_code` (students), `is_demo` |
+| `guardian_links` | "This guardian may view this student" | unique per pair |
+| `play_sessions` | One boss battle | `status` (active, victory, defeat, abandoned), correct and wrong counts, streak |
+| `attempts` | One question served | the question, its options and `correct_index`; `is_correct`; `mastery_before` and `mastery_after`; five nullable attention columns |
+| `topic_mastery` | Mastery of one topic | `p_mastery`, `attempts_count` |
+
+The attention columns on `attempts` are NULL unless the camera was on for that
+question. Nothing else in the schema refers to attention.
+
+## Who may do what
+
+Identity always comes from the sign-in token, never from an id in the request.
+
+| Action | Student | Parent / teacher |
+|---|---|---|
+| Play missions, answer, ask for hints | own account only | no |
+| Read a student's report | own only | linked students only |
+| Link to a student | no | with that student's link code |
+| Demo login | only when `DEMO_MODE=true`, and only the seeded demo accounts |
+
+Demo accounts and real accounts can never be linked to each other.
+
+## Where each requirement is tested
+
+| # | Requirement | Test file |
+|---|---|---|
+| T1 | Gameplay without camera permission | `frontend/src/components/MissionPlayer.test.tsx`, `backend/tests/test_sessions.py` |
+| T2 | Gameplay with camera permission | `MissionPlayer.test.tsx`, `test_sessions.py` |
+| T3 | Camera permission denied or camera missing | `MissionPlayer.test.tsx` |
+| T4 | Camera switched off during a mission | `MissionPlayer.test.tsx` |
+| T5 | No webcam images uploaded | `MissionPlayer.test.tsx`, `test_sessions.py` |
+| T6 | Mastery unchanged by attention data | `backend/tests/test_mastery.py` |
+| T7 | Correct and incorrect answers update BKT properly | `test_mastery.py` |
+| T8 | Demo login unavailable when `DEMO_MODE=false` | `backend/tests/test_auth.py` |
+| T9 | Demo login reaches only seeded demo accounts | `test_auth.py`, `backend/tests/test_guardians.py` |
+| T10 | Parent and teacher access restrictions | `test_guardians.py`, `backend/tests/test_dashboard.py` |
+| T11 | Dashboard statistics match the database | `test_dashboard.py` |
+| T12 | Several children linked to one parent | `test_guardians.py`, `test_dashboard.py` |
+
+Also covered: every question type at every level re-solved independently
+(`test_questions.py`), hint fallbacks (`test_hints.py`), the attention summary
+logic (`frontend/src/lib/attention/summary.test.ts`), the demo banner
+(`frontend/src/App.test.tsx`), and the report screens
+(`frontend/src/components/dashboard/StudentReportView.test.tsx`,
+`frontend/src/components/ParentDashboard.test.tsx`).
