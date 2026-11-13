@@ -506,7 +506,10 @@ export async function generateItinerary(
     const allocation = plan.cities[i];
     const count = allocation.days;
     const isLast = i === plan.cities.length - 1;
-    const nights = Math.max(1, isLast ? count - 1 : count);
+    // You sleep a night in every city you stay in, except that the trip ends on
+    // its last day. So the last city gets one night fewer than its days, which
+    // is none when the trip ends the day it arrives there.
+    const nights = isLast ? count - 1 : count;
 
     // The destination doubles as the country hint for place lookups: searching
     // "Rome, Italy" is far more precise than searching "Rome".
