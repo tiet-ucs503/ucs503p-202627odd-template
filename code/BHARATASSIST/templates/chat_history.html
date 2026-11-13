@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}Chat History — BharatAssist{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-page-container {
+        padding: 40px 0 70px;
+    }
+
+    .history-card {
+        background: #ffffff;
+        border: 1px solid #E2E8F0;
+        border-radius: 18px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+        overflow: hidden;
+    }
+
+    .thread-item-row {
+        padding: 18px 24px;
+        border-bottom: 1px solid #F1F5F9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        transition: background-color 0.2s ease;
+        cursor: pointer;
+    }
+
+    .thread-item-row:hover {
+        background-color: #F8FAFC;
+    }
+
+    .thread-item-row:last-child {
+        border-bottom: none;
+    }
+
+    .thread-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: rgba(0, 0, 128, 0.08);
+        color: var(--navy);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .thread-title {
+        font-weight: 700;
+        color: var(--navy);
+        font-size: 1rem;
+        margin-bottom: 4px;
+        line-height: 1.4;
+    }
+
+    .chat-bubble-user {
+        background: var(--navy);
+        color: #ffffff;
+        border-radius: 16px 16px 4px 16px;
+        padding: 14px 18px;
+        max-width: 85%;
+        margin-left: auto;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 128, 0.15);
+    }
+
+    .chat-bubble-ai {
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid var(--saffron);
+        border-radius: 16px 16px 16px 4px;
+        padding: 16px 20px;
+        max-width: 90%;
+        margin-right: auto;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+        line-height: 1.6;
+        color: #1E293B;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-page-container">
+    <div class="container">
+        <!-- Header -->
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <h2 class="fw-bold mb-1" style="color: var(--navy);">
+                    <i class="fa-solid fa-clock-rotate-left text-green me-2"></i> Civic Assistant Chat History
+                </h2>
+                <p class="text-muted small mb-0">Review past conversations, guidance, and document assistance</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('assistant') }}" class="btn btn-tricolor fw-semibold">
+                    <i class="fa-solid fa-plus me-1"></i> Start New Conversation
+                </a>
+            </div>
+        </div>
+
+        <div id="historyAlert" class="alert d-none mb-4 shadow-sm" role="alert"></div>
+
+        {% if threads %}
+        <div class="history-card shadow-sm">
+            {% for thread in threads %}
+            <div class="thread-item-row" id="threadRow-{{ thread.id }}" onclick="openThreadModal('{{ thread.id }}')">
+                <div class="d-flex align-items-center gap-3 flex-grow-1 overflow-hidden">
+                    <div class="thread-avatar">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <div class="thread-title text-truncate">
+                            {{ thread.title }}
+                        </div>
+                        <div class="text-muted small d-flex align-items-center gap-2">
+                            <span><i class="fa-regular fa-calendar me-1"></i> {{ thread.updated_at[:16] if thread.updated_at != 'Earlier' else 'Archived thread' }}</span>
+                            <span>•</span>
+                            <span class="badge bg-light text-navy border">{{ thread.message_count }} message{{ 's' if thread.message_count != 1 else '' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation();">
+                    <button type="button" class="btn btn-sm btn-outline-primary fw-semibold" onclick="openThreadModal('{{ thread.id }}')">
+                        <i class="fa-regular fa-folder-open me-1"></i> View Thread
+                    </button>
+                    {% if thread.id != 'legacy_thread' %}
+                    <a href="{{ url_for('assistant') }}?c={{ thread.id }}" class="btn btn-sm btn-tricolor fw-semibold">
+                        <i class="fa-solid fa-play me-1"></i> Continue
+                    </a>
+                    {% endif %}
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteThread('{{ thread.id }}', '{{ thread.title|replace("'", "\\'") }}')">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-5 px-3 bg-white rounded-4 border shadow-sm my-4">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success mb-3" style="width:80px;height:80px;">
+                <i class="fa-solid fa-comments fs-2 text-green"></i>
+            </div>
+            <h4 class="fw-bold mb-2" style="color: var(--navy);">No Saved Chat Conversations</h4>
+            <p class="text-muted small mx-auto mb-4" style="max-width: 480px;">
+                Your discussions with the BharatAssist AI Assistant are automatically saved here so you can review official procedures whenever you need!
+            </p>
+            <a href="{{ url_for('assistant') }}" class="btn btn-tricolor px-4 py-2 fw-semibold">
+                <i class="fa-solid fa-robot me-2"></i> Chat with AI Assistant
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- THREAD DETAIL MODAL -->
+<div class="modal fade" id="threadDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow" style="border-radius: 18px;">
+            <div class="modal-header border-bottom bg-light">
+                <div>
+                    <h5 class="modal-title fw-bold text-navy" id="threadModalTitle">Conversation Thread</h5>
+                    <div class="text-muted small" id="threadModalSubtitle">BharatAssist AI guidance</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="threadMessagesContainer">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+            <div class="modal-footer border-top bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="btnContinueThisThread" class="btn btn-tricolor fw-semibold">
+                    <i class="fa-solid fa-play me-1"></i> Continue Chat
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DELETE THREAD CONFIRM MODAL -->
+<div class="modal fade" id="deleteThreadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 16px;">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-navy">
+                    <i class="fa-solid fa-trash-can text-danger me-2"></i> Delete Conversation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="mb-1 text-dark">Are you sure you want to delete this conversation thread?</p>
+                <p class="fw-bold text-navy mb-3" id="deleteThreadTitlePlaceholder"></p>
+                <p class="text-muted small mb-0">All messages in this conversation thread will be permanently removed.</p>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="btnConfirmDeleteThread" class="btn btn-danger fw-semibold px-4">
+                    Delete Thread
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let threadToDeleteId = null;
+
+function showHistoryAlert(msg, isSuccess = true) {
+    const alertBox = document.getElementById("historyAlert");
+    alertBox.className = `alert ${isSuccess ? 'alert-success' : 'alert-danger'} shadow-sm`;
+    alertBox.innerHTML = `<i class="fa-solid ${isSuccess ? 'fa-circle-check text-success' : 'fa-circle-exclamation text-danger'} me-2"></i> ${msg}`;
+    alertBox.classList.remove("d-none");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+async function openThreadModal(threadId) {
+    const modalEl = document.getElementById("threadDetailModal");
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    const container = document.getElementById("threadMessagesContainer");
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>';
+
+    const continueBtn = document.getElementById("btnContinueThisThread");
+    if (threadId === "legacy_thread") {
+        continueBtn.style.display = "none";
+    } else {
+        continueBtn.style.display = "inline-block";
+        continueBtn.href = `/assistant?c=${threadId}`;
+    }
+
+    try {
+        const resp = await fetch(`/api/conversations/${threadId}`);
+        const data = await resp.json();
+
+        if (data.success) {
+            document.getElementById("threadModalTitle").textContent = data.title || "Conversation";
+            document.getElementById("threadModalSubtitle").textContent = `${data.messages.length} interaction${data.messages.length !== 1 ? 's' : ''}`;
+
+            if (data.messages && data.messages.length > 0) {
+                container.innerHTML = data.messages.map(m => `
+                    <div class="chat-bubble-user">
+                        <div class="small opacity-75 mb-1"><i class="fa-solid fa-user me-1"></i> You</div>
+                        <div>${escapeHtml(m.question)}</div>
+                    </div>
+                    <div class="chat-bubble-ai">
+                        <div class="small text-muted fw-bold mb-2">
+                            <i class="fa-solid fa-robot text-saffron me-1"></i> BharatAssist Assistant
+                            <span class="badge bg-light text-navy border ms-2">${m.language || 'English'}</span>
+                        </div>
+                        <div class="ai-rendered-answer">${formatAiAnswer(m.answer)}</div>
+                    </div>
+                `).join("");
+            } else {
+                container.innerHTML = '<div class="text-center py-4 text-muted">No messages found in this thread.</div>';
+            }
+        } else {
+            container.innerHTML = `<div class="alert alert-danger">${data.error || 'Failed to load conversation.'}</div>`;
+        }
+    } catch (err) {
+        container.innerHTML = '<div class="alert alert-danger">Connection error loading conversation.</div>';
+    }
+}
+
+function confirmDeleteThread(threadId, threadTitle) {
+    threadToDeleteId = threadId;
+    document.getElementById("deleteThreadTitlePlaceholder").textContent = threadTitle;
+    const modal = new bootstrap.Modal(document.getElementById("deleteThreadModal"));
+    modal.show();
+}
+
+document.getElementById("btnConfirmDeleteThread").addEventListener("click", async function () {
+    if (!threadToDeleteId) return;
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Deleting...';
+
+    try {
+        const resp = await fetch(`/api/conversations/${threadToDeleteId}`, {
+            method: "DELETE"
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+            const modalEl = document.getElementById("deleteThreadModal");
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+
+            const row = document.getElementById(`threadRow-${threadToDeleteId}`);
+            if (row) row.remove();
+
+            showHistoryAlert("Conversation deleted successfully.", true);
+        } else {
+            showHistoryAlert(data.error || "Failed to delete conversation.", false);
+        }
+    } catch (err) {
+        showHistoryAlert("Connection error deleting conversation.", false);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = "Delete Thread";
+        threadToDeleteId = null;
+    }
+});
+
+function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str || "";
+    return div.innerHTML;
+}
+
+function formatAiAnswer(raw) {
+    if (!raw) return "";
+    let text = raw.trim();
+    text = text.replace(/^###\s*(.+)$/gm, '<div class="fw-bold fs-6 mt-3 mb-1 text-primary">$1</div>');
+    text = text.replace(/^##\s*(.+)$/gm, '<div class="fw-bold fs-6 mt-3 mb-1 text-primary">$1</div>');
+    text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/(?:^|\n)(\d+)\.\s+([^\n]+)/g, '\n<div class="mb-1"><span class="badge bg-light text-dark border me-1">$1</span> $2</div>');
+    text = text.replace(/(?:^|\n)[*-]\s+([^\n]+)/g, '\n<div class="mb-1">• $1</div>');
+    text = text.replace(/\n\n+/g, '<br><br>');
+    return text;
+}
+</script>
+{% endblock %}

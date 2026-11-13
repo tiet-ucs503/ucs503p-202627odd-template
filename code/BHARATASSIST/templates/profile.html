@@ -1,0 +1,684 @@
+{% extends "base.html" %}
+
+{% block title %}Citizen Profile — BharatAssist{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+        padding: 40px 0 70px;
+    }
+
+    .profile-card {
+        background: #ffffff;
+        border: 1px solid rgba(255, 153, 51, 0.25);
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .profile-card-header {
+        background: linear-gradient(135deg, rgba(255, 153, 51, 0.08) 0%, rgba(19, 136, 8, 0.08) 100%);
+        padding: 24px 28px;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .profile-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, var(--navy) 0%, #1e3a8a 100%);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        font-weight: 700;
+        box-shadow: 0 6px 16px rgba(0, 0, 128, 0.2);
+    }
+
+    .profile-field-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: #64748B;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+
+    .profile-field-value {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--navy);
+        padding: 8px 12px;
+        background: #F8FAFC;
+        border-radius: 10px;
+        border: 1px solid #E2E8F0;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+
+    .profile-field-value.empty {
+        color: #94A3B8;
+        font-style: italic;
+        font-weight: 400;
+    }
+
+    .badge-shield {
+        background: rgba(19, 136, 8, 0.12);
+        color: var(--green);
+        border: 1px solid rgba(19, 136, 8, 0.3);
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .danger-zone-card {
+        border: 1px solid rgba(220, 53, 69, 0.3);
+        background: #fff;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .danger-zone-header {
+        background: rgba(220, 53, 69, 0.06);
+        padding: 20px 28px;
+        border-bottom: 1px solid rgba(220, 53, 69, 0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="container">
+        <!-- Toast / Alert Container -->
+        <div id="alertBox" class="alert d-none mb-4 shadow-sm" role="alert"></div>
+
+        <div class="row g-4">
+            <!-- LEFT COLUMN: Citizen Summary & Quick Links -->
+            <div class="col-lg-4">
+                <div class="profile-card text-center p-4">
+                    <div class="profile-avatar mx-auto mb-3">
+                        {{ user.name[:1] if user.name else "C" }}
+                    </div>
+                    <h4 class="fw-bold mb-1" style="color: var(--navy);" id="summaryCitizenName">{{ user.name }}</h4>
+                    <p class="text-muted small mb-2">
+                        <i class="fa-solid fa-mobile-screen me-1 text-saffron"></i>
+                        <span id="summaryCitizenPhone">{{ masked_phone }}</span>
+                    </p>
+                    <div class="mb-3">
+                        <span class="badge-shield">
+                            <i class="fa-solid fa-shield-halved"></i> Zero-LLM Privacy Shield Active
+                        </span>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 text-start small mb-3 border">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Account ID:</span>
+                            <span class="fw-bold text-navy">#CITIZEN-{{ user.id }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Registered:</span>
+                            <span class="fw-semibold text-dark">{{ user.created_at[:10] if user.created_at else "Active" }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Status:</span>
+                            <span class="text-success fw-bold"><i class="fa-solid fa-circle-check me-1"></i> Verified Citizen</span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('my_applications') }}" class="btn btn-outline-primary fw-semibold py-2" style="border-color: rgba(0, 0, 128, 0.35); color: var(--navy);">
+                            <i class="fa-solid fa-clipboard-check me-2 text-saffron"></i> My Applications & Checklists
+                        </a>
+                        <a href="{{ url_for('chat_history_page') }}" class="btn btn-outline-secondary fw-semibold py-2">
+                            <i class="fa-solid fa-clock-rotate-left me-2 text-green"></i> View Chat History
+                        </a>
+                        <a href="{{ url_for('assistant') }}" class="btn btn-tricolor fw-semibold py-2">
+                            <i class="fa-solid fa-robot me-2"></i> Open AI Civic Assistant
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Account Security Quick Card -->
+                <div class="profile-card p-4">
+                    <h6 class="fw-bold mb-3 text-navy">
+                        <i class="fa-solid fa-lock text-saffron me-2"></i> Security & Credentials
+                    </h6>
+                    <p class="text-muted small mb-3">
+                        Manage your password and authentication settings. You can always sign in with OTP on your registered phone.
+                    </p>
+                    <button type="button" class="btn btn-outline-dark w-100 fw-semibold" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <i class="fa-solid fa-key me-1"></i> Change Account Password
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Profile Details (View & Edit Mode) -->
+            <div class="col-lg-8">
+                <!-- VIEW MODE -->
+                <div id="profileViewCard" class="profile-card">
+                    <div class="profile-card-header">
+                        <div>
+                            <h4 class="fw-bold mb-1" style="color: var(--navy);">Citizen Profile Details</h4>
+                            <p class="text-muted small mb-0">Personal preferences for government service guidance</p>
+                        </div>
+                        <button type="button" id="btnEnableEdit" class="btn btn-sm btn-tricolor px-3 py-2 fw-semibold">
+                            <i class="fa-solid fa-pen-to-square me-1"></i> Edit Profile
+                        </button>
+                    </div>
+
+                    <div class="p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="profile-field-label">Full Name</div>
+                                <div class="profile-field-value" id="viewName">{{ user.name }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="profile-field-label">Email Address</div>
+                                <div class="profile-field-value {% if not user.email %}empty{% endif %}" id="viewEmail">
+                                    {{ user.email or "Not provided" }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="profile-field-label">Registered Mobile Number</div>
+                                <div class="profile-field-value" id="viewPhone">
+                                    {{ masked_phone }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="profile-field-label">Preferred Language</div>
+                                <div class="profile-field-value" id="viewLanguage">
+                                    {{ user.preferred_language or "English" }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="profile-field-label">State / UT</div>
+                                <div class="profile-field-value {% if not user.state %}empty{% endif %}" id="viewState">
+                                    {{ user.state or "All India / Not set" }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="profile-field-label">District</div>
+                                <div class="profile-field-value {% if not user.district %}empty{% endif %}" id="viewDistrict">
+                                    {{ user.district or "Not set" }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 p-3 rounded-3 bg-light border d-flex align-items-start gap-3">
+                            <i class="fa-solid fa-circle-info text-primary fs-5 mt-1"></i>
+                            <div class="small text-muted">
+                                Setting your state and district allows BharatAssist to tailor state-specific eligibility, document checklists, and local civic processing rules accurately.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EDIT MODE FORM (Hidden by default) -->
+                <div id="profileEditCard" class="profile-card d-none">
+                    <div class="profile-card-header">
+                        <div>
+                            <h4 class="fw-bold mb-1" style="color: var(--navy);">Edit Profile Details</h4>
+                            <p class="text-muted small mb-0">Update your details and localized region settings</p>
+                        </div>
+                        <button type="button" id="btnCancelEdit" class="btn btn-sm btn-outline-secondary px-3 py-2 fw-semibold">
+                            <i class="fa-solid fa-xmark me-1"></i> Cancel
+                        </button>
+                    </div>
+
+                    <form id="profileEditForm" class="p-4" novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-navy">
+                                    Full Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" id="editName" class="form-control" value="{{ user.name }}" required minlength="2" placeholder="e.g. Ramesh Kumar">
+                                <div class="invalid-feedback">Please enter your full name (at least 2 characters).</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-navy">
+                                    Email Address (Optional)
+                                </label>
+                                <input type="email" id="editEmail" class="form-control" value="{{ user.email or '' }}" placeholder="citizen@example.gov.in">
+                                <div class="invalid-feedback">Please enter a valid email address.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-navy">
+                                    Registered Mobile Number
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light fw-bold text-navy">🇮🇳 +91</span>
+                                    <input type="tel" id="editPhone" class="form-control" value="{{ user.phone }}" maxlength="10" placeholder="10-digit mobile number">
+                                </div>
+                                <div class="form-text small">Used for login and OTP verification.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-navy">
+                                    Preferred Language
+                                </label>
+                                <select id="editLanguage" class="form-select">
+                                    <option value="English" {% if user.preferred_language == 'English' %}selected{% endif %}>English</option>
+                                    <option value="Hindi" {% if user.preferred_language == 'Hindi' %}selected{% endif %}>हिंदी (Hindi)</option>
+                                    <option value="Punjabi" {% if user.preferred_language == 'Punjabi' %}selected{% endif %}>ਪੰਜਾਬੀ (Punjabi)</option>
+                                    <option value="Bengali" {% if user.preferred_language == 'Bengali' %}selected{% endif %}>বাংলা (Bengali)</option>
+                                    <option value="Marathi" {% if user.preferred_language == 'Marathi' %}selected{% endif %}>मराठी (Marathi)</option>
+                                    <option value="Gujarati" {% if user.preferred_language == 'Gujarati' %}selected{% endif %}>ગુજરાતી (Gujarati)</option>
+                                    <option value="Tamil" {% if user.preferred_language == 'Tamil' %}selected{% endif %}>தமிழ் (Tamil)</option>
+                                    <option value="Telugu" {% if user.preferred_language == 'Telugu' %}selected{% endif %}>తెలుగు (Telugu)</option>
+                                    <option value="Kannada" {% if user.preferred_language == 'Kannada' %}selected{% endif %}>ಕನ್ನಡ (Kannada)</option>
+                                    <option value="Malayalam" {% if user.preferred_language == 'Malayalam' %}selected{% endif %}>മലയാളം (Malayalam)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-navy">
+                                    State / Union Territory
+                                </label>
+                                <select id="editState" class="form-select">
+                                    <option value="">-- Select State / UT --</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-navy">
+                                    District
+                                </label>
+                                <select id="editDistrict" class="form-select" disabled>
+                                    <option value="">-- Select State First --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <button type="button" id="btnCancelEditBottom" class="btn btn-outline-secondary px-4">Cancel</button>
+                            <button type="submit" id="btnSaveProfile" class="btn btn-tricolor px-4 fw-semibold">
+                                <i class="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- DANGER ZONE: DELETE ACCOUNT -->
+                <div class="danger-zone-card shadow-sm">
+                    <div class="danger-zone-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold text-danger mb-1">
+                                <i class="fa-solid fa-triangle-exclamation me-2"></i> Danger Zone
+                            </h5>
+                            <p class="text-muted small mb-0">Irreversible account removal and privacy erasure</p>
+                        </div>
+                        <button type="button" class="btn btn-outline-danger btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                            <i class="fa-solid fa-trash-can me-1"></i> Delete Account
+                        </button>
+                    </div>
+                    <div class="p-3 bg-white">
+                        <p class="text-muted small mb-0">
+                            Deleting your account permanently wipes your profile, saved applications, checklist steps, and AI conversation history from the local database. This action cannot be undone.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: CHANGE PASSWORD -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 16px;">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-navy" id="changePasswordModalLabel">
+                    <i class="fa-solid fa-key text-saffron me-2"></i> Change Password
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formChangePassword">
+                <div class="modal-body p-4">
+                    <div id="passwordAlert" class="alert d-none mb-3 small" role="alert"></div>
+
+                    {% if user.password_hash %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-navy">Current Password</label>
+                        <input type="password" id="currentPassword" class="form-control" required placeholder="Enter current password">
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-navy">New Password</label>
+                        <input type="password" id="newPassword" class="form-control" minlength="6" required placeholder="At least 6 characters">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-navy">Confirm New Password</label>
+                        <input type="password" id="confirmNewPassword" class="form-control" minlength="6" required placeholder="Re-enter new password">
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="btnSubmitPassword" class="btn btn-tricolor fw-semibold px-4">
+                        Update Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: DELETE ACCOUNT CONFIRMATION -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 16px;">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold" id="deleteAccountModalLabel">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i> Permanent Account Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formDeleteAccount">
+                <div class="modal-body p-4">
+                    <div id="deleteAlert" class="alert d-none mb-3 small" role="alert"></div>
+
+                    <p class="text-danger fw-semibold mb-2">
+                        Warning: This will permanently delete your citizen profile, all saved applications, checklist progress, and conversation history.
+                    </p>
+                    <p class="text-muted small mb-3">
+                        To proceed, please type <span class="badge bg-danger-subtle text-danger fw-bold border border-danger">DELETE</span> in capital letters below or enter your account password.
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-navy">Type "DELETE" to confirm:</label>
+                        <input type="text" id="deleteConfirmText" class="form-control" placeholder="DELETE" autocomplete="off">
+                    </div>
+
+                    {% if user.password_hash %}
+                    <div class="divider-text text-center text-muted small my-2">OR</div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-navy">Confirm with your Password:</label>
+                        <input type="password" id="deletePassword" class="form-control" placeholder="Your password">
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="btnConfirmDelete" class="btn btn-danger fw-semibold px-4">
+                        <i class="fa-solid fa-trash-can me-1"></i> Permanently Delete Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+    const userInitialState = {{ user.state|tojson if user.state else '""' }};
+    const userInitialDistrict = {{ user.district|tojson if user.district else '""' }};
+
+    const alertBox = document.getElementById("alertBox");
+    const profileViewCard = document.getElementById("profileViewCard");
+    const profileEditCard = document.getElementById("profileEditCard");
+    const btnEnableEdit = document.getElementById("btnEnableEdit");
+    const btnCancelEdit = document.getElementById("btnCancelEdit");
+    const btnCancelEditBottom = document.getElementById("btnCancelEditBottom");
+    const profileEditForm = document.getElementById("profileEditForm");
+
+    const editState = document.getElementById("editState");
+    const editDistrict = document.getElementById("editDistrict");
+
+    let statesData = {};
+
+    function showAlert(msg, isSuccess = true) {
+        alertBox.className = `alert ${isSuccess ? 'alert-success' : 'alert-danger'} shadow-sm`;
+        alertBox.innerHTML = `<i class="fa-solid ${isSuccess ? 'fa-circle-check text-success' : 'fa-circle-exclamation text-danger'} me-2"></i> ${msg}`;
+        alertBox.classList.remove("d-none");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // Load Indian States and Districts
+    try {
+        const res = await fetch("/static/india_states_districts.json");
+        statesData = await res.json();
+        
+        // Populate state dropdown
+        const states = Object.keys(statesData).sort();
+        states.forEach(st => {
+            const opt = document.createElement("option");
+            opt.value = st;
+            opt.textContent = st;
+            if (st === userInitialState) {
+                opt.selected = true;
+            }
+            editState.appendChild(opt);
+        });
+
+        if (userInitialState && statesData[userInitialState]) {
+            populateDistricts(userInitialState, userInitialDistrict);
+        }
+    } catch (err) {
+        console.warn("Could not load states data:", err);
+    }
+
+    function populateDistricts(selectedState, preselectDistrict = "") {
+        editDistrict.innerHTML = '<option value="">-- Select District --</option>';
+        if (selectedState && statesData[selectedState]) {
+            editDistrict.disabled = false;
+            statesData[selectedState].forEach(dist => {
+                const opt = document.createElement("option");
+                opt.value = dist;
+                opt.textContent = dist;
+                if (dist === preselectDistrict) {
+                    opt.selected = true;
+                }
+                editDistrict.appendChild(opt);
+            });
+        } else {
+            editDistrict.disabled = true;
+            editDistrict.innerHTML = '<option value="">-- Select State First --</option>';
+        }
+    }
+
+    editState.addEventListener("change", function () {
+        populateDistricts(this.value);
+    });
+
+    // Toggle Edit Mode
+    btnEnableEdit.addEventListener("click", function () {
+        profileViewCard.classList.add("d-none");
+        profileEditCard.classList.remove("d-none");
+    });
+
+    function exitEditMode() {
+        profileEditCard.classList.add("d-none");
+        profileViewCard.classList.remove("d-none");
+    }
+
+    btnCancelEdit.addEventListener("click", exitEditMode);
+    btnCancelEditBottom.addEventListener("click", exitEditMode);
+
+    // Profile Edit Submit
+    profileEditForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const name = document.getElementById("editName").value.trim();
+        const email = document.getElementById("editEmail").value.trim();
+        const phone = document.getElementById("editPhone").value.trim();
+        const preferred_language = document.getElementById("editLanguage").value;
+        const state = editState.value;
+        const district = editDistrict.value;
+
+        if (!name || name.length < 2) {
+            document.getElementById("editName").classList.add("is-invalid");
+            return;
+        } else {
+            document.getElementById("editName").classList.remove("is-invalid");
+        }
+
+        if (email) {
+            const emailRe = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+            if (!emailRe.test(email)) {
+                document.getElementById("editEmail").classList.add("is-invalid");
+                return;
+            } else {
+                document.getElementById("editEmail").classList.remove("is-invalid");
+            }
+        }
+
+        const btnSave = document.getElementById("btnSaveProfile");
+        btnSave.disabled = true;
+        btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+
+        try {
+            const resp = await fetch("/api/profile/update", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    phone,
+                    preferred_language,
+                    state,
+                    district
+                })
+            });
+            const data = await resp.json();
+
+            if (data.success) {
+                // Update UI view mode values
+                document.getElementById("viewName").textContent = name;
+                document.getElementById("summaryCitizenName").textContent = name;
+                
+                const emailEl = document.getElementById("viewEmail");
+                emailEl.textContent = email || "Not provided";
+                if (!email) emailEl.classList.add("empty"); else emailEl.classList.remove("empty");
+
+                document.getElementById("viewLanguage").textContent = preferred_language;
+
+                const stateEl = document.getElementById("viewState");
+                stateEl.textContent = state || "All India / Not set";
+                if (!state) stateEl.classList.add("empty"); else stateEl.classList.remove("empty");
+
+                const distEl = document.getElementById("viewDistrict");
+                distEl.textContent = district || "Not set";
+                if (!district) distEl.classList.add("empty"); else distEl.classList.remove("empty");
+
+                if (phone) {
+                    const masked = "+91 " + phone.substring(0, 2) + "••• ••" + phone.substring(phone.length - 3);
+                    document.getElementById("viewPhone").textContent = masked;
+                    document.getElementById("summaryCitizenPhone").textContent = masked;
+                }
+
+                exitEditMode();
+                showAlert("Profile updated successfully!", true);
+            } else {
+                showAlert(data.error || "Failed to update profile.", false);
+            }
+        } catch (err) {
+            showAlert("Connection error while updating profile.", false);
+        } finally {
+            btnSave.disabled = false;
+            btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i> Save Changes';
+        }
+    });
+
+    // CHANGE PASSWORD HANDLER
+    const formChangePassword = document.getElementById("formChangePassword");
+    const passwordAlert = document.getElementById("passwordAlert");
+    formChangePassword.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const current_password = document.getElementById("currentPassword") ? document.getElementById("currentPassword").value : "";
+        const new_password = document.getElementById("newPassword").value;
+        const confirm_password = document.getElementById("confirmNewPassword").value;
+
+        if (new_password !== confirm_password) {
+            passwordAlert.className = "alert alert-danger";
+            passwordAlert.textContent = "New passwords do not match.";
+            passwordAlert.classList.remove("d-none");
+            return;
+        }
+
+        const btnSubmit = document.getElementById("btnSubmitPassword");
+        btnSubmit.disabled = true;
+
+        try {
+            const resp = await fetch("/api/profile/change-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ current_password, new_password, confirm_password })
+            });
+            const data = await resp.json();
+
+            if (data.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById("changePasswordModal"));
+                modal.hide();
+                formChangePassword.reset();
+                showAlert("Password updated successfully!", true);
+            } else {
+                passwordAlert.className = "alert alert-danger";
+                passwordAlert.textContent = data.error || "Failed to update password.";
+                passwordAlert.classList.remove("d-none");
+            }
+        } catch (err) {
+            passwordAlert.className = "alert alert-danger";
+            passwordAlert.textContent = "Network error while changing password.";
+            passwordAlert.classList.remove("d-none");
+        } finally {
+            btnSubmit.disabled = false;
+        }
+    });
+
+    // DELETE ACCOUNT HANDLER
+    const formDeleteAccount = document.getElementById("formDeleteAccount");
+    const deleteAlert = document.getElementById("deleteAlert");
+    formDeleteAccount.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const confirm_text = document.getElementById("deleteConfirmText").value.trim();
+        const password = document.getElementById("deletePassword") ? document.getElementById("deletePassword").value : "";
+
+        const btnDelete = document.getElementById("btnConfirmDelete");
+        btnDelete.disabled = true;
+        btnDelete.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Deleting...';
+
+        try {
+            const resp = await fetch("/api/profile/delete-account", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ confirm_text, password })
+            });
+            const data = await resp.json();
+
+            if (data.success) {
+                window.location.href = "/login";
+            } else {
+                deleteAlert.className = "alert alert-danger";
+                deleteAlert.textContent = data.error || "Confirmation failed. Please type 'DELETE' or check your password.";
+                deleteAlert.classList.remove("d-none");
+                btnDelete.disabled = false;
+                btnDelete.innerHTML = '<i class="fa-solid fa-trash-can me-1"></i> Permanently Delete Account';
+            }
+        } catch (err) {
+            deleteAlert.className = "alert alert-danger";
+            deleteAlert.textContent = "Network error while deleting account.";
+            deleteAlert.classList.remove("d-none");
+            btnDelete.disabled = false;
+            btnDelete.innerHTML = '<i class="fa-solid fa-trash-can me-1"></i> Permanently Delete Account';
+        }
+    });
+});
+</script>
+{% endblock %}
