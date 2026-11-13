@@ -1,4 +1,10 @@
-"""Every generated question must have a correct stored answer, checked by re-solving it."""
+"""
+Every generated question must have a correct stored answer.
+
+`solve` works the answer out again from the question text alone, using its own
+arithmetic, and the tests compare that with what the generator stored. This is
+run for all six bosses at all three difficulty tiers, hundreds of times each.
+"""
 import math
 import random
 import re
@@ -6,62 +12,142 @@ import re
 import pytest
 
 from services.curriculum import BOSS_IDS
-from services.questions import generate_question
+from services.questions import DIFFICULTIES, generate_question
 
 SEEDS = range(300)
-
-
-def ints(text: str):
-    return [int(n) for n in re.findall(r"-?\d+", text)]
+CASES = [(boss, tier) for boss in BOSS_IDS for tier in DIFFICULTIES]
 
 
 def solve(boss_id: str, text: str) -> int:
     """Independently works out the answer from the question text."""
+    def find(pattern):
+        match = re.search(pattern, text)
+        return match.groups() if match else None
+
     if boss_id == "goblin":
-        a, op, b, c = re.search(r"(\d+)Y ([+-]) (\d+) = (-?\d+)", text).groups()
-        a, b, c = int(a), int(b), int(c)
-        return (c - b) // a if op == "+" else (c + b) // a
+        if g := find(r"(\d+)Y \+ (\d+) = (\d+)Y \+ (\d+)"):  # aY + b = cY + d
+            a, b, c, d = map(int, g)
+            assert (d - b) % (a - c) == 0
+            return (d - b) // (a - c)
+        if g := find(r"(\d+)\(Y ([+-]) (\d+)\) = (\d+)"):  # a(Y ± b) = c
+            a, b, c = int(g[0]), int(g[2]), int(g[3])
+            assert c % a == 0
+            return c // a - b if g[1] == "+" else c // a + b
+        if g := find(r"(\d+)Y ([+-]) (\d+) = (\d+)"):  # aY ± b = c
+            a, b, c = int(g[0]), int(g[2]), int(g[3])
+            top = c - b if g[1] == "+" else c + b
+            assert top % a == 0
+            return top // a
+        if g := find(r"(\d+)Y = (\d+)"):  # aY = c
+            assert int(g[1]) % int(g[0]) == 0
+            return int(g[1]) // int(g[0])
+        op, b, c = find(r"\nY ([+-]) (\d+) = (\d+)")  # Y ± b = c
+        return int(c) - int(b) if op == "+" else int(c) + int(b)
+
     if boss_id == "doc-ock":
-        w, length = map(int, re.search(r"(\d+)m wide and (\d+)m long", text).groups())
+        if g := find(r"base of (\d+)m and a height of (\d+)m"):
+            assert int(g[0]) * int(g[1]) % 2 == 0
+            return int(g[0]) * int(g[1]) // 2
+        if g := find(r"perimeter of (\d+)m and a width of (\d+)m"):
+            perimeter, w = map(int, g)
+            assert perimeter % 2 == 0
+            return w * (perimeter // 2 - w)
+        w, length = map(int, find(r"(\d+)m wide and (\d+)m long"))
         return w * length if "Area" in text else 2 * (w + length)
+
     if boss_id == "mysterio":
-        s = list(map(int, re.search(r"sequence: (\d+), (\d+), (\d+), (\d+)", text).groups()))
-        if s[1] - s[0] == s[2] - s[1] == s[3] - s[2]:
+        s = list(map(int, find(r"sequence: (\d+), (\d+), (\d+), (\d+)")))
+        arithmetic = s[1] - s[0] == s[2] - s[1] == s[3] - s[2]
+        if g := find(r"What is the (\d+)th number"):
+            assert arithmetic
+            return s[0] + (int(g[0]) - 1) * (s[1] - s[0])
+        if arithmetic:
             return s[3] + (s[1] - s[0])
         assert s[1] * s[1] == s[0] * s[2] and s[2] * s[2] == s[1] * s[3]
         return s[3] * s[1] // s[0]
+
     if boss_id == "venom":
-        percent, total = map(int, re.search(r"(\d+)% of a (\d+) sq ft", text).groups())
+        if g := find(r"covered (\d+) sq ft, then grew by (\d+)%"):
+            base, percent = map(int, g)
+            assert base * percent % 100 == 0
+            return base + base * percent // 100
+        if g := find(r"infected (\d+) of the (\d+) lab computers"):
+            part, total = map(int, g)
+            assert part * 100 % total == 0
+            return part * 100 // total
+        percent, total = map(int, find(r"(\d+)% of a (\d+) sq ft"))
+        assert percent * total % 100 == 0
         return percent * total // 100
+
     if boss_id == "lizard":
-        base, exp, op, square = re.search(r"(\d+)\^(\d+) ([+-]) √(\d+)", text).groups()
+        if g := find(r"\((\d+)\^(\d+)\)\^(\d+) = \?"):
+            return (int(g[0]) ** int(g[1])) ** int(g[2])
+        if g := find(r"(\d+)\^(\d+) × (\d+)\^(\d+) = \?"):
+            return int(g[0]) ** int(g[1]) * int(g[2]) ** int(g[3])
+        if g := find(r"(\d+)\^(\d+) ([+-]) √(\d+) = \?"):
+            root = math.isqrt(int(g[3]))
+            assert root * root == int(g[3])
+            power = int(g[0]) ** int(g[1])
+            return power + root if g[2] == "+" else power - root
+        if g := find(r"(\d+)\^(\d+) = \?"):
+            return int(g[0]) ** int(g[1])
+        (square,) = find(r"√(\d+) = \?")
         root = math.isqrt(int(square))
         assert root * root == int(square)
-        return int(base) ** int(exp) + root if op == "+" else int(base) ** int(exp) - root
+        return root
+
     if boss_id == "kingpin":
-        x1, y1, x2 = map(int, re.search(r"ratio is (\d+) : (\d+) = (\d+) : X", text).groups())
+        if g := find(r"splits \$(\d+) between two gangs in the ratio (\d+) : (\d+)"):
+            total, a, b = map(int, g)
+            assert total % (a + b) == 0
+            return total // (a + b) * a
+        x1, y1, x2 = map(int, find(r"ratio is (\d+) : (\d+) = (\d+) : X"))
+        assert y1 * x2 % x1 == 0
         return y1 * x2 // x1
+
     raise AssertionError(boss_id)
 
 
-@pytest.mark.parametrize("boss_id", BOSS_IDS)
-def test_stored_answer_is_mathematically_correct(boss_id):
+@pytest.mark.parametrize("boss_id,difficulty", CASES)
+def test_stored_answer_is_mathematically_correct(boss_id, difficulty):
     for seed in SEEDS:
-        q = generate_question(boss_id, rng=random.Random(seed))
+        q = generate_question(boss_id, difficulty, rng=random.Random(seed))
         assert q.options[q.correct_index] == str(solve(boss_id, q.text)), (seed, q.text, q.options)
 
 
-@pytest.mark.parametrize("boss_id", BOSS_IDS)
-def test_four_distinct_options_with_the_answer_exactly_once(boss_id):
+@pytest.mark.parametrize("boss_id,difficulty", CASES)
+def test_four_distinct_options_with_the_answer_exactly_once(boss_id, difficulty):
     positions = set()
     for seed in SEEDS:
-        q = generate_question(boss_id, rng=random.Random(seed))
+        q = generate_question(boss_id, difficulty, rng=random.Random(seed))
         assert len(q.options) == 4 and len(set(q.options)) == 4
-        assert 0 <= q.correct_index <= 3 and q.hint
+        assert 0 <= q.correct_index <= 3
+        assert q.hint and q.difficulty == difficulty
         positions.add(q.correct_index)
     assert positions == {0, 1, 2, 3}  # the answer is not always in the same place
 
 
-def test_unknown_boss_is_an_error():
+@pytest.mark.parametrize("boss_id,difficulty", CASES)
+def test_hint_never_states_the_answer_outright(boss_id, difficulty):
+    for seed in SEEDS:
+        q = generate_question(boss_id, difficulty, rng=random.Random(seed))
+        answer = q.options[q.correct_index]
+        assert not re.search(rf"(is|=|equals|answer:?)\s*{re.escape(answer)}\b\.?$", q.hint), (q.text, q.hint)
+
+
+@pytest.mark.parametrize("boss_id", BOSS_IDS)
+def test_tiers_are_genuinely_different(boss_id):
+    """Harder tiers use question forms that the easy tier never produces."""
+    def texts(tier):
+        return {re.sub(r"\d+", "N", generate_question(boss_id, tier, rng=random.Random(s)).text) for s in SEEDS}
+
+    easy, hard = texts("easy"), texts("hard")
+    assert easy.isdisjoint(hard) or boss_id in ("doc-ock",), boss_id
+    assert hard - easy  # hard always has at least one form of its own
+
+
+def test_unknown_boss_or_tier_is_an_error():
     with pytest.raises(ValueError):
         generate_question("thanos")
+    with pytest.raises(ValueError):
+        generate_question("goblin", "impossible")

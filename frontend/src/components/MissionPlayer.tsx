@@ -475,6 +475,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
                   </div>
                   <div className="hidden sm:block border-l border-white/10 pl-4 text-gray-500 font-mono text-[10px] uppercase">
                     Question {questionNumber}
+                    <div className="text-hero-400 font-bold mt-0.5">Level: {question.difficulty}</div>
                   </div>
                 </div>
               </div>

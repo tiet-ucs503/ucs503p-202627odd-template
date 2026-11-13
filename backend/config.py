@@ -40,6 +40,7 @@ class Settings:
             if o.strip()
         ]
         self.groq_api_key: str = os.getenv("GROQ_API_KEY", "").strip()
+        self.groq_model: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
 
 settings = Settings()

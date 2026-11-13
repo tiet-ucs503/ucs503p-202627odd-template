@@ -65,7 +65,7 @@ def _replay_session(db: Session, student: models.User, boss_id: str, days_ago: i
         db.add(tm)
 
     for is_correct in answers:
-        q = generate_question(boss_id, rng=rng)
+        q = generate_question(boss_id, mastery.difficulty_for(tm.p_mastery), rng=rng)
         wrong_choices = [i for i in range(4) if i != q.correct_index]
         selected = q.correct_index if is_correct else rng.choice(wrong_choices)
         response_ms = rng.randint(6, 40) * 1000

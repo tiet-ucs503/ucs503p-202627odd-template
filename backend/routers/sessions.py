@@ -12,7 +12,7 @@ import schemas
 from database import get_db
 from deps import require_student
 from models import utcnow
-from services import attention, game, mastery
+from services import attention, game, hints, mastery
 from services.curriculum import get_boss, unlocked_bosses
 from services.questions import generate_question
 
@@ -123,7 +123,7 @@ def get_hint(
     if attempt.answered_at is None:
         attempt.hint_used = True
         db.commit()
-    return schemas.HintOut(hint=attempt.hint_text)
+    return schemas.HintOut(hint=hints.hint_for(attempt.question_text, attempt.topic, attempt.hint_text))
 
 
 @router.post("/attempts/{attempt_id}/answer", response_model=schemas.AnswerResponse)

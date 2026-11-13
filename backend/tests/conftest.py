@@ -7,6 +7,7 @@ os.environ["JWT_SECRET_KEY"] = "test-only-secret-not-used-anywhere-else"
 os.environ["DEMO_MODE"] = "false"
 os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["BCRYPT_ROUNDS"] = "4"  # minimum work factor, so the suite runs in seconds
+os.environ["GROQ_API_KEY"] = ""  # tests never call the AI service
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pytest
