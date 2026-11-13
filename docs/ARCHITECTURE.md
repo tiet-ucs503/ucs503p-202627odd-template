@@ -124,6 +124,34 @@ the textbook behaviour to show what is being avoided.
 - Each topic is independent. Being strong at algebra does not make geometry
   start hard.
 
+### How mastery is shown
+
+BKT moves quickly, so a stored value can reach 0.01 or 0.99 after one mission.
+Printed as "1%" or "99%", that reads like certainty, which a handful of answers
+cannot justify. So what people see is a presentation of the stored value, made
+in one place: `backend/services/mastery_display.py`.
+
+| Shown | Rule |
+|---|---|
+| **Band, first and largest** | Needs practice (below 0.40), Developing (0.40–0.75), Strong (above 0.75). The same thresholds that choose question difficulty. |
+| **Estimated percentage** | The stored value rounded, then limited to 5–95. At a limit it is worded "5% or less" or "95% or more", so it is clearly a limit and not a measurement. |
+| **The plain record** | "Answers so far: 4 of 11 correct", next to the estimate, so the estimate is never the only thing to go on. |
+
+What does **not** change:
+
+- The stored numbers. `p_mastery`, `mastery_before` and `mastery_after` keep the
+  model's own values, and `mastery.py` knows nothing about display.
+- Any decision. Question difficulty, the "needs practice" list and which
+  observation sentences appear all use the raw stored value. Only the number
+  printed is the display value.
+
+The trade-off: a report cannot tell 96% from 99%. That is deliberate; the model
+cannot honestly tell them apart either. Tests
+(`backend/tests/test_mastery_display.py`) check that the shown value always lies
+within 5–95, that ordering between students is preserved, that bands match the
+difficulty thresholds, and that building a report leaves stored values
+untouched.
+
 ## Questions
 
 `backend/services/questions.py` has one small generator per boss per tier

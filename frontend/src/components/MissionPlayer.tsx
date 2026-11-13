@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import CameraConsent from '@/components/CameraConsent';
 import { AttentionTracker } from '@/lib/attention/tracker';
 import { getCameraChoice, setCameraChoice } from '@/lib/attention/preference';
+import { formatMastery } from '@/lib/mastery';
 
 interface MissionPlayerProps {
   bossId: string;
@@ -80,7 +81,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
   const [timeSpent, setTimeSpent] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const [hintOpen, setHintOpen] = useState(false);
-  const [mastery, setMastery] = useState<number | null>(null);
+  const [mastery, setMastery] = useState<number | null>(null); // display percentage (5-95), not the raw value
   const [bestStreak, setBestStreak] = useState(0);
 
   // ── Optional camera ────────────────────────────────────────────────────────
@@ -204,7 +205,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
       setResult(res);
       setSession(res.session);
       setProgress(res.progress);
-      setMastery(res.mastery);
+      setMastery(res.mastery_display_pct);
       setBestStreak((best) => Math.max(best, res.session.streak));
 
       if (res.correct) {
@@ -448,7 +449,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
           <div className="flex items-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5 text-yellow-400" />
             Topic mastery:{' '}
-            <span className="text-yellow-400 font-bold">{mastery === null ? 'answer a question to see it' : `${Math.round(mastery * 100)}%`}</span>
+            <span className="text-yellow-400 font-bold">{mastery === null ? 'answer a question to see it' : `about ${formatMastery(mastery)}`}</span>
           </div>
           <div>Mistakes: <span className="text-white font-bold">{session.wrong_count} / {session.max_wrong}</span></div>
           <button

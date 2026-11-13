@@ -53,7 +53,7 @@ export function installFakeServer(extraRoutes: Record<string, () => unknown> = {
       const state = session();
       return jsonResponse(200, {
         correct: true, correct_index: json?.selected_index ?? 0, points_awarded: 70,
-        bonus_points: 0, mastery: 0.5, session_status: state.status, session: state,
+        bonus_points: 0, mastery: 0.99, mastery_display_pct: 95, session_status: state.status, session: state,
         progress: progress(), next_question: state.status === 'active' ? question() : null,
       });
     }

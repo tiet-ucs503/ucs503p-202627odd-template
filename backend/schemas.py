@@ -104,7 +104,8 @@ class AnswerResponse(BaseModel):
     correct_index: int
     points_awarded: int
     bonus_points: int
-    mastery: float
+    mastery: float  # the raw stored value
+    mastery_display_pct: int  # what to show on screen: limited to 5-95 (services/mastery_display.py)
     session_status: str
     session: SessionState
     progress: ProgressOut
@@ -135,8 +136,11 @@ class LinkedStudent(BaseModel):
 class TopicMasteryOut(BaseModel):
     topic: str
     label: str
-    mastery_pct: Optional[int] = None  # None = topic not started
+    # Display values only (services/mastery_display.py). None = topic not started.
+    mastery_pct: Optional[int] = None  # limited to 5-95 for display; the stored value is not changed
+    mastery_band: Optional[str] = None  # needs_practice | developing | strong
     questions_answered: int
+    correct_answers: int = 0  # the plain record, shown beside the estimate
 
 
 class RecentAttemptOut(BaseModel):

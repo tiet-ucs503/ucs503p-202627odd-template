@@ -13,6 +13,7 @@ from database import get_db
 from deps import require_student
 from models import utcnow
 from services import attention, game, hints, mastery
+from services.mastery_display import display_pct
 from services.curriculum import get_boss, unlocked_bosses
 from services.questions import generate_question
 
@@ -195,6 +196,7 @@ def answer(
         points_awarded=points,
         bonus_points=bonus,
         mastery=mastery_after,
+        mastery_display_pct=display_pct(mastery_after),
         session_status=session.status,
         session=_session_state(session),
         progress=game.progress_for(db, student),

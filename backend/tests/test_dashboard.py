@@ -110,6 +110,13 @@ def test_topic_mastery_and_history_match_the_stored_values(client, known_student
     assert by_topic["linear_equations"] == {**by_topic["linear_equations"], "mastery_pct": 82, "questions_answered": 11}
     assert by_topic["area_perimeter"] == {**by_topic["area_perimeter"], "mastery_pct": 20, "questions_answered": 4}
     assert by_topic["percentages"]["mastery_pct"] is None  # not started: unknown, not 0%
+    assert by_topic["percentages"]["mastery_band"] is None
+
+    # The band in words, and the plain record shown beside the estimate.
+    assert by_topic["linear_equations"]["mastery_band"] == "strong"
+    assert by_topic["area_perimeter"]["mastery_band"] == "needs_practice"
+    assert by_topic["linear_equations"]["correct_answers"] == 7   # 3 nine days ago + 4 two days ago
+    assert by_topic["area_perimeter"]["correct_answers"] == 1
 
     assert [t["topic"] for t in r["needs_practice"]] == ["area_perimeter"]  # 20% is below 40%
 
@@ -134,7 +141,7 @@ def test_observations_are_rule_based_statements_of_the_numbers(client, known_stu
         "Practised on 2 of the last 7 days.",
         # last 7 days: 5 of 9 correct = 56%; the 7 days before: 3 of 6 = 50%
         "Accuracy over the last 7 days was 56%, up from 50% the week before.",
-        "Algebra (Linear Equations) is a strength (mastery 82%).",
+        "Algebra (Linear Equations) is a strength (estimated mastery 82%).",
     ]
     # Attention never appears in, or explains, anything academic.
     text = " ".join(r["observations"]).lower()

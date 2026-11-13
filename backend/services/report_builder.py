@@ -21,11 +21,10 @@ import schemas
 from models import utcnow
 from services.curriculum import BOSSES, boss_for_topic, get_boss
 from services.mastery import EASY_BELOW, HARD_ABOVE
+from services.mastery_display import display_pct, display_text, mastery_band
 
 RECENT_LIMIT = 10
 TREND_DAYS = 14
-NEEDS_PRACTICE_BELOW = round(EASY_BELOW * 100)   # mastery % under which a topic is flagged
-STRENGTH_ABOVE = round(HARD_ABOVE * 100)
 MIN_ANSWERS_FOR_OBSERVATIONS = 10
 MIN_ANSWERS_PER_TOPIC = 5
 MIN_ANSWERS_PER_WEEK = 5
@@ -82,7 +81,7 @@ def _mastery_history(answered: List[models.Attempt], shift: timedelta) -> List[s
             topic=boss["topic"],
             label=boss["label"],
             points=[
-                schemas.MasteryPoint(date=d, mastery_pct=round(p * 100))
+                schemas.MasteryPoint(date=d, mastery_pct=display_pct(p))
                 for d, p in sorted(end_of_day[boss["topic"]].items())
             ],
         )
@@ -117,7 +116,7 @@ def _badges(answered_count: int, sessions: List[models.PlaySession]) -> List[sch
 
 
 def _observations(answered: List[models.Attempt], topics: List[schemas.TopicMasteryOut],
-                  daily: List[schemas.DailyPoint]) -> List[str]:
+                  raw_mastery: Dict[str, float], daily: List[schemas.DailyPoint]) -> List[str]:
     """
     Short factual statements produced by fixed rules on the numbers above.
     No AI is involved, and attention data is never used here.
@@ -141,14 +140,22 @@ def _observations(answered: List[models.Attempt], topics: List[schemas.TopicMast
         else:
             notes.append(f"Accuracy over the last 7 days was {now}%, the same as the week before.")
 
-    practised = [t for t in topics if t.mastery_pct is not None and t.questions_answered >= MIN_ANSWERS_PER_TOPIC]
+    # Which topics are mentioned is decided on the raw stored mastery; only the
+    # number printed in the sentence is the display value.
+    practised = [t for t in topics if t.topic in raw_mastery and t.questions_answered >= MIN_ANSWERS_PER_TOPIC]
     if practised:
-        weakest = min(practised, key=lambda t: t.mastery_pct)
-        strongest = max(practised, key=lambda t: t.mastery_pct)
-        if weakest.mastery_pct < NEEDS_PRACTICE_BELOW:
-            notes.append(f"{weakest.label} needs the most practice (mastery {weakest.mastery_pct}%).")
-        if strongest.mastery_pct > STRENGTH_ABOVE:
-            notes.append(f"{strongest.label} is a strength (mastery {strongest.mastery_pct}%).")
+        weakest = min(practised, key=lambda t: raw_mastery[t.topic])
+        strongest = max(practised, key=lambda t: raw_mastery[t.topic])
+        if raw_mastery[weakest.topic] < EASY_BELOW:
+            notes.append(
+                f"{weakest.label} needs the most practice "
+                f"(estimated mastery {display_text(raw_mastery[weakest.topic])})."
+            )
+        if raw_mastery[strongest.topic] > HARD_ABOVE:
+            notes.append(
+                f"{strongest.label} is a strength "
+                f"(estimated mastery {display_text(raw_mastery[strongest.topic])})."
+            )
 
     hint_pct = _pct(sum(1 for a in answered if a.hint_used), len(answered))
     if hint_pct >= 50:
@@ -181,15 +188,25 @@ def build_report(db: Session, student: models.User, tz_offset_minutes: int = 0,
     won = [s for s in sessions if s.status == "victory"]
 
     mastery_rows = {m.topic: m for m in db.query(models.TopicMastery).filter_by(student_id=student.id)}
+    correct_by_topic: Dict[str, int] = defaultdict(int)
+    for a in answered:
+        if a.is_correct:
+            correct_by_topic[a.topic] += 1
+
     topics = []
+    raw_mastery: Dict[str, float] = {}  # stored values, used for every decision below
     for boss in BOSSES:
         row = mastery_rows.get(boss["topic"])
         started = row is not None and row.attempts_count > 0
+        if started:
+            raw_mastery[boss["topic"]] = row.p_mastery
         topics.append(schemas.TopicMasteryOut(
             topic=boss["topic"],
             label=boss["label"],
-            mastery_pct=round(row.p_mastery * 100) if started else None,
+            mastery_pct=display_pct(row.p_mastery) if started else None,
+            mastery_band=mastery_band(row.p_mastery) if started else None,
             questions_answered=row.attempts_count if row else 0,
+            correct_answers=correct_by_topic[boss["topic"]],
         ))
 
     daily = _daily(answered, today, shift)
@@ -228,12 +245,12 @@ def build_report(db: Session, student: models.User, tz_offset_minutes: int = 0,
         total_bosses=len(BOSSES),
         topic_mastery=topics,
         needs_practice=sorted(
-            [t for t in topics if t.mastery_pct is not None and t.mastery_pct < NEEDS_PRACTICE_BELOW],
-            key=lambda t: t.mastery_pct,
+            [t for t in topics if t.topic in raw_mastery and raw_mastery[t.topic] < EASY_BELOW],
+            key=lambda t: raw_mastery[t.topic],
         ),
         daily=daily,
         mastery_history=_mastery_history(answered, shift),
-        observations=_observations(answered, topics, daily),
+        observations=_observations(answered, topics, raw_mastery, daily),
         badges=_badges(total, sessions),
         recent_attempts=recent,
         attention=schemas.AttentionOut(

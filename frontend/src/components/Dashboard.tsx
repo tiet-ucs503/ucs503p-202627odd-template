@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Target, Trophy, Clock, Zap, AlertTriangle, CheckCircle2, XCircle, KeyRound } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import { api, reportPath, StudentReport } from '@/lib/api';
+import { bandInfo, formatMastery } from '@/lib/mastery';
 import { useGame } from '@/context/GameContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -170,13 +171,14 @@ export default function Dashboard({ setView }: { setView: (view: string) => void
                     <div key={t.topic}>
                       <div className="flex justify-between text-sm mb-1.5">
                         <span className="font-medium text-gray-300">{t.label}</span>
-                        <span className="text-gray-400 font-mono">{t.mastery_pct === null ? 'Not started' : `${t.mastery_pct}%`}</span>
+                        <span className="text-gray-400 font-mono text-xs text-right">
+                          <span className={`font-bold ${bandInfo(t.mastery_band).text}`}>{bandInfo(t.mastery_band).label}</span>
+                          {t.mastery_pct !== null ? ` · est. ${formatMastery(t.mastery_pct)}` : ''}
+                        </span>
                       </div>
                       <div className="h-2 rounded-full bg-ink-950 overflow-hidden border border-white/5">
                         <div
-                          className={`h-full rounded-full transition-all duration-1000 ${
-                            (t.mastery_pct ?? 0) > 75 ? 'bg-green-500' : (t.mastery_pct ?? 0) >= 40 ? 'bg-yellow-500' : 'bg-red-500'
-                          }`}
+                          className={`h-full rounded-full transition-all duration-1000 ${bandInfo(t.mastery_band).bar}`}
                           style={{ width: `${t.mastery_pct ?? 0}%` }}
                         />
                       </div>

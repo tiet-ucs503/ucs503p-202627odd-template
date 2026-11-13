@@ -119,7 +119,8 @@ export interface AnswerResponse {
   correct_index: number;
   points_awarded: number;
   bonus_points: number;
-  mastery: number;
+  mastery: number; // raw stored value; do not show it
+  mastery_display_pct: number; // what to show: limited to 5-95
   session_status: SessionState['status'];
   session: SessionState;
   progress: Progress;
@@ -140,8 +141,10 @@ export interface LinkedStudent {
 export interface TopicMastery {
   topic: string;
   label: string;
-  mastery_pct: number | null;
+  mastery_pct: number | null; // display value, limited to 5-95; null = not started
+  mastery_band: 'needs_practice' | 'developing' | 'strong' | null;
   questions_answered: number;
+  correct_answers: number;
 }
 
 export interface RecentAttempt {

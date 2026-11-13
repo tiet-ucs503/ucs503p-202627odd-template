@@ -27,7 +27,7 @@ describe('learning progress', () => {
     expect(section.getByText('Questions answered per day')).toBeTruthy();
     expect(section.getByText('Accuracy on the days practised')).toBeTruthy();
     expect(section.getByText('Topics that need practice')).toBeTruthy();
-    expect(section.getByText('Geometry (Area & Perimeter) (mastery 20%)')).toBeTruthy();
+    expect(section.getByText(/Geometry \(Area & Perimeter\): 1 of 5 correct so far \(estimated mastery 5% or less\)/)).toBeTruthy();
     expect(section.getByText('Practised on 2 of the last 7 days.')).toBeTruthy();
     expect(section.getByText('Green Goblin defeated')).toBeTruthy();
     expect(section.getByText(/Not written by AI/)).toBeTruthy();
@@ -37,6 +37,27 @@ describe('learning progress', () => {
     render(<StudentReportView report={activeReport()} />);
     expect(learning().getByText('Show these numbers as a table')).toBeTruthy();
     expect(learning().getByText('4.5 min')).toBeTruthy();
+  });
+});
+
+describe('how mastery is shown', () => {
+  it('puts the level in words first, with a limited percentage and the plain record', () => {
+    render(<StudentReportView report={activeReport()} />);
+    const section = learning();
+    expect(section.getByText('Strong')).toBeTruthy();
+    expect(section.getByText('Needs practice')).toBeTruthy();
+    expect(section.getByText('est. 95% or more')).toBeTruthy();
+    expect(section.getByText('est. 5% or less')).toBeTruthy();
+    expect(section.getByText(/Answers so far: 8 of 10 correct/)).toBeTruthy();
+    expect(section.getByText(/Answers so far: 1 of 5 correct/)).toBeTruthy();
+    expect(section.getByText(/never shown below 5% or above 95%/)).toBeTruthy();
+  });
+
+  it('never prints a mastery percentage outside 5 to 95', () => {
+    render(<StudentReportView report={activeReport()} />);
+    const text = screen.getByRole('region', { name: /learning progress/i }).textContent ?? '';
+    expect(text).not.toMatch(/mastery (?:[0-4]|9[6-9]|100)%/i);
+    expect(text).not.toMatch(/est\. (?:[0-4]|9[6-9]|100)%/i);
   });
 });
 

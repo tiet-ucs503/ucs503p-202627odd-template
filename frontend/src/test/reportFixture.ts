@@ -28,7 +28,9 @@ export function emptyReport(overrides: Partial<StudentReport> = {}): StudentRepo
     student_id: 5, student_name: 'Asha', is_demo: false, points: 0, level: 1, last_active: null,
     questions_answered: 0, correct_answers: 0, accuracy_pct: null, practice_minutes: 0,
     missions_played: 0, missions_won: 0, bosses_defeated: 0, total_bosses: 6,
-    topic_mastery: TOPICS.map(([topic, label]) => ({ topic, label, mastery_pct: null, questions_answered: 0 })),
+    topic_mastery: TOPICS.map(([topic, label]) => ({
+      topic, label, mastery_pct: null, mastery_band: null, questions_answered: 0, correct_answers: 0,
+    })),
     needs_practice: [], daily: emptyDaily(), mastery_history: [], observations: [], badges: [],
     recent_attempts: [],
     attention: { measured_questions: 0, total_questions: 0, avg_on_screen_pct: null },
@@ -48,15 +50,21 @@ export function activeReport(overrides: Partial<StudentReport> = {}): StudentRep
     questions_answered: 15, correct_answers: 9, accuracy_pct: 60, practice_minutes: 7,
     missions_played: 2, missions_won: 1, bosses_defeated: 1,
     topic_mastery: base.topic_mastery.map((t) =>
-      t.topic === 'linear_equations' ? { ...t, mastery_pct: 82, questions_answered: 10 }
-        : t.topic === 'area_perimeter' ? { ...t, mastery_pct: 20, questions_answered: 5 } : t),
-    needs_practice: [{ topic: 'area_perimeter', label: 'Geometry (Area & Perimeter)', mastery_pct: 20, questions_answered: 5 }],
+      t.topic === 'linear_equations'
+        ? { ...t, mastery_pct: 95, mastery_band: 'strong' as const, questions_answered: 10, correct_answers: 8 }
+        : t.topic === 'area_perimeter'
+          ? { ...t, mastery_pct: 5, mastery_band: 'needs_practice' as const, questions_answered: 5, correct_answers: 1 }
+          : t),
+    needs_practice: [{
+      topic: 'area_perimeter', label: 'Geometry (Area & Perimeter)', mastery_pct: 5,
+      mastery_band: 'needs_practice', questions_answered: 5, correct_answers: 1,
+    }],
     daily,
     mastery_history: [
-      { topic: 'linear_equations', label: 'Algebra (Linear Equations)', points: [{ date: isoDay(2), mastery_pct: 82 }] },
-      { topic: 'area_perimeter', label: 'Geometry (Area & Perimeter)', points: [{ date: isoDay(0), mastery_pct: 20 }] },
+      { topic: 'linear_equations', label: 'Algebra (Linear Equations)', points: [{ date: isoDay(2), mastery_pct: 95 }] },
+      { topic: 'area_perimeter', label: 'Geometry (Area & Perimeter)', points: [{ date: isoDay(0), mastery_pct: 5 }] },
     ],
-    observations: ['Practised on 2 of the last 7 days.', 'Algebra (Linear Equations) is a strength (mastery 82%).'],
+    observations: ['Practised on 2 of the last 7 days.', 'Algebra (Linear Equations) is a strength (estimated mastery 95% or more).'],
     badges: [{ id: 'defeated-goblin', label: 'Green Goblin defeated', description: 'Won a mission on Algebra (Linear Equations).' }],
     recent_attempts: [{
       id: 1, boss_name: 'Doctor Octopus', topic_label: 'Geometry (Area & Perimeter)', difficulty: 'easy',

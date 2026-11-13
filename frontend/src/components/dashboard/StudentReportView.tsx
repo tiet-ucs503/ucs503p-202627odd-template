@@ -2,6 +2,7 @@ import { Target, Clock, Eye, Award, CheckCircle2, XCircle, Zap, BookOpen, HelpCi
 import type { StudentReport } from '@/lib/api';
 import TrendCharts from '@/components/dashboard/TrendCharts';
 import { formatDay } from '@/lib/dates';
+import { bandInfo, formatMastery } from '@/lib/mastery';
 
 // One student's report, as seen by a linked parent or teacher.
 //
@@ -28,13 +29,6 @@ function Kpi({ label, value, note, icon: Icon, color }: { label: string; value: 
       <div className="text-[11px] text-gray-400">{note}</div>
     </div>
   );
-}
-
-function masteryLevel(pct: number | null): { label: string; bar: string; text: string } {
-  if (pct === null) return { label: 'Not started', bar: 'bg-transparent', text: 'text-gray-500' };
-  if (pct > 75) return { label: 'Strong', bar: 'bg-green-500', text: 'text-green-400' };
-  if (pct >= 40) return { label: 'Developing', bar: 'bg-blue-500', text: 'text-blue-300' };
-  return { label: 'Needs practice', bar: 'bg-amber-500', text: 'text-amber-400' };
 }
 
 export default function StudentReportView({ report: r }: { report: StudentReport }) {
@@ -91,12 +85,13 @@ export default function StudentReportView({ report: r }: { report: StudentReport
         <div className={`${panel} mb-8`}>
           <h3 className={`${sectionTitle} mb-1`}>Mastery by topic</h3>
           <p className="text-xs text-gray-400 mb-5 leading-relaxed">
-            An estimate of how well each topic is understood. It goes up with correct answers and down with
-            incorrect ones, and depends on nothing else.
+            The level in words is an estimate of how well each topic is understood. It goes up with correct
+            answers and down with incorrect ones, and depends on nothing else. The percentage is a rough estimate,
+            never shown below 5% or above 95%; the count of correct answers beside it is the plain record.
           </p>
           <div className="grid md:grid-cols-2 gap-4">
             {r.topic_mastery.map((t) => {
-              const level = masteryLevel(t.mastery_pct);
+              const level = bandInfo(t.mastery_band);
               const points = history[t.topic] ?? [];
               const first = points[0];
               return (
@@ -105,16 +100,22 @@ export default function StudentReportView({ report: r }: { report: StudentReport
                     <span className="font-bold text-gray-200">{t.label}</span>
                     <span className="flex items-center gap-2 shrink-0">
                       <span className={`font-mono font-bold ${level.text}`}>{level.label}</span>
-                      {t.mastery_pct !== null && <span className="font-mono font-bold text-white">{t.mastery_pct}%</span>}
+                      {t.mastery_pct !== null && (
+                        <span className="font-mono text-gray-300" title="An estimate. It is never shown below 5% or above 95%.">
+                          est. {formatMastery(t.mastery_pct)}
+                        </span>
+                      )}
                     </span>
                   </div>
                   <div className="h-2 bg-black/60 rounded-full overflow-hidden border border-white/10">
                     <div className={`h-full rounded-full ${level.bar}`} style={{ width: `${t.mastery_pct ?? 0}%` }} />
                   </div>
                   <div className="text-[10px] text-gray-500 mt-1">
-                    {t.questions_answered} questions answered
+                    {t.questions_answered === 0
+                      ? 'No answers yet'
+                      : `Answers so far: ${t.correct_answers} of ${t.questions_answered} correct`}
                     {points.length > 1 && t.mastery_pct !== null
-                      ? ` · was ${first.mastery_pct}% on ${formatDay(first.date)}, now ${t.mastery_pct}%`
+                      ? ` · estimate was ${formatMastery(first.mastery_pct)} on ${formatDay(first.date)}, now ${formatMastery(t.mastery_pct)}`
                       : ''}
                   </div>
                 </div>
@@ -127,7 +128,10 @@ export default function StudentReportView({ report: r }: { report: StudentReport
               <div className="text-sm font-bold text-amber-300 mb-1">Topics that need practice</div>
               <ul className="text-sm text-gray-200 list-disc list-inside space-y-0.5">
                 {r.needs_practice.map((t) => (
-                  <li key={t.topic}>{t.label} (mastery {t.mastery_pct}%)</li>
+                  <li key={t.topic}>
+                    {t.label}: {t.correct_answers} of {t.questions_answered} correct so far
+                    {t.mastery_pct !== null ? ` (estimated mastery ${formatMastery(t.mastery_pct)})` : ''}
+                  </li>
                 ))}
               </ul>
             </div>
