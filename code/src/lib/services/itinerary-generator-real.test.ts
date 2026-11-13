@@ -181,3 +181,30 @@ describe("when the places service cannot help", () => {
     expect(JSON.stringify(itinerary)).not.toMatch(/Local lunch|Dinner in the city centre/);
   });
 });
+
+describe("hotel nights", () => {
+  const nightsOf = async (input: TripDraftInput, cityPlan: CityPlan) => {
+    const itinerary = await generateItinerary(input, cityPlan, undefined, new RatedPlacesProvider(results()));
+    return itinerary.cities.map((c) => c.hotel.nights);
+  };
+
+  it("charges no night in the last city when the trip ends there the same day it arrives", async () => {
+    const threeDays = { ...draft, endDate: "2027-03-03" };
+    const twoCities = plan([
+      { name: "Testville", days: 2 },
+      { name: "Otherton", days: 1 },
+    ]);
+    expect(await nightsOf(threeDays, twoCities)).toEqual([2, 0]);
+  });
+
+  it("charges no night for a one-day trip", async () => {
+    const oneDay = { ...draft, endDate: "2027-03-01" };
+    expect(await nightsOf(oneDay, plan([{ name: "Testville", days: 1 }]))).toEqual([0]);
+  });
+
+  it("charges one night fewer than the days in total", async () => {
+    const threeDays = { ...draft, endDate: "2027-03-03" };
+    const nights = await nightsOf(threeDays, plan([{ name: "Testville", days: 3 }]));
+    expect(nights).toEqual([2]);
+  });
+});

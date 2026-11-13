@@ -28,6 +28,17 @@ export function HotelCard({
 }) {
   const [editing, setEditing] = useState(false);
   const total = city.hotel.pricePerNight * city.hotel.nights;
+  const nights = city.hotel.nights;
+
+  // The trip ends the day it reaches this city, so there is nothing to book. The
+  // id stays so a map click on this city's hotel still has somewhere to scroll.
+  if (nights === 0) {
+    return (
+      <p id={`hotel-${city.id}`} className={cn("scroll-mt-24 text-xs text-zinc-500", className)}>
+        No overnight stay in {city.name}.
+      </p>
+    );
+  }
 
   return (
     <>
@@ -54,14 +65,14 @@ export function HotelCard({
           </span>
           <span className="text-xs text-zinc-500">
             {formatMoney(city.hotel.pricePerNight, currency)}/night
-            {city.hotel.priceIsEstimate !== false ? " (est.)" : ""} · {city.hotel.nights} nights · {formatMoney(total, currency)}
+            {city.hotel.priceIsEstimate !== false ? " (est.)" : ""} · {nights} {nights === 1 ? "night" : "nights"} · {formatMoney(total, currency)}
             {city.hotel.isDemoData ? " · not verified" : ""}
           </span>
         </span>
         <span className="sr-only">Edit hotel in {city.name}</span>
       </button>
 
-      <HotelEditorDialog open={editing} onOpenChange={setEditing} hotel={city.hotel} onSave={onEdit} />
+      <HotelEditorDialog open={editing} onOpenChange={setEditing} hotel={city.hotel} maxNights={city.dayCount} onSave={onEdit} />
     </>
   );
 }
