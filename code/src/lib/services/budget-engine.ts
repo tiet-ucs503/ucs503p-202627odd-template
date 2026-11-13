@@ -1,5 +1,6 @@
 import type { BudgetBreakdown, BudgetCategory, SavingsSuggestion } from "@/types/budget";
 import type { City, TripDay } from "@/types/itinerary";
+import { fromInr } from "@/lib/fx";
 
 /**
  * Pure functions that turn an itinerary (cities + days + activities) into a
@@ -8,6 +9,12 @@ import type { City, TripDay } from "@/types/itinerary";
  * Nothing here touches Firestore or React; the roadmap and budget UI call
  * these after every edit so the numbers stay in lockstep with the itinerary.
  */
+
+// These three numbers are written in rupees and converted to the trip's currency
+// when they are used, so a USD, EUR or GBP trip gets sensible values too.
+const DAILY_TRANSPORT_INR = 500;
+const MIN_BUFFER_INR = 3_000;
+const PRICEY_ACTIVITY_INR = 1_500;
 
 const ACTIVITY_CATEGORY_TO_BUDGET: Record<string, BudgetCategory> = {
   food: "food",
@@ -53,7 +60,7 @@ export function computeBudgetBreakdown(input: ComputeBudgetInput): BudgetBreakdo
     }
     // A small daily allowance for local transport (taxis, tuk-tuks, metro)
     // that isn't tied to any single itinerary line item.
-    categories.transport += 500;
+    categories.transport += fromInr(DAILY_TRANSPORT_INR, input.currency);
   }
 
   const subtotal =
@@ -65,7 +72,7 @@ export function computeBudgetBreakdown(input: ComputeBudgetInput): BudgetBreakdo
     categories.shopping;
 
   categories.misc = Math.round(subtotal * 0.04);
-  categories.buffer = Math.round(Math.max(input.userBudget * 0.05, 3_000));
+  categories.buffer = Math.round(Math.max(input.userBudget * 0.05, fromInr(MIN_BUFFER_INR, input.currency)));
 
   for (const key of Object.keys(categories) as BudgetCategory[]) {
     categories[key] = Math.round(categories[key]);
@@ -115,7 +122,7 @@ export function buildSavingsSuggestions(
 
   const allActivities = days.flatMap((d) => d.activities.map((a) => ({ dayId: d.id, activity: a })));
   const nonEssential = allActivities
-    .filter(({ activity }) => activity.category !== "food" && activity.estimatedCost > 1_500)
+    .filter(({ activity }) => activity.category !== "food" && activity.estimatedCost > fromInr(PRICEY_ACTIVITY_INR, budget.currency))
     .sort((a, b) => b.activity.estimatedCost - a.activity.estimatedCost)[0];
   if (nonEssential) {
     const savings = Math.round(nonEssential.activity.estimatedCost * 0.6);
