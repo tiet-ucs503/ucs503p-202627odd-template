@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Target, Trophy, Clock, Zap, AlertTriangle, CheckCircle2, XCircle, KeyRound } from 'lucide-react';
 import Reveal from '@/components/Reveal';
-import { api, StudentReport } from '@/lib/api';
+import { api, reportPath, StudentReport } from '@/lib/api';
 import { useGame } from '@/context/GameContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -23,7 +23,7 @@ export default function Dashboard({ setView }: { setView: (view: string) => void
   useEffect(() => {
     if (!user) return;
     refreshProgress();
-    api<StudentReport>(`/students/${user.id}/report`)
+    api<StudentReport>(reportPath(user.id))
       .then(setReport)
       .catch((err) => setError(err instanceof Error ? err.message : 'Could not load your stats.'));
   }, [user, refreshProgress]);

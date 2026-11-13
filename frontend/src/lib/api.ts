@@ -132,6 +132,9 @@ export interface LinkedStudent {
   level: number;
   points: number;
   is_demo: boolean;
+  questions_answered: number;
+  accuracy_pct: number | null;
+  last_active: string | null;
 }
 
 export interface TopicMastery {
@@ -145,6 +148,7 @@ export interface RecentAttempt {
   id: number;
   boss_name: string;
   topic_label: string;
+  difficulty: string;
   is_correct: boolean;
   response_time_s: number;
   hint_used: boolean;
@@ -153,12 +157,36 @@ export interface RecentAttempt {
   attention_label: string | null;
 }
 
+/** One calendar day. Days without practice have zero questions and null accuracy. */
+export interface DailyPoint {
+  date: string; // YYYY-MM-DD
+  questions: number;
+  correct: number;
+  accuracy_pct: number | null;
+  practice_minutes: number;
+  attention_measured: number;
+  avg_on_screen_pct: number | null;
+}
+
+export interface TopicHistory {
+  topic: string;
+  label: string;
+  points: { date: string; mastery_pct: number }[];
+}
+
+export interface Badge {
+  id: string;
+  label: string;
+  description: string;
+}
+
 export interface StudentReport {
   student_id: number;
   student_name: string;
   is_demo: boolean;
   points: number;
   level: number;
+  last_active: string | null;
   questions_answered: number;
   correct_answers: number;
   accuracy_pct: number | null;
@@ -168,10 +196,20 @@ export interface StudentReport {
   bosses_defeated: number;
   total_bosses: number;
   topic_mastery: TopicMastery[];
+  needs_practice: TopicMastery[];
+  daily: DailyPoint[];
+  mastery_history: TopicHistory[];
+  observations: string[];
+  badges: Badge[];
   recent_attempts: RecentAttempt[];
   attention: {
     measured_questions: number;
     total_questions: number;
     avg_on_screen_pct: number | null;
   };
+}
+
+/** Report URL including the viewer's clock offset, so daily trends follow their calendar day. */
+export function reportPath(studentId: number): string {
+  return `/students/${studentId}/report?tz_offset_minutes=${-new Date().getTimezoneOffset()}`;
 }

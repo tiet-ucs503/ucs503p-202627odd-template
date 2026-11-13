@@ -8,15 +8,9 @@ import models
 import schemas
 from database import get_db
 from deps import require_guardian
+from services.report_builder import summary_for_list
 
 router = APIRouter(prefix="/guardians", tags=["guardians"])
-
-
-def _linked(student: models.User) -> schemas.LinkedStudent:
-    return schemas.LinkedStudent(
-        id=student.id, name=student.name, level=student.level,
-        points=student.points, is_demo=student.is_demo,
-    )
 
 
 @router.post("/links", response_model=schemas.LinkedStudent, status_code=201)
@@ -45,7 +39,7 @@ def link_student(
     if existing is None:
         db.add(models.GuardianLink(guardian_id=guardian.id, student_id=student.id))
         db.commit()
-    return _linked(student)
+    return summary_for_list(db, student)
 
 
 @router.get("/students", response_model=List[schemas.LinkedStudent])
@@ -60,4 +54,4 @@ def my_students(guardian: models.User = Depends(require_guardian), db: Session =
         .order_by(models.User.name)
         .all()
     )
-    return [_linked(s) for s in students]
+    return [summary_for_list(db, s) for s in students]

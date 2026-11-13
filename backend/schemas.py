@@ -1,5 +1,5 @@
 """Request and response shapes. Requests reject unknown fields (extra="forbid")."""
-from datetime import datetime
+from datetime import date, datetime
 from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -126,6 +126,9 @@ class LinkedStudent(BaseModel):
     level: int
     points: int
     is_demo: bool
+    questions_answered: int = 0
+    accuracy_pct: Optional[int] = None  # None when no questions answered
+    last_active: Optional[datetime] = None
 
 
 # ── Reports ──────────────────────────────────────────────────────────────────
@@ -140,6 +143,7 @@ class RecentAttemptOut(BaseModel):
     id: int
     boss_name: str
     topic_label: str
+    difficulty: str
     is_correct: bool
     response_time_s: float
     hint_used: bool
@@ -154,12 +158,42 @@ class AttentionOut(BaseModel):
     avg_on_screen_pct: Optional[int] = None  # None when nothing was measured
 
 
+class DailyPoint(BaseModel):
+    """One calendar day. Days without practice are included with zero questions."""
+
+    date: date
+    questions: int
+    correct: int
+    accuracy_pct: Optional[int] = None  # None when nothing was answered that day
+    practice_minutes: float
+    attention_measured: int  # questions that day with a camera estimate
+    avg_on_screen_pct: Optional[int] = None  # None when nothing was measured that day
+
+
+class MasteryPoint(BaseModel):
+    date: date
+    mastery_pct: int
+
+
+class TopicHistory(BaseModel):
+    topic: str
+    label: str
+    points: List[MasteryPoint]
+
+
+class Badge(BaseModel):
+    id: str
+    label: str
+    description: str
+
+
 class StudentReport(BaseModel):
     student_id: int
     student_name: str
     is_demo: bool
     points: int
     level: int
+    last_active: Optional[datetime] = None
     questions_answered: int
     correct_answers: int
     accuracy_pct: Optional[int] = None  # None when no questions answered
@@ -169,5 +203,10 @@ class StudentReport(BaseModel):
     bosses_defeated: int
     total_bosses: int
     topic_mastery: List[TopicMasteryOut]
+    needs_practice: List[TopicMasteryOut]  # started topics with low mastery, weakest first
+    daily: List[DailyPoint]  # the last 14 days, oldest first
+    mastery_history: List[TopicHistory]
+    observations: List[str]  # rule-based statements; empty until there is enough data
+    badges: List[Badge]  # earned from stored missions and answers only
     recent_attempts: List[RecentAttemptOut]
     attention: AttentionOut
