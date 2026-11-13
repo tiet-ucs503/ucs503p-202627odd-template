@@ -18,6 +18,7 @@ export function toAgentTrip(trip: Trip): AgentTrip {
     cities: trip.cities,
     days: trip.days,
     budget: trip.budget,
+    ...(trip.flights !== undefined ? { flights: trip.flights } : {}),
   };
 }
 

@@ -53,7 +53,15 @@ function settle(message: TripAgentChatMessage, status: ChangeStatus): TripAgentC
 
 /** What `onApply` is asked to write back to restore a trip as it was. */
 function snapshotOf(trip: Trip): TripPatch {
-  return { cities: trip.cities, days: trip.days, budget: trip.budget, endDate: trip.endDate, dayCount: trip.dayCount };
+  return {
+    cities: trip.cities,
+    days: trip.days,
+    budget: trip.budget,
+    endDate: trip.endDate,
+    dayCount: trip.dayCount,
+    // Only when the trip has one: a trip saved before quotes existed has none to put back.
+    ...(trip.flights !== undefined ? { flights: trip.flights } : {}),
+  };
 }
 
 interface Undo {

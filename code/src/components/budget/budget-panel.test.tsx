@@ -1,7 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { BudgetPanel } from "@/components/budget/budget-panel";
+import { quoteFlights } from "@/lib/flights/quote";
+import { fromInr } from "@/lib/fx";
 import { buildSavingsSuggestions } from "@/lib/services/budget-engine";
+import type { FlightQuote } from "@/types/flights";
 import { buildThailandTrip } from "@/test-support/trip-fixture";
 import type { AgentTrip } from "@/types/trip-agent";
 
@@ -63,5 +66,56 @@ describe("BudgetPanel", () => {
   it("calls a saving an estimate, not a promise", () => {
     renderPanel();
     expect(screen.getAllByText(/Est\. saving/).length).toBeGreaterThan(0);
+  });
+});
+
+describe("the flight quote", () => {
+  const quote = quoteFlights({
+    origin: "BOM",
+    destination: "Singapore",
+    startDate: "2027-03-08",
+    travelers: 2,
+    now: new Date("2026-11-13T12:00:00Z"),
+  })!;
+  const renderWith = (flights: FlightQuote | null, currency = "INR") =>
+    render(
+      <BudgetPanel budget={{ ...trip.budget, currency }} flights={flights} suggestions={[]} onAskTravis={vi.fn()} />,
+    );
+
+  it("shows the route, the range per person and that it is an estimate", () => {
+    renderWith(quote);
+    expect(screen.getByText("Mumbai (BOM) → Singapore (SIN), return")).toBeInTheDocument();
+    const range = screen.getByTestId("flight-range");
+    expect(range).toHaveTextContent(`₹${quote.perTravelerInr.low.toLocaleString("en-IN")}`);
+    expect(range).toHaveTextContent(`₹${quote.perTravelerInr.high.toLocaleString("en-IN")}`);
+    expect(range).toHaveTextContent(`for 2`);
+    expect(screen.getByText(quote.basis)).toBeInTheDocument();
+    expect(screen.getByText(/not a live fare/)).toBeInTheDocument();
+  });
+
+  it("shows the range in the trip's currency", () => {
+    renderWith(quote, "USD");
+    expect(screen.getByTestId("flight-range")).toHaveTextContent(
+      `$${fromInr(quote.perTravelerInr.typical, "USD").toLocaleString("en-IN")}`,
+    );
+  });
+
+  it("explains a zero fare instead of showing a route", () => {
+    const home = quoteFlights({
+      origin: "DEL",
+      destination: "India",
+      firstCity: "Delhi",
+      startDate: "2027-03-08",
+      travelers: 2,
+      now: new Date("2026-11-13T12:00:00Z"),
+    })!;
+    renderWith(home);
+    expect(screen.queryByTestId("flight-range")).not.toBeInTheDocument();
+    expect(screen.getByText(/no flight to pay for/)).toBeInTheDocument();
+  });
+
+  it("shows nothing for a trip without a quote", () => {
+    renderWith(null);
+    expect(screen.queryByText(/not a live fare/)).not.toBeInTheDocument();
   });
 });

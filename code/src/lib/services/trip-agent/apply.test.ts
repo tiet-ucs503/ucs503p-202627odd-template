@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
+import { fromInr } from "@/lib/fx";
 import { computeBudgetBreakdown } from "@/lib/services/budget-engine";
 import { buildChangeSet, nextFreeTime, queryWords, statsOf } from "@/lib/services/trip-agent/apply";
 import { tripVersion } from "@/lib/services/trip-agent/version";
@@ -416,5 +417,79 @@ describe("statsOf", () => {
     expect(stats.cityDays.reduce((s, c) => s + c.days, 0)).toBe(trip.days.length);
     expect(stats.total).toBe(trip.budget.total);
     expect(Array.isArray(stats.overfullDays)).toBe(true);
+  });
+});
+
+describe("flights when an edit changes where the trip starts", () => {
+  const phuketFirst: EditOperation = {
+    type: "set_cities",
+    cities: [
+      { name: "Phuket", days: 4 },
+      { name: "Bangkok", days: 5 },
+    ],
+  };
+
+  it("starts from a trip that carries a quote", () => {
+    expect(trip.flights).toBeTruthy();
+    expect(trip.flights!.arrival?.code).toBe("BKK");
+  });
+
+  it("re-prices the fare when the first city, and so the arrival airport, changes", async () => {
+    const change = await okChange([phuketFirst]);
+    const quote = change.patch.flights!;
+
+    expect(quote.arrival?.code).toBe("HKT");
+    expect(quote.totalInr).not.toBe(trip.flights!.totalInr);
+    // The budget carries the new fare, not the old one.
+    expect(change.patch.budget.categories.flights).toBe(fromInr(quote.totalInr, trip.currency));
+    expect(change.patch.budget.categories.flights).not.toBe(trip.budget.categories.flights);
+    expect(change.lines.some((l) => /^Flights re-estimated \(arriving at Phuket\)/.test(l))).toBe(true);
+  });
+
+  it("keeps the origin and the quote day, so only the airport moves the price", async () => {
+    const change = await okChange([phuketFirst]);
+    expect(change.patch.flights!.origin).toEqual(trip.flights!.origin);
+    expect(change.patch.flights!.originAssumed).toBe(trip.flights!.originAssumed);
+    expect(change.patch.flights!.quotedOn).toBe(trip.flights!.quotedOn);
+  });
+
+  it("leaves the fare alone when the first city stays the same", async () => {
+    const change = await okChange([
+      {
+        type: "set_cities",
+        cities: [
+          { name: "Bangkok", days: 3 },
+          { name: "Phuket", days: 6 },
+        ],
+      },
+    ]);
+    expect(change.patch.flights).toEqual(trip.flights);
+    expect(change.patch.budget.categories.flights).toBe(trip.budget.categories.flights);
+    expect(change.lines.some((l) => /Flights re-estimated/.test(l))).toBe(false);
+  });
+
+  it("does not touch the flights for an edit that cannot change them", async () => {
+    const change = await okChange([{ type: "remove_activity", activityId: firstDay().activities[0].id }]);
+    expect("flights" in change.patch).toBe(false);
+    expect(change.patch.budget.categories.flights).toBe(trip.budget.categories.flights);
+  });
+
+  it("leaves a trip saved without a quote exactly as it was", async () => {
+    const { flights: _quote, ...legacy } = trip;
+    void _quote;
+    const change = await okChange([phuketFirst], legacy);
+    expect("flights" in change.patch).toBe(false);
+    expect(change.patch.budget.categories.flights).toBe(trip.budget.categories.flights);
+  });
+
+  it("leaves a trip with flights switched off at zero", async () => {
+    const off: AgentTrip = {
+      ...trip,
+      flights: null,
+      budget: { ...trip.budget, categories: { ...trip.budget.categories, flights: 0 } },
+    };
+    const change = await okChange([phuketFirst], off);
+    expect("flights" in change.patch).toBe(false);
+    expect(change.patch.budget.categories.flights).toBe(0);
   });
 });

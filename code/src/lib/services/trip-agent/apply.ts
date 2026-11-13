@@ -1,3 +1,5 @@
+import { flightDraftFields } from "@/lib/flights/draft";
+import { fromInr } from "@/lib/fx";
 import { computeBudgetBreakdown } from "@/lib/services/budget-engine";
 import { analyzeTrip } from "@/lib/services/feasibility";
 import { generateItinerary, placeToActivity, placeToHotel, searchPlaces } from "@/lib/services/itinerary-generator";
@@ -7,6 +9,7 @@ import { splitDaysAcrossCities, validateCityAllocation } from "@/lib/services/pl
 import { normalise } from "@/lib/countries";
 import { MAX_TRIP_DAYS } from "@/lib/validation/trip-agent";
 import { addDaysIso, formatDateShort, formatMoney } from "@/lib/utils";
+import type { FlightQuote } from "@/types/flights";
 import type { Activity, City, TripDay } from "@/types/itinerary";
 import type { Place, PlaceType } from "@/types/place";
 import type { Trip } from "@/types/trip";
@@ -76,15 +79,20 @@ export function statsOf(trip: AgentTrip): TripStats {
   };
 }
 
-function recomputeBudget(base: AgentTrip, cities: City[], days: TripDay[]) {
+/**
+ * `flights` is the re-priced quote when the edit moved the trip's start;
+ * `undefined` means the flights stay exactly as saved, which is what almost
+ * every edit wants (a stop or a hotel doesn't change the fare).
+ */
+function recomputeBudget(base: AgentTrip, cities: City[], days: TripDay[], flights?: FlightQuote | null) {
   return computeBudgetBreakdown({
     cities,
     days,
     travelers: base.travelers,
     currency: base.currency,
     userBudget: base.budget.total,
-    // The flight figure is not something an edit changes.
-    flightCostTotal: base.budget.categories.flights,
+    flightCostTotal:
+      flights === undefined ? base.budget.categories.flights : flights ? fromInr(flights.totalInr, base.currency) : 0,
   });
 }
 
@@ -101,6 +109,8 @@ interface Working {
   days: TripDay[];
   endDate: string;
   dayCount: number;
+  /** Set only when the trip's flights were re-priced. */
+  flights?: FlightQuote | null;
   lines: string[];
   warnings: string[];
   problems: string[];
@@ -236,6 +246,11 @@ async function applyStructure(
       travelers: trip.travelers,
       travelerType: trip.travelerType,
       preferences: trip.preferences,
+      // A trip that carries a quote is priced again with the same airport and
+      // quote day, so the fare moves only if the first city changed. A trip
+      // without one (saved before quotes existed, or flights left out) is not
+      // touched: there is nothing to keep consistent.
+      ...(trip.flights ? flightDraftFields(trip) : {}),
     },
     {
       destination: trip.destination,
@@ -252,6 +267,7 @@ async function applyStructure(
   w.days = itinerary.days;
   w.endDate = itinerary.endDate;
   w.dayCount = itinerary.dayCount;
+  if (trip.flights) w.flights = itinerary.flights ?? null;
   if (itinerary.days.some((d) => d.activities.some((a) => a.isDemoData))) w.usedUnverifiedPlace = true;
 
   // Say what moved, city by city.
@@ -391,8 +407,25 @@ export async function buildChangeSet(trip: AgentTrip, operations: EditOperation[
 
   if (w.lines.length === 0) return { ok: false, problems: ["That wouldn't change anything in the trip."] };
 
-  const budget = recomputeBudget(trip, w.cities, w.days);
-  const patch: TripPatch = { cities: w.cities, days: w.days, budget, endDate: w.endDate, dayCount: w.dayCount };
+  const budget = recomputeBudget(trip, w.cities, w.days, w.flights);
+  const patch: TripPatch = {
+    cities: w.cities,
+    days: w.days,
+    budget,
+    endDate: w.endDate,
+    dayCount: w.dayCount,
+    ...(w.flights !== undefined ? { flights: w.flights } : {}),
+  };
+
+  // Say so when the fare moved, so the new total is not a surprise.
+  const flightsBefore = trip.budget.categories.flights;
+  const flightsAfter = budget.categories.flights;
+  if (w.flights && flightsAfter !== flightsBefore) {
+    const where = w.flights.arrival ? `arriving at ${w.flights.arrival.city}` : "no flight needed";
+    w.lines.push(
+      `Flights re-estimated (${where}): ${formatMoney(flightsBefore, trip.currency)} → ${formatMoney(flightsAfter, trip.currency)}.`,
+    );
+  }
 
   const before = statsOf(trip);
   const after = statsOf({ ...trip, ...patch });

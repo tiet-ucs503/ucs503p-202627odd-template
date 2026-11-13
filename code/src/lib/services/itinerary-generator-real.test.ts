@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { quoteFlights } from "@/lib/flights/quote";
+import { fromInr } from "@/lib/fx";
 import { generateItinerary } from "@/lib/services/itinerary-generator";
 import { PlacesProviderError } from "@/lib/services/places/errors";
 import type { CityPlan } from "@/types/planning";
@@ -206,5 +208,64 @@ describe("hotel nights", () => {
     const threeDays = { ...draft, endDate: "2027-03-03" };
     const nights = await nightsOf(threeDays, plan([{ name: "Testville", days: 3 }]));
     expect(nights).toEqual([2]);
+  });
+});
+
+describe("flights in the budget", () => {
+  // Quoted as of a fixed day, so the fare doesn't depend on when the tests run.
+  const thailand: TripDraftInput = { ...draft, destination: "Thailand", origin: "BOM", quotedOn: "2026-11-13" };
+  const build = (input: TripDraftInput, cities = oneCity) =>
+    generateItinerary(input, cities, undefined, new RatedPlacesProvider(results()));
+
+  it("budgets the quoted fare for every traveller, and keeps the quote", async () => {
+    const itinerary = await build(thailand);
+    const expected = quoteFlights({
+      origin: "BOM",
+      destination: "Thailand",
+      firstCity: "Testville",
+      startDate: draft.startDate,
+      travelers: 2,
+      now: new Date("2026-11-13T12:00:00Z"),
+    })!;
+    expect(itinerary.flights).toEqual(expected);
+    expect(itinerary.flights?.quotedOn).toBe("2026-11-13");
+    expect(itinerary.budget.categories.flights).toBe(expected.totalInr);
+    expect(expected.totalInr).toBe(expected.perTravelerInr.typical * 2);
+  });
+
+  it("flies into the airport of the first city", async () => {
+    const itinerary = await build(
+      { ...thailand, destination: "Japan" },
+      plan([{ name: "Kyoto", days: 2 }, { name: "Tokyo", days: 2 }]),
+    );
+    expect(itinerary.flights?.arrival?.code).toBe("KIX");
+  });
+
+  it("prices a trip inside India as a domestic flight, or nothing when it starts at home", async () => {
+    const goa = await build({ ...thailand, destination: "India" }, plan([{ name: "Goa", days: 4 }]));
+    expect(goa.flights?.arrival?.code).toBe("GOI");
+    expect(goa.budget.categories.flights).toBeGreaterThan(10_000);
+
+    const home = await build({ ...thailand, destination: "India", origin: "DEL" }, plan([{ name: "Delhi", days: 4 }]));
+    expect(home.budget.categories.flights).toBe(0);
+    expect(home.flights?.basis).toMatch(/no flight/);
+  });
+
+  it("converts the fare into the trip's currency", async () => {
+    const inr = await build(thailand);
+    const usd = await build({ ...thailand, currency: "USD", budget: 1_200 });
+    expect(usd.budget.categories.flights).toBe(fromInr(inr.flights!.totalInr, "USD"));
+  });
+
+  it("charges nothing for flights when the traveller leaves them out", async () => {
+    const itinerary = await build({ ...thailand, includeFlights: false });
+    expect(itinerary.budget.categories.flights).toBe(0);
+    expect(itinerary.flights).toBeNull();
+  });
+
+  it("still includes flights when the choice was never made, as for trips saved earlier", async () => {
+    const itinerary = await build({ ...thailand, includeFlights: undefined, origin: undefined });
+    expect(itinerary.flights?.originAssumed).toBe(true);
+    expect(itinerary.budget.categories.flights).toBeGreaterThan(0);
   });
 });

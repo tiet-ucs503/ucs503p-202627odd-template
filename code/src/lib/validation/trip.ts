@@ -2,8 +2,16 @@ import { z } from "zod";
 import { latLngSchema, ratingSchema, sourceRefSchema } from "@/lib/validation/places";
 import { travelStyleSchema } from "@/lib/validation/shared";
 import { isSupportedCountry } from "@/lib/countries";
+import { isOriginAirport } from "@/lib/flights/airports";
 
 export { travelStyleSchema };
+
+/** A YYYY-MM-DD that is a real calendar day (`2027-02-30` is not). */
+const realIsoDay = (value: string) => {
+  const ms = Date.parse(`${value}T00:00:00Z`);
+  return !Number.isNaN(ms) && new Date(ms).toISOString().slice(0, 10) === value;
+};
+const quoteDaySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(realIsoDay, { message: "Not a real date." });
 
 /**
  * Zod schemas mirror the types in `@/types`. The itinerary generator's output
@@ -23,6 +31,9 @@ export const tripDraftInputSchema = z.object({
   travelers: z.number().int().min(1).max(20),
   travelerType: travelerTypeSchema,
   preferences: z.array(travelStyleSchema).min(1).max(8),
+  includeFlights: z.boolean().optional(),
+  origin: z.string().refine(isOriginAirport, { message: "Choose an airport from the list." }).optional(),
+  quotedOn: quoteDaySchema.optional(),
 });
 
 /**
@@ -126,6 +137,25 @@ export const budgetBreakdownSchema = z.object({
   categories: z.record(budgetCategorySchema, z.number().nonnegative()),
 });
 
+const quotedAirportSchema = z.object({ code: z.string().min(3).max(3), city: z.string().min(1) });
+
+export const flightQuoteSchema = z.object({
+  origin: quotedAirportSchema,
+  arrival: quotedAirportSchema.nullable(),
+  originAssumed: z.boolean(),
+  perTravelerInr: z.object({
+    low: z.number().nonnegative(),
+    typical: z.number().nonnegative(),
+    high: z.number().nonnegative(),
+  }),
+  travelers: z.number().int().positive(),
+  totalInr: z.number().nonnegative(),
+  quotedOn: quoteDaySchema,
+  daysAhead: z.number().int().nonnegative(),
+  confidence: z.enum(["route", "modelled"]),
+  basis: z.string(),
+});
+
 export const generatedItinerarySchema = z.object({
   destination: z.string(),
   title: z.string(),
@@ -136,6 +166,7 @@ export const generatedItinerarySchema = z.object({
   cities: z.array(citySchema).min(1),
   days: z.array(tripDaySchema).min(1),
   budget: budgetBreakdownSchema,
+  flights: flightQuoteSchema.nullable().optional(),
 });
 
 export type NewTripInputParsed = z.infer<typeof newTripInputSchema>;

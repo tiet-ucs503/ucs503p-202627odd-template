@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ACTIVITY_CATEGORY_ICON, type ActivityCategory } from "@/types/itinerary";
 import type { EditOperation } from "@/types/trip-agent";
 import { travelStyleSchema } from "@/lib/validation/shared";
-import { budgetBreakdownSchema, citySchema, travelerTypeSchema, tripDaySchema } from "@/lib/validation/trip";
+import { budgetBreakdownSchema, citySchema, flightQuoteSchema, travelerTypeSchema, tripDaySchema } from "@/lib/validation/trip";
 
 /**
  * The two boundaries of the trip agent: what the browser may send, and what a
@@ -34,6 +34,7 @@ export const agentTripSchema = z.object({
   cities: z.array(citySchema).min(1).max(12),
   days: z.array(tripDaySchema).min(1).max(120),
   budget: budgetBreakdownSchema,
+  flights: flightQuoteSchema.nullable().optional(),
 });
 
 export const tripAgentRequestSchema = z.object({

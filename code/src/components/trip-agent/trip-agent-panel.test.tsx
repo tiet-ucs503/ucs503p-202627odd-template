@@ -356,7 +356,16 @@ describe("undo", () => {
     await screen.findByText(/your trip is back as it was/i);
     expect(view.onApply).toHaveBeenCalledTimes(2);
     const restored = view.onApply.mock.calls[1][0] as TripPatch;
-    expect(restored).toEqual({ cities: trip.cities, days: trip.days, budget: trip.budget, endDate: trip.endDate, dayCount: trip.dayCount });
+    expect(restored).toEqual({
+      cities: trip.cities,
+      days: trip.days,
+      budget: trip.budget,
+      endDate: trip.endDate,
+      dayCount: trip.dayCount,
+      // The saved flight quote goes back too, so an undone city change can't leave a new fare behind.
+      flights: trip.flights,
+    });
+    expect(restored.flights).toBeTruthy();
   });
 
   it("is not offered once the traveller has edited the trip since, because it would erase that", async () => {

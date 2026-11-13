@@ -1,4 +1,5 @@
 import type { BudgetBreakdown } from "./budget";
+import type { FlightQuote } from "./flights";
 import type { ActivityCategory, City, TravelerType, TravelStyle, TripDay } from "./itinerary";
 
 /**
@@ -26,6 +27,11 @@ export interface AgentTrip {
   cities: City[];
   days: TripDay[];
   budget: BudgetBreakdown;
+  /**
+   * The saved flight quote, if the trip has one. Not shown to the model; our
+   * code re-prices it when an edit changes where the trip starts.
+   */
+  flights?: FlightQuote | null;
 }
 
 /**
@@ -53,6 +59,8 @@ export interface TripPatch {
   budget: BudgetBreakdown;
   endDate: string;
   dayCount: number;
+  /** Present only when the edit re-priced the flights; absent means they are left as saved. */
+  flights?: FlightQuote | null;
 }
 
 /** A few numbers that say what a change did, before and after. */

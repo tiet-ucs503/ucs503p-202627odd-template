@@ -1,7 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
-import { BudgetStep, DestinationStep, type WizardData } from "@/components/trips/wizard/steps";
+import {
+  BudgetStep,
+  DestinationStep,
+  ReviewStep,
+  flightsIncluded,
+  flightsReady,
+  type WizardData,
+} from "@/components/trips/wizard/steps";
 import { COUNTRIES } from "@/lib/countries";
 
 const EMPTY: WizardData = {
@@ -13,6 +20,8 @@ const EMPTY: WizardData = {
   travelerType: "couple",
   travelers: 2,
   preferences: [],
+  includeFlights: null,
+  flyingFrom: null,
 };
 
 function Harness({ initial = "" }: { initial?: string }) {
@@ -67,8 +76,16 @@ describe("DestinationStep", () => {
   });
 });
 
-function BudgetHarness({ currency, budget }: { currency: string; budget: string }) {
-  const [data, setData] = useState<WizardData>({ ...EMPTY, currency, budget });
+function BudgetHarness({
+  currency = "INR",
+  budget = "150000",
+  destination = "",
+}: {
+  currency?: string;
+  budget?: string;
+  destination?: string;
+}) {
+  const [data, setData] = useState<WizardData>({ ...EMPTY, currency, budget, destination });
   return (
     <BudgetStep data={data} setData={(patch) => setData((prev) => ({ ...prev, ...(typeof patch === "function" ? patch(prev) : patch) }))} />
   );
@@ -95,5 +112,81 @@ describe("BudgetStep rupee preview", () => {
     expect(screen.getByTestId("budget-inr")).toHaveTextContent("₹83,000");
     fireEvent.change(screen.getByLabelText("Currency"), { target: { value: "GBP" } });
     expect(screen.getByTestId("budget-inr")).toHaveTextContent("₹1,05,000");
+  });
+});
+
+describe("BudgetStep flights switch", () => {
+  const box = () => screen.getByRole("checkbox", { name: /include flights/i });
+
+  it("starts ticked for a trip abroad", () => {
+    render(<BudgetHarness destination="Thailand" />);
+    expect(box()).toBeChecked();
+  });
+
+  it("starts unticked for a trip inside India, which may well be a road trip", () => {
+    render(<BudgetHarness destination="India" />);
+    expect(box()).not.toBeChecked();
+  });
+
+  it("lets the traveller untick it abroad and tick it in India", () => {
+    const { unmount } = render(<BudgetHarness destination="Thailand" />);
+    fireEvent.click(box());
+    expect(box()).not.toBeChecked();
+    unmount();
+
+    render(<BudgetHarness destination="India" />);
+    fireEvent.click(box());
+    expect(box()).toBeChecked();
+  });
+});
+
+describe("flightsIncluded", () => {
+  it("follows the destination until the traveller chooses, then follows the choice", () => {
+    expect(flightsIncluded({ destination: "India", includeFlights: null })).toBe(false);
+    expect(flightsIncluded({ destination: "Japan", includeFlights: null })).toBe(true);
+    expect(flightsIncluded({ destination: "India", includeFlights: true })).toBe(true);
+    expect(flightsIncluded({ destination: "Japan", includeFlights: false })).toBe(false);
+  });
+});
+
+describe("BudgetStep flying from", () => {
+  const picker = () => screen.queryByRole("combobox", { name: /flying from/i });
+
+  it("asks where the traveller flies from only while flights are included", () => {
+    render(<BudgetHarness destination="Thailand" />);
+    expect(picker()).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox", { name: /include flights/i }));
+    expect(picker()).not.toBeInTheDocument();
+  });
+
+  it("offers Indian airports by city, and keeps the choice", () => {
+    render(<BudgetHarness destination="Thailand" />);
+    const select = picker() as HTMLSelectElement;
+    expect(screen.getByRole("option", { name: "Delhi (DEL)" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Chandigarh (IXC)" })).toBeInTheDocument();
+    // Leh is a place to fly to, not a starting point.
+    expect(screen.queryByRole("option", { name: /Leh/ })).not.toBeInTheDocument();
+    fireEvent.change(select, { target: { value: "BOM" } });
+    expect(select.value).toBe("BOM");
+  });
+});
+
+describe("flightsReady", () => {
+  it("needs an airport only when flights are included", () => {
+    expect(flightsReady({ destination: "Japan", includeFlights: null, flyingFrom: null })).toBe(false);
+    expect(flightsReady({ destination: "Japan", includeFlights: null, flyingFrom: "BLR" })).toBe(true);
+    expect(flightsReady({ destination: "Japan", includeFlights: null, flyingFrom: "IXL" })).toBe(false);
+    expect(flightsReady({ destination: "Japan", includeFlights: false, flyingFrom: null })).toBe(true);
+    expect(flightsReady({ destination: "India", includeFlights: null, flyingFrom: null })).toBe(true);
+  });
+});
+
+describe("ReviewStep flights", () => {
+  it("says where the flights are from, or that they are left out", () => {
+    const { unmount } = render(<ReviewStep data={{ ...EMPTY, destination: "Japan", flyingFrom: "CCU" }} />);
+    expect(screen.getByText("From Kolkata (estimate)")).toBeInTheDocument();
+    unmount();
+    render(<ReviewStep data={{ ...EMPTY, destination: "Japan", includeFlights: false }} />);
+    expect(screen.getByText("Not included")).toBeInTheDocument();
   });
 });

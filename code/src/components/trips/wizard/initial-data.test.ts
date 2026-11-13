@@ -14,6 +14,8 @@ describe("buildInitialWizardData", () => {
       travelerType: "couple",
       travelers: 2,
       preferences: [],
+      includeFlights: null,
+      flyingFrom: null,
     });
   });
 
@@ -98,5 +100,29 @@ describe("startingStep", () => {
 
   it("opens on the dates after a Travis suggestion, since the destination is already settled", () => {
     expect(startingStep({ source: "travis", destination: "Bali", windowLabel: "Apr–Jun" })).toBe(1);
+  });
+});
+
+describe("buildInitialWizardData flights choice", () => {
+  it("leaves the choice open when the draft has none", () => {
+    expect(buildInitialWizardData({ destination: "Japan" }, defaults).includeFlights).toBeNull();
+  });
+
+  it("keeps a choice the draft made", () => {
+    expect(buildInitialWizardData({ includeFlights: false }, defaults).includeFlights).toBe(false);
+  });
+});
+
+describe("buildInitialWizardData flying from", () => {
+  it("keeps a known starting airport from the draft", () => {
+    expect(buildInitialWizardData({ origin: "BOM" }, defaults).flyingFrom).toBe("BOM");
+    expect(buildInitialWizardData({ origin: "blr" }, defaults).flyingFrom).toBe("BLR");
+  });
+
+  it("drops anything that isn't one of the offered airports", () => {
+    expect(buildInitialWizardData({ origin: "IXL" }, defaults).flyingFrom).toBeNull();
+    expect(buildInitialWizardData({ origin: "ZZZ" }, defaults).flyingFrom).toBeNull();
+    expect(buildInitialWizardData({ origin: 42 as unknown as string }, defaults).flyingFrom).toBeNull();
+    expect(buildInitialWizardData(null, defaults).flyingFrom).toBeNull();
   });
 });

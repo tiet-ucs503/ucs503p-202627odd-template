@@ -1,9 +1,11 @@
 "use client";
 
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { AlertTriangle, Sparkles } from "lucide-react";
+import { AlertTriangle, Plane, Sparkles } from "lucide-react";
 import { Alert, Badge, Button, Card } from "@/components/ui";
+import { fromInr } from "@/lib/fx";
 import { formatMoney } from "@/lib/utils";
+import type { FlightQuote } from "@/types/flights";
 import { BUDGET_CATEGORY_LABELS, BUDGET_CATEGORY_ORDER } from "@/types/budget";
 import type { BudgetBreakdown, SavingsSuggestion } from "@/types/budget";
 
@@ -11,10 +13,13 @@ const CHART_COLOR = "#ea580c";
 
 export function BudgetPanel({
   budget,
+  flights = null,
   suggestions,
   onAskTravis,
 }: {
   budget: BudgetBreakdown;
+  /** How the flight cost was worked out; null when there is nothing to explain. */
+  flights?: FlightQuote | null;
   suggestions: SavingsSuggestion[];
   /** Open Travis with this already asked. */
   onAskTravis: (text: string) => void;
@@ -113,6 +118,8 @@ export function BudgetPanel({
         </ul>
       </Card>
 
+      {flights ? <FlightQuoteCard quote={flights} currency={budget.currency} /> : null}
+
       {suggestions.length > 0 ? (
         <Card>
           <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
@@ -141,5 +148,37 @@ export function BudgetPanel({
         </Card>
       ) : null}
     </div>
+  );
+}
+
+/** Where the flight figure came from, so it reads as an estimate with its reasons, not a fare. */
+function FlightQuoteCard({ quote, currency }: { quote: FlightQuote; currency: string }) {
+  const money = (inr: number) => formatMoney(fromInr(inr, currency), currency);
+  const { low, typical, high } = quote.perTravelerInr;
+  return (
+    <Card>
+      <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+        <Plane className="h-4 w-4 text-orange-600" />
+        Flights
+      </h3>
+      {quote.arrival ? (
+        <>
+          <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+            {quote.origin.city} ({quote.origin.code}) → {quote.arrival.city} ({quote.arrival.code}), return
+          </p>
+          <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300" data-testid="flight-range">
+            {money(low)} – {money(high)} per person, typically {money(typical)}
+            {quote.travelers > 1 ? ` · ${money(quote.totalInr)} for ${quote.travelers}` : ""}
+          </p>
+        </>
+      ) : null}
+      <p className="mt-2 text-xs text-zinc-500">{quote.basis}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Badge tone={quote.confidence === "route" ? "green" : "amber"}>
+          {quote.confidence === "route" ? "Based on a year of fares on this route" : "Modelled estimate"}
+        </Badge>
+        <Badge tone="neutral">Estimated on {quote.quotedOn}, not a live fare</Badge>
+      </div>
+    </Card>
   );
 }

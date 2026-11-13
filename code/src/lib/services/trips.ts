@@ -21,6 +21,7 @@ import { COLLECTIONS } from "@/lib/collections";
 import type { BudgetBreakdown } from "@/types/budget";
 import type { City, TripDay } from "@/types/itinerary";
 import type { CityPlan } from "@/types/planning";
+import type { FlightQuote } from "@/types/flights";
 import type { GeneratedItinerary, Trip, TripDraftInput } from "@/types/trip";
 
 /**
@@ -58,6 +59,8 @@ const tripConverter: FirestoreDataConverter<Trip> = {
       days: (data.days ?? []) as TripDay[],
       budget: data.budget as BudgetBreakdown,
       planning: (data.planning ?? null) as CityPlan | null,
+      // Left undefined for trips saved before quotes existed, so they can be told apart.
+      flights: data.flights === undefined ? undefined : ((data.flights ?? null) as FlightQuote | null),
       createdAt: tsToDate(data.createdAt),
       updatedAt: tsToDate(data.updatedAt),
     };
@@ -100,6 +103,7 @@ export async function saveGeneratedTrip(
     budget: itinerary.budget,
     // Only the structured decision — never prompts or raw model output.
     planning: planning ?? null,
+    flights: itinerary.flights ?? null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -177,6 +181,8 @@ export function updateTripItinerary(
     days?: TripDay[];
     budget?: BudgetBreakdown;
     planning?: CityPlan;
+    /** The flight quote behind the budget's flight cost; null when flights are left out. */
+    flights?: FlightQuote | null;
     /** Changing the trip's length moves its last day and its day count. */
     endDate?: string;
     dayCount?: number;

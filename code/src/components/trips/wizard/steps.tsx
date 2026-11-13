@@ -5,6 +5,8 @@ import { Minus, Plus } from "lucide-react";
 import { Chip, SelectField, TextField } from "@/components/ui";
 import { CountryCombobox } from "@/components/ui/country-combobox";
 import { COUNTRIES } from "@/lib/countries";
+import { ORIGIN_AIRPORTS, indianAirport, isOriginAirport } from "@/lib/flights/airports";
+import { isDomestic } from "@/lib/flights/quote";
 import { toInr } from "@/lib/fx";
 import { cn, formatMoney } from "@/lib/utils";
 import { TRAVEL_STYLES, TRAVELER_TYPES, type TravelerType, type TravelStyle } from "@/types/itinerary";
@@ -19,7 +21,28 @@ export interface WizardData {
   travelerType: TravelerType;
   travelers: number;
   preferences: TravelStyle[];
+  /** null until the traveller chooses: flights then follow the destination. */
+  includeFlights: boolean | null;
+  /** IATA code of the airport the traveller flies from; null until chosen. */
+  flyingFrom: string | null;
 }
+
+/**
+ * Whether flights go into the budget. Until the traveller decides, a trip
+ * inside India leaves them out (it is as likely to be a road trip or a train)
+ * and every other trip includes them.
+ */
+export function flightsIncluded(data: Pick<WizardData, "includeFlights" | "destination">): boolean {
+  return data.includeFlights ?? !isDomestic(data.destination);
+}
+
+/** Flights can only be priced from a known airport, so one must be chosen when they're included. */
+export function flightsReady(data: Pick<WizardData, "includeFlights" | "destination" | "flyingFrom">): boolean {
+  return !flightsIncluded(data) || isOriginAirport(data.flyingFrom);
+}
+
+/** The airports a trip can start from, A to Z, as "City (CODE)". */
+const ORIGIN_CHOICES = [...ORIGIN_AIRPORTS].sort((a, b) => a.city.localeCompare(b.city));
 
 type SetData = (patch: Partial<WizardData> | ((prev: WizardData) => Partial<WizardData>)) => void;
 
@@ -128,6 +151,41 @@ export function BudgetStep({ data, setData }: { data: WizardData; setData: SetDa
           <span className="ml-1">(approximate rate)</span>
         </p>
       )}
+      <label htmlFor="include-flights" className="mt-6 flex cursor-pointer items-start gap-3">
+        <input
+          id="include-flights"
+          type="checkbox"
+          checked={flightsIncluded(data)}
+          onChange={(e) => setData({ includeFlights: e.target.checked })}
+          className="mt-1 h-4 w-4 accent-orange-600"
+        />
+        <span>
+          <span className="block text-sm font-medium text-zinc-800 dark:text-zinc-200">
+            Include flights in the budget
+          </span>
+          <span className="block text-sm text-zinc-500 dark:text-zinc-400">
+            Untick this for a road trip, or if your tickets are already booked.
+          </span>
+        </span>
+      </label>
+      {flightsIncluded(data) && (
+        <div className="mt-4 max-w-xs">
+          <SelectField
+            id="flying-from"
+            label="Flying from"
+            hint="Fares are estimated from this airport to your first city."
+            value={data.flyingFrom ?? ""}
+            onChange={(e) => setData({ flyingFrom: e.target.value || null })}
+          >
+            <option value="">Choose a city</option>
+            {ORIGIN_CHOICES.map((airport) => (
+              <option key={airport.code} value={airport.code}>
+                {airport.city} ({airport.code})
+              </option>
+            ))}
+          </SelectField>
+        </div>
+      )}
     </div>
   );
 }
@@ -221,6 +279,14 @@ export function ReviewStep({ data }: { data: WizardData }) {
             data.currency !== "INR" && Number(data.budget) > 0
               ? `${formatMoney(Number(data.budget), data.currency)} (≈ ${formatMoney(toInr(Number(data.budget), data.currency), "INR")})`
               : formatMoney(Number(data.budget) || 0, data.currency)
+          }
+        />
+        <Row
+          label="Flights"
+          value={
+            flightsIncluded(data)
+              ? `From ${indianAirport(data.flyingFrom)?.city ?? "—"} (estimate)`
+              : "Not included"
           }
         />
         <Row label="Style" value={styleLabels || "No preferences selected"} />

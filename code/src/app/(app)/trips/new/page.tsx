@@ -13,6 +13,8 @@ import {
   ReviewStep,
   StyleStep,
   TravelersStep,
+  flightsIncluded,
+  flightsReady,
   type WizardData,
 } from "@/components/trips/wizard/steps";
 import { buildInitialWizardData, startingStep } from "@/components/trips/wizard/initial-data";
@@ -44,7 +46,7 @@ function stepIsValid(step: number, data: WizardData): boolean {
     case 1:
       return Boolean(data.startDate && data.endDate && data.endDate >= data.startDate);
     case 2:
-      return Number(data.budget) > 0;
+      return Number(data.budget) > 0 && flightsReady(data);
     case 3:
       return data.travelers >= 1;
     default:
@@ -92,6 +94,8 @@ export default function NewTripPage() {
       travelers: data.travelers,
       travelerType: data.travelerType,
       preferences: data.preferences,
+      includeFlights: flightsIncluded(data),
+      ...(flightsIncluded(data) && data.flyingFrom ? { origin: data.flyingFrom } : {}),
     };
 
     try {

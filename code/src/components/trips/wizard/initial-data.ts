@@ -1,4 +1,5 @@
 import { resolveCountry } from "@/lib/countries";
+import { isOriginAirport } from "@/lib/flights/airports";
 import type { DraftOrigin, PartialDraft } from "@/lib/draft-storage";
 import { TRAVEL_STYLES, TRAVELER_TYPES } from "@/types/itinerary";
 import type { WizardData } from "./steps";
@@ -43,6 +44,8 @@ export function buildInitialWizardData(draft: PartialDraft | null, defaults: Wiz
     preferences: Array.isArray(draft?.preferences)
       ? draft.preferences.filter((style) => KNOWN_STYLES.has(style))
       : [],
+    includeFlights: typeof draft?.includeFlights === "boolean" ? draft.includeFlights : null,
+    flyingFrom: typeof draft?.origin === "string" && isOriginAirport(draft.origin) ? draft.origin.toUpperCase() : null,
   };
 }
 

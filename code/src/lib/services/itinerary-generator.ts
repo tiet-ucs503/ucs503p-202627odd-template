@@ -1,5 +1,6 @@
 import { addDaysIso } from "@/lib/utils";
 import { fromInr } from "@/lib/fx";
+import { quoteFlights } from "@/lib/flights/quote";
 import { getPlacesProvider } from "@/lib/services/places";
 import { PlacesProviderError } from "@/lib/services/places/errors";
 import { pickHotel, rankByQuality, withoutDuplicates } from "@/lib/services/places/ranking";
@@ -443,13 +444,6 @@ function buildDaysForCity(
   return days;
 }
 
-/**
- * A round-trip flight is the one big cost with no free source of live prices, so
- * it is a flat, labelled estimate per traveller. It is shown as an estimate
- * everywhere, and replacing it needs a fares provider, not a change here.
- */
-const FLIGHT_ESTIMATE_PER_TRAVELER_INR = 25_000;
-
 /** Match a planned city to one already in the trip, by name. Renaming a city
  *  therefore counts as a different place and correctly gets fresh lookups. */
 function findExistingCity(
@@ -562,7 +556,24 @@ export async function generateItinerary(
     dayOffset += count;
   }
 
-  const flightCostTotal = fromInr(FLIGHT_ESTIMATE_PER_TRAVELER_INR * input.travelers, input.currency);
+  // There is no free source of live fares, so the flight is a quote from
+  // TripEase's fare model (see lib/flights): the traveller's airport to the
+  // first city, for these dates and this many people. A traveller who is
+  // driving, or has already booked, leaves it out entirely. A rebuild passes
+  // the original quote date, so editing cities doesn't make the fare drift.
+  const flights =
+    input.includeFlights === false
+      ? null
+      : quoteFlights({
+          origin: input.origin,
+          destination: input.destination,
+          firstCity: cities[0]?.name,
+          firstCityLocation: cities[0]?.hotel.location ?? null,
+          startDate: input.startDate,
+          travelers: input.travelers,
+          now: input.quotedOn ? new Date(`${input.quotedOn}T12:00:00Z`) : undefined,
+        });
+  const flightCostTotal = flights ? fromInr(flights.totalInr, input.currency) : 0;
 
   const budget = computeBudgetBreakdown({
     cities,
@@ -583,5 +594,6 @@ export async function generateItinerary(
     cities,
     days,
     budget,
+    flights,
   };
 }

@@ -1,4 +1,5 @@
 import type { BudgetBreakdown } from "./budget";
+import type { FlightQuote } from "./flights";
 import type { City, TravelerType, TravelStyle, TripDay } from "./itinerary";
 import type { CityPlan } from "./planning";
 
@@ -40,6 +41,13 @@ export interface Trip {
    */
   planning?: CityPlan | null;
 
+  /**
+   * How the flight cost in the budget was worked out. null when flights were
+   * left out; absent on trips saved before quotes existed, whose flight cost
+   * was a flat estimate.
+   */
+  flights?: FlightQuote | null;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,6 +62,16 @@ export interface TripDraftInput {
   travelers: number;
   travelerType: TravelerType;
   preferences: TravelStyle[];
+  /** Leave out the flight cost (road trip, tickets already booked). Absent means include. */
+  includeFlights?: boolean;
+  /** IATA code of the airport the traveller flies from. Absent means Delhi is assumed. */
+  origin?: string;
+  /**
+   * The day an earlier flight quote for this trip was made, YYYY-MM-DD. A
+   * rebuild sends it back so the fare is priced as of that day and doesn't
+   * drift just because the city list was edited later.
+   */
+  quotedOn?: string;
 }
 
 /** What the itinerary generator produces; validated, then persisted as a Trip. */
@@ -67,4 +85,6 @@ export interface GeneratedItinerary {
   cities: City[];
   days: TripDay[];
   budget: BudgetBreakdown;
+  /** null when flights were left out of the budget. */
+  flights?: FlightQuote | null;
 }

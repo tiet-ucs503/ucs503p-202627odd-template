@@ -14,6 +14,7 @@ import { TravisBanner } from "@/components/trip-agent/travis-banner";
 import { TravisLauncher } from "@/components/trip-agent/travis-launcher";
 import { BudgetPanel } from "@/components/budget/budget-panel";
 import { TripMap } from "@/components/maps/trip-map";
+import { flightDraftFields } from "@/lib/flights/draft";
 import { buildSavingsSuggestions } from "@/lib/services/budget-engine";
 import { analyzeTrip } from "@/lib/services/feasibility";
 import { subscribeToTrip, updateTripItinerary } from "@/lib/services/trips";
@@ -231,6 +232,9 @@ export default function TripPage({ params }: { params: Promise<{ tripId: string 
           travelers: trip.travelers,
           travelerType: trip.travelerType,
           preferences: trip.preferences,
+          // Same flight settings the trip was priced with, so the fare only moves
+          // if the first city (and so the arrival airport) changes.
+          ...flightDraftFields(trip),
         },
         cities: nextCities,
         existing: { cities: trip.cities, days: trip.days },
@@ -241,6 +245,7 @@ export default function TripPage({ params }: { params: Promise<{ tripId: string 
       cities: itinerary.cities,
       days: itinerary.days,
       budget: itinerary.budget,
+      flights: itinerary.flights ?? null,
       planning: {
         destination: trip.destination,
         cities: nextCities,
@@ -357,7 +362,12 @@ export default function TripPage({ params }: { params: Promise<{ tripId: string 
         </TabsContent>
 
         <TabsContent value="budget" className="mt-6 max-w-2xl focus:outline-none">
-          <BudgetPanel budget={trip.budget} suggestions={suggestions} onAskTravis={openTravis} />
+          <BudgetPanel
+            budget={trip.budget}
+            flights={trip.flights ?? null}
+            suggestions={suggestions}
+            onAskTravis={openTravis}
+          />
         </TabsContent>
       </Tabs>
 
