@@ -10,6 +10,7 @@ import Dashboard from '@/components/Dashboard';
 import ParentDashboard from '@/components/ParentDashboard';
 import MissionPlayer from '@/components/MissionPlayer';
 import AuthModal from '@/components/AuthModal';
+import Soundboard from '@/components/effects/Soundboard';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { GameProvider } from '@/context/GameContext';
 import type { Role } from '@/lib/api';
@@ -98,7 +99,11 @@ function AppContent() {
   );
 }
 
+/** A review page for sounds, opened with ?soundboard=1. Not linked from the app. */
+const showSoundboard = () => new URLSearchParams(window.location.search).has('soundboard');
+
 export default function App() {
+  if (showSoundboard()) return <Soundboard />;
   return (
     <AuthProvider>
       <GameProvider>

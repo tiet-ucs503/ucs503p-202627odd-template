@@ -8,6 +8,9 @@ import CameraConsent from '@/components/CameraConsent';
 import { AttentionTracker } from '@/lib/attention/tracker';
 import { getCameraChoice, setCameraChoice } from '@/lib/attention/preference';
 import { formatMastery } from '@/lib/mastery';
+import { useEffectsDirector } from '@/hooks/useEffectsDirector';
+import { deriveEvents, EventState, initialEventState } from '@/lib/effects/events';
+import SoundControls from '@/components/effects/SoundControls';
 
 interface MissionPlayerProps {
   bossId: string;
@@ -37,26 +40,6 @@ const FEEDBACK_MS = 2200;
 // off: not in use · starting: waiting for permission/model · on: measuring ·
 // unavailable: the student asked for it but it could not be used
 type CameraState = 'off' | 'starting' | 'on' | 'unavailable';
-
-/** A short "whoosh" for a correct answer, made in the browser so no sound file is fetched. */
-function playStrikeSound() {
-  try {
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(900, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.18);
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.2);
-    osc.onended = () => ctx.close();
-  } catch {
-    /* no audio available: the sound is optional */
-  }
-}
 
 type Phase = 'loading' | 'combat' | 'victory' | 'defeat' | 'error';
 type Feedback = { kind: 'strike' | 'counter' | 'timeout'; text: string };
@@ -124,16 +107,10 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
   const advanceTimer = useRef<number>();
   const started = useRef(false);
 
-  const laughAudio = useRef<HTMLAudioElement>(null);
-  const drottoAudio = useRef<HTMLAudioElement>(null);
-  const drottoLosingAudio = useRef<HTMLAudioElement>(null);
-  const victoryAudio = useRef<HTMLAudioElement>(null);
-
-  const playSound = (ref: React.RefObject<HTMLAudioElement>) => {
-    if (!ref.current) return;
-    ref.current.currentTime = 0;
-    ref.current.play().catch(() => { /* autoplay blocked: sound is optional */ });
-  };
+  // Sound (and, later, visuals) for gameplay events. The director only ever
+  // receives events that came from a server response.
+  const { director } = useEffectsDirector(bossId);
+  const eventState = useRef<EventState>(initialEventState());
 
   const showQuestion = (q: Question) => {
     setQuestion(q);
@@ -152,6 +129,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
     setPhase('loading');
     setBestStreak(0);
     setMastery(null);
+    eventState.current = initialEventState();
     try {
       const data = await api<{ session: SessionState; question: Question }>('/sessions', {
         body: { boss_id: bossId },
@@ -159,11 +137,12 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
       setSession(data.session);
       showQuestion(data.question);
       setPhase('combat');
+      director.current?.play({ type: 'mission_start' });
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Could not start the mission.');
       setPhase('error');
     }
-  }, [bossId]);
+  }, [bossId, director]);
 
   useEffect(() => {
     if (consentNeeded || started.current) return; // start exactly once, after the camera choice
@@ -173,13 +152,6 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
 
   useEffect(() => () => window.clearTimeout(advanceTimer.current), []);
 
-  // The victory jingle plays for a few seconds once the victory screen is showing.
-  useEffect(() => {
-    if (phase !== 'victory') return;
-    playSound(victoryAudio);
-    const stop = window.setTimeout(() => victoryAudio.current?.pause(), 6000);
-    return () => window.clearTimeout(stop);
-  }, [phase]);
 
   useEffect(() => {
     document.body.style.backgroundColor = '#000';
@@ -190,6 +162,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
     if (!question || locked) return;
     setLocked(true);
     setSelected(index);
+    director.current?.unlock(); // browsers allow sound only after a click
     const responseMs = Math.round(performance.now() - questionShownAt.current);
 
     try {
@@ -208,19 +181,24 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
       setMastery(res.mastery_display_pct);
       setBestStreak((best) => Math.max(best, res.session.streak));
 
+      // Work out which gameplay events this answer caused, and play the ones
+      // that belong to the result now. End-of-mission events wait for the end screen.
+      const derived = deriveEvents(eventState.current, res, index === null);
+      eventState.current = derived.state;
+      derived.events.filter((e) => !e.afterResult).forEach((e) => director.current?.play(e));
+      const endEvents = derived.events.filter((e) => e.afterResult);
+
       if (res.correct) {
-        playStrikeSound();
-        if (bossId === 'doc-ock') playSound(drottoLosingAudio);
         setFeedback({
           kind: 'strike',
           text: res.session.streak > 1 ? `+${res.points_awarded} COMBO x${res.session.streak}!` : `+${res.points_awarded} WEB STRIKE!`,
         });
       } else {
-        playSound(bossId === 'doc-ock' ? drottoAudio : laughAudio);
         setFeedback(index === null ? { kind: 'timeout', text: 'TIME OUT!' } : { kind: 'counter', text: 'COUNTER ATTACK!' });
       }
 
       advanceTimer.current = window.setTimeout(() => {
+        endEvents.forEach((e) => director.current?.play(e));
         if (res.session_status === 'victory') {
           setPhase('victory');
         } else if (res.session_status === 'defeat' || !res.next_question) {
@@ -233,7 +211,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
       setErrorMsg(err instanceof Error ? err.message : 'Could not send your answer.');
       setPhase('error');
     }
-  }, [question, locked, hint, bossId, setProgress, feedbackMs]);
+  }, [question, locked, hint, setProgress, feedbackMs, director]);
 
   // Per-question countdown. Running out of time is sent as "no answer".
   useEffect(() => {
@@ -252,6 +230,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
     try {
       const data = await api<{ hint: string }>(`/attempts/${question.attempt_id}/hint`);
       setHint(data.hint);
+      director.current?.play({ type: 'hint' });
     } catch {
       setHint('Gwen cannot reach you right now. Try breaking the problem into smaller steps.');
     }
@@ -301,7 +280,6 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
     const nextBoss = NEXT_BOSS[bossId];
     return (
       <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-4">
-        <audio ref={victoryAudio} src="/spiderman-meme-song.mp3" preload="auto" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-hero-600/30 via-black to-black" />
         <Reveal className="relative text-center max-w-md w-full bg-ink-950/80 backdrop-blur-xl border border-hero-600/50 rounded-3xl p-8 comic-shadow-red">
           <div className="w-24 h-24 mx-auto bg-green-500/20 border-4 border-green-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(34,197,94,0.4)]">
@@ -380,10 +358,6 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
 
   return (
     <div className="fixed inset-0 z-50 bg-black overflow-hidden font-sans">
-      <audio ref={laughAudio} src="/green_goblin_laugh.mp3" preload="auto" />
-      <audio ref={drottoAudio} src="/drotto.wav" preload="auto" />
-      <audio ref={drottoLosingAudio} src="/drottoloosing.wav" preload="auto" />
-      <audio ref={victoryAudio} src="/spiderman-meme-song.mp3" preload="auto" />
 
       <div className="absolute inset-0 bg-gradient-to-b from-hero-900/40 via-ink-950/80 to-black" />
       <div className="absolute inset-0 halftone opacity-30 pointer-events-none" />
@@ -452,6 +426,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
             <span className="text-yellow-400 font-bold">{mastery === null ? 'answer a question to see it' : `about ${formatMastery(mastery)}`}</span>
           </div>
           <div>Mistakes: <span className="text-white font-bold">{session.wrong_count} / {session.max_wrong}</span></div>
+          <SoundControls />
           <button
             onClick={camera === 'on' || camera === 'starting' ? disableCamera : enableCamera}
             aria-pressed={camera === 'on'}
