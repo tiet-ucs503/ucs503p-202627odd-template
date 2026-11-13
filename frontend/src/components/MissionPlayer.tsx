@@ -1,13 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Zap, CheckCircle2, ShieldAlert, Cpu, AlertTriangle, Clock, TrendingUp } from 'lucide-react';
+import { Zap, CheckCircle2, ShieldAlert, Cpu, AlertTriangle, Clock, TrendingUp, Camera, CameraOff } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import { api, AnswerResponse, Question, SessionState } from '@/lib/api';
 import { useGame } from '@/context/GameContext';
+import { useAuth } from '@/context/AuthContext';
+import CameraConsent from '@/components/CameraConsent';
+import { AttentionTracker } from '@/lib/attention/tracker';
+import { getCameraChoice, setCameraChoice } from '@/lib/attention/preference';
 
 interface MissionPlayerProps {
   bossId: string;
   onExit: () => void;
   onNextLevel?: (bossId: string) => void;
+  /** How long the result of an answer stays on screen. Tests shorten it. */
+  feedbackMs?: number;
 }
 
 // Full class names are written out so Tailwind can see them at build time.
@@ -27,11 +33,17 @@ const NEXT_BOSS: Record<string, string> = {
 const QUESTION_TIME_LIMIT = 300; // seconds
 const FEEDBACK_MS = 2200;
 
+// off: not in use · starting: waiting for permission/model · on: measuring ·
+// unavailable: the student asked for it but it could not be used
+type CameraState = 'off' | 'starting' | 'on' | 'unavailable';
+
 type Phase = 'loading' | 'combat' | 'victory' | 'defeat' | 'error';
 type Feedback = { kind: 'strike' | 'counter' | 'timeout'; text: string };
 
-export default function MissionPlayer({ bossId, onExit, onNextLevel }: MissionPlayerProps) {
+export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs = FEEDBACK_MS }: MissionPlayerProps) {
   const { progress, setProgress } = useGame();
+  const { user } = useAuth();
+  const userId = user?.id ?? 0;
   const boss = BOSS_UI[bossId] ?? BOSS_UI.goblin;
 
   // Everything about the mission comes from the server: the questions, whether an
@@ -50,6 +62,42 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel }: MissionPl
   const [hintOpen, setHintOpen] = useState(false);
   const [mastery, setMastery] = useState<number | null>(null);
   const [bestStreak, setBestStreak] = useState(0);
+
+  // ── Optional camera ────────────────────────────────────────────────────────
+  // The game below never waits for, or depends on, any of this.
+  const [consentNeeded, setConsentNeeded] = useState(() => getCameraChoice(userId) === null);
+  const [camera, setCamera] = useState<CameraState>('off');
+  const tracker = useRef<AttentionTracker | null>(null);
+
+  const enableCamera = useCallback(async () => {
+    if (!tracker.current) tracker.current = new AttentionTracker();
+    const t = tracker.current;
+    t.onEnded = () => setCamera('unavailable'); // unplugged, or permission taken away
+    setCamera('starting');
+    try {
+      await t.start();
+      if (t.running) {
+        setCamera('on');
+        setCameraChoice(userId, 'enabled');
+      }
+    } catch {
+      // Denied, no camera, camera busy, or the model failed to load: carry on without it.
+      setCamera('unavailable');
+      setCameraChoice(userId, 'declined'); // do not ask again every mission; the toggle can retry
+    }
+  }, [userId]);
+
+  const disableCamera = useCallback(() => {
+    tracker.current?.stop(); // stops the webcam immediately
+    setCamera('off');
+    setCameraChoice(userId, 'declined');
+  }, [userId]);
+
+  // A student who chose the camera before on this device gets it switched on again.
+  useEffect(() => {
+    if (getCameraChoice(userId) === 'enabled') enableCamera();
+    return () => tracker.current?.stop();
+  }, [userId, enableCamera]);
 
   const questionShownAt = useRef(performance.now());
   const advanceTimer = useRef<number>();
@@ -77,6 +125,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel }: MissionPl
     setHintOpen(false);
     setTimeSpent(0);
     questionShownAt.current = performance.now();
+    tracker.current?.beginQuestion();
   };
 
   const startMission = useCallback(async () => {
@@ -97,10 +146,10 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel }: MissionPl
   }, [bossId]);
 
   useEffect(() => {
-    if (started.current) return; // start exactly once per mount
+    if (consentNeeded || started.current) return; // start exactly once, after the camera choice
     started.current = true;
     startMission();
-  }, [startMission]);
+  }, [startMission, consentNeeded]);
 
   useEffect(() => () => window.clearTimeout(advanceTimer.current), []);
 
@@ -129,7 +178,8 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel }: MissionPl
           selected_index: index, // null = ran out of time
           response_time_ms: responseMs,
           hint_used: hint !== null,
-          attention: null, // camera not used; the optional attention estimate arrives in Phase B
+          // Numbers only, and only if the camera is on. null = not measured.
+          attention: tracker.current?.takeSummary() ?? null,
         },
       });
       setResult(res);
@@ -158,12 +208,12 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel }: MissionPl
         } else {
           showQuestion(res.next_question);
         }
-      }, FEEDBACK_MS);
+      }, feedbackMs);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Could not send your answer.');
       setPhase('error');
     }
-  }, [question, locked, hint, bossId, setProgress]);
+  }, [question, locked, hint, bossId, setProgress, feedbackMs]);
 
   // Per-question countdown. Running out of time is sent as "no answer".
   useEffect(() => {
@@ -188,6 +238,21 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel }: MissionPl
   };
 
   // ── Screens ────────────────────────────────────────────────────────────────
+  if (consentNeeded) {
+    return (
+      <CameraConsent
+        onEnable={() => {
+          setConsentNeeded(false);
+          enableCamera();
+        }}
+        onDecline={() => {
+          setCameraChoice(userId, 'declined');
+          setConsentNeeded(false);
+        }}
+      />
+    );
+  }
+
   if (phase === 'loading') {
     return (
       <div className="fixed inset-0 z-50 bg-black flex items-center justify-center text-hero-400 font-mono text-sm tracking-widest">
@@ -369,7 +434,26 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel }: MissionPl
             <span className="text-yellow-400 font-bold">{mastery === null ? 'answer a question to see it' : `${Math.round(mastery * 100)}%`}</span>
           </div>
           <div>Mistakes: <span className="text-white font-bold">{session.wrong_count} / {session.max_wrong}</span></div>
+          <button
+            onClick={camera === 'on' || camera === 'starting' ? disableCamera : enableCamera}
+            aria-pressed={camera === 'on'}
+            title="Optional. Checks if you are looking at the screen. Nothing is recorded and it never changes your score."
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold border transition-colors ${
+              camera === 'on'
+                ? 'bg-blue-600/30 border-blue-400 text-blue-200'
+                : 'bg-white/5 border-white/20 text-slate-300 hover:text-white'
+            }`}
+          >
+            {camera === 'on' ? <Camera className="w-3.5 h-3.5" /> : <CameraOff className="w-3.5 h-3.5" />}
+            {camera === 'on' ? 'Camera on (tap to turn off)' : camera === 'starting' ? 'Camera starting...' : 'Camera off'}
+          </button>
         </div>
+
+        {camera === 'unavailable' && (
+          <div role="status" className="w-full max-w-3xl mb-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300">
+            Camera unavailable, carrying on without it. Your game and score are not affected.
+          </div>
+        )}
 
         <div className="w-full max-w-3xl relative mt-2">
           <div className="bg-black/60 backdrop-blur-2xl border border-red-500/20 rounded-3xl p-4 sm:p-5 relative overflow-hidden">
