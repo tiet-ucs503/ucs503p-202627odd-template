@@ -9,12 +9,8 @@ const studentLinks = [
   { label: 'Rewards', href: '#rewards' },
 ];
 
-const guardianLinks = [
-  { label: 'Student Analytics', href: '#' },
-  { label: 'Cognitive Engagement', href: '#' },
-  { label: 'Curriculum Mastery', href: '#' },
-  { label: 'AI Tutor Guidance', href: '#' },
-];
+// Parents and teachers have a single page, so they get no section links.
+const guardianLinks: { label: string; href: string }[] = [];
 
 export default function Navbar({ setView }: { setView: (view: string) => void }) {
   const { user, logout, openAuthModal } = useAuth();
@@ -146,7 +142,7 @@ export default function Navbar({ setView }: { setView: (view: string) => void })
               >
                 {user.role === 'parent' || user.role === 'teacher' ? (
                   <>
-                    <Shield className="w-3.5 h-3.5 text-blue-400" /> Parent Portal
+                    <Shield className="w-3.5 h-3.5 text-blue-400" /> {user.role === 'teacher' ? 'Teacher Portal' : 'Parent Portal'}
                   </>
                 ) : (
                   <>
@@ -224,7 +220,7 @@ export default function Navbar({ setView }: { setView: (view: string) => void })
             }}
             className="block w-full text-center px-5 py-2.5 bg-ink-700 border border-hero-500/30 text-white font-semibold rounded-lg mt-2"
           >
-            {user ? (user.role === 'parent' || user.role === 'teacher' ? 'Parent Portal' : 'Hero Portal') : 'Portal'}
+            {user ? (user.role === 'teacher' ? 'Teacher Portal' : user.role === 'parent' ? 'Parent Portal' : 'Hero Portal') : 'Portal'}
           </button>
           {!user ? (
             <button

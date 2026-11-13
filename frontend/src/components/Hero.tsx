@@ -1,14 +1,14 @@
-import { ArrowRight, Play, Sparkles } from 'lucide-react';
-import { useGameState } from '@/hooks/useGameState';
+import { ArrowRight, Play } from 'lucide-react';
+import { useGame } from '@/context/GameContext';
 import { useAuth } from '@/context/AuthContext';
 
 const SPIDEY_GIF = '/spiderman-gif.gif';
 
 export default function Hero({ setView }: { setView: (view: string) => void }) {
-  const { gameState } = useGameState();
-  const { user, isAuthenticated, openAuthModal } = useAuth();
+  const { progress } = useGame();
+  const { isAuthenticated, openAuthModal } = useAuth();
   
-  const currentPoints = user?.points !== undefined ? user.points : gameState.spiderPoints;
+  const currentPoints = progress.points;
   const tiers = [1000, 2500, 4000, 5500, 7000, 8500];
   const nextTarget = tiers.find(t => t > currentPoints) || (currentPoints + 1000);
   const progressPercent = Math.min(100, Math.max(0, (currentPoints / nextTarget) * 100));
@@ -18,7 +18,7 @@ export default function Hero({ setView }: { setView: (view: string) => void }) {
       openAuthModal();
       return;
     }
-    const currentBossId = gameState.unlockedBosses[0] || 'goblin';
+    const currentBossId = progress.unlocked_bosses[progress.unlocked_bosses.length - 1] || 'goblin';
     setView(`mission:${currentBossId}`);
   };
 

@@ -1,6 +1,6 @@
-import { Zap, Lock, Skull } from 'lucide-react';
+import { Lock, Skull } from 'lucide-react';
 import Reveal from '@/components/Reveal';
-import { useGameState } from '@/hooks/useGameState';
+import { useGame } from '@/context/GameContext';
 import { useAuth } from '@/context/AuthContext';
 
 const bossesData = [
@@ -90,12 +90,12 @@ const bossesData = [
 ];
 
 export default function BossBattles({ setView }: { setView: (v: string) => void }) {
-  const { gameState } = useGameState();
+  const { progress } = useGame();
   const { isAuthenticated, openAuthModal } = useAuth();
 
   const bosses = bossesData.map(boss => ({
     ...boss,
-    locked: !gameState.unlockedBosses.includes(boss.id),
+    locked: !progress.unlocked_bosses.includes(boss.id),
   }));
 
   const handleBossClick = (boss: typeof bosses[0]) => {

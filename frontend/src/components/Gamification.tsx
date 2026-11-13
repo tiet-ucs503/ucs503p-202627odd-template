@@ -1,6 +1,6 @@
 import { Flame, Award, Users2, Timer } from 'lucide-react';
 import Reveal from '@/components/Reveal';
-import { useGameState } from '@/hooks/useGameState';
+import { useGame } from '@/context/GameContext';
 import { useAuth } from '@/context/AuthContext';
 
 const features = [
@@ -36,21 +36,21 @@ const bossDetails: Record<string, { title: string, desc: string, name: string }>
 };
 
 export default function Gamification({ setView }: { setView?: (view: string) => void }) {
-  const { gameState } = useGameState();
+  const { progress } = useGame();
   const { user, isAuthenticated, openAuthModal } = useAuth();
   
   // Dynamic user points
-  const currentPoints = user?.points !== undefined ? user.points : gameState.spiderPoints;
+  const currentPoints = progress.points;
   const tiers = [1000, 2500, 4000, 5500, 7000, 8500];
   const nextTarget = tiers.find(t => t > currentPoints) || (currentPoints + 1000);
   const progressPercent = Math.min(100, Math.max(0, (currentPoints / nextTarget) * 100));
 
   // Dynamic active boss (first boss 'goblin' for a newly signed up user)
-  const currentBossId = gameState.unlockedBosses[gameState.unlockedBosses.length - 1] || 'goblin';
+  const currentBossId = progress.unlocked_bosses[progress.unlocked_bosses.length - 1] || 'goblin';
   const currentBoss = bossDetails[currentBossId] || bossDetails['goblin'];
 
   const heroDisplayName = user?.name || 'Spider-Man';
-  const heroRoleSubtitle = user ? `Level ${user.level || 1} • Cadet Web-Slinger` : 'Sign up to unlock Hero Abilities';
+  const heroRoleSubtitle = user ? `Level ${progress.level} • Cadet Web-Slinger` : 'Sign up to unlock Hero Abilities';
 
   const handleStartMission = () => {
     if (!isAuthenticated) {
@@ -104,7 +104,7 @@ export default function Gamification({ setView }: { setView?: (view: string) => 
                 </div>
                 <div className="flex items-center gap-1.5 text-hero-400 font-bold">
                   <Flame className="w-5 h-5" fill="currentColor" />
-                  <span className="text-lg">{gameState.missionsCompleted > 0 ? (gameState.missionsCompleted * 2) : 0}</span>
+                  <span className="text-lg" title="Missions won">{progress.missions_won}</span>
                 </div>
               </div>
 
@@ -116,18 +116,6 @@ export default function Gamification({ setView }: { setView?: (view: string) => 
                 </div>
                 <div className="h-3 rounded-full bg-ink-700 overflow-hidden">
                   <div className="h-full rounded-full bg-gradient-to-r from-hero-600 to-hero-400 transition-all duration-1000 ease-out" style={{ width: `${progressPercent}%` }} />
-                </div>
-              </div>
-
-              {/* Badges */}
-              <div className="mb-5">
-                <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">Recent Spider Badges</div>
-                <div className="flex gap-2">
-                  {['🥇', '⚡', '🎯', '🏆', '🔥'].map((b, i) => (
-                    <span key={i} className="grid place-items-center w-10 h-10 rounded-lg bg-ink-900 border border-white/10 text-xl hover:scale-110 hover:-rotate-12 hover:border-hero-600/40 transition-all cursor-default" style={{ animationDelay: `${i * 80}ms` }}>
-                      {b}
-                    </span>
-                  ))}
                 </div>
               </div>
 
@@ -145,7 +133,7 @@ export default function Gamification({ setView }: { setView?: (view: string) => 
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Message from J.J.J.</span>
-                      <span className="text-[10px] text-gray-400 font-mono">Missions: {gameState.missionsCompleted}</span>
+                      <span className="text-[10px] text-gray-400 font-mono">Missions won: {progress.missions_won}</span>
                     </div>
                     <p className="text-white font-medium text-sm leading-snug">
                       &quot;{currentBoss.desc}&quot;

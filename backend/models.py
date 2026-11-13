@@ -1,87 +1,120 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean, Text
+from datetime import datetime, timezone
+
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
-from datetime import datetime
+
 from database import Base
+
+
+def utcnow() -> datetime:
+    # Stored as naive UTC; SQLite has no timezone type.
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 
 class User(Base):
     __tablename__ = "users"
-    userId = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    email = Column(String, unique=True, index=True, nullable=True)
-    password_hash = Column(String, nullable=True)
-    role = Column(String, default="student") # student, teacher, parent
-    points = Column(Integer, default=0)
-    level = Column(Integer, default=1)
-    student_code = Column(String, unique=True, index=True, nullable=True)
-    linked_student_id = Column(Integer, ForeignKey("users.userId"), nullable=True)
-    
-    attempts = relationship("MissionAttempt", back_populates="user", cascade="all, delete-orphan")
-    mastery = relationship("TopicMastery", back_populates="user", cascade="all, delete-orphan")
-    reports = relationship("LearningReport", back_populates="user", cascade="all, delete-orphan")
 
-class Mission(Base):
-    __tablename__ = "missions"
-    missionId = Column(String, primary_key=True, index=True)
-    topic = Column(String, index=True)
-    difficulty = Column(Integer, default=1)
-    
-    questions = relationship("Question", back_populates="mission")
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    role = Column(String, nullable=False)  # student | parent | teacher
+    points = Column(Integer, nullable=False, default=0)
+    level = Column(Integer, nullable=False, default=1)
+    # Students only: the code a parent or teacher must enter to link to this child.
+    link_code = Column(String, unique=True, index=True, nullable=True)
+    # Demo accounts hold synthetic data and can never be linked with real accounts.
+    is_demo = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
-class Question(Base):
-    __tablename__ = "questions"
-    questionId = Column(Integer, primary_key=True, index=True)
-    missionId = Column(String, ForeignKey("missions.missionId"))
-    text = Column(String)
-    difficulty = Column(Integer, default=1)
-    
-    mission = relationship("Mission", back_populates="questions")
+
+class GuardianLink(Base):
+    """A parent or teacher who may view one student's reports. Many-to-many."""
+
+    __tablename__ = "guardian_links"
+    __table_args__ = (UniqueConstraint("guardian_id", "student_id"),)
+
+    id = Column(Integer, primary_key=True)
+    guardian_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+
+
+class PlaySession(Base):
+    """One boss battle: a run of questions that ends in victory, defeat or abandonment."""
+
+    __tablename__ = "play_sessions"
+
+    id = Column(Integer, primary_key=True)
+    student_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    boss_id = Column(String, nullable=False)
+    topic = Column(String, nullable=False)
+    status = Column(String, nullable=False, default="active")  # active|victory|defeat|abandoned
+    correct_count = Column(Integer, nullable=False, default=0)
+    wrong_count = Column(Integer, nullable=False, default=0)
+    streak = Column(Integer, nullable=False, default=0)
+    points_awarded = Column(Integer, nullable=False, default=0)
+    started_at = Column(DateTime, nullable=False, default=utcnow)
+    ended_at = Column(DateTime, nullable=True)
+
+    attempts = relationship("Attempt", back_populates="session")
+
+
+class Attempt(Base):
+    """One question served to a student. Created when served, completed when answered."""
+
+    __tablename__ = "attempts"
+
+    id = Column(Integer, primary_key=True)
+    session_id = Column(Integer, ForeignKey("play_sessions.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    topic = Column(String, nullable=False)
+    difficulty = Column(String, nullable=False, default="medium")
+
+    question_text = Column(Text, nullable=False)
+    options_json = Column(Text, nullable=False)
+    correct_index = Column(Integer, nullable=False)  # never sent to the client before answering
+    hint_text = Column(Text, nullable=False, default="")
+
+    selected_index = Column(Integer, nullable=True)  # NULL = unanswered or timed out
+    is_correct = Column(Boolean, nullable=True)  # NULL until answered
+    response_time_ms = Column(Integer, nullable=True)
+    hint_used = Column(Boolean, nullable=False, default=False)
+    points_awarded = Column(Integer, nullable=False, default=0)
+    mastery_before = Column(Float, nullable=True)
+    mastery_after = Column(Float, nullable=True)
+
+    # Optional attention estimate. NULL means "not measured" (camera off or
+    # unavailable). It is stored and reported, and never read by anything academic.
+    face_present_pct = Column(Float, nullable=True)
+    on_screen_pct = Column(Float, nullable=True)
+    blink_rate_per_min = Column(Float, nullable=True)
+    attention_score = Column(Float, nullable=True)
+    attention_label = Column(String, nullable=True)
+
+    served_at = Column(DateTime, nullable=False, default=utcnow)
+    answered_at = Column(DateTime, nullable=True)
+
+    session = relationship("PlaySession", back_populates="attempts")
+
 
 class TopicMastery(Base):
     __tablename__ = "topic_mastery"
-    masteryId = Column(Integer, primary_key=True, index=True)
-    userId = Column(Integer, ForeignKey("users.userId"))
-    topic = Column(String, index=True)
-    masteryLevel = Column(Float, default=0.0)
-    
-    user = relationship("User", back_populates="mastery")
+    __table_args__ = (UniqueConstraint("student_id", "topic"),)
 
-class MissionAttempt(Base):
-    __tablename__ = "mission_attempts"
-    attemptId = Column(Integer, primary_key=True, index=True)
-    userId = Column(Integer, ForeignKey("users.userId"))
-    villain = Column(String, default="Green Goblin")
-    score = Column(Integer, default=0)
-    timeTaken = Column(Integer, default=0)
-    hintUsed = Column(Boolean, default=False)
-    cognitiveState = Column(String, default="Focused")
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    
-    user = relationship("User", back_populates="attempts")
-    hints = relationship("HintHistory", back_populates="attempt")
-
-class HintHistory(Base):
-    __tablename__ = "hint_history"
-    hintId = Column(Integer, primary_key=True, index=True)
-    attemptId = Column(Integer, ForeignKey("mission_attempts.attemptId"))
-    hintText = Column(String)
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    
-    attempt = relationship("MissionAttempt", back_populates="hints")
-
-class LearningReport(Base):
-    __tablename__ = "learning_reports"
-    reportId = Column(Integer, primary_key=True, index=True)
-    userId = Column(Integer, ForeignKey("users.userId"))
-    totalScore = Column(Integer, default=0)
-    badges = Column(String, default="") # Comma-separated badges
-    aiSummary = Column(Text, nullable=True)
-    focusPercentage = Column(Float, default=0.0)
-    averageAccuracy = Column(Float, default=0.0)
-    generatedAt = Column(DateTime, default=datetime.utcnow)
-    
-    user = relationship("User", back_populates="reports")
-
-class Badge(Base):
-    __tablename__ = "badges"
-    badgeId = Column(Integer, primary_key=True, index=True)
-    criteria = Column(String)
+    id = Column(Integer, primary_key=True)
+    student_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    topic = Column(String, nullable=False)
+    p_mastery = Column(Float, nullable=False)
+    attempts_count = Column(Integer, nullable=False, default=0)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)

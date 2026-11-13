@@ -21,3 +21,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# The repo-level .gitignore ignores every "lib/" folder (a Python rule).
+# Our frontend source lives in src/lib, so it must be tracked.
+!src/lib/

@@ -1,6 +1,6 @@
 import { Target, Shield, Zap, Beaker } from 'lucide-react';
 import Reveal from '@/components/Reveal';
-import { useGameState } from '@/hooks/useGameState';
+import { useGame } from '@/context/GameContext';
 import { useAuth } from '@/context/AuthContext';
 
 const missionsData = [
@@ -73,12 +73,12 @@ const missionsData = [
 ];
 
 export default function Missions({ setView }: { setView: (v: string) => void }) {
-  const { gameState } = useGameState();
+  const { progress } = useGame();
   const { isAuthenticated, openAuthModal } = useAuth();
 
   const missions = missionsData.map(m => ({
     ...m,
-    locked: !gameState.unlockedBosses.includes(m.id)
+    locked: !progress.unlocked_bosses.includes(m.id)
   }));
 
   const handleStartMission = (m: typeof missions[0]) => {

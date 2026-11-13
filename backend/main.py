@@ -1,38 +1,41 @@
-import os
-os.environ.setdefault("KERAS_HOME", os.path.join(os.path.dirname(__file__), ".keras"))
-os.environ.setdefault("MPLCONFIGDIR", os.path.join(os.path.dirname(__file__), ".matplotlib"))
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import engine, Base
-from routers import users, missions, attempts, eye_tracking, auth, reports
-import models
 
-# Initialize the database tables
-Base.metadata.create_all(bind=engine)
+import models  # noqa: F401  (registers the tables on Base)
+from config import settings
+from database import Base, engine
+from routers import auth, guardians, reports, sessions
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    yield
+
 
 app = FastAPI(
-    title="MathVerse AI API",
-    description="Backend API for the AI-Powered Gamified Mathematics Learning Platform",
-    version="1.0.0"
+    title="MathVerse API",
+    description="Gamified maths practice: accounts, missions, mastery and reports.",
+    version="2.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.cors_origins,
+    allow_credentials=False,  # auth is a bearer token in a header, not a cookie
+    allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
-# Include Routers
 app.include_router(auth.router)
-app.include_router(users.router)
-app.include_router(missions.router)
-app.include_router(attempts.router)
-app.include_router(eye_tracking.router)
+app.include_router(sessions.router)
+app.include_router(guardians.router)
 app.include_router(reports.router)
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the MathVerse AI Backend Services"}
+
+@app.get("/health", tags=["health"])
+def health():
+    return {"status": "ok", "demo_mode": settings.demo_mode}
