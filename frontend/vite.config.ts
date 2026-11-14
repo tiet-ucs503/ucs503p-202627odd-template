@@ -17,7 +17,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    css: false,
+    css: true, // tests read effects.css to check its animation rules
   },
   optimizeDeps: {
     exclude: ['lucide-react'],

@@ -12,6 +12,9 @@ import { useEffectsDirector } from '@/hooks/useEffectsDirector';
 import { deriveEvents, EventState, initialEventState } from '@/lib/effects/events';
 import SoundControls from '@/components/effects/SoundControls';
 import CharacterPortrait from '@/components/effects/CharacterPortrait';
+import EffectsLayer, { PortraitOverlays } from '@/components/effects/EffectsLayer';
+import { reactionClasses, reactionStyle } from '@/lib/effects/cueStyle';
+import { useActiveCues } from '@/hooks/useActiveCues';
 import { SPIDERMAN, villainFor } from '@/lib/characters';
 
 interface MissionPlayerProps {
@@ -101,7 +104,9 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
 
   // Sound (and, later, visuals) for gameplay events. The director only ever
   // receives events that came from a server response.
-  const { director } = useEffectsDirector(bossId);
+  const { cues, onCue } = useActiveCues();
+  const { director } = useEffectsDirector(bossId, onCue);
+  const cuesFor = (target: string) => cues.filter((c) => c.target === target);
   const eventState = useRef<EventState>(initialEventState());
 
   const showQuestion = (q: Question) => {
@@ -274,7 +279,10 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
       <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-4">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-hero-600/30 via-black to-black" />
         <Reveal className="relative text-center max-w-md w-full bg-ink-950/80 backdrop-blur-xl border border-hero-600/50 rounded-3xl p-8 comic-shadow-red">
-          <div className="w-24 h-24 mx-auto bg-green-500/20 border-4 border-green-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(34,197,94,0.4)]">
+          <div
+            className={`w-24 h-24 mx-auto bg-green-500/20 border-4 border-green-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(34,197,94,0.4)] ${reactionClasses(cuesFor('end'))}`}
+            style={reactionStyle(cuesFor('end'), 'right')}
+          >
             <CheckCircle2 className="w-12 h-12 text-green-400" />
           </div>
           <h2 className="text-4xl sm:text-5xl font-comic text-white mb-4 uppercase tracking-wide">THREAT NEUTRALIZED</h2>
@@ -313,7 +321,10 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
       <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-4">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/40 via-black to-black" />
         <Reveal className="relative text-center max-w-md w-full bg-ink-950/80 backdrop-blur-xl border border-red-600/50 rounded-3xl p-8 comic-shadow-red">
-          <div className="w-24 h-24 mx-auto bg-red-500/20 border-4 border-red-500 rounded-full flex items-center justify-center mb-6">
+          <div
+            className={`w-24 h-24 mx-auto bg-red-500/20 border-4 border-red-500 rounded-full flex items-center justify-center mb-6 ${reactionClasses(cuesFor('end'))}`}
+            style={reactionStyle(cuesFor('end'), 'right')}
+          >
             <ShieldAlert className="w-12 h-12 text-red-400" />
           </div>
           <h2 className="text-4xl sm:text-5xl font-comic text-white mb-4 uppercase tracking-wide">MISSION FAILED</h2>
@@ -343,9 +354,9 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
   };
 
   const feedbackStyle = {
-    strike: { wrap: 'bg-hero-600/10', box: 'text-white border-hero-500 rotate-[-10deg]' },
-    counter: { wrap: 'bg-red-900/20', box: 'text-red-400 border-red-500 rotate-[5deg]' },
-    timeout: { wrap: 'bg-yellow-900/40', box: 'text-yellow-400 border-yellow-500' },
+    strike: 'text-white border-hero-500',
+    counter: 'text-red-400 border-red-500',
+    timeout: 'text-yellow-400 border-yellow-500',
   };
 
   return (
@@ -356,7 +367,8 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
 
       {/* Battle header: each character's animated portrait, with a lane between them for effects */}
       <div className="relative z-20 flex items-center gap-3 sm:gap-4 p-2 pt-3 max-w-[1400px] mx-auto w-full">
-        <CharacterPortrait character={SPIDERMAN} badge={`LVL ${progress.level}`} />
+        <EffectsLayer cues={cues} />
+        <CharacterPortrait character={SPIDERMAN} side="left" badge={`LVL ${progress.level}`} cues={cuesFor('player')} />
         <div className="flex-1 flex flex-col justify-center min-w-0">
           <h1 className="text-lg sm:text-2xl font-comic text-white tracking-widest italic whitespace-nowrap mb-1.5">SPIDER-MAN</h1>
           <div className="h-3 bg-ink-950/80 rounded-full border-2 border-white/10 overflow-hidden" role="progressbar" aria-label="Your health" aria-valuenow={Math.round(playerHealth)} aria-valuemin={0} aria-valuemax={100}>
@@ -387,11 +399,19 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
             </div>
           </div>
         </div>
-        <CharacterPortrait character={boss} />
+        <CharacterPortrait character={boss} side="right" cues={cuesFor('villain')} />
       </div>
 
       {/* Main combat area */}
       <div className="relative z-10 flex flex-col items-center justify-center p-2 w-full">
+        {/* The result of the last answer. It has its own row, so it never covers the question. */}
+        <div className="w-full max-w-3xl h-10 mb-1 flex items-center justify-center" data-result-strip>
+          {feedback && (
+            <div role="status" className={`font-comic text-xl sm:text-2xl italic tracking-wide px-4 py-1 rounded-xl bg-black/70 border-2 ${feedbackStyle[feedback.kind]}`}>
+              {feedback.text}
+            </div>
+          )}
+        </div>
         <div className="w-full max-w-3xl flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 mb-2 rounded-xl bg-black/60 border border-white/10 backdrop-blur-md text-[11px] sm:text-xs font-mono text-slate-400">
           <div className="flex items-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5 text-yellow-400" />
@@ -470,13 +490,6 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
             </div>
           </div>
 
-          {feedback && (
-            <div role="status" className={`absolute inset-0 z-50 flex items-center justify-center pointer-events-none backdrop-blur-sm overflow-hidden ${feedbackStyle[feedback.kind].wrap}`}>
-              <div className={`font-comic text-4xl md:text-6xl italic tracking-tighter p-6 md:p-8 bg-black/70 border-4 rounded-3xl ${feedbackStyle[feedback.kind].box}`}>
-                {feedback.text}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
@@ -498,7 +511,10 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
             <Cpu className="w-4 h-4" /> Ask Gwen for a hint
           </button>
         )}
-        <img src="/gwen.jpeg" alt="" className="relative z-10 w-14 h-14 rounded-full border-2 border-pink-500 object-cover shrink-0" />
+        <div className="relative shrink-0 text-pink-400">
+          <img src="/gwen.jpeg" alt="" className="relative z-10 w-14 h-14 rounded-full border-2 border-pink-500 object-cover" />
+          <PortraitOverlays cues={cuesFor('gwen')} />
+        </div>
       </div>
 
       <button

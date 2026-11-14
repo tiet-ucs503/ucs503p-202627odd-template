@@ -6,6 +6,7 @@
 
 import type { AudioEngine } from '@/lib/effects/audio/engine';
 import { RECIPES } from '@/lib/effects/audio/recipes';
+import { cueClass } from '@/lib/effects/cues';
 import type { GameEvent } from '@/lib/effects/events';
 import { CueStep, Profile, SHARED, SPIDERMAN, Variation, VILLAINS } from '@/lib/effects/profiles';
 import type { SettingsStore } from '@/lib/effects/settings';
@@ -88,6 +89,7 @@ export class EffectsDirector {
     if (!onCue) return;
     const reducedMotion = settings.reducedMotion();
     for (const cue of variation.cues) {
+      if (cueClass(cue.cue, reducedMotion) === null) continue; // unknown, or has no still form
       const show = () => onCue({ ...cue, key: `${group}:${cue.cue}:${cue.atMs}`, variation: variation.id, reducedMotion });
       if (cue.atMs + jitterMs <= 0) {
         show();

@@ -28,7 +28,9 @@ export interface CueStep {
   atMs: number;
   /** Name of a visual cue drawn by the effects layer. */
   cue: string;
-  target: 'player' | 'villain' | 'strip';
+  /** player/villain = that character's portrait; strip = the lane between them;
+   *  gwen = her avatar by the hint button; end = the icon on the end screen. */
+  target: 'player' | 'villain' | 'strip' | 'gwen' | 'end';
   durMs: number;
 }
 
@@ -39,8 +41,25 @@ export interface Variation extends Pickable {
 
 export type Profile = Partial<Record<GameEventType, Variation[]>>;
 
-const sound = (id: string, recipe: string, category: SoundCategory = 'impact'): Variation => ({
-  id, sounds: [{ atMs: 0, recipe, category }], cues: [],
+const sound = (id: string, recipe: string, category: SoundCategory = 'impact', cues: CueStep[] = []): Variation => ({
+  id, sounds: [{ atMs: 0, recipe, category }], cues,
+});
+
+const cue = (atMs: number, name: string, target: CueStep['target'], durMs: number): CueStep => ({
+  atMs, cue: name, target, durMs,
+});
+
+// The web reaches the villain 180 ms after it is fired, in step with the sound's impact layer.
+const WEB_TRAVEL_MS = 180;
+const webStrike = (id: string, recipe: string, line: string, splat: string): Variation => ({
+  id,
+  sounds: [{ atMs: 0, recipe, category: 'impact' }],
+  cues: [
+    cue(0, line, 'strip', 260),
+    cue(WEB_TRAVEL_MS, splat, 'villain', 300),
+    cue(WEB_TRAVEL_MS, 'react-recoil', 'villain', 260),
+    cue(WEB_TRAVEL_MS, 'spark-burst', 'strip', 320),
+  ],
 });
 
 const sample = (id: string, url: string, category: SoundCategory, extra: Partial<Variation> & { maxSeconds?: number } = {}): Variation => ({
@@ -49,18 +68,30 @@ const sample = (id: string, url: string, category: SoundCategory, extra: Partial
 
 /** Used whichever villain is on screen. */
 export const SHARED: Profile = {
-  villain_attack: [sound('counter-1', 'counter-thud-1'), sound('counter-2', 'counter-thud-2')],
-  time_out: [sound('time-out-1', 'time-out-1', 'ui')],
-  hint: [sound('gwen-1', 'gwen-chirp-1', 'ui'), sound('gwen-2', 'gwen-chirp-2', 'ui')],
-  defeat: [sound('defeat-1', 'defeat-1', 'music')],
-  victory: [sample('jingle', SAMPLES.victoryJingle, 'music', { maxSeconds: 6 })],
+  // The villain steps into view. Each villain's own entrance arrives with its profile.
+  mission_start: [{ id: 'enter', sounds: [], cues: [cue(0, 'react-enter', 'villain', 500)] }],
+  // Spider-Man takes the hit: his portrait flinches. The shake is 4px for a quarter of a second.
+  villain_attack: [
+    sound('counter-1', 'counter-thud-1', 'impact', [cue(60, 'react-hit', 'player', 250)]),
+    sound('counter-2', 'counter-thud-2', 'impact', [cue(60, 'react-hit', 'player', 250)]),
+  ],
+  time_out: [sound('time-out-1', 'time-out-1', 'ui', [cue(0, 'react-dim', 'player', 400)])],
+  hint: [
+    sound('gwen-1', 'gwen-chirp-1', 'ui', [cue(0, 'gwen-ripple', 'gwen', 600)]),
+    sound('gwen-2', 'gwen-chirp-2', 'ui', [cue(0, 'gwen-ripple', 'gwen', 600)]),
+  ],
+  defeat: [sound('defeat-1', 'defeat-1', 'music', [cue(0, 'defeat-sink', 'end', 700)])],
+  victory: [{
+    ...sample('jingle', SAMPLES.victoryJingle, 'music', { maxSeconds: 6 }),
+    cues: [cue(0, 'victory-pop', 'end', 700)],
+  }],
 };
 
 export const SPIDERMAN: Profile = {
   player_strike: [
-    sound('thwip-1', 'spidey-thwip-1'),
-    sound('thwip-2', 'spidey-thwip-2'),
-    sound('thwip-3', 'spidey-thwip-3'),
+    webStrike('thwip-1', 'spidey-thwip-1', 'web-line-1', 'web-splat-1'),
+    webStrike('thwip-2', 'spidey-thwip-2', 'web-line-2', 'web-splat-2'),
+    webStrike('thwip-3', 'spidey-thwip-3', 'web-line-3', 'web-splat-3'),
   ],
 };
 

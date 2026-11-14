@@ -1,0 +1,134 @@
+/*
+ * Battle effects. Every animation here is short, local to the battle header,
+ * and never drawn over the question or the controls.
+ *
+ * Rules kept by this file:
+ *   - no full-screen flashes and nothing that blinks more than 3 times a second;
+ *   - a character never moves more than 6px and is never hidden;
+ *   - each effect has a "still" version (a gentle fade, no movement) that is
+ *     used when reduced motion is on. Which version is used is decided in code
+ *     from the player's setting, so the player's own choice always wins.
+ *
+ * --fx-dur is the length of the effect, set from the cue.
+ * --fx-dir is 1 for the villain (right side) and -1 for the player (left side).
+ */
+
+/* ── Reactions: applied to the character's own portrait ─────────────────── */
+@keyframes fx-recoil {
+  0%   { transform: translateX(0) rotate(0); filter: brightness(1); }
+  30%  { transform: translateX(calc(6px * var(--fx-dir, 1))) rotate(calc(3deg * var(--fx-dir, 1))); filter: brightness(1.35); }
+  100% { transform: translateX(0) rotate(0); filter: brightness(1); }
+}
+.fx-react-recoil { animation: fx-recoil var(--fx-dur, 260ms) ease-out; }
+
+@keyframes fx-hit {
+  0%   { transform: translateX(0); filter: brightness(1) saturate(1); }
+  25%  { transform: translateX(calc(4px * var(--fx-dir, -1))); filter: brightness(0.8) saturate(1.4); }
+  60%  { transform: translateX(calc(-2px * var(--fx-dir, -1))); }
+  100% { transform: translateX(0); filter: brightness(1) saturate(1); }
+}
+.fx-react-hit { animation: fx-hit var(--fx-dur, 250ms) ease-out; }
+
+@keyframes fx-dim {
+  0%, 100% { filter: brightness(1); }
+  40%      { filter: brightness(0.7); }
+}
+.fx-react-dim { animation: fx-dim var(--fx-dur, 300ms) ease-in-out; }
+
+@keyframes fx-enter {
+  0%   { transform: translateX(calc(24px * var(--fx-dir, 1))) scale(0.9); opacity: 0; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+.fx-react-enter { animation: fx-enter var(--fx-dur, 500ms) cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+@keyframes fx-fade-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+.fx-react-fade-in { animation: fx-fade-in var(--fx-dur, 500ms) ease-out; }
+
+/* ── Strip effects: travel across the lane between the two portraits ────── */
+.fx-web-line {
+  position: absolute;
+  top: 50%;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.15), #ffffff 60%, #ffffff);
+  transform-origin: left center;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+}
+@keyframes fx-web-shoot {
+  0%   { transform: rotate(var(--fx-tilt, 0deg)) scaleX(0); opacity: 1; }
+  70%  { transform: rotate(var(--fx-tilt, 0deg)) scaleX(1); opacity: 1; }
+  100% { transform: rotate(var(--fx-tilt, 0deg)) scaleX(1); opacity: 0; }
+}
+.fx-web-line-moving { animation: fx-web-shoot var(--fx-dur, 260ms) ease-out forwards; }
+.fx-web-line-straight { --fx-tilt: 0deg; }
+.fx-web-line-high { --fx-tilt: -2.5deg; }
+.fx-web-line-low { --fx-tilt: 2.5deg; }
+
+@keyframes fx-fade-out {
+  0%   { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+.fx-web-line-still { animation: fx-fade-out var(--fx-dur, 260ms) ease-out forwards; }
+
+.fx-spark {
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+@keyframes fx-spark-fly {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--fx-x, 0), var(--fx-y, 0)) scale(0.3); opacity: 0; }
+}
+.fx-spark-moving { animation: fx-spark-fly var(--fx-dur, 320ms) ease-out forwards; }
+
+/* ── Overlays: small accents at the edge of a portrait, never covering it ── */
+.fx-web-splat {
+  position: absolute;
+  width: 40%;
+  height: 40%;
+  pointer-events: none;
+}
+.fx-splat-tl { top: -6%; left: -6%; }
+.fx-splat-tr { top: -6%; right: -6%; }
+.fx-splat-bl { bottom: -6%; left: -6%; }
+@keyframes fx-splat-pop {
+  0%   { transform: scale(0.3); opacity: 0; }
+  35%  { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+.fx-web-splat-moving { animation: fx-splat-pop var(--fx-dur, 300ms) ease-out forwards; }
+.fx-web-splat-still { animation: fx-fade-out var(--fx-dur, 300ms) ease-out forwards; }
+
+/* ── Rings: a soft pulse around a small avatar or icon ───────────────────── */
+.fx-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  pointer-events: none;
+}
+@keyframes fx-ring-grow {
+  0%   { transform: scale(0.9); opacity: 0.9; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.fx-ring-moving { animation: fx-ring-grow var(--fx-dur, 600ms) ease-out forwards; }
+.fx-ring-still { animation: fx-fade-out var(--fx-dur, 600ms) ease-out forwards; }
+
+/* ── End screens ─────────────────────────────────────────────────────────── */
+@keyframes fx-victory-pop {
+  0%   { transform: scale(0.7) rotate(-8deg); }
+  60%  { transform: scale(1.12) rotate(3deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.fx-victory-pop { animation: fx-victory-pop var(--fx-dur, 700ms) cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+@keyframes fx-defeat-sink {
+  0%   { transform: translateY(-6px); opacity: 0.4; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.fx-defeat-sink { animation: fx-defeat-sink var(--fx-dur, 700ms) ease-out; }
