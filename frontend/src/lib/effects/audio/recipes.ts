@@ -3,7 +3,7 @@
 // F2 holds the shared sounds and Spider-Man's basic strike. Each villain's own
 // sound family is added in its own phase and reviewed by ear before it ships.
 
-import type { Recipe } from '@/lib/effects/audio/synth';
+import type { Layer, Recipe } from '@/lib/effects/audio/synth';
 import { VILLAIN_RECIPES_1 } from '@/lib/effects/audio/recipes.villains1';
 import { VILLAIN_RECIPES_2 } from '@/lib/effects/audio/recipes.villains2';
 
@@ -86,6 +86,32 @@ const list: Recipe[] = [
     ],
   },
 ];
+
+// ── Spider-Man's combo: a quick barrage of web shots, rising in pitch ──
+/** One web shot: the same thwip as a strike, a little shorter. */
+const webShot = (at: number, pitch: number): Layer[] => [
+  { source: 'noise', at, dur: 0.12, gain: 0.46, attack: 0.002, filter: { type: 'bandpass', freq: [1000 * pitch, 5600 * pitch], q: 3 }, pan: -0.5 },
+  { source: 'triangle', at, dur: 0.15, freq: [900 * pitch, 280 * pitch], gain: 0.24, attack: 0.002, pan: -0.4 },
+];
+const webImpact = (at: number): Layer => ({
+  source: 'noise', at, dur: 0.08, gain: 0.32, attack: 0.001, filter: { type: 'lowpass', freq: [2000, 450] }, pan: 0.4,
+});
+const barrage = (pitches: number[]): Layer[] => [
+  ...pitches.flatMap((pitch, i) => webShot(i * 0.11, pitch)),
+  webImpact(pitches.length * 0.11 + 0.03),
+];
+
+list.push(
+  { id: 'spidey-barrage-3a', layers: barrage([1, 1.15, 1.32]) },
+  { id: 'spidey-barrage-3b', layers: barrage([1.1, 1, 1.4]) },
+  { id: 'spidey-barrage-5a', layers: barrage([1, 1.12, 1.26, 1.42]) },
+  { id: 'spidey-barrage-5b', layers: barrage([1.05, 1.2, 1.1, 1.5]) },
+  {
+    id: 'spidey-barrage-7', // the full barrage, finished with a bright rising note
+    layers: [...barrage([1, 1.12, 1.26, 1.42, 1.6]),
+      { source: 'triangle', at: 0.6, dur: 0.3, freq: [1760, 2640], gain: 0.14, attack: 0.01, pan: 0, echo: 0.3 }],
+  },
+);
 
 export const RECIPES: Record<string, Recipe> = Object.fromEntries(
   [...list, ...VILLAIN_RECIPES_1, ...VILLAIN_RECIPES_2].map((r) => [r.id, r]),

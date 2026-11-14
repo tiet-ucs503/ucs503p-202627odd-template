@@ -16,7 +16,7 @@ import { SPIDERMAN as SPIDERMAN_CHARACTER, VILLAIN_CHARACTERS, villainFor } from
 
 const EVENTS: GameEventType[] = [
   'mission_start', 'player_strike', 'villain_attack', 'time_out',
-  'combo_special', 'villain_special', 'villain_staggered', 'hint', 'victory', 'defeat',
+  'combo_special', 'villain_special', 'villain_staggered', 'hint', 'victory', 'villain_defeated', 'defeat',
 ];
 
 const button = 'px-3 py-1.5 rounded-lg bg-ink-800 border border-white/15 hover:border-hero-500 text-sm text-white text-left';
@@ -24,6 +24,7 @@ const button = 'px-3 py-1.5 rounded-lg bg-ink-800 border border-white/15 hover:b
 export default function Soundboard() {
   const [villainId, setVillainId] = useState('goblin');
   const [last, setLast] = useState('');
+  const [streak, setStreak] = useState(3);
   const { cues, onCue } = useActiveCues();
   const { director, engine } = useEffectsDirector(villainId, onCue);
   const villain = villainFor(villainId);
@@ -83,6 +84,16 @@ export default function Soundboard() {
               {Object.keys(VILLAINS).map((id) => <option key={id} value={id}>{id}</option>)}
             </select>
           </label>
+          <label className="text-sm text-gray-300 ml-4">
+            Streak for combo_special{' '}
+            <select
+              value={streak}
+              onChange={(e) => setStreak(Number(e.target.value))}
+              className="bg-ink-900 border border-white/15 rounded-lg px-2 py-1 ml-1 text-white"
+            >
+              {[3, 5, 7].map((n) => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </label>
           <div className="grid sm:grid-cols-3 gap-2 mt-3">
             {EVENTS.map((event) => (
               <button
@@ -91,7 +102,7 @@ export default function Soundboard() {
                 disabled={!available(event)}
                 onClick={() => {
                   director.current?.unlock();
-                  const chosen = director.current?.play({ type: event }) ?? [];
+                  const chosen = director.current?.play({ type: event, streak }) ?? [];
                   setLast(`${event}: ${chosen.join(', ') || 'nothing chosen (every variation is inside its gap)'}`);
                 }}
               >

@@ -52,13 +52,44 @@ export const SHARED: Profile = {
     sound('gwen-2', 'gwen-chirp-2', 'ui', [cue(0, 'gwen-ripple', 'gwen', 600)]),
   ],
   defeat: [sound('defeat-1', 'defeat-1', 'music', [cue(0, 'defeat-sink', 'end', 700)])],
+  // The villain reels once, when half its health is gone. It looks weakened from then on.
+  villain_staggered: [{ id: 'stagger', sounds: [], cues: [cue(460, 'react-stagger', 'villain', 420)] }],
+  // Fallback for a villain with no defeat of its own.
+  villain_defeated: [{ id: 'collapse', sounds: [], cues: [cue(0, 'react-collapse', 'villain', 700)] }],
   victory: [{
     ...sample('jingle', SAMPLES.victoryJingle, 'music', { maxSeconds: 6 }),
     cues: [cue(0, 'victory-pop', 'end', 700)],
   }],
 };
 
+// A combo: web shots 110 ms apart, in step with the barrage sound. The longer
+// the streak, the more shots; at seven a web net closes round the villain.
+const SHOT_GAP_MS = 110;
+const combo = (id: string, recipe: string, forStreak: number, shots: number, splat: string, net = false): Variation => {
+  const lastShotLands = (shots - 1) * SHOT_GAP_MS + WEB_TRAVEL_MS;
+  return {
+    id,
+    forStreak,
+    sounds: [{ atMs: 0, recipe, category: 'impact' }],
+    cues: [
+      ...Array.from({ length: shots }, (_, i) => cue(i * SHOT_GAP_MS, `web-line-${(i % 3) + 1}`, 'strip', 260)),
+      cue(WEB_TRAVEL_MS, 'react-recoil', 'villain', 260),
+      cue(WEB_TRAVEL_MS, 'spark-burst', 'strip', 320),
+      cue(lastShotLands, 'spark-burst', 'strip', 320),
+      cue(lastShotLands, splat, 'villain', 300), // one web only, so the portrait stays clear
+      ...(net ? [cue(lastShotLands, 'web-net', 'villain', 600)] : []),
+    ],
+  };
+};
+
 export const SPIDERMAN: Profile = {
+  combo_special: [
+    combo('barrage-3a', 'spidey-barrage-3a', 3, 3, 'web-splat-1'),
+    combo('barrage-3b', 'spidey-barrage-3b', 3, 3, 'web-splat-2'),
+    combo('barrage-5a', 'spidey-barrage-5a', 5, 4, 'web-splat-3'),
+    combo('barrage-5b', 'spidey-barrage-5b', 5, 4, 'web-splat-1'),
+    combo('barrage-7', 'spidey-barrage-7', 7, 5, 'web-splat-2', true),
+  ],
   player_strike: [
     webStrike('thwip-1', 'spidey-thwip-1', 'web-line-1', 'web-splat-1'),
     webStrike('thwip-2', 'spidey-thwip-2', 'web-line-2', 'web-splat-2'),

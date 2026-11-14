@@ -137,3 +137,64 @@ export const MYSTERIO: Profile = {
     { id: 'taunt-2', sounds: [synth('mysterio-mist-2', 'voice')], cues: [cue(0, 'mysterio-mist-2', 'strip', 700), cue(0, 'react-dim', 'player', 400)] },
   ],
 };
+
+// ── Signature moves (the second wrong answer in a row) and defeats ──────────
+// In a signature move the two hits on Spider-Man are at least 280 ms apart, so
+// the marks they leave at the edge of his portrait never pile up.
+const defeated = (id: string, recipe: string): Variation => ({
+  id, sounds: [synth(recipe, 'voice')], cues: [cue(0, 'react-collapse', 'villain', 700)],
+});
+const twoHits = (first: number, second: number, mark: string) => [
+  cue(first, mark, 'player', 280), cue(first, 'react-hit', 'player', 250),
+  cue(second, mark, 'player', 280), cue(second, 'react-hit', 'player', 250),
+];
+
+const doublePumpkin = (id: string, lobs: [string, string], streak: string): Variation => ({
+  id,
+  sounds: [synth('goblin-special-1')],
+  cues: [
+    cue(0, 'react-lean', 'villain', 300),
+    cue(0, streak, 'strip', 600),
+    cue(0, lobs[0], 'strip', PUMPKIN_FLIGHT_MS),
+    cue(300, lobs[1], 'strip', PUMPKIN_FLIGHT_MS),
+    ...twoHits(PUMPKIN_FLIGHT_MS, 300 + PUMPKIN_FLIGHT_MS, 'goblin-puff'),
+  ],
+});
+GOBLIN.villain_special = [
+  doublePumpkin('double-pumpkin-1', ['goblin-pumpkin-1', 'goblin-pumpkin-2'], 'goblin-streak-1'),
+  doublePumpkin('double-pumpkin-2', ['goblin-pumpkin-2', 'goblin-pumpkin-1'], 'goblin-streak-2'),
+];
+GOBLIN.villain_defeated = [defeated('glider-falls', 'goblin-defeat-1')];
+
+const allArms = (id: string, order: string[]): Variation => ({
+  id,
+  sounds: [synth('ock-special-1')],
+  // One arm per clank: the clanks are 140 ms apart.
+  cues: [
+    cue(0, 'react-lean', 'villain', 300),
+    ...order.map((name, i) => cue(i * 140, name, 'strip', 300)),
+    ...twoHits(ARM_REACH_MS, 420 + ARM_REACH_MS, 'ock-impact'),
+  ],
+});
+DOC_OCK.villain_special = [
+  allArms('all-arms-1', ['ock-arm-1', 'ock-arm-2', 'ock-arm-3', 'ock-arm-4']),
+  allArms('all-arms-2', ['ock-arm-4', 'ock-arm-3', 'ock-arm-2', 'ock-arm-1']),
+];
+DOC_OCK.villain_defeated = [defeated('arms-droop', 'ock-defeat-1')];
+
+const split = (id: string, secondGhostMs: number): Variation => ({
+  id,
+  sounds: [synth('mysterio-special-1')],
+  // He splits into copies of himself; both drift out and dissolve.
+  cues: [
+    cue(0, 'react-ripple', 'villain', 400),
+    cue(0, 'mysterio-ghost-1', 'strip', 480),
+    cue(secondGhostMs, 'mysterio-ghost-2', 'strip', 480),
+    cue(100, 'mysterio-mist-1', 'strip', 500),
+    cue(200, 'mysterio-mist-2', 'strip', 500),
+    cue(ILLUSION_LANDS_MS, 'mysterio-veil', 'player', 280),
+    cue(ILLUSION_LANDS_MS, 'react-hit', 'player', 250),
+  ],
+});
+MYSTERIO.villain_special = [split('split-1', 0), split('split-2', 140)];
+MYSTERIO.villain_defeated = [defeated('illusion-breaks', 'mysterio-defeat-1')];

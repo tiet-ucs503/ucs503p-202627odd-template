@@ -133,4 +133,39 @@ const kingpin: Recipe[] = [
   { id: 'kingpin-taunt-2', layers: [tap(0, 0.26), ...thud(0.3, 0.4, 120)] },
 ];
 
+// ── Signature moves (second wrong answer in a row) and defeats ──
+venom.push(
+  { id: 'venom-special-1', layers: [...growl(0, 0.45, 54, 88), ...snap(0.45), ...snap(0.6, 0.5)] }, // a long growl, two snaps
+  {
+    id: 'venom-defeat-1', // the growl sinks away
+    layers: [
+      { source: 'sine', dur: 1.0, freq: [80, 36], gain: 0.5, attack: 0.01, pan: 0.5 },
+      { source: 'noise', dur: 1.0, gain: 0.34, attack: 0.01, filter: { type: 'lowpass', freq: [700, 120], q: 6 }, pan: 0.5 },
+    ],
+  },
+);
+
+lizard.push(
+  {
+    id: 'lizard-special-1', // hiss, crack, the tail comes round again, crack
+    layers: [
+      hiss(0, 0.22), crack(0.3),
+      { source: 'noise', at: 0.42, dur: 0.16, gain: 0.3, attack: 0.08, filter: { type: 'highpass', freq: [1500, 4800] }, pan: 0.45 },
+      crack(0.6, 0.5),
+    ],
+  },
+  {
+    id: 'lizard-defeat-1', // a long hiss that fades out
+    layers: [
+      { source: 'noise', dur: 1.0, gain: 0.3, attack: 0.01, filter: { type: 'highpass', freq: [6000, 2400] }, pan: 0.45 },
+      scratch(0.2),
+    ],
+  },
+);
+
+kingpin.push(
+  { id: 'kingpin-special-1', layers: [tap(0), ...thud(0.18), ...thud(0.5, 0.62, 170)] }, // a tap, then two heavy beats
+  { id: 'kingpin-defeat-1', layers: [...thud(0, 0.62, 170), tap(0.6, 0.22), tap(0.95, 0.14)] }, // he falls; the cane rolls away
+);
+
 export const VILLAIN_RECIPES_2: Recipe[] = [...venom, ...lizard, ...kingpin];

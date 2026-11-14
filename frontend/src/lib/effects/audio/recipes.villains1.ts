@@ -191,4 +191,57 @@ const mysterio: Recipe[] = [
   },
 ];
 
+// ── Signature moves (second wrong answer in a row) and defeats ──
+goblin.push(
+  {
+    id: 'goblin-special-1', // two pumpkins, then a cackle
+    layers: [
+      { source: 'sawtooth', dur: 0.2, freq: [920, 300], gain: 0.24, attack: 0.01, ring: 120, pan: 0.2 },
+      { source: 'noise', at: 0.22, dur: 0.12, gain: 0.38, attack: 0.002, filter: { type: 'lowpass', freq: [1300, 280] }, pan: -0.4 },
+      { source: 'sawtooth', at: 0.3, dur: 0.2, freq: [800, 260], gain: 0.24, attack: 0.01, ring: 140, pan: 0.2 },
+      { source: 'noise', at: 0.52, dur: 0.13, gain: 0.4, attack: 0.002, filter: { type: 'lowpass', freq: [1100, 240] }, pan: -0.4 },
+      chirp(0.68, 600, 820), chirp(0.79, 700, 980), chirp(0.9, 820, 1100),
+    ],
+  },
+  {
+    id: 'goblin-defeat-1', // the glider sputters and drops
+    layers: [
+      { source: 'sawtooth', dur: 0.9, freq: [420, 90], gain: 0.28, attack: 0.01, vibrato: { rate: 22, depth: 70 }, ring: 60, pan: 0.5, echo: 0.15 },
+      { source: 'noise', dur: 0.5, gain: 0.12, attack: 0.2, filter: { type: 'bandpass', freq: [1500, 400], q: 4 }, pan: 0.5 },
+    ],
+  },
+);
+
+docOck.push(
+  {
+    id: 'ock-special-1', // all four arms, one after another
+    layers: [
+      click(0), clank(0, 310, 1.41, 0.2, 0.3),
+      click(0.14, 170), clank(0.14, 260, 3.5, 0.2, 0.3),
+      click(0.28, 190), clank(0.28, 340, 2.2, 0.2, 0.3),
+      click(0.42, 210), clank(0.42, 290, 1.41, 0.42, 0.34),
+    ],
+  },
+  {
+    id: 'ock-defeat-1', // the servos wind down, each click later than the last
+    layers: [
+      click(0), click(0.14), click(0.32), click(0.56), click(0.86),
+      { source: 'sine', dur: 1.0, freq: [180, 60], gain: 0.24, attack: 0.02, fm: { ratio: 1.41, index: 2.5 }, pan: 0.45 },
+    ],
+  },
+);
+
+mysterio.push(
+  {
+    id: 'mysterio-special-1', // two swells at once: the illusion doubles
+    layers: [...pair(0, 440, 660, 0.5, 0.45), ...pair(0, 330, 495, 0.5, 0.45, 0.16),
+      { source: 'triangle', at: 0.45, dur: 0.4, freq: [1320, 2640], gain: 0.1, attack: 0.01, echo: 0.8 }],
+  },
+  {
+    id: 'mysterio-defeat-1', // the illusion collapses: a long fall and a crack in the dome
+    layers: [...pair(0, 660, 220, 1.0, 0.02, 0.2),
+      { source: 'noise', at: 0.1, dur: 0.06, gain: 0.16, attack: 0.001, filter: { type: 'highpass', freq: [4000, 6000] }, echo: 0.6 }],
+  },
+);
+
 export const VILLAIN_RECIPES_1: Recipe[] = [...goblin, ...docOck, ...mysterio];

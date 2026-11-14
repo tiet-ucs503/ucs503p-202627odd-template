@@ -363,3 +363,42 @@
   100% { transform: translateX(0); opacity: 1; }
 }
 .fx-react-step-in { animation: fx-step-in var(--fx-dur, 700ms) ease-out; }
+
+/* ════ Specials and end states ═════════════════════════════════════════════ */
+
+/* Spider-Man's full combo: a web net closes round the villain's portrait (a frame, outside the image). */
+.fx-net {
+  position: absolute;
+  inset: -7%;
+  border: 2px dashed #ffffff;
+  border-radius: 1.25rem;
+  pointer-events: none;
+}
+@keyframes fx-net-close {
+  0%   { transform: scale(1.25); opacity: 0; }
+  30%  { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+.fx-net-moving { animation: fx-net-close var(--fx-dur, 600ms) ease-out forwards; }
+.fx-net-still { animation: fx-fade-out var(--fx-dur, 600ms) ease-out forwards; }
+
+@keyframes fx-stagger {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  20%      { transform: rotate(calc(5deg * var(--fx-dir, 1))) translateY(2px); }
+  50%      { transform: rotate(calc(-4deg * var(--fx-dir, 1))) translateY(0); }
+  75%      { transform: rotate(calc(2deg * var(--fx-dir, 1))) translateY(1px); }
+}
+.fx-react-stagger { animation: fx-stagger var(--fx-dur, 420ms) ease-out; }
+
+@keyframes fx-collapse {
+  0%   { transform: rotate(0) translateY(0); filter: grayscale(0) brightness(1); }
+  100% { transform: rotate(calc(6deg * var(--fx-dir, 1))) translateY(4px); filter: grayscale(1) brightness(0.6); }
+}
+.fx-react-collapse { animation: fx-collapse var(--fx-dur, 700ms) ease-in forwards; }
+
+/* Lasting looks for a portrait. These are states, not animations: they ease in once and stay. */
+.fx-state { transition: filter 0.4s ease, transform 0.4s ease; }
+.fx-weakened { filter: saturate(0.5) brightness(0.82); transform: rotate(calc(2deg * var(--fx-dir, 1))) translateY(2px); }
+.fx-weakened-still { filter: saturate(0.5) brightness(0.82); }
+.fx-defeated { filter: grayscale(1) brightness(0.6); transform: rotate(calc(6deg * var(--fx-dir, 1))) translateY(4px); }
+.fx-defeated-still { filter: grayscale(1) brightness(0.6); }

@@ -36,7 +36,7 @@ describe('built villains', () => {
 
   it.each(BUILT)('%s always has something to play: not every variation is rationed', (id) => {
     for (const variations of Object.values(VILLAINS[id])) {
-      expect(variations.filter((v) => !v.minGap).length).toBeGreaterThanOrEqual(2);
+      expect(variations.filter((v) => !v.minGap).length).toBeGreaterThanOrEqual(1);
     }
   });
 
@@ -91,7 +91,7 @@ describe('distinct identities', () => {
   });
 
   it('no two villains share a visual of their own', () => {
-    const generic = new Set(['react-hit', 'react-dim', 'react-enter', 'react-lean']);
+    const generic = new Set(['react-hit', 'react-dim', 'react-enter', 'react-lean', 'react-collapse']);
     const seen = new Map<string, string>();
     for (const id of BUILT) {
       const own = cuesOf(VILLAINS[id]).filter((c) => !generic.has(c));

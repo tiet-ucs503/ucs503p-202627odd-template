@@ -108,3 +108,67 @@ export const KINGPIN: Profile = {
     { id: 'taunt-2', sounds: [synth('kingpin-taunt-2', 'voice')], cues: [cue(300, 'kingpin-ring-1', 'strip', 420), cue(0, 'react-dim', 'player', 400)] },
   ],
 };
+
+// ── Signature moves (the second wrong answer in a row) and defeats ──────────
+// In a signature move the two hits on Spider-Man are at least 280 ms apart, so
+// the marks they leave at the edge of his portrait never pile up.
+const defeated = (id: string, recipe: string): Variation => ({
+  id, sounds: [synth(recipe, 'voice')], cues: [cue(0, 'react-collapse', 'villain', 700)],
+});
+
+const tendrilWeb = (id: string, order: string[]): Variation => ({
+  id,
+  sounds: [synth('venom-special-1')],
+  // All three tendrils close in; the sound snaps twice.
+  cues: [
+    cue(0, 'react-lean', 'villain', 300),
+    ...order.map((name, i) => cue(i * 60, name, 'strip', 570)),
+    cue(450, 'venom-slash', 'player', 280),
+    cue(450, 'react-hit', 'player', 250),
+    cue(740, 'react-hit', 'player', 250),
+  ],
+});
+VENOM.villain_special = [
+  tendrilWeb('tendril-web-1', ['venom-tendril-1', 'venom-tendril-3', 'venom-tendril-2']),
+  tendrilWeb('tendril-web-2', ['venom-tendril-2', 'venom-tendril-1', 'venom-tendril-3']),
+];
+VENOM.villain_defeated = [defeated('tendrils-retract', 'venom-defeat-1')];
+
+const tailSweep = (id: string, marks: [string, string]): Variation => ({
+  id,
+  sounds: [synth('lizard-special-1')],
+  // The tail cracks at 300 ms and again at 600 ms.
+  cues: [
+    cue(0, 'react-lean', 'villain', 300),
+    cue(140, 'lizard-tail-1', 'strip', 260),
+    cue(300, marks[0], 'player', 280),
+    cue(300, 'react-hit', 'player', 250),
+    cue(440, 'lizard-tail-2', 'strip', 260),
+    cue(600, marks[1], 'player', 280),
+    cue(600, 'react-hit', 'player', 250),
+  ],
+});
+LIZARD.villain_special = [
+  tailSweep('tail-sweep-1', ['lizard-claws-1', 'lizard-claws-2']),
+  tailSweep('tail-sweep-2', ['lizard-claws-3', 'lizard-claws-1']),
+];
+LIZARD.villain_defeated = [defeated('scales-fade', 'lizard-defeat-1')];
+
+const doubleThud = (id: string, rings: [string, string]): Variation => ({
+  id,
+  sounds: [synth('kingpin-special-1')],
+  // Two heavy beats, at 180 ms and 500 ms; each ring reaches Spider-Man 120 ms later.
+  cues: [
+    cue(180, rings[0], 'strip', 420),
+    cue(300, 'kingpin-impact', 'player', 280),
+    cue(300, 'react-hit', 'player', 250),
+    cue(500, rings[1], 'strip', 420),
+    cue(620, 'kingpin-impact', 'player', 280),
+    cue(620, 'react-hit', 'player', 250),
+  ],
+});
+KINGPIN.villain_special = [
+  doubleThud('double-thud-1', ['kingpin-ring-1', 'kingpin-ring-2']),
+  doubleThud('double-thud-2', ['kingpin-ring-2', 'kingpin-ring-1']),
+];
+KINGPIN.villain_defeated = [defeated('he-falls', 'kingpin-defeat-1')];

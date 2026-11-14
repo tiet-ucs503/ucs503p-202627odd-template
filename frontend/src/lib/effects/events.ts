@@ -10,11 +10,12 @@ export type GameEventType =
   | 'player_strike'      // the server judged the answer correct: Spider-Man lands a hit
   | 'villain_attack'     // the server judged a chosen answer wrong: villain counter-attacks
   | 'time_out'           // no answer was given in time: villain taunt
-  | 'combo_special'      // the correct streak reached 3, 5 or 7: Spider-Man special
-  | 'villain_special'    // second wrong answer in a row: villain signature move
+  | 'combo_special'      // a correct answer that takes the streak to 3, 5 or 7: Spider-Man's special, in place of a plain strike
+  | 'villain_special'    // the second wrong answer in a row: the villain's signature move, in place of a plain attack
   | 'villain_staggered'  // half the hits needed have landed: villain weakened (once per mission)
   | 'hint'               // the hint arrived from the server
   | 'victory'
+  | 'villain_defeated'   // with victory: the villain's own way of going down
   | 'defeat';
 
 export interface GameEvent {
@@ -50,10 +51,9 @@ export function deriveEvents(
 
   if (response.correct) {
     next.wrongInARow = 0;
-    events.push({ type: 'player_strike', streak: session.streak });
-    if (COMBO_MILESTONES.includes(session.streak)) {
-      events.push({ type: 'combo_special', streak: session.streak });
-    }
+    // One move per answer: at a streak milestone the special replaces the plain strike.
+    const special = COMBO_MILESTONES.includes(session.streak);
+    events.push({ type: special ? 'combo_special' : 'player_strike', streak: session.streak });
     const halfway = session.correct_count * 2 >= session.questions_to_win;
     if (halfway && !state.staggered && response.session_status === 'active') {
       next.staggered = true;
@@ -64,12 +64,14 @@ export function deriveEvents(
     if (timedOut) {
       events.push({ type: 'time_out' });
     } else {
-      events.push({ type: 'villain_attack' });
-      if (next.wrongInARow === 2) events.push({ type: 'villain_special' });
+      // One move per answer: the second wrong answer in a row brings the signature move instead.
+      events.push({ type: next.wrongInARow === 2 ? 'villain_special' : 'villain_attack' });
     }
   }
 
-  if (response.session_status === 'victory') events.push({ type: 'victory', afterResult: true });
+  if (response.session_status === 'victory') {
+    events.push({ type: 'victory', afterResult: true }, { type: 'villain_defeated', afterResult: true });
+  }
   if (response.session_status === 'defeat') events.push({ type: 'defeat', afterResult: true });
 
   return { events, state: next };

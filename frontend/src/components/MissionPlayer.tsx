@@ -285,6 +285,10 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
           >
             <CheckCircle2 className="w-12 h-12 text-green-400" />
           </div>
+          <div className="flex items-center justify-center gap-6 mb-6" data-end-portraits>
+            <CharacterPortrait character={SPIDERMAN} side="left" cues={cuesFor('player')} />
+            <CharacterPortrait character={boss} side="right" cues={cuesFor('villain')} state="defeated" />
+          </div>
           <h2 className="text-4xl sm:text-5xl font-comic text-white mb-4 uppercase tracking-wide">THREAT NEUTRALIZED</h2>
 
           <div className="grid grid-cols-2 gap-4 mb-10">
@@ -327,6 +331,10 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
           >
             <ShieldAlert className="w-12 h-12 text-red-400" />
           </div>
+          <div className="flex items-center justify-center gap-6 mb-6" data-end-portraits>
+            <CharacterPortrait character={SPIDERMAN} side="left" cues={cuesFor('player')} state="weakened" />
+            <CharacterPortrait character={boss} side="right" cues={cuesFor('villain')} />
+          </div>
           <h2 className="text-4xl sm:text-5xl font-comic text-white mb-4 uppercase tracking-wide">MISSION FAILED</h2>
           <p className="text-red-400 font-comic text-2xl mb-10">The villain escaped this time...</p>
           <div className="flex gap-4">
@@ -341,6 +349,8 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
   if (!session || !question) return null;
 
   const villainHealth = Math.max(0, 100 - (100 * session.correct_count) / session.questions_to_win);
+  // Once half the hits have landed the villain looks worn down for the rest of the mission.
+  const weakened = session.correct_count * 2 >= session.questions_to_win;
   const playerHealth = Math.max(0, 100 - (100 * session.wrong_count) / session.max_wrong);
   const timeLeft = Math.max(0, QUESTION_TIME_LIMIT - timeSpent);
   const questionNumber = session.correct_count + session.wrong_count + (result ? 0 : 1);
@@ -399,7 +409,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
             </div>
           </div>
         </div>
-        <CharacterPortrait character={boss} side="right" cues={cuesFor('villain')} />
+        <CharacterPortrait character={boss} side="right" cues={cuesFor('villain')} state={weakened ? 'weakened' : undefined} />
       </div>
 
       {/* Main combat area */}

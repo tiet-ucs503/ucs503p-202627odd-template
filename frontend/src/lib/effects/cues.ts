@@ -63,6 +63,8 @@ export const CUES: Record<string, CueDef> = {
   'react-dim': reaction('fx-react-dim', 'fx-react-dim'),
   'react-enter': reaction('fx-react-enter', 'fx-react-fade-in'),
   'react-lean': reaction('fx-react-lean', null), // a villain leaning into its attack
+  'react-stagger': reaction('fx-react-stagger', 'fx-react-dim'), // the villain reels when half its health is gone
+  'react-collapse': reaction('fx-react-collapse', 'fx-react-dim'), // the villain goes down
   'victory-pop': reaction('fx-victory-pop', 'fx-react-fade-in'),
   'defeat-sink': reaction('fx-defeat-sink', 'fx-react-fade-in'),
 
@@ -74,6 +76,8 @@ export const CUES: Record<string, CueDef> = {
   'web-splat-2': overlay('fx-web-splat fx-web-splat-moving fx-splat-bl', 'fx-web-splat fx-web-splat-still fx-splat-bl', 16, undefined, { mark: 'web' }),
   'web-splat-3': overlay('fx-web-splat fx-web-splat-moving fx-splat-tr', 'fx-web-splat fx-web-splat-still fx-splat-tr', 16, undefined, { mark: 'web' }),
   'spark-burst': strip('sparks', 'fx-spark fx-spark-moving', null, { particles: 6, color: '#ffffff' }),
+  // A web net closing round the villain's portrait. It is a frame outside the image, so it hides nothing.
+  'web-net': overlay('fx-net fx-net-moving', 'fx-net fx-net-still', 0),
 
   // ── Gwen's comm link ──
   'gwen-ripple': overlay('fx-ring fx-ring-moving', 'fx-ring fx-ring-still', 0),

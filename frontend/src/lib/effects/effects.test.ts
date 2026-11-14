@@ -34,9 +34,9 @@ describe('deriveEvents', () => {
     expect(types(initialEventState(), judged(false, { wrong_count: 1 }), true)).toEqual(['time_out']);
   });
 
-  it.each([3, 5, 7])('a streak of %i adds a combo special', (streak) => {
+  it.each([3, 5, 7])('a streak of %i is a combo special, in place of a plain strike', (streak) => {
     const events = types({ wrongInARow: 0, staggered: true }, judged(true, { streak, correct_count: streak }));
-    expect(events).toEqual(['player_strike', 'combo_special']);
+    expect(events).toEqual(['combo_special']);
   });
 
   it.each([1, 2, 4, 6])('a streak of %i does not', (streak) => {
@@ -44,7 +44,7 @@ describe('deriveEvents', () => {
     expect(events).toEqual(['player_strike']);
   });
 
-  it('the second wrong answer in a row adds the villain special, and only the second', () => {
+  it('the second wrong answer in a row is the villain special, and only the second', () => {
     let state = initialEventState();
     const seen: GameEventType[][] = [];
     for (let i = 1; i <= 4; i++) {
@@ -52,7 +52,7 @@ describe('deriveEvents', () => {
       state = result.state;
       seen.push(result.events.map((e) => e.type));
     }
-    expect(seen).toEqual([['villain_attack'], ['villain_attack', 'villain_special'], ['villain_attack'], ['villain_attack']]);
+    expect(seen).toEqual([['villain_attack'], ['villain_special'], ['villain_attack'], ['villain_attack']]);
   });
 
   it('a correct answer resets the wrong-in-a-row count', () => {
@@ -74,7 +74,9 @@ describe('deriveEvents', () => {
 
   it('victory and defeat are marked to wait for the end screen', () => {
     const win = deriveEvents(initialEventState(), judged(true, { streak: 1, correct_count: 7 }, 'victory'), false).events;
-    expect(win.map((e) => [e.type, e.afterResult ?? false])).toEqual([['player_strike', false], ['victory', true]]);
+    expect(win.map((e) => [e.type, e.afterResult ?? false])).toEqual(
+      [['player_strike', false], ['victory', true], ['villain_defeated', true]],
+    );
     const loss = deriveEvents(initialEventState(), judged(false, { wrong_count: 7 }, 'defeat'), false).events;
     expect(loss.map((e) => e.type)).toEqual(['villain_attack', 'defeat']);
   });
@@ -318,8 +320,8 @@ describe('EffectsDirector', () => {
     }
   });
 
-  it('ignores events that have no effects yet, and unknown villains', () => {
-    expect(makeDirector('goblin').director.play({ type: 'combo_special' })).toEqual([]);
+  it('uses the shared effects where a villain has none, and for unknown villains', () => {
+    expect(makeDirector('goblin').director.play({ type: 'hint' })).toHaveLength(1); // shared only: villains have no hint effect
     const picked = makeDirector('nobody').director.play({ type: 'player_strike' });
     expect(picked).toHaveLength(1); // Spider-Man's own sound still plays
     expect(picked[0]).toMatch(/^spiderman:/);

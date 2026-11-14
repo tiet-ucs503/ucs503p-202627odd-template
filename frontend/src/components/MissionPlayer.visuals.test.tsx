@@ -134,6 +134,57 @@ describe('each villain takes a hit in its own way', () => {
   });
 });
 
+describe('weakened and defeated villains', () => {
+  // The fake mission is won with three correct answers, so half its health is gone after the second.
+  it('the villain looks weakened once half the hits have landed, and stays that way', async () => {
+    installFakeServer();
+    const view = render(<MissionPlayer bossId="venom" onExit={vi.fn()} feedbackMs={20} />);
+    const portrait = () => view.container.querySelector('[data-portrait="venom"]')!;
+    await screen.findByText(/^Puzzle \d+$/);
+    expect(portrait().getAttribute('data-state')).toBe('normal');
+
+    fireEvent.click(option());
+    await waitFor(() => expect(screen.getByText(/1 \/ 3 hits landed/)).toBeTruthy());
+    expect(portrait().getAttribute('data-state')).toBe('normal');
+
+    await waitFor(() => expect(option().hasAttribute('disabled')).toBe(false));
+    fireEvent.click(option());
+    await waitFor(() => expect(portrait().getAttribute('data-state')).toBe('weakened'));
+    expect(portrait().querySelector('[data-portrait-frame]')!.className).toContain('fx-weakened');
+    expect(portrait().querySelector('img')).not.toBeNull(); // still fully there, just worn down
+  });
+
+  it('with reduced motion the weakened look is a change of colour only, with no tilt', async () => {
+    effectsSettings.update({ motion: 'reduced' });
+    installFakeServer();
+    const view = render(<MissionPlayer bossId="venom" onExit={vi.fn()} feedbackMs={20} />);
+    await screen.findByText(/^Puzzle \d+$/);
+    fireEvent.click(option());
+    await waitFor(() => expect(screen.getByText(/1 \/ 3 hits landed/)).toBeTruthy());
+    await waitFor(() => expect(option().hasAttribute('disabled')).toBe(false));
+    fireEvent.click(option());
+    const frame = () => view.container.querySelector('[data-portrait="venom"] [data-portrait-frame]')!;
+    await waitFor(() => expect(frame().className).toContain('fx-weakened-still'));
+    const rule = effectsCss.match(/\.fx-weakened-still\s*\{([^}]*)\}/)![1];
+    expect(rule).not.toMatch(/transform/);
+  });
+
+  it('the victory screen shows Spider-Man beside the defeated villain', async () => {
+    installFakeServer();
+    const view = render(<MissionPlayer bossId="kingpin" onExit={vi.fn()} feedbackMs={20} />);
+    for (let i = 0; i < 3; i++) {
+      await waitFor(() => expect(option().hasAttribute('disabled')).toBe(false));
+      fireEvent.click(option());
+      await waitFor(() => expect(screen.queryByText(new RegExp(`${i + 1} / 3 hits landed`)) ?? screen.queryByText('THREAT NEUTRALIZED')).toBeTruthy());
+    }
+    await screen.findByText('THREAT NEUTRALIZED');
+    const row = view.container.querySelector('[data-end-portraits]')!;
+    expect(row.querySelector('[data-portrait="spiderman"]')!.getAttribute('data-state')).toBe('normal');
+    expect(row.querySelector('[data-portrait="kingpin"]')!.getAttribute('data-state')).toBe('defeated');
+    expect(row.querySelector('[data-portrait="kingpin"] img')).not.toBeNull();
+  });
+});
+
 describe('effects never get in the way', () => {
   it('the effects layer ignores the mouse, is hidden from screen readers, and sits in the header only', async () => {
     installFakeServer();
@@ -176,7 +227,8 @@ describe('effects never get in the way', () => {
           expect(def, `unknown cue ${step.cue}`).toBeDefined();
           if (def.kind === 'overlay' && (step.target === 'player' || step.target === 'villain')) {
             expect(def.coverPct).toBeLessThanOrEqual(MAX_OVERLAY_COVER_PCT);
-            expect(step.durMs).toBeLessThanOrEqual(MAX_OVERLAY_MS);
+            // Anything drawn on the image must be brief. A frame outside it (the web net) covers nothing.
+            if ((def.coverPct ?? 0) > 5) expect(step.durMs).toBeLessThanOrEqual(MAX_OVERLAY_MS);
           }
           if (def.particles) expect(def.particles).toBeLessThanOrEqual(MAX_PARTICLES);
           expect(step.atMs + step.durMs).toBeLessThanOrEqual(2200); // fits in the pause between questions

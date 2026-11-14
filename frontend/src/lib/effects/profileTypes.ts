@@ -28,6 +28,8 @@ export interface CueStep {
 export interface Variation extends Pickable {
   sounds: SoundStep[];
   cues: CueStep[];
+  /** Only used when the correct streak is exactly this long (for combo specials). */
+  forStreak?: number;
 }
 
 export type Profile = Partial<Record<GameEventType, Variation[]>>;
