@@ -24,8 +24,8 @@ const layersOf = (prefix: string): [Recipe, Layer[]][] =>
   Object.values(RECIPES).filter((r) => r.id.startsWith(prefix)).map((r) => [r, r.layers]);
 
 describe('built villains', () => {
-  it('this phase covers Green Goblin, Doctor Octopus and Mysterio', () => {
-    expect(BUILT).toEqual(['goblin', 'doc-ock', 'mysterio']);
+  it('all six villains have their own effects', () => {
+    expect(BUILT).toEqual(['goblin', 'doc-ock', 'mysterio', 'venom', 'lizard', 'kingpin']);
   });
 
   it.each(BUILT)('%s has at least two variations of every repeatable effect', (id) => {
@@ -145,6 +145,54 @@ describe('distinct identities', () => {
     }
   });
 
+  it('Venom is sub-bass under dark, low-passed noise: nothing bright, no echo', () => {
+    const recipes = layersOf('venom-');
+    expect(recipes.length).toBeGreaterThanOrEqual(8);
+    for (const [recipe, layers] of recipes) {
+      expect(layers.some((l) => l.source === 'sine' && Math.min(...l.freq!) <= 60), recipe.id).toBe(true);
+      expect(layers.some((l) => l.source === 'noise' && l.filter?.type === 'lowpass'), recipe.id).toBe(true);
+      expect(layers.some((l) => l.filter?.type === 'highpass' || l.echo || l.fm || l.ring), recipe.id).toBe(false);
+      expect(layers.some((l) => ['sawtooth', 'square', 'triangle'].includes(l.source)), recipe.id).toBe(false);
+    }
+  });
+
+  it('The Lizard is high-passed noise only: hisses and cracks, no tones at all', () => {
+    const recipes = layersOf('lizard-');
+    expect(recipes.length).toBeGreaterThanOrEqual(8);
+    for (const [recipe, layers] of recipes) {
+      expect(layers.every((l) => l.source === 'noise' && l.filter?.type === 'highpass'), recipe.id).toBe(true);
+      expect(layers.some((l) => l.echo), recipe.id).toBe(false);
+    }
+    // every attack ends in an instant crack
+    for (const id of ['lizard-claw-1', 'lizard-claw-2', 'lizard-claw-3']) {
+      expect(RECIPES[id].layers.some((l) => l.dur <= 0.05 && (l.attack ?? 1) <= 0.001), id).toBe(true);
+    }
+  });
+
+  it('Kingpin is a pitch-dropping thud with a wooden click, in an echoing room', () => {
+    const recipes = layersOf('kingpin-');
+    expect(recipes.length).toBeGreaterThanOrEqual(8);
+    for (const [recipe, layers] of recipes) {
+      const thud = layers.find((l) => l.source === 'sine');
+      expect(thud, recipe.id).toBeDefined();
+      expect(thud!.freq![0] / thud!.freq![1], recipe.id).toBeGreaterThanOrEqual(2); // the pitch falls by an octave or more
+      expect(thud!.freq![1], recipe.id).toBeLessThanOrEqual(60);
+      expect((thud!.echo ?? 0), recipe.id).toBeGreaterThanOrEqual(0.3);
+      expect(layers.some((l) => l.source === 'triangle' && l.dur <= 0.04), recipe.id).toBe(true); // the cane tap
+      expect(layers.some((l) => l.filter?.type === 'highpass' || l.fm || l.ring || l.source === 'sawtooth'), recipe.id).toBe(false);
+    }
+  });
+
+  it('the two lowest villains are still different kinds of sound', () => {
+    // Venom and Kingpin both sit very low; what separates them is how the sound is made and shaped.
+    const venomAttack = RECIPES['venom-lash-1'].layers;
+    const kingpinAttack = RECIPES['kingpin-cane-1'].layers;
+    expect(venomAttack[0].attack).toBeGreaterThan(0.1); // Venom swells in slowly
+    expect(kingpinAttack.find((l) => l.source === 'sine')!.attack).toBeLessThan(0.01); // Kingpin lands at once
+    expect(venomAttack.some((l) => l.echo)).toBe(false);
+    expect(kingpinAttack.every((l) => (l.echo ?? 0) > 0)).toBe(true);
+  });
+
   it('the signature rhythms are there: three chirps, four clicks', () => {
     const cackle = RECIPES['goblin-cackle-1'].layers.filter((l) => l.dur < 0.1);
     expect(cackle).toHaveLength(3);
@@ -191,8 +239,8 @@ describe('the director with a built villain', () => {
     expect(cues.some((c) => c.cue === 'react-recoil')).toBe(false);
   });
 
-  it('a villain without its own effects still uses the shared ones', () => {
-    const { director } = setup('venom');
+  it('the shared effects remain as the fallback for an unknown villain', () => {
+    const { director } = setup('nobody');
     expect(director.play({ type: 'villain_attack' })[0]).toMatch(/^shared:counter-/);
     expect(director.play({ type: 'mission_start' })).toEqual(['shared:enter']);
   });

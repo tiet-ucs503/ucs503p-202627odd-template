@@ -11,7 +11,10 @@
 export type CueKind = 'reaction' | 'overlay' | 'strip';
 
 /** How a strip cue is drawn. */
-export type StripShape = 'line' | 'sparks' | 'dot' | 'arc' | 'blob' | 'ghost';
+export type StripShape = 'line' | 'sparks' | 'dot' | 'arc' | 'blob' | 'ghost' | 'ring';
+
+/** A small drawing placed at the edge of a portrait. */
+export type OverlayMark = 'web' | 'slash' | 'claws' | 'glint';
 
 /** Overlays may touch a portrait's edge but must leave it clearly visible. */
 export const MAX_OVERLAY_COVER_PCT = 20;
@@ -33,6 +36,10 @@ export interface CueDef {
   particles?: number;
   /** For 'arc': the curve, drawn in a 100 x 100 box from the villain (right) to the player (left). */
   path?: string;
+  /** For overlays that are a small drawing rather than a plain shape. */
+  mark?: OverlayMark;
+  /** For 'claws': the angle of the scratch marks, in degrees. */
+  angle?: number;
   /** Colour of the cue as a CSS colour, where it has one. */
   color?: string;
 }
@@ -40,10 +47,14 @@ export interface CueDef {
 const reaction = (className: string, reducedClassName: string | null): CueDef => ({ kind: 'reaction', className, reducedClassName });
 const strip = (shape: StripShape, moving: string, still: string | null, extra: Partial<CueDef> = {}): CueDef =>
   ({ kind: 'strip', shape, className: moving, reducedClassName: still, ...extra });
-const overlay = (moving: string, still: string, coverPct: number, color?: string): CueDef =>
-  ({ kind: 'overlay', className: moving, reducedClassName: still, coverPct, color });
+const overlay = (moving: string, still: string, coverPct: number, color?: string, extra: Partial<CueDef> = {}): CueDef =>
+  ({ kind: 'overlay', className: moving, reducedClassName: still, coverPct, color, ...extra });
+/** A small drawing that pops in at the inner edge of the player's portrait, where an attack lands. */
+const mark = (kind: OverlayMark, color: string, extra: Partial<CueDef> = {}): CueDef =>
+  overlay('fx-edge-mark fx-edge-inner fx-web-splat-moving', 'fx-edge-mark fx-edge-inner fx-web-splat-still', 19, color, { mark: kind, ...extra });
 
 const STEEL = '#94a3b8';
+const TENDRIL = '#64748b';
 
 export const CUES: Record<string, CueDef> = {
   // ── Reactions shared by everyone ──
@@ -59,9 +70,9 @@ export const CUES: Record<string, CueDef> = {
   'web-line-1': strip('line', 'fx-web-line fx-web-line-moving fx-web-line-straight', 'fx-web-line fx-web-line-still'),
   'web-line-2': strip('line', 'fx-web-line fx-web-line-moving fx-web-line-high', 'fx-web-line fx-web-line-still'),
   'web-line-3': strip('line', 'fx-web-line fx-web-line-moving fx-web-line-low', 'fx-web-line fx-web-line-still'),
-  'web-splat-1': overlay('fx-web-splat fx-web-splat-moving fx-splat-tl', 'fx-web-splat fx-web-splat-still fx-splat-tl', 16),
-  'web-splat-2': overlay('fx-web-splat fx-web-splat-moving fx-splat-bl', 'fx-web-splat fx-web-splat-still fx-splat-bl', 16),
-  'web-splat-3': overlay('fx-web-splat fx-web-splat-moving fx-splat-tr', 'fx-web-splat fx-web-splat-still fx-splat-tr', 16),
+  'web-splat-1': overlay('fx-web-splat fx-web-splat-moving fx-splat-tl', 'fx-web-splat fx-web-splat-still fx-splat-tl', 16, undefined, { mark: 'web' }),
+  'web-splat-2': overlay('fx-web-splat fx-web-splat-moving fx-splat-bl', 'fx-web-splat fx-web-splat-still fx-splat-bl', 16, undefined, { mark: 'web' }),
+  'web-splat-3': overlay('fx-web-splat fx-web-splat-moving fx-splat-tr', 'fx-web-splat fx-web-splat-still fx-splat-tr', 16, undefined, { mark: 'web' }),
   'spark-burst': strip('sparks', 'fx-spark fx-spark-moving', null, { particles: 6, color: '#ffffff' }),
 
   // ── Gwen's comm link ──
@@ -91,6 +102,32 @@ export const CUES: Record<string, CueDef> = {
   'mysterio-veil': overlay('fx-puff fx-puff-moving', 'fx-puff fx-puff-still', 13, '#2dd4bf'),
   'react-ripple': reaction('fx-react-ripple', 'fx-react-dim'),
   'react-materialise': reaction('fx-react-materialise', 'fx-react-fade-in'),
+
+  // ── Venom: thick grey tendrils that creep and lash, a white slash, a recoil ──
+  'venom-tendril-1': strip('arc', 'fx-arc fx-arc-thick fx-arc-moving', 'fx-arc fx-arc-thick fx-arc-still', { path: 'M100,34 C82,60 62,8 42,36 C28,56 14,30 3,44', color: TENDRIL }),
+  'venom-tendril-2': strip('arc', 'fx-arc fx-arc-thick fx-arc-moving', 'fx-arc fx-arc-thick fx-arc-still', { path: 'M100,52 C80,26 64,78 44,52 C30,34 16,62 3,50', color: TENDRIL }),
+  'venom-tendril-3': strip('arc', 'fx-arc fx-arc-thick fx-arc-moving', 'fx-arc fx-arc-thick fx-arc-still', { path: 'M100,70 C84,92 60,46 42,68 C28,84 14,52 3,58', color: TENDRIL }),
+  'venom-retract-1': strip('arc', 'fx-arc fx-arc-thick fx-arc-retract', 'fx-arc fx-arc-thick fx-arc-still', { path: 'M100,40 C84,62 66,20 50,42', color: TENDRIL }),
+  'venom-retract-2': strip('arc', 'fx-arc fx-arc-thick fx-arc-retract', 'fx-arc fx-arc-thick fx-arc-still', { path: 'M100,62 C84,40 66,82 50,60', color: TENDRIL }),
+  'venom-slash': mark('slash', '#f8fafc'),
+  'react-shrink': reaction('fx-react-shrink', 'fx-react-dim'),
+
+  // ── The Lizard: a sweeping green tail, claw marks, shimmering scales ──
+  'lizard-tail-1': strip('arc', 'fx-arc fx-arc-thick fx-arc-moving', 'fx-arc fx-arc-thick fx-arc-still', { path: 'M100,22 C70,20 34,34 3,62', color: '#84cc16' }),
+  'lizard-tail-2': strip('arc', 'fx-arc fx-arc-thick fx-arc-moving', 'fx-arc fx-arc-thick fx-arc-still', { path: 'M100,80 C68,82 32,68 3,40', color: '#84cc16' }),
+  'lizard-claws-1': mark('claws', '#bef264', { angle: -35 }),
+  'lizard-claws-2': mark('claws', '#bef264', { angle: 35 }),
+  'lizard-claws-3': mark('claws', '#bef264', { angle: -70 }),
+  'react-flick': reaction('fx-react-flick', 'fx-react-dim'),
+  'react-shimmer': reaction('fx-react-shimmer', 'fx-react-fade-in'),
+
+  // ── Kingpin: a red and gold shock ring, a gold glint, hardly moving ──
+  'kingpin-ring-1': strip('ring', 'fx-shock fx-shock-moving', 'fx-shock fx-shock-still', { color: '#f59e0b' }),
+  'kingpin-ring-2': strip('ring', 'fx-shock fx-shock-wide fx-shock-moving', 'fx-shock fx-shock-wide fx-shock-still', { color: '#dc2626' }),
+  'kingpin-impact': overlay('fx-puff fx-puff-moving', 'fx-puff fx-puff-still', 13, '#f59e0b'),
+  'kingpin-glint': overlay('fx-edge-mark fx-edge-corner fx-web-splat-moving', 'fx-edge-mark fx-edge-corner fx-web-splat-still', 7, '#fde68a', { mark: 'glint' }),
+  'react-brace': reaction('fx-react-brace', 'fx-react-dim'),
+  'react-step-in': reaction('fx-react-step-in', 'fx-react-fade-in'),
 };
 
 /** The classes to use for a cue, or null if it should not be shown. */

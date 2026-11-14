@@ -52,13 +52,13 @@ describe('character portraits', () => {
 describe('a strike by Spider-Man', () => {
   it('draws a web across the lane and makes the villain portrait react', async () => {
     installFakeServer();
-    const view = renderMission('venom'); // a villain still using the shared effects
+    const view = renderMission('nobody'); // an unknown villain: shown as the first one, using only the shared effects
     await screen.findByText(/^Puzzle \d+$/);
     fireEvent.click(option());
 
     await waitFor(() => expect(cuesOnScreen(view).some((c) => c?.startsWith('web-line'))).toBe(true));
     await waitFor(() => expect(cuesOnScreen(view).some((c) => c?.startsWith('web-splat'))).toBe(true));
-    const frame = view.container.querySelector('[data-portrait="venom"] [data-portrait-frame]')!;
+    const frame = view.container.querySelector('[data-portrait="goblin"] [data-portrait-frame]')!;
     await waitFor(() => expect(frame.className).toContain('fx-react-recoil'));
 
     // The reaction is on the portrait itself, and the image is still there.
@@ -82,6 +82,9 @@ describe('each villain takes a hit in its own way', () => {
     ['goblin', 'fx-react-wobble'],
     ['doc-ock', 'fx-react-flinch'],
     ['mysterio', 'fx-react-ripple'],
+    ['venom', 'fx-react-shrink'],
+    ['lizard', 'fx-react-flick'],
+    ['kingpin', 'fx-react-brace'],
   ])('%s: its portrait shows %s, and the web still lands', async (villainId, reaction) => {
     installFakeServer();
     const view = renderMission(villainId);
@@ -106,6 +109,20 @@ describe('each villain takes a hit in its own way', () => {
     // The ghost is in the lane, not on top of the real portrait.
     expect(view.container.querySelector('[data-effects-lane]')!.contains(ghost)).toBe(true);
     expect(view.container.querySelector('[data-portrait="mysterio"]')!.contains(ghost)).toBe(false);
+  });
+
+  it.each([
+    ['venom', 'venom-tendril'],
+    ['lizard', 'lizard-tail'],
+    ['kingpin', 'kingpin-ring'],
+  ])('%s enters with its own visual in the lane (%s)', async (villainId, cuePrefix) => {
+    installFakeServer();
+    const view = renderMission(villainId);
+    await screen.findByText(/^Puzzle \d+$/);
+    await waitFor(() => expect(cuesOnScreen(view).some((c) => c?.startsWith(cuePrefix))).toBe(true));
+    const cue = view.container.querySelector(`[data-cue^="${cuePrefix}"]`)!;
+    expect(view.container.querySelector('[data-effects-lane]')!.contains(cue)).toBe(true);
+    expect(view.container.querySelector(`[data-portrait="${villainId}"] img`)).not.toBeNull(); // the portrait stays
   });
 
   it('Doctor Octopus enters by unfolding his arms into the lane', async () => {

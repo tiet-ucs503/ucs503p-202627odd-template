@@ -332,7 +332,7 @@ describe('EffectsDirector', () => {
   });
 
   it('stays quiet when muted but still works', () => {
-    const { director, settings, ctx } = makeDirector('venom');
+    const { director, settings, ctx } = makeDirector('nobody'); // no villain effects: Spider-Man's alone
     settings.update({ muted: true });
     expect(director.play({ type: 'player_strike' })).toHaveLength(1);
     expect(ctx.sources).toHaveLength(0);

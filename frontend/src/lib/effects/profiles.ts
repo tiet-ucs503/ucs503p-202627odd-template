@@ -12,6 +12,7 @@ import type { SoundCategory } from '@/lib/effects/audio/engine';
 import { SAMPLES } from '@/lib/effects/audio/recipes';
 import { cue, CueStep, Profile, Variation } from '@/lib/effects/profileTypes';
 import { DOC_OCK, GOBLIN, MYSTERIO } from '@/lib/effects/profiles.villains1';
+import { KINGPIN, LIZARD, VENOM } from '@/lib/effects/profiles.villains2';
 
 export type { CueStep, Profile, SoundStep, Variation } from '@/lib/effects/profileTypes';
 
@@ -67,16 +68,16 @@ export const SPIDERMAN: Profile = {
 
 /**
  * Each villain's own effects. Where a villain has effects for an event they
- * replace the shared ones (see director.ts). Venom, The Lizard and Kingpin
- * get theirs in the next phase and use the shared effects until then.
+ * replace the shared ones (see director.ts). The shared effects remain as the
+ * fallback, and still supply hints, victory and defeat.
  */
 export const VILLAINS: Record<string, Profile> = {
   goblin: GOBLIN,
   'doc-ock': DOC_OCK,
   mysterio: MYSTERIO,
-  venom: {},
-  lizard: {},
-  kingpin: {},
+  venom: VENOM,
+  lizard: LIZARD,
+  kingpin: KINGPIN,
 };
 
 export const CHARACTER_IDS = ['spiderman', ...Object.keys(VILLAINS)] as const;

@@ -52,6 +52,30 @@ export const IDENTITY: Record<string, SoundIdentity> = {
     space: 'wide, heavy echo',
     recipePrefix: 'mysterio-',
   },
+  venom: {
+    timbre: 'sub-bass under dark noise with a sliding filter',
+    register: 'very-low',
+    envelope: 'slow growl, sudden snap',
+    rhythm: 'one long gesture',
+    space: 'right, dark, no echo',
+    recipePrefix: 'venom-',
+  },
+  lizard: {
+    timbre: 'high-passed noise hiss and a broadband crack',
+    register: 'high',
+    envelope: 'hiss builds, crack is instant',
+    rhythm: 'hiss, pause, crack',
+    space: 'right, thin and dry',
+    recipePrefix: 'lizard-',
+  },
+  kingpin: {
+    timbre: 'pitch-dropping thud with a wooden click',
+    register: 'very-low',
+    envelope: 'hard hit, short boom',
+    rhythm: 'one or two slow, deliberate beats',
+    space: 'centre-right, big echoing room',
+    recipePrefix: 'kingpin-',
+  },
 };
 
 export const IDENTITY_FIELDS = ['timbre', 'register', 'envelope', 'rhythm', 'space'] as const;

@@ -5,6 +5,7 @@
 
 import type { Recipe } from '@/lib/effects/audio/synth';
 import { VILLAIN_RECIPES_1 } from '@/lib/effects/audio/recipes.villains1';
+import { VILLAIN_RECIPES_2 } from '@/lib/effects/audio/recipes.villains2';
 
 const list: Recipe[] = [
   // ── Spider-Man: web "thwip" (noise swept upward) with a plucked tone ──
@@ -87,7 +88,7 @@ const list: Recipe[] = [
 ];
 
 export const RECIPES: Record<string, Recipe> = Object.fromEntries(
-  [...list, ...VILLAIN_RECIPES_1].map((r) => [r.id, r]),
+  [...list, ...VILLAIN_RECIPES_1, ...VILLAIN_RECIPES_2].map((r) => [r.id, r]),
 );
 
 /** The audio files that already existed in the project. */

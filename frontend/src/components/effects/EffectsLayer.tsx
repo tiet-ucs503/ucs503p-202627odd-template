@@ -18,6 +18,38 @@ function WebSplat() {
   );
 }
 
+/** A single diagonal cut. */
+function Slash() {
+  return (
+    <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" strokeLinecap="round">
+      <line x1="3" y1="20" x2="21" y2="4" strokeWidth="2.5" />
+      <line x1="6" y1="21" x2="22" y2="7" strokeWidth="1" opacity="0.6" />
+    </svg>
+  );
+}
+
+/** Three parallel scratch marks at the given angle. */
+function Claws({ angle = -35 }: { angle?: number }) {
+  return (
+    <svg viewBox="-12 -12 24 24" width="100%" height="100%" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <g transform={`rotate(${angle})`}>
+        <line x1="-9" y1="-5" x2="9" y2="-5" />
+        <line x1="-10" y1="0" x2="10" y2="0" />
+        <line x1="-9" y1="5" x2="9" y2="5" />
+      </g>
+    </svg>
+  );
+}
+
+/** A four-point glint, like light catching a diamond. */
+function Glint() {
+  return (
+    <svg viewBox="-12 -12 24 24" width="100%" height="100%" fill="currentColor">
+      <path d="M0,-11 L2,-2 L11,0 L2,2 L0,11 L-2,2 L-11,0 L-2,-2 Z" />
+    </svg>
+  );
+}
+
 /**
  * Small accents drawn at the edge of one character's portrait or avatar.
  * Rendered inside that portrait's own box.
@@ -31,7 +63,10 @@ export function PortraitOverlays({ cues }: { cues: ActiveCue[] }) {
         if (!className || def?.kind !== 'overlay') return null;
         return (
           <span key={cue.key} className={className} style={{ ...dur(cue), color: def.color }} data-cue={cue.cue} aria-hidden="true">
-            {cue.cue.startsWith('web-splat') && <WebSplat />}
+            {def.mark === 'web' && <WebSplat />}
+            {def.mark === 'slash' && <Slash />}
+            {def.mark === 'claws' && <Claws angle={def.angle} />}
+            {def.mark === 'glint' && <Glint />}
           </span>
         );
       })}
@@ -74,7 +109,7 @@ function StripCue({ cue, villain }: { cue: ActiveCue; villain?: Character }) {
       return villain ? (
         <img src={villain.image} alt="" className={className} style={{ ...style, objectPosition: villain.focus }} data-cue={cue.cue} />
       ) : null;
-    default: // line, dot, blob: a single shaped element
+    default: // line, dot, blob, ring: a single shaped element
       return <span className={className} style={style} data-cue={cue.cue} />;
   }
 }
