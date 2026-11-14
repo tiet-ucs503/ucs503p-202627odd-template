@@ -4,9 +4,11 @@ import { recipeDuration } from '@/lib/effects/audio/synth';
 import type { GameEventType } from '@/lib/effects/events';
 import { SHARED, SPIDERMAN, VILLAINS } from '@/lib/effects/profiles';
 import { useEffectsDirector } from '@/hooks/useEffectsDirector';
+import { useActiveCues } from '@/hooks/useActiveCues';
+import EffectsLayer from '@/components/effects/EffectsLayer';
 import SoundControls from '@/components/effects/SoundControls';
 import CharacterPortrait from '@/components/effects/CharacterPortrait';
-import { SPIDERMAN as SPIDERMAN_CHARACTER, VILLAIN_CHARACTERS } from '@/lib/characters';
+import { SPIDERMAN as SPIDERMAN_CHARACTER, VILLAIN_CHARACTERS, villainFor } from '@/lib/characters';
 
 // A review page for listening to every sound. It is not linked from the app:
 // open it by adding ?soundboard=1 to the address. It needs no sign-in and
@@ -22,7 +24,10 @@ const button = 'px-3 py-1.5 rounded-lg bg-ink-800 border border-white/15 hover:b
 export default function Soundboard() {
   const [villainId, setVillainId] = useState('goblin');
   const [last, setLast] = useState('');
-  const { director, engine } = useEffectsDirector(villainId);
+  const { cues, onCue } = useActiveCues();
+  const { director, engine } = useEffectsDirector(villainId, onCue);
+  const villain = villainFor(villainId);
+  const cuesFor = (target: string) => cues.filter((c) => c.target === target);
 
   const available = (event: GameEventType) =>
     Boolean(SHARED[event]?.length || SPIDERMAN[event]?.length || VILLAINS[villainId]?.[event]?.length);
@@ -33,7 +38,7 @@ export default function Soundboard() {
         <header>
           <h1 className="font-comic text-4xl tracking-wide">Effects review</h1>
           <p className="text-sm text-gray-400 mt-2">
-            For reviewing character portraits and sounds. Click a sound button to hear it. Sounds have short cooldowns, so wait a moment between clicks of the same kind.
+            For reviewing character portraits, sounds and visual effects. Click a button to play it. Sounds have short cooldowns, so wait a moment between clicks of the same kind.
           </p>
           <div className="mt-4 text-xs text-gray-300 font-mono"><SoundControls /></div>
         </header>
@@ -56,8 +61,18 @@ export default function Soundboard() {
         <section>
           <h2 className="font-comic text-2xl mb-1">As played in a mission</h2>
           <p className="text-xs text-gray-400 mb-3">
-            Plays what the game would play for each event, including variation and pitch changes. Click the same event several times to hear the variations.
+            Plays what the game would play for each event, sound and visuals together, including variation and pitch changes.
+            Click the same event several times to see and hear the variations. Any villain can be chosen here, locked or not.
           </p>
+
+          {/* The battle header as it appears in a mission, so effects can be watched here. */}
+          <div className="relative flex items-center gap-4 p-3 mb-4 rounded-2xl border border-white/10 bg-ink-950/60" data-preview-arena>
+            <EffectsLayer cues={cues} villain={villain} />
+            <CharacterPortrait character={SPIDERMAN_CHARACTER} side="left" cues={cuesFor('player')} />
+            <div className="flex-1 text-center font-comic text-2xl text-white/40 italic">VS</div>
+            <CharacterPortrait character={villain} side="right" cues={cuesFor('villain')} />
+          </div>
+
           <label className="text-sm text-gray-300">
             Villain{' '}
             <select

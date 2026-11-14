@@ -5,48 +5,18 @@
 // list. That is how a strike can be Spider-Man's web sound plus the villain's
 // own reaction.
 //
-// F2 routes the sounds the game already had through this table. Visual cues
-// and each villain's own sound family arrive in later phases.
+// Where the villain has its own effects for an event, they replace the shared
+// ones, and replace the generic way a villain reacts to being hit.
 
-import type { GameEventType } from '@/lib/effects/events';
 import type { SoundCategory } from '@/lib/effects/audio/engine';
-import type { Pickable } from '@/lib/effects/variation';
 import { SAMPLES } from '@/lib/effects/audio/recipes';
+import { cue, CueStep, Profile, Variation } from '@/lib/effects/profileTypes';
+import { DOC_OCK, GOBLIN, MYSTERIO } from '@/lib/effects/profiles.villains1';
 
-export interface SoundStep {
-  /** Milliseconds after the effect starts. */
-  atMs: number;
-  /** A synthesised sound from recipes.ts, or... */
-  recipe?: string;
-  /** ...one of the existing audio files. */
-  sample?: string;
-  category: SoundCategory;
-  maxSeconds?: number;
-}
-
-export interface CueStep {
-  atMs: number;
-  /** Name of a visual cue drawn by the effects layer. */
-  cue: string;
-  /** player/villain = that character's portrait; strip = the lane between them;
-   *  gwen = her avatar by the hint button; end = the icon on the end screen. */
-  target: 'player' | 'villain' | 'strip' | 'gwen' | 'end';
-  durMs: number;
-}
-
-export interface Variation extends Pickable {
-  sounds: SoundStep[];
-  cues: CueStep[];
-}
-
-export type Profile = Partial<Record<GameEventType, Variation[]>>;
+export type { CueStep, Profile, SoundStep, Variation } from '@/lib/effects/profileTypes';
 
 const sound = (id: string, recipe: string, category: SoundCategory = 'impact', cues: CueStep[] = []): Variation => ({
   id, sounds: [{ atMs: 0, recipe, category }], cues,
-});
-
-const cue = (atMs: number, name: string, target: CueStep['target'], durMs: number): CueStep => ({
-  atMs, cue: name, target, durMs,
 });
 
 // The web reaches the villain 180 ms after it is fired, in step with the sound's impact layer.
@@ -95,16 +65,15 @@ export const SPIDERMAN: Profile = {
   ],
 };
 
+/**
+ * Each villain's own effects. Where a villain has effects for an event they
+ * replace the shared ones (see director.ts). Venom, The Lizard and Kingpin
+ * get theirs in the next phase and use the shared effects until then.
+ */
 export const VILLAINS: Record<string, Profile> = {
-  goblin: {
-    // The recorded laugh is a rare taunt: at most once in every three counter-attacks.
-    villain_attack: [sample('laugh', SAMPLES.goblinLaugh, 'voice', { minGap: 2 })],
-  },
-  'doc-ock': {
-    villain_attack: [sample('drotto', SAMPLES.drotto, 'voice', { minGap: 1 })],
-    player_strike: [sample('drotto-losing', SAMPLES.drottoLosing, 'voice', { minGap: 2 })],
-  },
-  mysterio: {},
+  goblin: GOBLIN,
+  'doc-ock': DOC_OCK,
+  mysterio: MYSTERIO,
   venom: {},
   lizard: {},
   kingpin: {},

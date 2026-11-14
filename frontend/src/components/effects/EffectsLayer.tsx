@@ -1,4 +1,5 @@
 import '@/styles/effects.css';
+import type { Character } from '@/lib/characters';
 import { cueClass, CUES } from '@/lib/effects/cues';
 import { cueDuration as dur } from '@/lib/effects/cueStyle';
 import type { ActiveCue } from '@/lib/effects/director';
@@ -25,10 +26,11 @@ export function PortraitOverlays({ cues }: { cues: ActiveCue[] }) {
   return (
     <>
       {cues.map((cue) => {
+        const def = CUES[cue.cue];
         const className = cueClass(cue.cue, cue.reducedMotion);
-        if (!className || CUES[cue.cue]?.kind !== 'overlay') return null;
+        if (!className || def?.kind !== 'overlay') return null;
         return (
-          <span key={cue.key} className={className} style={dur(cue)} data-cue={cue.cue} aria-hidden="true">
+          <span key={cue.key} className={className} style={{ ...dur(cue), color: def.color }} data-cue={cue.cue} aria-hidden="true">
             {cue.cue.startsWith('web-splat') && <WebSplat />}
           </span>
         );
@@ -41,34 +43,55 @@ const SPARK_OFFSETS = [
   [-26, -18], [-30, 2], [-22, 20], [-10, -24], [-12, 22], [-34, -8], [-18, 10], [-6, -12],
 ];
 
+/** Draws one cue that travels across the lane. */
+function StripCue({ cue, villain }: { cue: ActiveCue; villain?: Character }) {
+  const def = CUES[cue.cue];
+  const className = cueClass(cue.cue, cue.reducedMotion);
+  if (!className || !def) return null;
+  const style = { ...dur(cue), color: def.color };
+
+  switch (def.shape) {
+    case 'sparks': // a few small dots flying away from the point of impact, beside the villain
+      return (
+        <>
+          {SPARK_OFFSETS.slice(0, def.particles ?? 0).map(([x, y], i) => (
+            <span
+              key={i}
+              className={className}
+              data-cue={cue.cue}
+              style={{ ...style, background: def.color, ['--fx-x' as string]: `${x}px`, ['--fx-y' as string]: `${y}px` }}
+            />
+          ))}
+        </>
+      );
+    case 'arc': // a curved arm reaching from the villain to the player
+      return (
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" data-cue={cue.cue}>
+          <path d={def.path} pathLength={100} className={className} style={style} stroke={def.color} vectorEffect="non-scaling-stroke" />
+        </svg>
+      );
+    case 'ghost': // a faint copy of the villain's own image drifting across
+      return villain ? (
+        <img src={villain.image} alt="" className={className} style={{ ...style, objectPosition: villain.focus }} data-cue={cue.cue} />
+      ) : null;
+    default: // line, dot, blob: a single shaped element
+      return <span className={className} style={style} data-cue={cue.cue} />;
+  }
+}
+
 /**
  * Effects that travel across the lane between the two portraits.
- * It fills the battle header only, is invisible to the mouse and to screen
- * readers, and is never placed over the question or the controls.
+ * The layer fills the battle header only, is invisible to the mouse and to
+ * screen readers, and is never placed over the question or the controls.
  */
-export default function EffectsLayer({ cues }: { cues: ActiveCue[] }) {
+export default function EffectsLayer({ cues, villain }: { cues: ActiveCue[]; villain?: Character }) {
   const strip = cues.filter((cue) => cue.target === 'strip' && CUES[cue.cue]?.kind === 'strip');
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true" data-effects-layer>
-      {strip.map((cue) => {
-        const def = CUES[cue.cue];
-        const className = cueClass(cue.cue, cue.reducedMotion);
-        if (!className) return null;
-
-        if (def.particles) {
-          // A few small dots flying away from the point of impact, beside the villain.
-          return SPARK_OFFSETS.slice(0, def.particles).map(([x, y], i) => (
-            <span
-              key={`${cue.key}:${i}`}
-              className={`${className} right-28 sm:right-36`}
-              data-cue={cue.cue}
-              style={{ ...dur(cue), background: def.color, ['--fx-x' as string]: `${x}px`, ['--fx-y' as string]: `${y}px` }}
-            />
-          ));
-        }
-        // A line from the player's portrait to the villain's.
-        return <span key={cue.key} className={`${className} left-28 right-28 sm:left-36 sm:right-36`} style={dur(cue)} data-cue={cue.cue} />;
-      })}
+      {/* The lane: the space between the player's portrait and the villain's. */}
+      <div className="absolute top-0 bottom-0 left-28 right-28 sm:left-36 sm:right-36" data-effects-lane>
+        {strip.map((cue) => <StripCue key={cue.key} cue={cue} villain={villain} />)}
+      </div>
     </div>
   );
 }

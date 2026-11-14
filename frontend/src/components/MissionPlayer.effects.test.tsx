@@ -34,12 +34,12 @@ async function answerQuestion() {
 /** Sets mute, volume and reduced motion using the on-screen controls, as a player would. */
 async function chooseSettings() {
   await screen.findByText(/^Puzzle \d+$/);
-  fireEvent.click(screen.getByRole('button', { name: /turn sound off/i }));
-  fireEvent.click(screen.getByRole('button', { name: /turn sound on/i })); // unmute to move the slider
+  fireEvent.click(await screen.findByRole('button', { name: /turn sound off/i }));
+  fireEvent.click(await screen.findByRole('button', { name: /turn sound on/i })); // unmute to move the slider
   fireEvent.change(screen.getByRole('slider', { name: 'Volume' }), { target: { value: '35' } });
-  fireEvent.click(screen.getByRole('button', { name: /turn sound off/i }));
+  fireEvent.click(await screen.findByRole('button', { name: /turn sound off/i }));
   fireEvent.click(screen.getByRole('checkbox', { name: /less motion/i }));
-  expect(effectsSettings.get()).toEqual(CHOSEN);
+  await waitFor(() => expect(effectsSettings.get()).toEqual(CHOSEN));
 }
 
 function expectControlsToShow() {

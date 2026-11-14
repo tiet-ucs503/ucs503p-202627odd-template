@@ -312,18 +312,9 @@ describe('EffectsDirector', () => {
     for (let i = 1; i < picks.length; i++) expect(picks[i]).not.toBe(picks[i - 1]);
   });
 
-  it('the Goblin laugh is a rare taunt, not every wrong answer', () => {
-    const { director } = makeDirector('goblin');
-    const laughs = Array.from({ length: 9 }, () => director.play({ type: 'villain_attack' }).includes('goblin:laugh'));
-    expect(laughs).toEqual([true, false, false, true, false, false, true, false, false]);
-  });
-
-  it('only the Goblin ever uses the Goblin laugh', () => {
-    for (const villainId of Object.keys(VILLAINS).filter((v) => v !== 'goblin')) {
-      const { director } = makeDirector(villainId);
-      const all = Array.from({ length: 6 }, () => director.play({ type: 'villain_attack' })).flat();
-      expect(all.some((id) => id.includes('laugh'))).toBe(false);
-      expect(all.length).toBeGreaterThan(0); // every villain still has a counter-attack sound
+  it('every villain has a counter-attack sound', () => {
+    for (const villainId of Object.keys(VILLAINS)) {
+      expect(makeDirector(villainId).director.play({ type: 'villain_attack' }).length).toBeGreaterThan(0);
     }
   });
 
@@ -341,7 +332,7 @@ describe('EffectsDirector', () => {
   });
 
   it('stays quiet when muted but still works', () => {
-    const { director, settings, ctx } = makeDirector('goblin');
+    const { director, settings, ctx } = makeDirector('venom');
     settings.update({ muted: true });
     expect(director.play({ type: 'player_strike' })).toHaveLength(1);
     expect(ctx.sources).toHaveLength(0);

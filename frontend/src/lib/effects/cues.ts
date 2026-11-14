@@ -10,6 +10,9 @@
 
 export type CueKind = 'reaction' | 'overlay' | 'strip';
 
+/** How a strip cue is drawn. */
+export type StripShape = 'line' | 'sparks' | 'dot' | 'arc' | 'blob' | 'ghost';
+
 /** Overlays may touch a portrait's edge but must leave it clearly visible. */
 export const MAX_OVERLAY_COVER_PCT = 20;
 export const MAX_OVERLAY_MS = 300;
@@ -22,34 +25,72 @@ export interface CueDef {
   className: string;
   /** Classes used with reduced motion, or null to leave the cue out. */
   reducedClassName: string | null;
+  /** For strip cues: what to draw. */
+  shape?: StripShape;
   /** For overlays: how much of the portrait's area the cue can cover, in percent. */
   coverPct?: number;
-  /** For strip cues made of small dots: how many. */
+  /** For 'sparks': how many dots. */
   particles?: number;
+  /** For 'arc': the curve, drawn in a 100 x 100 box from the villain (right) to the player (left). */
+  path?: string;
   /** Colour of the cue as a CSS colour, where it has one. */
   color?: string;
 }
 
+const reaction = (className: string, reducedClassName: string | null): CueDef => ({ kind: 'reaction', className, reducedClassName });
+const strip = (shape: StripShape, moving: string, still: string | null, extra: Partial<CueDef> = {}): CueDef =>
+  ({ kind: 'strip', shape, className: moving, reducedClassName: still, ...extra });
+const overlay = (moving: string, still: string, coverPct: number, color?: string): CueDef =>
+  ({ kind: 'overlay', className: moving, reducedClassName: still, coverPct, color });
+
+const STEEL = '#94a3b8';
+
 export const CUES: Record<string, CueDef> = {
-  // Reactions
-  'react-recoil': { kind: 'reaction', className: 'fx-react-recoil', reducedClassName: 'fx-react-dim' },
-  'react-hit': { kind: 'reaction', className: 'fx-react-hit', reducedClassName: 'fx-react-dim' },
-  'react-dim': { kind: 'reaction', className: 'fx-react-dim', reducedClassName: 'fx-react-dim' },
-  'react-enter': { kind: 'reaction', className: 'fx-react-enter', reducedClassName: 'fx-react-fade-in' },
-  'victory-pop': { kind: 'reaction', className: 'fx-victory-pop', reducedClassName: 'fx-react-fade-in' },
-  'defeat-sink': { kind: 'reaction', className: 'fx-defeat-sink', reducedClassName: 'fx-react-fade-in' },
+  // ── Reactions shared by everyone ──
+  'react-recoil': reaction('fx-react-recoil', 'fx-react-dim'),
+  'react-hit': reaction('fx-react-hit', 'fx-react-dim'),
+  'react-dim': reaction('fx-react-dim', 'fx-react-dim'),
+  'react-enter': reaction('fx-react-enter', 'fx-react-fade-in'),
+  'react-lean': reaction('fx-react-lean', null), // a villain leaning into its attack
+  'victory-pop': reaction('fx-victory-pop', 'fx-react-fade-in'),
+  'defeat-sink': reaction('fx-defeat-sink', 'fx-react-fade-in'),
 
-  // Spider-Man's web: a line across the lane, then a small splat at the villain's edge
-  'web-line-1': { kind: 'strip', className: 'fx-web-line fx-web-line-moving fx-web-line-straight', reducedClassName: 'fx-web-line fx-web-line-still' },
-  'web-line-2': { kind: 'strip', className: 'fx-web-line fx-web-line-moving fx-web-line-high', reducedClassName: 'fx-web-line fx-web-line-still' },
-  'web-line-3': { kind: 'strip', className: 'fx-web-line fx-web-line-moving fx-web-line-low', reducedClassName: 'fx-web-line fx-web-line-still' },
-  'web-splat-1': { kind: 'overlay', className: 'fx-web-splat fx-web-splat-moving fx-splat-tl', reducedClassName: 'fx-web-splat fx-web-splat-still fx-splat-tl', coverPct: 16 },
-  'web-splat-2': { kind: 'overlay', className: 'fx-web-splat fx-web-splat-moving fx-splat-bl', reducedClassName: 'fx-web-splat fx-web-splat-still fx-splat-bl', coverPct: 16 },
-  'web-splat-3': { kind: 'overlay', className: 'fx-web-splat fx-web-splat-moving fx-splat-tr', reducedClassName: 'fx-web-splat fx-web-splat-still fx-splat-tr', coverPct: 16 },
-  'spark-burst': { kind: 'strip', className: 'fx-spark fx-spark-moving', reducedClassName: null, particles: 6, color: '#ffffff' },
+  // ── Spider-Man: a web line across the lane, then a small web at the villain's edge ──
+  'web-line-1': strip('line', 'fx-web-line fx-web-line-moving fx-web-line-straight', 'fx-web-line fx-web-line-still'),
+  'web-line-2': strip('line', 'fx-web-line fx-web-line-moving fx-web-line-high', 'fx-web-line fx-web-line-still'),
+  'web-line-3': strip('line', 'fx-web-line fx-web-line-moving fx-web-line-low', 'fx-web-line fx-web-line-still'),
+  'web-splat-1': overlay('fx-web-splat fx-web-splat-moving fx-splat-tl', 'fx-web-splat fx-web-splat-still fx-splat-tl', 16),
+  'web-splat-2': overlay('fx-web-splat fx-web-splat-moving fx-splat-bl', 'fx-web-splat fx-web-splat-still fx-splat-bl', 16),
+  'web-splat-3': overlay('fx-web-splat fx-web-splat-moving fx-splat-tr', 'fx-web-splat fx-web-splat-still fx-splat-tr', 16),
+  'spark-burst': strip('sparks', 'fx-spark fx-spark-moving', null, { particles: 6, color: '#ffffff' }),
 
-  // Gwen's comm link
-  'gwen-ripple': { kind: 'overlay', className: 'fx-ring fx-ring-moving', reducedClassName: 'fx-ring fx-ring-still', coverPct: 0 },
+  // ── Gwen's comm link ──
+  'gwen-ripple': overlay('fx-ring fx-ring-moving', 'fx-ring fx-ring-still', 0),
+
+  // ── Green Goblin: glider streaks, lobbed pumpkins, an orange puff, a wobbling glider ──
+  'goblin-streak-1': strip('line', 'fx-streak fx-streak-moving fx-streak-high', 'fx-streak fx-streak-still fx-streak-high'),
+  'goblin-streak-2': strip('line', 'fx-streak fx-streak-moving fx-streak-low', 'fx-streak fx-streak-still fx-streak-low'),
+  'goblin-pumpkin-1': strip('dot', 'fx-dot fx-lob-high', null, { color: '#fb923c' }),
+  'goblin-pumpkin-2': strip('dot', 'fx-dot fx-lob-low', null, { color: '#fb923c' }),
+  'goblin-puff': overlay('fx-puff fx-puff-moving', 'fx-puff fx-puff-still', 13, '#fb923c'),
+  'react-wobble': reaction('fx-react-wobble', 'fx-react-dim'),
+
+  // ── Doctor Octopus: four mechanical arms reaching across, an amber impact, a flinch ──
+  'ock-arm-1': strip('arc', 'fx-arc fx-arc-moving', 'fx-arc fx-arc-still', { path: 'M100,30 C70,4 40,10 3,42', color: STEEL }),
+  'ock-arm-2': strip('arc', 'fx-arc fx-arc-moving', 'fx-arc fx-arc-still', { path: 'M100,45 C76,28 44,34 3,50', color: STEEL }),
+  'ock-arm-3': strip('arc', 'fx-arc fx-arc-moving', 'fx-arc fx-arc-still', { path: 'M100,58 C72,76 42,70 3,54', color: STEEL }),
+  'ock-arm-4': strip('arc', 'fx-arc fx-arc-moving', 'fx-arc fx-arc-still', { path: 'M100,74 C70,98 36,94 3,60', color: STEEL }),
+  'ock-impact': overlay('fx-puff fx-puff-moving', 'fx-puff fx-puff-still', 13, '#fbbf24'),
+  'react-flinch': reaction('fx-react-flinch', 'fx-react-dim'),
+
+  // ── Mysterio: drifting mist, ghost copies of himself, a teal veil, a rippling image ──
+  'mysterio-mist-1': strip('blob', 'fx-mist fx-mist-moving fx-mist-a', 'fx-mist fx-mist-still fx-mist-a'),
+  'mysterio-mist-2': strip('blob', 'fx-mist fx-mist-moving fx-mist-b', 'fx-mist fx-mist-still fx-mist-b'),
+  'mysterio-ghost-1': strip('ghost', 'fx-ghost fx-ghost-moving fx-ghost-high', null),
+  'mysterio-ghost-2': strip('ghost', 'fx-ghost fx-ghost-moving fx-ghost-low', null),
+  'mysterio-veil': overlay('fx-puff fx-puff-moving', 'fx-puff fx-puff-still', 13, '#2dd4bf'),
+  'react-ripple': reaction('fx-react-ripple', 'fx-react-dim'),
+  'react-materialise': reaction('fx-react-materialise', 'fx-react-fade-in'),
 };
 
 /** The classes to use for a cue, or null if it should not be shown. */

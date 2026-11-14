@@ -367,7 +367,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
 
       {/* Battle header: each character's animated portrait, with a lane between them for effects */}
       <div className="relative z-20 flex items-center gap-3 sm:gap-4 p-2 pt-3 max-w-[1400px] mx-auto w-full">
-        <EffectsLayer cues={cues} />
+        <EffectsLayer cues={cues} villain={boss} />
         <CharacterPortrait character={SPIDERMAN} side="left" badge={`LVL ${progress.level}`} cues={cuesFor('player')} />
         <div className="flex-1 flex flex-col justify-center min-w-0">
           <h1 className="text-lg sm:text-2xl font-comic text-white tracking-widest italic whitespace-nowrap mb-1.5">SPIDER-MAN</h1>

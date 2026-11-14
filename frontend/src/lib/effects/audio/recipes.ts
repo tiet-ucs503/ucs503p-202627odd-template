@@ -4,6 +4,7 @@
 // sound family is added in its own phase and reviewed by ear before it ships.
 
 import type { Recipe } from '@/lib/effects/audio/synth';
+import { VILLAIN_RECIPES_1 } from '@/lib/effects/audio/recipes.villains1';
 
 const list: Recipe[] = [
   // ── Spider-Man: web "thwip" (noise swept upward) with a plucked tone ──
@@ -85,7 +86,9 @@ const list: Recipe[] = [
   },
 ];
 
-export const RECIPES: Record<string, Recipe> = Object.fromEntries(list.map((r) => [r.id, r]));
+export const RECIPES: Record<string, Recipe> = Object.fromEntries(
+  [...list, ...VILLAIN_RECIPES_1].map((r) => [r.id, r]),
+);
 
 /** The audio files that already existed in the project. */
 export const SAMPLES = {

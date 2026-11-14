@@ -52,13 +52,13 @@ describe('character portraits', () => {
 describe('a strike by Spider-Man', () => {
   it('draws a web across the lane and makes the villain portrait react', async () => {
     installFakeServer();
-    const view = renderMission();
+    const view = renderMission('venom'); // a villain still using the shared effects
     await screen.findByText(/^Puzzle \d+$/);
     fireEvent.click(option());
 
     await waitFor(() => expect(cuesOnScreen(view).some((c) => c?.startsWith('web-line'))).toBe(true));
     await waitFor(() => expect(cuesOnScreen(view).some((c) => c?.startsWith('web-splat'))).toBe(true));
-    const frame = view.container.querySelector('[data-portrait="goblin"] [data-portrait-frame]')!;
+    const frame = view.container.querySelector('[data-portrait="venom"] [data-portrait-frame]')!;
     await waitFor(() => expect(frame.className).toContain('fx-react-recoil'));
 
     // The reaction is on the portrait itself, and the image is still there.
@@ -74,6 +74,46 @@ describe('a strike by Spider-Man', () => {
     await waitFor(() => expect(cuesOnScreen(view)).toHaveLength(0), { timeout: 2000 });
     const frame = view.container.querySelector('[data-portrait="goblin"] [data-portrait-frame]')!;
     expect(frame.className).not.toContain('fx-react');
+  });
+});
+
+describe('each villain takes a hit in its own way', () => {
+  it.each([
+    ['goblin', 'fx-react-wobble'],
+    ['doc-ock', 'fx-react-flinch'],
+    ['mysterio', 'fx-react-ripple'],
+  ])('%s: its portrait shows %s, and the web still lands', async (villainId, reaction) => {
+    installFakeServer();
+    const view = renderMission(villainId);
+    await screen.findByText(/^Puzzle \d+$/);
+    fireEvent.click(option());
+
+    const frame = view.container.querySelector(`[data-portrait="${villainId}"] [data-portrait-frame]`)!;
+    await waitFor(() => expect(frame.className).toContain(reaction));
+    expect(frame.className).not.toContain('fx-react-recoil');
+    expect(frame.querySelector('img')).not.toBeNull(); // the animated image is still there
+    expect(cuesOnScreen(view).some((c) => c?.startsWith('web-'))).toBe(true);
+  });
+
+  it('Mysterio enters with mist and ghost copies of his own image', async () => {
+    installFakeServer();
+    const view = renderMission('mysterio');
+    await screen.findByText(/^Puzzle \d+$/);
+    await waitFor(() => expect(cuesOnScreen(view).some((c) => c?.startsWith('mysterio-mist'))).toBe(true));
+    await waitFor(() => expect(cuesOnScreen(view).some((c) => c?.startsWith('mysterio-ghost'))).toBe(true));
+    const ghost = view.container.querySelector('[data-cue^="mysterio-ghost"]') as HTMLImageElement;
+    expect(ghost.getAttribute('src')).toBe(VILLAIN_CHARACTERS.mysterio.image);
+    // The ghost is in the lane, not on top of the real portrait.
+    expect(view.container.querySelector('[data-effects-lane]')!.contains(ghost)).toBe(true);
+    expect(view.container.querySelector('[data-portrait="mysterio"]')!.contains(ghost)).toBe(false);
+  });
+
+  it('Doctor Octopus enters by unfolding his arms into the lane', async () => {
+    installFakeServer();
+    const view = renderMission('doc-ock');
+    await screen.findByText(/^Puzzle \d+$/);
+    await waitFor(() => expect(cuesOnScreen(view).filter((c) => c?.startsWith('ock-arm')).length).toBeGreaterThanOrEqual(1));
+    expect(view.container.querySelector('[data-effects-lane] svg path')).not.toBeNull();
   });
 });
 

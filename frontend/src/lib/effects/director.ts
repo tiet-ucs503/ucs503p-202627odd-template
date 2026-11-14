@@ -6,7 +6,7 @@
 
 import type { AudioEngine } from '@/lib/effects/audio/engine';
 import { RECIPES } from '@/lib/effects/audio/recipes';
-import { cueClass } from '@/lib/effects/cues';
+import { cueClass, CUES } from '@/lib/effects/cues';
 import type { GameEvent } from '@/lib/effects/events';
 import { CueStep, Profile, SHARED, SPIDERMAN, Variation, VILLAINS } from '@/lib/effects/profiles';
 import type { SettingsStore } from '@/lib/effects/settings';
@@ -50,12 +50,16 @@ export class EffectsDirector {
   play(event: GameEvent): string[] {
     if (this.disposed) return [];
     const { villainId } = this.options;
+    const villainOwnsEvent = Boolean(VILLAINS[villainId]?.[event.type]?.length);
     const sources: [string, Profile | undefined][] = [
-      ['shared', SHARED],
+      // A villain with its own effects for this event replaces the shared ones.
+      ['shared', villainOwnsEvent ? undefined : SHARED],
       ['spiderman', SPIDERMAN],
       [villainId, VILLAINS[villainId]],
     ];
 
+    // Everything one event triggers is one effect as far as cooldowns go.
+    const group = `${event.type}:${++this.sequence}`;
     const chosen: string[] = [];
     for (const [owner, profile] of sources) {
       const variations = profile?.[event.type];
@@ -63,14 +67,17 @@ export class EffectsDirector {
       const variation = this.picker.pick(`${owner}:${event.type}`, variations);
       if (!variation) continue;
       chosen.push(`${owner}:${variation.id}`);
-      this.run(owner, variation);
+      // The villain decides how it reacts to being hit; drop the generic reaction.
+      const cues = owner === 'spiderman' && villainOwnsEvent
+        ? variation.cues.filter((c) => !(c.target === 'villain' && CUES[c.cue]?.kind === 'reaction'))
+        : variation.cues;
+      this.run(group, { ...variation, cues });
     }
     return chosen;
   }
 
-  private run(owner: string, variation: Variation): void {
+  private run(group: string, variation: Variation): void {
     const { engine, settings, onCue } = this.options;
-    const group = `${owner}:${variation.id}:${++this.sequence}`;
     const pitch = this.picker.pitchJitter();
     const jitterMs = this.picker.timingJitterMs();
 
@@ -90,7 +97,8 @@ export class EffectsDirector {
     const reducedMotion = settings.reducedMotion();
     for (const cue of variation.cues) {
       if (cueClass(cue.cue, reducedMotion) === null) continue; // unknown, or has no still form
-      const show = () => onCue({ ...cue, key: `${group}:${cue.cue}:${cue.atMs}`, variation: variation.id, reducedMotion });
+      const key = `${group}:${variation.id}:${cue.cue}:${cue.atMs}`;
+      const show = () => onCue({ ...cue, key, variation: variation.id, reducedMotion });
       if (cue.atMs + jitterMs <= 0) {
         show();
       } else {
