@@ -5,6 +5,8 @@ import type { GameEventType } from '@/lib/effects/events';
 import { SHARED, SPIDERMAN, VILLAINS } from '@/lib/effects/profiles';
 import { useEffectsDirector } from '@/hooks/useEffectsDirector';
 import SoundControls from '@/components/effects/SoundControls';
+import CharacterPortrait from '@/components/effects/CharacterPortrait';
+import { SPIDERMAN as SPIDERMAN_CHARACTER, VILLAIN_CHARACTERS } from '@/lib/characters';
 
 // A review page for listening to every sound. It is not linked from the app:
 // open it by adding ?soundboard=1 to the address. It needs no sign-in and
@@ -29,12 +31,27 @@ export default function Soundboard() {
     <div className="min-h-screen bg-black text-white p-6 sm:p-10 font-sans">
       <div className="max-w-4xl mx-auto space-y-10">
         <header>
-          <h1 className="font-comic text-4xl tracking-wide">Soundboard</h1>
+          <h1 className="font-comic text-4xl tracking-wide">Effects review</h1>
           <p className="text-sm text-gray-400 mt-2">
-            For reviewing sounds. Click a button to hear it. Sounds have short cooldowns, so wait a moment between clicks of the same kind.
+            For reviewing character portraits and sounds. Click a sound button to hear it. Sounds have short cooldowns, so wait a moment between clicks of the same kind.
           </p>
           <div className="mt-4 text-xs text-gray-300 font-mono"><SoundControls /></div>
         </header>
+
+        <section>
+          <h2 className="font-comic text-2xl mb-1">Character portraits</h2>
+          <p className="text-xs text-gray-400 mb-4">
+            Each character at the size and crop used in a battle. The animated image is the character; effects are drawn around it.
+          </p>
+          <div className="flex flex-wrap gap-6">
+            {[SPIDERMAN_CHARACTER, ...Object.values(VILLAIN_CHARACTERS)].map((character) => (
+              <figure key={character.id} className="m-0 text-center">
+                <CharacterPortrait character={character} />
+                <figcaption className={`mt-2 text-xs font-comic tracking-wider ${character.text}`}>{character.name}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
 
         <section>
           <h2 className="font-comic text-2xl mb-1">As played in a mission</h2>

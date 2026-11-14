@@ -11,6 +11,8 @@ import { formatMastery } from '@/lib/mastery';
 import { useEffectsDirector } from '@/hooks/useEffectsDirector';
 import { deriveEvents, EventState, initialEventState } from '@/lib/effects/events';
 import SoundControls from '@/components/effects/SoundControls';
+import CharacterPortrait from '@/components/effects/CharacterPortrait';
+import { SPIDERMAN, villainFor } from '@/lib/characters';
 
 interface MissionPlayerProps {
   bossId: string;
@@ -19,16 +21,6 @@ interface MissionPlayerProps {
   /** How long the result of an answer stays on screen. Tests shorten it. */
   feedbackMs?: number;
 }
-
-// Full class names are written out so Tailwind can see them at build time.
-const BOSS_UI: Record<string, { name: string; index: number; gif?: string; text: string; border: string; bg: string; health: string }> = {
-  goblin: { name: 'GREEN GOBLIN', index: 1, gif: '/goblin-gif.gif', text: 'text-green-400', border: 'border-green-500', bg: 'bg-green-950/50', health: 'from-green-700 via-green-500 to-green-300' },
-  'doc-ock': { name: 'DOCTOR OCTOPUS', index: 2, gif: '/doc-ock-spider-man.gif', text: 'text-slate-400', border: 'border-slate-500', bg: 'bg-slate-950/50', health: 'from-slate-700 via-slate-500 to-slate-300' },
-  mysterio: { name: 'MYSTERIO', index: 3, text: 'text-purple-400', border: 'border-purple-500', bg: 'bg-purple-950/50', health: 'from-purple-700 via-purple-500 to-purple-300' },
-  venom: { name: 'VENOM', index: 4, text: 'text-slate-100', border: 'border-slate-300', bg: 'bg-black/50', health: 'from-black via-slate-700 to-slate-400' },
-  lizard: { name: 'THE LIZARD', index: 5, text: 'text-lime-400', border: 'border-lime-500', bg: 'bg-lime-950/50', health: 'from-lime-700 via-lime-500 to-lime-300' },
-  kingpin: { name: 'KINGPIN', index: 6, text: 'text-red-500', border: 'border-red-600', bg: 'bg-red-950/50', health: 'from-red-800 via-red-600 to-red-400' },
-};
 
 const NEXT_BOSS: Record<string, string> = {
   goblin: 'doc-ock', 'doc-ock': 'mysterio', mysterio: 'venom', venom: 'lizard', lizard: 'kingpin',
@@ -48,7 +40,7 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
   const { progress, setProgress } = useGame();
   const { user } = useAuth();
   const userId = user?.id ?? 0;
-  const boss = BOSS_UI[bossId] ?? BOSS_UI.goblin;
+  const boss = villainFor(bossId);
 
   // Everything about the mission comes from the server: the questions, whether an
   // answer was right, the points, and when the mission is won or lost.
@@ -362,59 +354,40 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
       <div className="absolute inset-0 bg-gradient-to-b from-hero-900/40 via-ink-950/80 to-black" />
       <div className="absolute inset-0 halftone opacity-30 pointer-events-none" />
 
-      {/* Top combat HUD */}
-      <div className="relative z-20 flex justify-between items-start p-2 max-w-[1400px] mx-auto w-full pt-2">
-        <div className="flex items-center gap-4 w-1/3">
-          <div className="relative shrink-0">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-[3px] border-hero-600 bg-ink-900 overflow-hidden relative z-10 shadow-[0_0_20px_rgba(220,38,38,0.5)]">
-              <img src="/spiderman-gif.gif" alt="" className="w-full h-full object-cover scale-110" />
-            </div>
-            <div className="absolute -bottom-2 -right-2 bg-black border-2 border-hero-500 text-hero-400 font-comic text-xs px-2 py-0.5 rounded-lg z-20">
-              LVL {progress.level}
-            </div>
+      {/* Battle header: each character's animated portrait, with a lane between them for effects */}
+      <div className="relative z-20 flex items-center gap-3 sm:gap-4 p-2 pt-3 max-w-[1400px] mx-auto w-full">
+        <CharacterPortrait character={SPIDERMAN} badge={`LVL ${progress.level}`} />
+        <div className="flex-1 flex flex-col justify-center min-w-0">
+          <h1 className="text-lg sm:text-2xl font-comic text-white tracking-widest italic whitespace-nowrap mb-1.5">SPIDER-MAN</h1>
+          <div className="h-3 bg-ink-950/80 rounded-full border-2 border-white/10 overflow-hidden" role="progressbar" aria-label="Your health" aria-valuenow={Math.round(playerHealth)} aria-valuemin={0} aria-valuemax={100}>
+            <div className="h-full bg-gradient-to-r from-red-700 via-hero-500 to-red-400 transition-all duration-500 ease-out" style={{ width: `${playerHealth}%` }} />
           </div>
-          <div className="flex-1 flex flex-col justify-center min-w-0">
-            <h1 className="text-xl sm:text-2xl font-comic text-white tracking-widest italic whitespace-nowrap mb-1.5">SPIDER-MAN</h1>
-            <div className="h-3 bg-ink-950/80 rounded-full border-2 border-white/10 overflow-hidden" role="progressbar" aria-label="Your health" aria-valuenow={Math.round(playerHealth)} aria-valuemin={0} aria-valuemax={100}>
-              <div className="h-full bg-gradient-to-r from-red-700 via-hero-500 to-red-400 transition-all duration-500 ease-out" style={{ width: `${playerHealth}%` }} />
+          <div className="flex flex-wrap justify-between items-center gap-x-2 mt-2">
+            <div className="flex items-center gap-1.5 text-hero-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest bg-hero-950/50 px-2 py-1 rounded border border-hero-500/30 whitespace-nowrap">
+              <Zap className="w-3 h-3 text-yellow-400" /> {progress.points} SP
             </div>
-            <div className="flex justify-between items-center mt-2">
-              <div className="flex items-center gap-1.5 text-hero-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest bg-hero-950/50 px-2 py-1 rounded border border-hero-500/30 whitespace-nowrap">
-                <Zap className="w-3 h-3 text-yellow-400" /> {progress.points} SP
-              </div>
-              <div className="text-white font-comic text-lg sm:text-xl">
-                COMBO <span className="text-yellow-400 text-xl sm:text-2xl">{session.streak}x</span>
-              </div>
+            <div className="text-white font-comic text-base sm:text-xl whitespace-nowrap">
+              COMBO <span className="text-yellow-400 text-lg sm:text-2xl">{session.streak}x</span>
             </div>
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center mt-2">
-          <div className="font-comic text-4xl sm:text-5xl text-white italic tracking-tighter opacity-80">VS</div>
+        <div className="w-10 sm:w-24 shrink-0 flex items-center justify-center" data-arena-lane>
+          <div className="font-comic text-2xl sm:text-4xl text-white italic tracking-tighter opacity-70">VS</div>
         </div>
 
-        <div className="flex items-center gap-4 w-1/3 flex-row-reverse text-right">
-          <div className="relative shrink-0">
-            <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full border-[3px] ${boss.border} bg-ink-900 overflow-hidden relative z-10 flex items-center justify-center`}>
-              {boss.gif ? (
-                <img src={boss.gif} alt="" className="w-full h-full object-cover scale-110 object-top" />
-              ) : (
-                <ShieldAlert className={`w-8 h-8 ${boss.text}`} />
-              )}
-            </div>
+        <div className="flex-1 flex flex-col justify-center min-w-0 text-right">
+          <h1 className={`text-lg sm:text-2xl font-comic ${boss.text} tracking-widest italic whitespace-nowrap uppercase mb-1.5`}>{boss.name}</h1>
+          <div className="h-3 bg-ink-950/80 rounded-full border-2 border-white/10 overflow-hidden" role="progressbar" aria-label="Boss health" aria-valuenow={Math.round(villainHealth)} aria-valuemin={0} aria-valuemax={100}>
+            <div className={`h-full transition-all duration-500 ease-out bg-gradient-to-l ${boss.health}`} style={{ width: `${villainHealth}%`, marginLeft: 'auto' }} />
           </div>
-          <div className="flex-1 flex flex-col justify-center min-w-0">
-            <h1 className={`text-xl sm:text-2xl font-comic ${boss.text} tracking-widest italic whitespace-nowrap uppercase mb-1.5`}>{boss.name}</h1>
-            <div className="h-3 bg-ink-950/80 rounded-full border-2 border-white/10 overflow-hidden" role="progressbar" aria-label="Boss health" aria-valuenow={Math.round(villainHealth)} aria-valuemin={0} aria-valuemax={100}>
-              <div className={`h-full transition-all duration-500 ease-out bg-gradient-to-l ${boss.health}`} style={{ width: `${villainHealth}%`, marginLeft: 'auto' }} />
-            </div>
-            <div className="flex justify-end items-center mt-2">
-              <div className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest ${boss.text} ${boss.bg} px-2 py-1 rounded border ${boss.border} whitespace-nowrap`}>
-                {session.correct_count} / {session.questions_to_win} hits landed
-              </div>
+          <div className="flex justify-end items-center mt-2">
+            <div className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest ${boss.text} ${boss.bg} px-2 py-1 rounded border ${boss.border} whitespace-nowrap`}>
+              {session.correct_count} / {session.questions_to_win} hits landed
             </div>
           </div>
         </div>
+        <CharacterPortrait character={boss} />
       </div>
 
       {/* Main combat area */}
