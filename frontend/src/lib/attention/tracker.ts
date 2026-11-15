@@ -7,7 +7,7 @@
 
 import type { AttentionSummary } from '@/lib/api';
 import { createFaceDetector, FaceDetector } from '@/lib/attention/detector';
-import { AttentionAccumulator } from '@/lib/attention/summary';
+import { AttentionAccumulator, FaceSample, HeadBaseline, isFacingScreen } from '@/lib/attention/summary';
 
 const SAMPLE_INTERVAL_MS = 100; // about 10 readings a second
 
@@ -29,6 +29,18 @@ function problemFrom(err: unknown): CameraProblem {
   return 'failed';
 }
 
+/** What the test readout shows. Numbers only; there is no image data in here. */
+export interface AttentionDebugSnapshot {
+  reading: FaceSample | null;
+  baseline: HeadBaseline | null;
+  calibrationMsLeft: number;
+  /** Whether the latest reading counts as facing the screen; null while there is nothing to judge. */
+  facing: boolean | null;
+  /** The summary for the current question so far. Looking at it does not reset it. */
+  question: AttentionSummary | null;
+  readingsPerSecond: number;
+}
+
 export class AttentionTracker {
   private stream: MediaStream | null = null;
   private video: HTMLVideoElement | null = null;
@@ -36,6 +48,8 @@ export class AttentionTracker {
   private timer: number | undefined;
   private accumulator = new AttentionAccumulator();
   private generation = 0; // lets a stop() during start() cancel the start
+  private lastReading: FaceSample | null = null;
+  private readingTimes: number[] = [];
 
   /** Called if the camera stops by itself (unplugged, or permission taken away). */
   onEnded: (() => void) | null = null;
@@ -98,7 +112,11 @@ export class AttentionTracker {
     try {
       const now = performance.now();
       const reading = this.detector.detect(this.video, now);
-      if (reading) this.accumulator.add(reading, now);
+      if (reading) {
+        this.accumulator.add(reading, now);
+        this.lastReading = reading;
+        this.readingTimes = [...this.readingTimes.filter((t) => now - t < 2000), now];
+      }
     } catch {
       /* one bad frame is not worth interrupting the game for */
     }
@@ -116,6 +134,28 @@ export class AttentionTracker {
     this.video = null;
     this.detector = null;
     this.accumulator = new AttentionAccumulator();
+    this.lastReading = null;
+    this.readingTimes = [];
+  }
+
+  /**
+   * A read-only look at what is being measured, for testing on real hardware
+   * (see docs/WEBCAM_TEST_PLAN.md). It changes nothing and is never sent anywhere.
+   */
+  debugSnapshot(): AttentionDebugSnapshot | null {
+    if (!this.running) return null;
+    const now = performance.now();
+    const { baseline, msLeft } = this.accumulator.calibration(now);
+    const reading = this.lastReading;
+    const recent = this.readingTimes.filter((t) => now - t < 2000);
+    return {
+      reading,
+      baseline,
+      calibrationMsLeft: msLeft,
+      facing: reading && reading.facePresent ? (baseline ? isFacingScreen(reading, baseline) : true) : reading ? false : null,
+      question: this.accumulator.summary(),
+      readingsPerSecond: recent.length / 2,
+    };
   }
 
   /** Starts counting afresh for a new question. */

@@ -110,6 +110,8 @@ change makes one of those tests fail, the change is wrong, not the test.
 
 ## Known gaps
 
+- Real-device camera checklist: `docs/WEBCAM_TEST_PLAN.md` (not yet run).
+  `?attentionDebug=1` shows a text-only readout of the live numbers for it.
 - The camera path has only been tested with a simulated camera; head-angle
   thresholds in `lib/attention/summary.ts` are untuned.
 - BKT parameters are textbook defaults, so mastery can swing to 1% or 99%

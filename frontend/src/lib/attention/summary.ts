@@ -27,6 +27,19 @@ const MAX_BLINK_RATE = 200;
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
+export interface HeadBaseline {
+  yaw: number;
+  pitch: number;
+}
+
+/** Is the head within the allowed turn and tilt of the student's own resting position? */
+export function isFacingScreen(sample: FaceSample, baseline: HeadBaseline): boolean {
+  return (
+    Math.abs(sample.yawDeg - baseline.yaw) <= YAW_LIMIT_DEG &&
+    Math.abs(sample.pitchDeg - baseline.pitch) <= PITCH_LIMIT_DEG
+  );
+}
+
 export class AttentionAccumulator {
   // Baseline head pose: learned once, kept for the whole mission.
   private baseline: { yaw: number; pitch: number } | null = null;
@@ -74,10 +87,14 @@ export class AttentionAccumulator {
       return;
     }
 
-    const facing =
-      Math.abs(sample.yawDeg - this.baseline.yaw) <= YAW_LIMIT_DEG &&
-      Math.abs(sample.pitchDeg - this.baseline.pitch) <= PITCH_LIMIT_DEG;
-    if (facing) this.onScreen += 1;
+    if (isFacingScreen(sample, this.baseline)) this.onScreen += 1;
+  }
+
+  /** For the test readout only: where calibration stands. Reading it changes nothing. */
+  calibration(nowMs: number): { baseline: HeadBaseline | null; msLeft: number } {
+    if (this.baseline) return { baseline: { ...this.baseline }, msLeft: 0 };
+    const elapsed = this.calibrationStart === null ? 0 : nowMs - this.calibrationStart;
+    return { baseline: null, msLeft: Math.max(0, CALIBRATION_MS - elapsed) };
   }
 
   /** Clears the per-question counters. The calibrated baseline is kept. */

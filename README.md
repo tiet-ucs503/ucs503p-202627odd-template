@@ -158,7 +158,8 @@ journals/, project-proposal/, project-report-prototype-stage/, srs/   coursework
 ## Known limits
 
 - The attention estimate has been tested with a simulated camera. Its
-  thresholds have not been tuned on real webcams.
+  thresholds have not been tuned on real webcams. The checklist for testing
+  on real devices is in `docs/WEBCAM_TEST_PLAN.md`; it has not been run yet.
 - Mastery parameters are textbook defaults; with them, mastery moves quickly.
 - The camera choice is made by whoever is using the device. This is suitable
   for a course demo; see "Before real deployment" in

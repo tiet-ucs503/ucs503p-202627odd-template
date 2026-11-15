@@ -5,6 +5,8 @@ import { api, AnswerResponse, Question, SessionState } from '@/lib/api';
 import { useGame } from '@/context/GameContext';
 import { useAuth } from '@/context/AuthContext';
 import CameraConsent from '@/components/CameraConsent';
+import AttentionDebug from '@/components/AttentionDebug';
+import { attentionDebugRequested } from '@/lib/attention/debugFlag';
 import { AttentionTracker } from '@/lib/attention/tracker';
 import { getCameraChoice, setCameraChoice } from '@/lib/attention/preference';
 import { formatMastery } from '@/lib/mastery';
@@ -67,6 +69,9 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
   const [consentNeeded, setConsentNeeded] = useState(() => getCameraChoice(userId) === null);
   const [camera, setCamera] = useState<CameraState>('off');
   const tracker = useRef<AttentionTracker | null>(null);
+  // Test aid for real webcams: a text-only readout, shown only with ?attentionDebug=1 in the address.
+  const [showAttentionDebug] = useState(attentionDebugRequested);
+  const readAttentionDebug = useCallback(() => tracker.current?.debugSnapshot() ?? null, []);
 
   const enableCamera = useCallback(async () => {
     if (!tracker.current) tracker.current = new AttentionTracker();
@@ -533,6 +538,8 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
       >
         Abort Mission
       </button>
+
+      {showAttentionDebug && <AttentionDebug camera={camera} read={readAttentionDebug} />}
     </div>
   );
 }
