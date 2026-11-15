@@ -108,6 +108,58 @@ change makes one of those tests fail, the change is wrong, not the test.
 - Secrets live in `backend/.env` (git-ignored). Never print or commit them.
   `*.db` files are git-ignored and must stay that way.
 
+## Current state (updated 2026-11-15)
+
+Everything is local; nothing has been pushed to `origin`.
+
+- `master` holds the cleanup phases A–E and this file.
+- The effects work is a stack of branches, each cut from the one before, not
+  yet merged into `master`:
+  `f1-mastery-display` → `f2-effects-core` → `f3-visual-layer` →
+  `f4a-villains-1` → `f4b-villains-2` → `f5-specials` → `f6-webcam-test-kit`.
+  The tip, `f6-webcam-test-kit`, contains all of it.
+- At that tip: 351 backend tests and 223 frontend tests pass; typecheck and
+  build pass; lint has 0 errors and 2 old warnings.
+- The effects code is under `frontend/src/lib/effects/` and
+  `frontend/src/components/effects/`. It is frontend only, takes game events
+  from server responses, and has no access to camera or attention data.
+  Review all sounds at `http://localhost:5173/?soundboard=1`.
+
+## Remaining issues
+
+Needs the user (an assistant cannot do these):
+
+1. **Real webcam testing has not been done.** Run `docs/WEBCAM_TEST_PLAN.md`
+   on real devices, using `?attentionDebug=1`. Until its results table is
+   filled in, never describe the camera as verified on real hardware. The
+   readout's "camera on" lines have only been seen with a simulated camera.
+2. **Head-angle limits are untuned** (`YAW_LIMIT_DEG` 25, `PITCH_LIMIT_DEG` 20
+   in `lib/attention/summary.ts`). Change them only with measurements from the
+   checklist and the user's approval.
+3. **F5 sounds have not been listened to.** The combo barrages, villain
+   signature moves and defeat sounds need the same by-ear sign-off that F4a and
+   F4b got. An assistant cannot hear audio; do not call them reviewed.
+4. **Merging the effects branches into `master`** is waiting for the user's
+   go-ahead, and so is any push.
+5. **Rotate the Groq API key.** Its value appeared in an earlier assistant
+   session's output. The key lives only in `backend/.env`.
+6. **`frontend/public/laugh.mp3`** (6.6 s) is unused and nobody has listened to
+   it. Decide: use it or delete it.
+
+Known and open:
+
+7. In F5, a special move plays *instead of* the ordinary move (a combo replaces
+   the plain strike; a villain signature move replaces the plain attack). The
+   plan said "adds"; the user was told and has not objected.
+8. The camera test readout sits at the top centre of the mission screen and
+   overlaps the combo counter. It is developer-only and covers no question or
+   control.
+9. The defeat screen and in-mission signature moves are covered by tests only,
+   not seen in a browser.
+10. One unexplained stall of about half a second was seen once during the F5
+    performance check; it did not repeat.
+11. CI (`.github/workflows`) has never run, because nothing has been pushed.
+
 ## Known gaps
 
 - Real-device camera checklist: `docs/WEBCAM_TEST_PLAN.md` (not yet run).
