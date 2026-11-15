@@ -8,7 +8,7 @@ function DashboardSummary() {
     useEffect(() => {
         const loadDashboard = async () => {
             try {
-                const response = await api.get("/dashboard");
+                const response = await api.get("/dashboard/due-today");
 
                 const dashboardData = response.data;
 

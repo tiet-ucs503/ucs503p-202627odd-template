@@ -28,7 +28,7 @@ const Login = () => {
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
 
-            navigate("/");
+            window.location.href = "/";
         } catch (error) {
             console.error(
                 isSignUp ? "Registration failed:" : "Login failed:",
