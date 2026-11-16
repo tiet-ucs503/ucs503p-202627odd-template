@@ -148,8 +148,17 @@ Needs the user (an assistant cannot do these):
    left alone. Change nothing further without the user's approval.
 3. **Pushing to `origin`** waits for the user's explicit permission. All sound
    batches (F4a, F4b, F5) were signed off by ear by the user, F5 on 2026-11-16.
-5. **Rotate the Groq API key.** Its value appeared in an earlier assistant
-   session's output. The key lives only in `backend/.env`.
+4. **Deployment is postponed by the user** (2026-11-16). Nothing has been
+   built for it yet. The approach chosen when it resumes: one Docker
+   container on one free host, with the backend also serving the built
+   frontend from the same address; SQLite kept, demo accounts recreated at
+   startup; fonts self-hosted. Details to remember: build the frontend with an
+   API address that means "same address" (and teach the `connect-src` rule in
+   `vite.config.ts` about it), keep `backend/.env` out of the image, and set a
+   fresh `JWT_SECRET_KEY` on the host. Deploy as a demo, not for real children.
+5. **Groq API key:** the user replaced it in `backend/.env` on 2026-11-16 and
+   the new one works. Whether the old key was revoked in the Groq console is
+   unconfirmed. Never print the key.
 6. **`frontend/public/laugh.mp3`** (6.6 s) is unused and nobody has listened to
    it. Decide: use it or delete it.
 
