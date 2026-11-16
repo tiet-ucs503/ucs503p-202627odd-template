@@ -1,34 +1,45 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../api";
+import { loginUser, registerUser } from "../api";
 
 const Login = () => {
     const navigate = useNavigate();
 
+    const [isSignUp, setIsSignUp] = useState(false);
+
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const handleLogin = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         setError("");
         setLoading(true);
 
         try {
-            const data = await loginUser(email, password);
+            const data = isSignUp
+                ? await registerUser(name, email, password)
+                : await loginUser(email, password);
 
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
 
             navigate("/");
         } catch (error) {
-            console.error("Login failed:", error);
+            console.error(
+                isSignUp ? "Registration failed:" : "Login failed:",
+                error
+            );
 
             setError(
                 error.response?.data?.message ||
-                "Unable to login. Please check your credentials."
+                (isSignUp
+                    ? "Unable to register. Please try again."
+                    : "Unable to login. Please check your credentials.")
             );
         } finally {
             setLoading(false);
@@ -51,11 +62,13 @@ const Login = () => {
 
                 <div className="mb-8 text-center">
                     <h2 className="text-2xl font-semibold text-slate-800">
-                        Welcome Back!
+                        {isSignUp ? "Create Account" : "Welcome Back!"}
                     </h2>
 
                     <p className="mt-2 text-sm text-slate-500">
-                        Sign in to continue your revision journey.
+                        {isSignUp
+                            ? "Sign up to start your revision journey."
+                            : "Sign in to continue your revision journey."}
                     </p>
                 </div>
 
@@ -65,7 +78,24 @@ const Login = () => {
                     </div>
                 )}
 
-                <form onSubmit={handleLogin} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+
+                    {isSignUp && (
+                        <div>
+                            <label className="block mb-1 font-medium text-slate-700">
+                                Name
+                            </label>
+
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="Enter your name"
+                                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#315B8C]"
+                                required
+                            />
+                        </div>
+                    )}
 
                     <div>
                         <label className="block mb-1 font-medium text-slate-700">
@@ -102,10 +132,29 @@ const Login = () => {
                         disabled={loading}
                         className="w-full bg-[#315B8C] text-white px-4 py-2.5 rounded-lg font-medium hover:bg-[#26476D] disabled:opacity-60"
                     >
-                        {loading ? "Logging in..." : "Log In"}
+                        {loading
+                            ? (isSignUp ? "Creating Account..." : "Logging in...")
+                            : (isSignUp ? "Sign Up" : "Log In")}
                     </button>
 
                 </form>
+
+                <div className="mt-6 text-center text-sm text-slate-600">
+                    {isSignUp
+                        ? "Already have an account? "
+                        : "Don't have an account? "}
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsSignUp(!isSignUp);
+                            setError("");
+                        }}
+                        className="font-semibold text-[#315B8C] hover:underline"
+                    >
+                        {isSignUp ? "Log In" : "Sign Up"}
+                    </button>
+                </div>
 
                 <p className="mt-6 text-center text-xs text-slate-400">
                     Secure authentication for your DSA journey.
