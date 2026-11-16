@@ -108,28 +108,25 @@ change makes one of those tests fail, the change is wrong, not the test.
 - Secrets live in `backend/.env` (git-ignored). Never print or commit them.
   `*.db` files are git-ignored and must stay that way.
 
-## Current state (updated 2026-11-15)
+## Current state (updated 2026-11-16)
 
 Everything is local; nothing has been pushed to `origin`.
 
-- `master` holds the cleanup phases A–E and this file.
-- The effects work is a stack of branches, each cut from the one before, not
-  yet merged into `master`:
-  `f1-mastery-display` → `f2-effects-core` → `f3-visual-layer` →
-  `f4a-villains-1` → `f4b-villains-2` → `f5-specials` → `f6-webcam-test-kit`.
-  The tip, `f6-webcam-test-kit`, contains all of it.
-- At that tip: 351 backend tests and 223 frontend tests pass; typecheck and
+- `master` holds all of it: the cleanup phases A–E, the effects work (F1–F6)
+  and the camera checks (F7). The phase branches (`phase-*`, `f1-*` … `f7-*`)
+  are kept as history and are all contained in `master`.
+- On `master`: 351 backend tests and 225 frontend tests pass; typecheck and
   build pass; lint has 0 errors and 2 old warnings.
 - The effects code is under `frontend/src/lib/effects/` and
   `frontend/src/components/effects/`. It is frontend only, takes game events
   from server responses, and has no access to camera or attention data.
   Review all sounds at `http://localhost:5173/?soundboard=1`.
-- `f7-fake-camera-check` (cut from f6) adds `npm run check:camera`: the real
+- `npm run check:camera` (added in F7) runs the real
   app in headless Chrome with a pretend webcam. Needs both servers running.
   It found and fixed two things: MediaPipe was posting a usage log to Google
   (now refused by a `connect-src` rule added in `vite.config.ts`; do not
   remove it), and "no face" reported a blink rate of 0 instead of empty.
-  The real-webcam run on the same branch found the camera stayed on at the
+  The real-webcam run found the camera stayed on at the
   mission end screens; it is now switched off there.
 
 ## Remaining issues
@@ -149,11 +146,8 @@ Needs the user (an assistant cannot do these):
    repeated with 30. Looking down at the keyboard or lap is still counted as
    facing the screen; head angle cannot separate them, so the tilt limit was
    left alone. Change nothing further without the user's approval.
-3. **F5 sounds have not been listened to.** The combo barrages, villain
-   signature moves and defeat sounds need the same by-ear sign-off that F4a and
-   F4b got. An assistant cannot hear audio; do not call them reviewed.
-4. **Merging the effects branches into `master`** is waiting for the user's
-   go-ahead, and so is any push.
+3. **Pushing to `origin`** waits for the user's explicit permission. All sound
+   batches (F4a, F4b, F5) were signed off by ear by the user, F5 on 2026-11-16.
 5. **Rotate the Groq API key.** Its value appeared in an earlier assistant
    session's output. The key lives only in `backend/.env`.
 6. **`frontend/public/laugh.mp3`** (6.6 s) is unused and nobody has listened to
