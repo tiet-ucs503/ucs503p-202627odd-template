@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { SIDEBAR_ITEMS } from "../constants/sidebarItems";
 
 function Sidebar() {
+    const user = JSON.parse(localStorage.getItem("user"));
     return (
         <aside className="w-72 shrink-0 bg-[#eef3e8] min-h-screen px-6 py-8 flex flex-col">
 
@@ -23,7 +24,7 @@ function Sidebar() {
 
                     <div>
                         <p className="text-lg font-semibold text-[#24352b]">
-                            Pihu
+                            {user?.name || "User"}
                         </p>
 
                         <p className="text-sm text-[#657568]">
