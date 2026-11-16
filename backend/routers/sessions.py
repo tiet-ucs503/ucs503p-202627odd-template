@@ -15,7 +15,7 @@ from models import utcnow
 from services import attention, game, hints, mastery
 from services.mastery_display import display_pct
 from services.curriculum import get_boss, unlocked_bosses
-from services.questions import generate_question
+from services.question_bank import question_or_backup
 
 router = APIRouter(tags=["gameplay"])
 
@@ -58,7 +58,7 @@ def _get_mastery(db: Session, student_id: int, topic: str) -> models.TopicMaster
 def _serve_question(db: Session, session: models.PlaySession) -> models.Attempt:
     """Generates the next question for a session and stores it, answer included."""
     p = _get_mastery(db, session.student_id, session.topic).p_mastery
-    q = generate_question(session.boss_id, mastery.difficulty_for(p))
+    q = question_or_backup(session.boss_id, mastery.difficulty_for(p))
     attempt = models.Attempt(
         session_id=session.id,
         student_id=session.student_id,

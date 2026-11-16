@@ -169,6 +169,27 @@ from the question text alone and compares the result with the stored answer.
 | The Lizard, exponents and roots | `7^2`, `√49` | `3^2 + √16` | `2^3 × 2^2`, `(3^2)^2` |
 | Kingpin, ratios | `1 : 4 = 3 : X` | `2 : 5 = 6 : X` | share an amount in a ratio |
 
+### Story questions
+
+About half of all questions are told through the villain's own world instead of
+as a plain sum (`backend/services/story_questions.py`). Each villain has six
+stories, two per tier, practising the same skill as the plain questions of that
+tier: the Goblin's pumpkin bombs and glider, Doc Ock's arms and reactor,
+Mysterio's illusions, Venom's symbiote, the Lizard's serum, Kingpin's empire.
+They are generated exactly like the others: random numbers, computed answer,
+hint written from the same numbers. Story text is kept to three lines or fewer.
+
+### Backup questions
+
+`backend/services/question_bank.py` holds a fixed set of six questions per
+villain (two per tier), written and checked by hand. The game asks for
+questions through `question_or_backup`, which uses the generator and falls back
+to this bank only if the generator raises an unexpected error. Questions never
+depend on an AI service, so an AI outage cannot stop a mission; the bank covers
+the one remaining way a question could fail to appear.
+`tests/test_story_questions.py` re-solves every story and every bank entry and
+plays a whole mission per villain on backup questions alone.
+
 ## Hints and where AI is used
 
 Every question carries a plain hint written by the generator from the

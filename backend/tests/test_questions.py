@@ -25,6 +25,29 @@ def solve(boss_id: str, text: str) -> int:
         return match.groups() if match else None
 
     if boss_id == "goblin":
+        if g := find(r"grabbed (\d+) more\.\nNow he carries (\d+)"):  # Y + b = c
+            return int(g[1]) - int(g[0])
+        if g := find(r"In (\d+) seconds it covers (\d+) metres"):  # aY = c
+            assert int(g[1]) % int(g[0]) == 0
+            return int(g[1]) // int(g[0])
+        if g := find(r"(\d+) times Y, (plus|minus) (\d+), equals (\d+)"):  # aY ± b = c
+            a, b, c = int(g[0]), int(g[2]), int(g[3])
+            top = c - b if g[1] == "plus" else c + b
+            assert top % a == 0
+            return top // a
+        if g := find(r"(\d+) vials were filled and (\d+) drops spilled, leaving (\d+) drops"):  # aY - b = c
+            a, b, c = map(int, g)
+            assert (c + b) % a == 0
+            return (c + b) // a
+        if g := find(r"packs (\d+) crates\. Each crate holds Y pumpkin bombs and (\d+) smoke bombs\.\n"
+                     r"There are (\d+) bombs"):  # a(Y + b) = c
+            a, b, c = map(int, g)
+            assert c % a == 0
+            return c // a - b
+        if g := find(r"swings (\d+)Y \+ (\d+) metres\. The Goblin Glider flies (\d+)Y \+ (\d+) metres"):
+            a, b, c, d = map(int, g)  # aY + b = cY + d, told as a race
+            assert (d - b) % (a - c) == 0
+            return (d - b) // (a - c)
         if g := find(r"(\d+)Y \+ (\d+) = (\d+)Y \+ (\d+)"):  # aY + b = cY + d
             a, b, c, d = map(int, g)
             assert (d - b) % (a - c) == 0
@@ -48,6 +71,14 @@ def solve(boss_id: str, text: str) -> int:
         if g := find(r"base of (\d+)m and a height of (\d+)m"):
             assert int(g[0]) * int(g[1]) % 2 == 0
             return int(g[0]) * int(g[1]) // 2
+        if g := find(r"Each side is (\d+)m"):  # square, perimeter
+            return 4 * int(g[0])
+        if g := find(r"with sides of (\d+)m"):  # square, area
+            return int(g[0]) ** 2
+        if g := find(r"Area of (\d+) sq m and a width of (\d+)m"):  # rectangle, perimeter from area
+            area, w = map(int, g)
+            assert area % w == 0
+            return 2 * (w + area // w)
         if g := find(r"perimeter of (\d+)m and a width of (\d+)m"):
             perimeter, w = map(int, g)
             assert perimeter % 2 == 0
@@ -56,6 +87,10 @@ def solve(boss_id: str, text: str) -> int:
         return w * length if "Area" in text else 2 * (w + length)
 
     if boss_id == "mysterio":
+        if g := find(r"pattern: (\d+), (\d+), \?, (\d+), (\d+)"):  # the hidden middle number
+            a, b, d, e = map(int, g)
+            assert e - d == b - a and d - b == 2 * (b - a)
+            return b + (b - a)
         s = list(map(int, find(r"sequence: (\d+), (\d+), (\d+), (\d+)")))
         arithmetic = s[1] - s[0] == s[2] - s[1] == s[3] - s[2]
         if g := find(r"What is the (\d+)th number"):
@@ -75,6 +110,22 @@ def solve(boss_id: str, text: str) -> int:
             part, total = map(int, g)
             assert part * 100 % total == 0
             return part * 100 // total
+        if g := find(r"weighed (\d+) kg\. After absorbing energy he grew by (\d+)%"):
+            base, percent = map(int, g)
+            assert base * percent % 100 == 0
+            return base + base * percent // 100
+        if g := find(r"checked (\d+) photos and (\d+) were"):
+            total, part = map(int, g)
+            assert part * 100 % total == 0
+            return part * 100 // total
+        if g := find(r"has (\d+) ml of web fluid\. Venom's attack burns (\d+)%"):
+            total, percent = map(int, g)
+            assert percent * total % 100 == 0
+            return percent * total // 100
+        if g := find(r"(\d+)% of (?:Eddie Brock's|his|the symbiote's) (\d+) "):
+            percent, total = map(int, g)
+            assert percent * total % 100 == 0
+            return percent * total // 100
         percent, total = map(int, find(r"(\d+)% of a (\d+) sq ft"))
         assert percent * total % 100 == 0
         return percent * total // 100
@@ -97,6 +148,23 @@ def solve(boss_id: str, text: str) -> int:
         return root
 
     if boss_id == "kingpin":
+        if g := find(r"Kingpin posts (\d+) outside\.\nThere are (\d+) guards inside"):
+            return int(g[0]) * int(g[1])
+        if g := find(r"1 gold chip is worth (\d+) silver chips\.\n\nHow many silver chips are (\d+) gold"):
+            return int(g[0]) * int(g[1])
+        if g := find(r"(\d+) (?:crates|bodyguards) for every (\d+) (?:barrels|lawyers)\.\n"
+                     r"(?:A convoy carries|He has) (\d+) "):
+            x1, y1, x2 = map(int, g)
+            assert y1 * x2 % x1 == 0
+            return y1 * x2 // x1
+        if g := find(r"controls (\d+) city blocks\. He shares them with Hammerhead in the ratio (\d+) : (\d+)"):
+            total, a, b = map(int, g)
+            assert total % (a + b) == 0
+            return total // (a + b) * a  # Kingpin's share is the first number
+        if g := find(r"share \$(\d+) in the ratio (\d+) : (\d+)\.\n\nHow many dollars does Vanessa"):
+            total, a, b = map(int, g)
+            assert total % (a + b) == 0
+            return total // (a + b) * b  # Vanessa's share is the second number
         if g := find(r"splits \$(\d+) between two gangs in the ratio (\d+) : (\d+)"):
             total, a, b = map(int, g)
             assert total % (a + b) == 0

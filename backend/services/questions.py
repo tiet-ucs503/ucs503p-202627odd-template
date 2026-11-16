@@ -6,6 +6,11 @@ answer is always right (tests/test_questions.py re-solves thousands of them
 independently). The server keeps `correct_index`; the client only ever receives
 the text and the four options.
 
+About half the questions are "story" questions told through the villain's own
+world (services/story_questions.py). They are built the same way: random
+numbers, computed answer. If this generator ever fails, the game serves a fixed
+backup question instead (services/question_bank.py).
+
 Each question also carries a plain hint written from the same numbers. That
 hint is what Gwen says when no AI service is configured, and it is the only
 maths the AI is allowed to rephrase when one is (see services/hints.py).
@@ -318,6 +323,9 @@ def _kingpin_hard(rng):
 
 Generator = Callable[[random.Random], GeneratedQuestion]
 
+# The share of questions told as a villain story rather than as a plain sum.
+STORY_SHARE = 0.5
+
 _GENERATORS: Dict[str, Dict[str, Generator]] = {
     "goblin": {"easy": _goblin_easy, "medium": _goblin_medium, "hard": _goblin_hard},
     "doc-ock": {"easy": _doc_ock_easy, "medium": _doc_ock_medium, "hard": _doc_ock_hard},
@@ -334,6 +342,12 @@ def generate_question(boss_id: str, difficulty: str = "medium",
         raise ValueError(f"Unknown boss: {boss_id}")
     if difficulty not in DIFFICULTIES:
         raise ValueError(f"Unknown difficulty: {difficulty}")
-    question = _GENERATORS[boss_id][difficulty](rng or random.Random())
+    from services.story_questions import STORIES  # imported here: that module builds on this one
+
+    rng = rng or random.Random()
+    if rng.random() < STORY_SHARE:
+        question = rng.choice(STORIES[boss_id][difficulty])(rng)
+    else:
+        question = _GENERATORS[boss_id][difficulty](rng)
     question.difficulty = difficulty
     return question

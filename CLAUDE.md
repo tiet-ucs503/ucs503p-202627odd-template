@@ -73,7 +73,10 @@ Before saying work is done, run `pytest` and, for frontend changes,
    linked.
 8. **Questions are deterministic.** The generator computes each answer. A
    language model may only reword an existing verified hint; it never writes
-   questions or maths, and the game must work with no `GROQ_API_KEY`.
+   questions or maths, and the game must work with no `GROQ_API_KEY`. Story
+   questions (`services/story_questions.py`) follow the same rule. Serve
+   questions through `question_bank.question_or_backup`, which falls back to a
+   fixed bank only if the generator errors.
 9. **Guardians see a student only through a link** made with that student's link
    code. Use `deps.student_for_viewer` for any endpoint that returns a
    student's data.
@@ -92,8 +95,8 @@ change makes one of those tests fail, the change is wrong, not the test.
 - Mastery uses BKT with the learning step applied only after correct answers
   (a deliberate change from textbook BKT, documented in `services/mastery.py`).
   Do not "fix" it back.
-- Write tests with the feature. New question types need a case in
-  `tests/test_questions.py::solve`.
+- Write tests with the feature. New question types, stories included, need a
+  case in `tests/test_questions.py::solve`.
 - Charts are single-series inline SVG in `TrendCharts.tsx`; no chart library.
 
 ## Working rules for this repository
