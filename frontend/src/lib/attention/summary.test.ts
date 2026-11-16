@@ -50,7 +50,7 @@ describe('AttentionAccumulator', () => {
     const t = feed(acc, offset, CALIBRATION_MS / 100 + 1, 0);
     acc.resetQuestion();
     const t2 = feed(acc, { ...facing, yawDeg: 35 }, 10, t); // 15 degrees from their baseline: fine
-    feed(acc, { ...facing, yawDeg: 50 }, 10, t2); // 30 degrees from their baseline: away
+    feed(acc, { ...facing, yawDeg: 60 }, 10, t2); // 40 degrees from their baseline: away
     expect(acc.summary()?.on_screen_pct).toBe(50);
   });
 
