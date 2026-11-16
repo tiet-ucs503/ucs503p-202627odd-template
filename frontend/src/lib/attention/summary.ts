@@ -18,8 +18,13 @@ export interface FaceSample {
 
 /** The first seconds with a face visible set what "facing the screen" looks like for this student. */
 export const CALIBRATION_MS = 5000;
-/** How far the head may turn from that baseline and still count as facing the screen. */
-export const YAW_LIMIT_DEG = 25;
+/**
+ * How far the head may turn from that baseline and still count as facing the screen.
+ * The turn limit was 25 until a real-webcam run (docs/WEBCAM_TEST_PLAN.md, section 8)
+ * measured about 24 degrees for the right-hand corners of a laptop screen, and
+ * about 42 for turning to someone alongside. 30 clears the corners with a wide margin.
+ */
+export const YAW_LIMIT_DEG = 30;
 export const PITCH_LIMIT_DEG = 20;
 /** Below this, a blink rate would be noise, so it is reported as "not measured". */
 const MIN_SECONDS_FOR_BLINK_RATE = 5;

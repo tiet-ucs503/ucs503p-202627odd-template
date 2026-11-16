@@ -31,7 +31,7 @@ and a person has to run it.
 
 Everything in the table in section 3: real permission prompts, real hardware
 failures, tracking under different light and camera positions, other
-browsers, slower machines, and whether the two limits (head turn 25 degrees,
+browsers, slower machines, and whether the two limits (head turn 30 degrees, raised from 25 after section 8;
 head tilt 20 degrees, both measured from the student's own resting position)
 are sensible.
 
@@ -96,7 +96,7 @@ Record one row per device and browser combination where it matters.
 ### Threshold measurements (for cases 9 and 10)
 
 After the baseline is set, note the yaw and pitch the readout shows for each
-pose. This shows whether 25 and 20 degrees are sensible.
+pose. This shows whether the turn and tilt limits (30 and 20 degrees) are sensible.
 
 | Pose | Yaw | Pitch | "facing screen now" | Should it count as facing? |
 |---|---|---|---|---|
@@ -256,8 +256,10 @@ yaw -0.2, pitch 10.9, taken during the first 5 seconds of the mission.
    the question". This is one person on one device; it is evidence, not a
    calibration.
 
-No limit has been changed. Any change to `YAW_LIMIT_DEG` or `PITCH_LIMIT_DEG`
-is for the project owner to decide.
+Following this run, the project owner approved raising the turn limit
+(`YAW_LIMIT_DEG`) from 25 to 30. The figures in the table above were recorded
+with the old limit of 25; the run has not been repeated with 30. The tilt limit
+(`PITCH_LIMIT_DEG`, 20) is unchanged.
 
 ### A problem found on the real webcam, fixed
 

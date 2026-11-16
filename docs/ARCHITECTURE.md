@@ -188,7 +188,7 @@ attention input.
 Runs in the browser (`frontend/src/lib/attention/`), only after the student
 chooses **Enable camera**. Per question it reports the share of time a face was
 present, the share of time the head was facing the screen, and blinks per
-minute. "Facing the screen" means within 25° left or right and 20° up or down
+minute. "Facing the screen" means within 30° left or right and 20° up or down
 of the student's own resting head position, which is learned from the first
 five seconds. It is head direction, not eye tracking, and not a medical
 assessment. When the camera is off the values are stored as NULL, which means

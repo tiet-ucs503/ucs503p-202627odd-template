@@ -142,11 +142,13 @@ Needs the user (an assistant cannot do these):
    camera in use elsewhere, lighting, other cameras and positions, Edge,
    Firefox, Safari, phones, slow devices. Say "checked on one device", never
    "verified".
-2. **Head-angle limits are untuned and the user has not decided** (`YAW_LIMIT_DEG`
-   25, `PITCH_LIMIT_DEG` 20 in `lib/attention/summary.ts`). The real run showed
-   the turn limit is too tight for the right-hand screen corners (about 24
-   degrees; 30 was suggested), and that looking down at the keyboard or lap is
-   counted as facing the screen. Change nothing without the user's approval.
+2. **Head-angle limits are based on one run** (`YAW_LIMIT_DEG` 30,
+   `PITCH_LIMIT_DEG` 20 in `lib/attention/summary.ts`). The user approved
+   raising the turn limit from 25 to 30 on 2026-11-16 after the real run showed
+   the right-hand screen corners at about 24 degrees. The real run has not been
+   repeated with 30. Looking down at the keyboard or lap is still counted as
+   facing the screen; head angle cannot separate them, so the tilt limit was
+   left alone. Change nothing further without the user's approval.
 3. **F5 sounds have not been listened to.** The combo barrages, villain
    signature moves and defeat sounds need the same by-ear sign-off that F4a and
    F4b got. An assistant cannot hear audio; do not call them reviewed.
