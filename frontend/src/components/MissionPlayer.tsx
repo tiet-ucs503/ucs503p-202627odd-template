@@ -103,6 +103,24 @@ export default function MissionPlayer({ bossId, onExit, onNextLevel, feedbackMs 
     return () => tracker.current?.stop();
   }, [userId, enableCamera]);
 
+  // The camera is only on while there is a question to answer. On the end
+  // screens (won, lost, error) nothing is measured and there is no camera
+  // button, so the webcam is switched off there. It comes back on if the
+  // student plays again. The student's saved choice is not changed.
+  const cameraPausedAtEnd = useRef(false);
+  useEffect(() => {
+    if (phase === 'victory' || phase === 'defeat' || phase === 'error') {
+      if (tracker.current?.running) {
+        tracker.current.stop();
+        setCamera('off');
+        cameraPausedAtEnd.current = true;
+      }
+    } else if (phase === 'combat' && cameraPausedAtEnd.current) {
+      cameraPausedAtEnd.current = false;
+      if (getCameraChoice(userId) === 'enabled') enableCamera();
+    }
+  }, [phase, userId, enableCamera]);
+
   const questionShownAt = useRef(performance.now());
   const advanceTimer = useRef<number>();
   const started = useRef(false);

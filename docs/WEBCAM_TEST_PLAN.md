@@ -1,9 +1,12 @@
 # Webcam test plan
 
-**Status: not yet run on real hardware.** Until the results table below is
-filled in, the camera feature must be described as tested with a simulated
-camera only. A run in a real browser with a pretend webcam passed on
-2026-11-16 (section 7); that is not the same as a physical webcam.
+**Status: partly run on real hardware.** On 2026-11-16 the camera was tested
+on one laptop, one webcam, one browser and one person (section 8). Cases 1, 5,
+6, 8 and part of 10 passed there. Lighting, other cameras and positions, other
+browsers, other devices, a camera in use by another app, and a real permission
+prompt have **not** been tested on real hardware. A run in a real browser with
+a pretend webcam also passes (section 7). Describe the camera as "checked on
+one device", not as fully verified.
 
 The automated tests use a pretend camera and a pretend face model. They prove
 the app's own logic. They cannot prove that a real browser prompt, a real
@@ -161,7 +164,7 @@ a camera in use by another app, other devices, Firefox and Safari.
 
 ### Result, 2026-11-16, Chrome (headless), test pattern with no face
 
-30 checks, all passed.
+32 checks, all passed (30 on the first run; two were added later the same day).
 
 | Scenario | Checked | Result |
 |---|---|---|
@@ -183,7 +186,90 @@ a camera in use by another app, other devices, Firefox and Safari.
 2. **"No face" was reported as zero blinks a minute.** With nobody in view the
    blink rate is now empty, because blinks cannot be counted without a face.
 
+3. **The webcam stayed on at the end screen** (found with the real webcam,
+   section 8). Fixed, and the script now checks it.
+
 ### Not yet done
 
 A run with a video of a real face (`--video`), which would exercise face
 found, head angles and calibration with real numbers.
+
+## 8. Real webcam run, 2026-11-16
+
+One device: a laptop with its built-in camera above the screen ("HP HD
+Camera"), Chrome 157 on Windows 11, indoor room light, one adult tester. The
+app was driven through the Claude in Chrome extension; the tester followed
+on-screen prompts while the readout was sampled four times a second.
+
+| # | Case | Result | Notes |
+|---|---|---|---|
+| 1 | Permission granted | pass | Camera on, face found, baseline set, 10 readings a second. The permission had been granted to `localhost` earlier, so the browser prompt itself was not seen. |
+| 5 | Switched off mid-mission | pass | Stream ended at once; the next answer carried no attention. Whether the camera light went out was not observed. |
+| 6 | Switched back on | pass | New stream, no second consent screen, numbers sent again. |
+| 8 | Face leaves briefly | pass | Face present dropped to about 50% while leaning out, not to zero. |
+| 10 | Position and device | partly | Built-in camera above the screen only. |
+| 2, 3, 4, 7, 9, 11, 12 | | not run on real hardware | 2, 3, 7 and 12 pass with the pretend webcam (section 7). |
+
+Privacy, on the real device: the stream was video only (no sound); the answer
+bodies were JSON of at most 166 bytes; the page contacted only this app, its
+backend and the two font hosts; the usage log to Google was not sent. Three
+stored rows were checked: attention filled where measured, empty where not,
+and mastery matching correctness alone.
+
+### Head angles by pose
+
+Median over about 4.5 seconds of holding each pose. The baseline in use was
+yaw -0.2, pitch 10.9, taken during the first 5 seconds of the mission.
+
+| Pose | Yaw | Pitch | Face seen | Counted as facing | Should count? |
+|---|---|---|---|---|---|
+| Centre of the screen | -2.2 | -0.6 | 100% | 100% | yes |
+| Top-left corner | 13.4 | -7.8 | 100% | 94% | yes |
+| Top-right corner | -24.1 | -8.3 | 100% | **53%** | yes |
+| Bottom-left corner | 16.1 | 5.8 | 100% | 100% | yes |
+| Bottom-right corner | -24.3 | 7.2 | 100% | **83%** | yes |
+| Keyboard | 4.9 | 21.5 | 83% | **83%** | probably not |
+| Desk beside the laptop | -11.6 | 16.8 | 100% | **100%** | probably not |
+| Lap, as if at a phone | -4.6 | 22.3 | 78% | **78%** | no |
+| Turned to the left | 43.0 | 1.5 | 100% | 0% | no |
+| Turned to the right | -41.8 | -4.3 | 100% | 11% | no |
+| Leaning out of view | - | - | 50% | 0% | no |
+
+### What the numbers say
+
+1. **Turning away is detected clearly.** A turn of about 42 degrees is far past
+   the 25 degree limit.
+2. **The turn limit is too tight for the screen's own corners.** Looking at the
+   right-hand corners gave about 24 degrees, right at the limit, so those
+   moments flicker between on and off screen. A limit of about 30 would clear
+   the corners and still leave a wide margin before a real turn.
+3. **Looking down is not detected.** Keyboard, desk and lap were all counted as
+   facing the screen. Two causes: the baseline was taken while the tester was
+   looking at the lower part of the screen (pitch 10.9, against -0.6 for the
+   centre), and the gap between the bottom of the screen (about 7) and the
+   keyboard (about 22) is only about 15 degrees. The baseline can drift by
+   nearly that much depending on where the student looks in the first five
+   seconds. Head angle alone cannot reliably tell "bottom of the screen" from
+   "keyboard" on a laptop.
+4. **So the on-screen figure means "head roughly towards the screen"**, and
+   mostly catches turning away or leaving. It should not be read as "eyes on
+   the question". This is one person on one device; it is evidence, not a
+   calibration.
+
+No limit has been changed. Any change to `YAW_LIMIT_DEG` or `PITCH_LIMIT_DEG`
+is for the project owner to decide.
+
+### A problem found on the real webcam, fixed
+
+The webcam stayed on while the "mission failed" or "threat neutralized" screen
+was showing, where nothing is measured and there is no camera button. It is now
+switched off as soon as the mission ends and comes back on if the student plays
+again. Covered by a unit test and by `npm run check:camera`.
+
+### A note on one odd reading
+
+During the run, one answer went out with no attention numbers while the camera
+appeared to be on. Several automation commands had been cut off and were still
+running in the page at the time, clicking the camera button over each other.
+A clean repeat of the same steps behaved correctly. The overlap is the likely
+cause, but that was not proven.

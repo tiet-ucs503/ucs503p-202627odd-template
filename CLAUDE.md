@@ -129,21 +129,24 @@ Everything is local; nothing has been pushed to `origin`.
   It found and fixed two things: MediaPipe was posting a usage log to Google
   (now refused by a `connect-src` rule added in `vite.config.ts`; do not
   remove it), and "no face" reported a blink rate of 0 instead of empty.
+  The real-webcam run on the same branch found the camera stayed on at the
+  mission end screens; it is now switched off there.
 
 ## Remaining issues
 
 Needs the user (an assistant cannot do these):
 
-0. **The pretend-camera run has only been done with no face in view.** A run
-   with `--video <clip of a face>.mjpeg` is still to do; it needs a clip from
-   the user.
-1. **Real webcam testing has not been done.** Run `docs/WEBCAM_TEST_PLAN.md`
-   on real devices, using `?attentionDebug=1`. Until its results table is
-   filled in, never describe the camera as verified on real hardware. The
-   readout's "camera on" lines have only been seen with a simulated camera.
-2. **Head-angle limits are untuned** (`YAW_LIMIT_DEG` 25, `PITCH_LIMIT_DEG` 20
-   in `lib/attention/summary.ts`). Change them only with measurements from the
-   checklist and the user's approval.
+1. **Real webcam testing is partly done** (2026-11-16: one laptop webcam,
+   Chrome, one person; `docs/WEBCAM_TEST_PLAN.md` section 8). Still untested on
+   real hardware: a fresh permission prompt, permission denied, no camera,
+   camera in use elsewhere, lighting, other cameras and positions, Edge,
+   Firefox, Safari, phones, slow devices. Say "checked on one device", never
+   "verified".
+2. **Head-angle limits are untuned and the user has not decided** (`YAW_LIMIT_DEG`
+   25, `PITCH_LIMIT_DEG` 20 in `lib/attention/summary.ts`). The real run showed
+   the turn limit is too tight for the right-hand screen corners (about 24
+   degrees; 30 was suggested), and that looking down at the keyboard or lap is
+   counted as facing the screen. Change nothing without the user's approval.
 3. **F5 sounds have not been listened to.** The combo barrages, villain
    signature moves and defeat sounds need the same by-ear sign-off that F4a and
    F4b got. An assistant cannot hear audio; do not call them reviewed.
@@ -170,10 +173,11 @@ Known and open:
 
 ## Known gaps
 
-- Real-device camera checklist: `docs/WEBCAM_TEST_PLAN.md` (not yet run).
+- Real-device camera checklist: `docs/WEBCAM_TEST_PLAN.md` (partly run).
   `?attentionDebug=1` shows a text-only readout of the live numbers for it.
-- The camera path has only been tested with a simulated camera; head-angle
-  thresholds in `lib/attention/summary.ts` are untuned.
+- The camera path has been checked on one real device only; head-angle
+  thresholds in `lib/attention/summary.ts` are untuned, and "on screen" means
+  head direction, not eye gaze.
 - BKT parameters are textbook defaults, so mastery can swing to 1% or 99%
   quickly.
 - Camera consent is per device; real use with children needs verified

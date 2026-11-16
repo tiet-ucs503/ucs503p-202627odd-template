@@ -224,6 +224,26 @@ describe('T4: switching the camera off during a mission', () => {
   });
 });
 
+describe('the camera on the end screen', () => {
+  it('is switched off when the mission ends, and comes back on for another try', async () => {
+    installFakeServer();
+    const { track, getUserMedia } = fakeCamera();
+    const view = renderMission();
+    choose(/enable camera/i);
+    await screen.findByRole('button', { name: /camera on/i });
+
+    await winMission();
+    // Still on the victory screen: nothing has been unmounted.
+    expect(view.container.isConnected).toBe(true);
+    await waitFor(() => expect(track.stop).toHaveBeenCalled());
+    expect(localStorage.getItem(`mathverse_camera_choice_${USER_ID}`)).toBe('enabled'); // the choice is kept
+
+    fireEvent.click(screen.getAllByRole('button').find((b) => /again|replay|rematch/i.test(b.textContent ?? ''))!);
+    await screen.findByRole('button', { name: /camera on/i });
+    expect(getUserMedia).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe('T5: no webcam images are uploaded', () => {
   it('sends only small JSON text, and never turns a frame into an image', async () => {
     const server = installFakeServer();

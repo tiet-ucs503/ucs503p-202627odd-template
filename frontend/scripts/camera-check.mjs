@@ -59,6 +59,13 @@ async function openMission(token, { camera, video = null, slow = false }) {
   const browser = await chromium.launch({ channel: BROWSER, headless: true, args: launchArgs });
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   await context.addInitScript((t) => localStorage.setItem('mathverse_token', t), token);
+  // Test-browser only: keep a handle on every camera stream the app opens, so
+  // the script can tell whether the camera is really on or off.
+  await context.addInitScript(() => {
+    window.__streams = [];
+    const real = navigator.mediaDevices?.getUserMedia?.bind(navigator.mediaDevices);
+    if (real) navigator.mediaDevices.getUserMedia = async (c) => { const s = await real(c); window.__streams.push(s); return s; };
+  });
   const page = await context.newPage();
 
   const requests = [];
@@ -104,6 +111,8 @@ async function openMission(token, { camera, video = null, slow = false }) {
   return { browser, page, requests, refusals, pageErrors, readout, waitReadout, answers, answer };
 }
 
+const cameraLive = (page) => page.evaluate(() => window.__streams.some((s) => s.getTracks().some((t) => t.readyState === 'live')));
+
 const KEYS = ['blink_rate_per_min', 'face_present_pct', 'on_screen_pct', 'sample_seconds'];
 const number = (text, label) => Number((text.match(new RegExp(`${label}: (-?[\\d.]+)`)) ?? [])[1]);
 
@@ -137,8 +146,8 @@ async function granted(token) {
     await m.page.getByRole('button', { name: /Camera on/ }).click();
     await m.waitReadout(/camera: off/);
     await m.page.waitForTimeout(1500); // the face library sends its usage log when it shuts down
-    const live = await m.page.evaluate(() => [...document.querySelectorAll('video')].some((v) => v.srcObject && v.srcObject.getTracks().some((t) => t.readyState === 'live')));
-    record(name, 'switching off stops the camera at once', !live);
+    const opened = await m.page.evaluate(() => window.__streams.length);
+    record(name, 'switching off stops the camera at once', opened > 0 && !(await cameraLive(m.page)), `${opened} stream opened`);
     const off = await m.answer();
     record(name, 'answers after switching off carry no attention', off.sent.attention === null);
     await m.page.getByRole('button', { name: /Camera off/ }).click();
@@ -147,6 +156,13 @@ async function granted(token) {
     await m.page.waitForTimeout(1500);
     const on = await m.answer();
     record(name, 'answers after switching back on carry numbers again', on.sent.attention !== null);
+    record(name, 'the stream is video only, never sound', (await m.page.evaluate(() => window.__streams.every((s) => s.getAudioTracks().length === 0))));
+
+    // Play on to the end screen: the camera must not stay on there.
+    for (let i = 0; i < 20 && (await m.page.getByRole('button', { name: /^A\s/ }).count()) > 0; i++) await m.answer();
+    const ended = await m.page.getByText(/THREAT NEUTRALIZED|MISSION FAILED/).count();
+    await m.page.waitForTimeout(500);
+    record(name, 'the camera is off on the end screen', ended > 0 && !(await cameraLive(m.page)), ended ? '' : 'the mission did not reach an end screen');
     record(name, 'no errors on the page', m.pageErrors.length === 0, m.pageErrors.join(' | '));
     return m;
   } finally {
