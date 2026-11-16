@@ -115,8 +115,10 @@ export class AttentionAccumulator {
     return {
       face_present_pct: round1((100 * this.present) / this.total),
       on_screen_pct: round1((100 * this.onScreen) / this.total),
+      // Blinks can only be counted on a face. With no face there is nothing
+      // to report, which is different from "blinked zero times".
       blink_rate_per_min:
-        seconds >= MIN_SECONDS_FOR_BLINK_RATE
+        seconds >= MIN_SECONDS_FOR_BLINK_RATE && this.present > 0
           ? Math.min(MAX_BLINK_RATE, round1(this.blinks / (seconds / 60)))
           : null,
       sample_seconds: round1(seconds),

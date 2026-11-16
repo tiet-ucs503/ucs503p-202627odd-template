@@ -2,7 +2,8 @@
 
 **Status: not yet run on real hardware.** Until the results table below is
 filled in, the camera feature must be described as tested with a simulated
-camera only.
+camera only. A run in a real browser with a pretend webcam passed on
+2026-11-16 (section 7); that is not the same as a physical webcam.
 
 The automated tests use a pretend camera and a pretend face model. They prove
 the app's own logic. They cannot prove that a real browser prompt, a real
@@ -144,3 +145,45 @@ Do these once, during case 1.
   small change, made with the recorded numbers as the reason.
 - Any failure is a bug to fix before the camera is described as working on
   real hardware.
+
+## 7. Automated run with a pretend webcam
+
+`npm run check:camera` (in `frontend/`, with both servers running) drives the
+real app in headless Chrome or Edge. Chrome replaces the webcam with a test
+pattern, or with a video file given by `--video clip.mjpeg`. Everything else is
+real: the browser's camera call, the face model, the requests, the database
+rows. It never opens the actual webcam. It signs in as a throwaway student
+(`camera-check@example.com`) in the local development database.
+
+What it covers from section 3: cases 1, 2, 3, 5, 6, 7 and 12, plus all of
+section 4. What it cannot cover: a physical camera, lighting, camera position,
+a camera in use by another app, other devices, Firefox and Safari.
+
+### Result, 2026-11-16, Chrome (headless), test pattern with no face
+
+30 checks, all passed.
+
+| Scenario | Checked | Result |
+|---|---|---|
+| Camera on | turns on; face model loads; 10 readings a second; answer carries exactly the four numbers | pass |
+| No face in view | face 0%, on screen 0%, blink rate empty | pass (after a fix, below) |
+| Switch off, then on | camera stops at once; answers carry no attention; resumes with no second consent screen | pass |
+| Permission denied | one notice; mission playable; no attention sent | pass |
+| No camera present | same | pass |
+| CPU 4x slower | 9.5 readings a second; 172 ms from click to result | pass |
+| Privacy | only JSON sent to the backend; largest body 162 bytes; no image data; nothing sent to any other site | pass (after a fix, below) |
+| Stored rows | 8 rows: attention filled only where measured, NULL otherwise; mastery recomputed from correctness alone matches | pass |
+
+### Two problems this run found, both fixed
+
+1. **A usage log was going to Google.** The face-tracking library posted about
+   140 bytes of usage counters (no image) to `odml.pa.googleapis.com` whenever
+   the camera was used. The page now allows data connections only to this app
+   and its backend, so the browser refuses it. See `docs/PRIVACY.md`.
+2. **"No face" was reported as zero blinks a minute.** With nobody in view the
+   blink rate is now empty, because blinks cannot be counted without a face.
+
+### Not yet done
+
+A run with a video of a real face (`--video`), which would exercise face
+found, head angles and calibration with real numbers.

@@ -73,6 +73,12 @@ describe('AttentionAccumulator', () => {
     expect(summary.blink_rate_per_min).toBe(30); // 5 blinks in 10 seconds
   });
 
+  it('reports no blink rate, rather than zero, when no face was seen', () => {
+    const acc = new AttentionAccumulator();
+    feed(acc, noFace, 100, 0); // ten seconds of an empty chair
+    expect(acc.summary()).toMatchObject({ face_present_pct: 0, on_screen_pct: 0, blink_rate_per_min: null });
+  });
+
   it('does not report a blink rate from a very short sample', () => {
     const { acc, t } = calibrated();
     feed(acc, facing, 10, t);

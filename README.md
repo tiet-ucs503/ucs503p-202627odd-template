@@ -160,6 +160,8 @@ journals/, project-proposal/, project-report-prototype-stage/, srs/   coursework
 - The attention estimate has been tested with a simulated camera. Its
   thresholds have not been tuned on real webcams. The checklist for testing
   on real devices is in `docs/WEBCAM_TEST_PLAN.md`; it has not been run yet.
+  `npm run check:camera` runs the camera path in a real browser with a pretend
+  webcam (passed on 2026-11-16, with no face in view).
 - Mastery parameters are textbook defaults; with them, mastery moves quickly.
 - The camera choice is made by whoever is using the device. This is suitable
   for a course demo; see "Before real deployment" in

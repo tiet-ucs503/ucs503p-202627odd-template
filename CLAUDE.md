@@ -123,12 +123,20 @@ Everything is local; nothing has been pushed to `origin`.
 - The effects code is under `frontend/src/lib/effects/` and
   `frontend/src/components/effects/`. It is frontend only, takes game events
   from server responses, and has no access to camera or attention data.
+- `f7-fake-camera-check` (cut from f6) adds `npm run check:camera`: the real
+  app in headless Chrome with a pretend webcam. Needs both servers running.
+  It found and fixed two things: MediaPipe was posting a usage log to Google
+  (now refused by a `connect-src` rule added in `vite.config.ts`; do not
+  remove it), and "no face" reported a blink rate of 0 instead of empty.
   Review all sounds at `http://localhost:5173/?soundboard=1`.
 
 ## Remaining issues
 
 Needs the user (an assistant cannot do these):
 
+0. **The pretend-camera run has only been done with no face in view.** A run
+   with `--video <clip of a face>.mjpeg` is still to do; it needs a clip from
+   the user.
 1. **Real webcam testing has not been done.** Run `docs/WEBCAM_TEST_PLAN.md`
    on real devices, using `?attentionDebug=1`. Until its results table is
    filled in, never describe the camera as verified on real hardware. The

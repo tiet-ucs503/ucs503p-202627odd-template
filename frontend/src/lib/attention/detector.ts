@@ -2,8 +2,12 @@
 // browser (WebAssembly) and returns a few numbers per video frame. The frame
 // itself never leaves this function: it is not stored, drawn or sent anywhere.
 //
-// The model and the WebAssembly runtime are served by this app itself, so no
-// third-party server is contacted.
+// The model and the WebAssembly runtime are served by this app itself.
+//
+// MediaPipe also tries to post a small usage log (no image) to a Google
+// address, and offers no way to switch that off. The page's connection rule in
+// vite.config.ts makes the browser refuse it, so nothing reaches a third party.
+// scripts/camera-check.mjs checks this in a real browser.
 
 import type { FaceLandmarker } from '@mediapipe/tasks-vision';
 import wasmLoaderUrl from '@mediapipe/tasks-vision/vision_wasm_internal.js?url';

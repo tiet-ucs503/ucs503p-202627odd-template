@@ -97,6 +97,15 @@ screen, and cannot be linked to real accounts in either direction.
 | Google Fonts | When the site loads | A normal request for font files. No account or student data. |
 | Groq (only if the operator has set an API key) | When a student asks for a hint | The text of the maths question and the built-in hint. No name, email or other personal data. |
 
+**Blocked: the face-tracking library's usage log.** MediaPipe, the library that
+finds the face, tries to post a small usage log (about 140 bytes: its version
+and a few counters, no image) to `odml.pa.googleapis.com`, and has no setting
+to turn this off. The page therefore carries a rule that lets it exchange data
+only with this app and its own backend, and the browser refuses the log before
+it leaves. This was found and confirmed with `npm run check:camera` on
+2026-11-16. Before that date the log was being sent whenever the camera was
+used.
+
 ## Before real deployment
 
 This is a course project. As it stands, the camera choice is made by whoever is
