@@ -1,0 +1,1686 @@
+diff --git a/VersionVaultLauncher/VersionVaultFinderExtension/FinderSync.swift b/VersionVaultLauncher/VersionVaultFinderExtension/FinderSync.swift
+index 5c486fc..ac03aac 100644
+--- a/VersionVaultLauncher/VersionVaultFinderExtension/FinderSync.swift
++++ b/VersionVaultLauncher/VersionVaultFinderExtension/FinderSync.swift
+@@ -1,5 +1,4 @@
+ import Cocoa
+-
+ import FinderSync
+ 
+ class FinderSync: FIFinderSync {
+@@ -7,277 +6,179 @@ class FinderSync: FIFinderSync {
+     private let appGroup = "group.com.versionvault.shared"
+ 
+     override init() {
+-
+         super.init()
+ 
+         FIFinderSyncController.default().directoryURLs = [
+-
+             URL(fileURLWithPath: "/")
+-
+         ]
+ 
+         print("================================")
+-
+         print("VERSIONVAULT FINDER EXTENSION")
+-
+         print("STARTED")
+-
+         print("================================")
+-
+     }
+ 
+     // =========================================================
+-
+     // MENU
+-
+     // =========================================================
+ 
+     override func menu(for menuKind: FIMenuKind) -> NSMenu? {
+ 
+         guard menuKind == .contextualMenuForItems else {
+-
+             return nil
+-
+         }
+ 
+         guard let selectedURL = selectedItem() else {
+-
+             return nil
+-
+         }
+ 
++        let absolutePath = selectedURL.standardizedFileURL.path
+         let isFolder = isDirectory(selectedURL)
++        let isTracked = trackingStatus(for: selectedURL) == true
+ 
+         print("================================")
+-
+         print("VERSIONVAULT CONTEXT MENU")
+-
+         print("Path:")
+-
+-        print(selectedURL.path)
+-
++        print(absolutePath)
+         print("Is folder:")
+-
+         print(isFolder)
+-
++        print("Is tracked:")
++        print(isTracked)
+         print("================================")
+ 
+         let menu = NSMenu()
+ 
+         // =====================================================
+-
+         // VERSIONVAULT
+-
+         // =====================================================
+ 
+         let versionVaultItem = NSMenuItem(
+-
+             title: "VersionVault",
+-
+             action: nil,
+-
+             keyEquivalent: ""
+-
+         )
+ 
+         let versionVaultMenu = NSMenu(
+-
+             title: "VersionVault"
+-
+         )
+ 
+         versionVaultItem.submenu = versionVaultMenu
+-
+         menu.addItem(versionVaultItem)
+ 
+         // =====================================================
+-
+         // FILE OPTIONS
+-
+         // =====================================================
+ 
+         if !isFolder {
+ 
+-            addItem(
+-
+-                to: versionVaultMenu,
+-
+-                title: "Track",
+-
+-                action: #selector(trackAction)
+-
+-            )
++            if !isTracked {
++                addItem(
++                    to: versionVaultMenu,
++                    title: "Track",
++                    action: #selector(trackAction)
++                )
++            }
+ 
+             addItem(
+-
+                 to: versionVaultMenu,
+-
+                 title: "Save Version",
+-
+                 action: #selector(saveAction)
+-
+             )
+ 
+             addItem(
+-
+                 to: versionVaultMenu,
+-
+                 title: "History",
+-
+                 action: #selector(historyAction)
+-
+             )
+ 
+         } else {
+ 
+             // =================================================
+-
+             // FOLDER OPTIONS
+-
+             // =================================================
+ 
+-            addItem(
+-
+-                to: versionVaultMenu,
+-
+-                title: "Track Folder",
+-
+-                action: #selector(trackFolderAction)
+-
+-            )
+-
+-            addItem(
+-
+-                to: versionVaultMenu,
+-
+-                title: "Status",
+-
+-                action: #selector(statusAction)
++            if !isTracked {
++                addItem(
++                    to: versionVaultMenu,
++                    title: "Track Folder",
++                    action: #selector(trackFolderAction)
++                )
++            }
+ 
+-            )
++            // Status intentionally removed from the folder menu.
+ 
+             addItem(
+-
+                 to: versionVaultMenu,
+-
+                 title: "Save Folder Version",
+-
+                 action: #selector(saveFolderAction)
+-
+             )
+ 
+             addItem(
+-
+                 to: versionVaultMenu,
+-
+                 title: "History",
+-
+                 action: #selector(historyFolderAction)
+-
+             )
+-
+         }
+ 
+         versionVaultMenu.addItem(
+-
+             NSMenuItem.separator()
+-
+         )
+ 
+         // =====================================================
+-
+         // RESTORE SUBMENU
+-
+         //
+-
+         // Fresh history is fetched every time Finder creates
+-
+         // this menu.
+-
+         // =====================================================
+ 
+         let restoreItem = NSMenuItem(
+-
+             title: "Restore",
+-
+             action: nil,
+-
+             keyEquivalent: ""
+-
+         )
+ 
+         let restoreMenu = NSMenu(
+-
+             title: "Restore"
+-
+         )
+ 
+         restoreItem.submenu = restoreMenu
+ 
+         print("================================")
+-
+         print("REQUESTING FRESH HISTORY")
+-
+         print("Path:")
+-
+-        print(selectedURL.path)
+-
++        print(absolutePath)
+         print("================================")
+ 
+         let commits = requestHistorySynchronously(
+-
+-            path: selectedURL.path,
+-
++            path: absolutePath,
+             isFolder: isFolder
+-
+         )
+ 
+         print("================================")
+-
+         print("HISTORY RECEIVED")
+-
+         print("Versions: \(commits.count)")
+-
+         print("================================")
+ 
+         // =====================================================
+-
+         // BUILD RESTORE MENU
+-
+         //
+-
+         // commits has already been reversed in
+-
+         // requestHistorySynchronously().
+-
+         //
+-
+-        // Therefore:
+-
+-        //
+-
+         // Version 1 = oldest
+-
+         // Version 2 = newer
+-
+         // Version N = newest
+-
+         // =====================================================
+ 
+         if commits.isEmpty {
+ 
+             let emptyItem = NSMenuItem(
+-
+                 title: "No versions found",
+-
+                 action: nil,
+-
+                 keyEquivalent: ""
+-
+             )
+ 
+             emptyItem.isEnabled = false
+-
+             restoreMenu.addItem(emptyItem)
+ 
+         } else {
+@@ -285,425 +186,325 @@ class FinderSync: FIFinderSync {
+             for (index, commit) in commits.enumerated() {
+ 
+                 let title =
+-
+                     "Version \(index + 1)  \(commit)"
+ 
+                 let item = NSMenuItem(
+-
+                     title: title,
+-
+                     action: #selector(
+-
+                         restoreVersionAction(_:)
+-
+                     ),
+-
+                     keyEquivalent: ""
+-
+                 )
+ 
+                 item.target = self
+ 
+                 // Keep the hash here too.
+-
+                 // The click handler uses the title directly
+-
+                 // because Finder can copy menu items.
+ 
+                 item.representedObject = commit
+-
+                 restoreMenu.addItem(item)
+ 
+                 print("Added restore version:")
+-
+                 print(title)
+-
+             }
+-
+         }
+ 
+-        versionVaultMenu.addItem(
++        versionVaultMenu.addItem(restoreItem)
++
++        return menu
++    }
++
++    // =========================================================
++    // TRACKING STATUS
++    //
++    // Calls:
++    // /usr/local/bin/vv is-tracked <absolute-path>
++    //
++    // Returns true if tracked, false if untracked, and nil
++    // if the command fails or returns an unexpected response.
++    // If the result is nil, the Track option remains visible.
++    // =========================================================
++
++    private func trackingStatus(for url: URL) -> Bool? {
+ 
+-            restoreItem
++        let absolutePath = url.standardizedFileURL.path
+ 
++        let process = Process()
++        process.executableURL = URL(
++            fileURLWithPath: "/usr/local/bin/vv"
+         )
+ 
+-        return menu
++        process.arguments = [
++            "is-tracked",
++            absolutePath
++        ]
++
++        let outputPipe = Pipe()
++        let errorPipe = Pipe()
++
++        process.standardOutput = outputPipe
++        process.standardError = errorPipe
+ 
++        do {
++            try process.run()
++
++            let outputData =
++                outputPipe.fileHandleForReading.readDataToEndOfFile()
++
++            process.waitUntilExit()
++
++            guard process.terminationStatus == 0,
++                  let output = String(
++                    data: outputData,
++                    encoding: .utf8
++                  )?.trimmingCharacters(
++                    in: .whitespacesAndNewlines
++                  )
++            else {
++                print("Could not determine tracking status for:")
++                print(absolutePath)
++                return nil
++            }
++
++            switch output.lowercased() {
++            case "tracked":
++                return true
++
++            case "untracked":
++                return false
++
++            default:
++                print("Unexpected tracking status output:")
++                print(output)
++                return nil
++            }
++
++        } catch {
++            print("ERROR CHECKING TRACKING STATUS:")
++            print(error.localizedDescription)
++            return nil
++        }
+     }
+ 
+     // =========================================================
+-
+     // ADD MENU ITEM
+-
+     // =========================================================
+ 
+     private func addItem(
+-
+         to menu: NSMenu,
+-
+         title: String,
+-
+         action: Selector
+-
+     ) {
+ 
+         let item = NSMenuItem(
+-
+             title: title,
+-
+             action: action,
+-
+             keyEquivalent: ""
+-
+         )
+ 
+         item.target = self
+-
+         menu.addItem(item)
+-
+     }
+ 
+     // =========================================================
+-
+     // SELECTED ITEM
+-
+     // =========================================================
+ 
+     private func selectedItem() -> URL? {
+ 
+         return FIFinderSyncController
+-
+             .default()
+-
+             .selectedItemURLs()?
+-
+             .first
+-
+     }
+ 
+     // =========================================================
+-
+     // CHECK DIRECTORY
+-
+     // =========================================================
+ 
+     private func isDirectory(
+-
+         _ url: URL
+-
+     ) -> Bool {
+ 
+         var isDir: ObjCBool = false
+ 
+         FileManager.default.fileExists(
+-
+             atPath: url.path,
+-
+             isDirectory: &isDir
+-
+         )
+ 
+         return isDir.boolValue
+-
+     }
+ 
+     // =========================================================
+-
+     // APP GROUP CONTAINER
+-
+     // =========================================================
+ 
+     private func appGroupContainer() -> URL? {
+ 
+         return FileManager.default.containerURL(
+-
+             forSecurityApplicationGroupIdentifier:
+-
+                 appGroup
+-
+         )
+-
+     }
+ 
+     // =========================================================
+-
+     // REQUEST HISTORY SYNCHRONOUSLY
+-
+     //
+-
+     // Finder:
+-
+-    //
+-
+     // history_request.txt
+-
+     //
+-
+     // Main app:
+-
++    // vv history <path>
+     //
+-
+-    // vv history \<path>
+-
+-    //
+-
+     // Main app:
+-
+-    //
+-
+     // restore_history_response.txt
+-
+     //
+-
+-    // Finder:
+-
++    // Finder reads hashes.
+     //
+-
+-    // reads hashes
+-
+-    //
+-
+     // IMPORTANT:
+-
+-    //
+-
+     // Git returns newest -> oldest.
+-
+     // We reverse it before returning so the UI shows:
+-
+-    //
+-
+-    // oldest -> newest
+-
++    // oldest -> newest.
+     // =========================================================
+ 
+     private func requestHistorySynchronously(
+-
+         path: String,
+-
+         isFolder: Bool
+-
+     ) -> [String] {
+ 
+         guard let containerURL =
+-
+                 appGroupContainer()
+-
+         else {
+-
+-            print(
+-
+-                "ERROR: App Group unavailable"
+-
+-            )
+-
++            print("ERROR: App Group unavailable")
+             return []
+-
+         }
+ 
+         let requestURL =
+-
+             containerURL.appendingPathComponent(
+-
+                 "history_request.txt"
+-
+             )
+ 
+         let responseURL =
+-
+             containerURL.appendingPathComponent(
+-
+                 "restore_history_response.txt"
+-
+             )
+ 
+         // =====================================================
+-
+         // Remove old response.
+-
+         // =====================================================
+ 
+         try? FileManager.default.removeItem(
+-
+             at: responseURL
+-
+         )
+ 
+         // =====================================================
+-
+         // Remove old request.
+-
+         // =====================================================
+ 
+         try? FileManager.default.removeItem(
+-
+             at: requestURL
+-
+         )
+ 
+         // =====================================================
+-
+         // Select history command.
+-
+         // =====================================================
+ 
+         let command =
+-
+             isFolder
+-
+                 ? "history-folder"
+-
+                 : "history"
+ 
+         let requestContents =
+-
+             "\(command)\n\(path)"
+ 
+         // =====================================================
+-
+         // Write request.
+-
+         // =====================================================
+ 
+         do {
+-
+             try requestContents.write(
+-
+                 to: requestURL,
+-
+                 atomically: true,
+-
+                 encoding: .utf8
+-
+             )
+-
+         } catch {
+-
+-            print(
+-
+-                "ERROR WRITING HISTORY REQUEST:"
+-
+-            )
+-
+-            print(
+-
+-                error.localizedDescription
+-
+-            )
+-
++            print("ERROR WRITING HISTORY REQUEST:")
++            print(error.localizedDescription)
+             return []
+-
+         }
+ 
+         print("================================")
+-
+         print("HISTORY REQUEST SENT")
+-
+         print("Command: \(command)")
+-
+         print("Path:")
+-
+         print(path)
+-
+         print("================================")
+ 
+         // =====================================================
+-
+         // Wait for response.
+-
+         // =====================================================
+ 
+         let timeout: TimeInterval = 3.0
+-
+         let startTime = Date()
+ 
+         while Date().timeIntervalSince(startTime)
+-
+                 < timeout {
+ 
+             if FileManager.default.fileExists(
+-
+                 atPath: responseURL.path
+-
+             ) {
+ 
+                 guard let response =
+-
+                         try? String(
+-
+                             contentsOf: responseURL,
+-
+                             encoding: .utf8
+-
+                         )
+-
+                 else {
+-
+                     break
+-
+                 }
+ 
+                 let lines =
+-
+                     response.components(
+-
+                         separatedBy: .newlines
+-
+                     )
+ 
+                 guard !lines.isEmpty else {
+-
+                     break
+-
+                 }
+ 
+                 // =================================================
+-
+                 // Verify exact file path.
+-
+                 // =================================================
+ 
+                 let responsePath =
+-
+                     lines[0]
+-
+                         .trimmingCharacters(
+-
+                             in: .whitespacesAndNewlines
+-
+                         )
+ 
+                 guard responsePath == path else {
+ 
+                     print(
+-
+                         "ERROR: HISTORY RESPONSE PATH MISMATCH"
+-
+                     )
+ 
+                     print("Expected:")
+-
+                     print(path)
+ 
+                     print("Received:")
+-
+                     print(responsePath)
+ 
+                     try? FileManager.default.removeItem(
+-
+                         at: responseURL
+-
+                     )
+ 
+                     return []
+-
+                 }
+ 
+                 // =================================================
+-
+                 // Extract hashes.
+-
+                 // =================================================
+ 
+                 var commits: [String] = []
+@@ -711,403 +512,257 @@ class FinderSync: FIFinderSync {
+                 for line in lines.dropFirst() {
+ 
+                     let hash =
+-
+                         line.trimmingCharacters(
+-
+                             in: .whitespacesAndNewlines
+-
+                         )
+ 
+                     if isValidCommitHash(hash) {
+-
+                         commits.append(hash)
+-
+                     }
+-
+                 }
+ 
+                 // =================================================
+-
+                 // Delete response.
+-
+                 // =================================================
+ 
+                 try? FileManager.default.removeItem(
+-
+                     at: responseURL
+-
+                 )
+ 
+                 print("================================")
+-
+                 print("HISTORY RESPONSE ACCEPTED")
+-
+                 print("Path:")
+-
+                 print(path)
+-
+                 print("Versions:")
+-
+                 print(commits.count)
+-
+                 print("================================")
+ 
+                 // =================================================
+-
+                 // IMPORTANT:
+-
+-                //
+-
+-                // git log returns:
+-
+-                //
+-
+-                // newest
+-
+-                // older
+-
+-                // oldest
+-
+                 //
+-
++                // Git log returns newest -> oldest.
+                 // Reverse it for VersionVault:
+-
+-                //
+-
+                 // Version 1 = oldest
+-
+                 // Version N = newest
+-
+                 // =================================================
+ 
+                 return Array(
+-
+                     commits.reversed()
+-
+                 )
+-
+             }
+ 
+-            // =================================================
+-
++            // =====================================================
+             // Small wait.
+-
+-            // =================================================
++            // =====================================================
+ 
+             Thread.sleep(
+-
+                 forTimeInterval: 0.05
+-
+             )
+-
+         }
+ 
+         // =====================================================
+-
+         // Timeout.
+-
+         // =====================================================
+ 
+         print("================================")
+-
+         print("HISTORY REQUEST TIMED OUT")
+-
+         print("Path:")
+-
+         print(path)
+-
+         print("================================")
+ 
+         try? FileManager.default.removeItem(
+-
+             at: responseURL
+-
+         )
+ 
+         return []
+-
+     }
+ 
+     // =========================================================
+-
+     // VALID COMMIT HASH
+-
+     // =========================================================
+ 
+     private func isValidCommitHash(
+-
+         _ hash: String
+-
+     ) -> Bool {
+ 
+         guard hash.count == 40 else {
+-
+             return false
+-
+         }
+ 
+         return hash.allSatisfy { character in
+ 
+             character.isNumber ||
+-
+             (
+-
+                 character >= "a" &&
+-
+                 character <= "f"
+-
+             ) ||
+-
+             (
+-
+                 character >= "A" &&
+-
+                 character <= "F"
+-
+             )
+-
+         }
+-
+     }
+ 
+     // =========================================================
+-
+     // TRACK FILE
+-
+     // =========================================================
+ 
+     @objc
+-
+     func trackAction() {
+ 
+         guard let item = selectedItem()
+-
+         else {
+-
+             return
+-
+         }
+ 
+         print("TRACK CLICKED")
+ 
+         writeRequest(
+-
+             command: "track",
+-
+-            path: item.path
+-
++            path: item.standardizedFileURL.path
+         )
+-
+     }
+ 
+     // =========================================================
+-
+     // SAVE FILE VERSION
+-
+     // =========================================================
+ 
+     @objc
+-
+     func saveAction() {
+ 
+         guard let item = selectedItem()
+-
+         else {
+-
+             return
+-
+         }
+ 
+         print("SAVE VERSION CLICKED")
+ 
+         writeRequest(
+-
+             command: "save",
+-
+-            path: item.path
+-
++            path: item.standardizedFileURL.path
+         )
+-
+     }
+ 
+     // =========================================================
+-
+     // FILE HISTORY
+-
+     // =========================================================
+ 
+     @objc
+-
+     func historyAction() {
+ 
+         guard let item = selectedItem()
+-
+         else {
+-
+             return
+-
+         }
+ 
+         print("HISTORY CLICKED")
+ 
+         writeRequest(
+-
+             command: "history",
+-
+-            path: item.path
+-
++            path: item.standardizedFileURL.path
+         )
+-
+     }
+ 
+     // =========================================================
+-
+     // TRACK FOLDER
+-
+     // =========================================================
+ 
+     @objc
+-
+     func trackFolderAction() {
+ 
+         guard let item = selectedItem()
+-
+         else {
+-
+             return
+-
+         }
+ 
+         print("TRACK FOLDER CLICKED")
+ 
+         writeRequest(
+-
+             command: "track-folder",
+-
+-            path: item.path
+-
++            path: item.standardizedFileURL.path
+         )
+-
+     }
+ 
+     // =========================================================
+-
+     // FOLDER STATUS
+-
++    //
++    // Kept to preserve the existing handler, although the
++    // Status option is no longer shown in the Finder menu.
+     // =========================================================
+ 
+     @objc
+-
+     func statusAction() {
+ 
+         guard let item = selectedItem()
+-
+         else {
+-
+             return
+-
+         }
+ 
+         print("STATUS CLICKED")
+ 
+         writeRequest(
+-
+             command: "status",
+-
+-            path: item.path
+-
++            path: item.standardizedFileURL.path
+         )
+-
+     }
+ 
+     // =========================================================
+-
+     // SAVE FOLDER VERSION
+-
+     // =========================================================
+ 
+     @objc
+-
+     func saveFolderAction() {
+ 
+         guard let item = selectedItem()
+-
+         else {
+-
+             return
+-
+         }
+ 
+         print("SAVE FOLDER VERSION CLICKED")
+ 
+         writeRequest(
+-
+             command: "save-folder",
+-
+-            path: item.path
+-
++            path: item.standardizedFileURL.path
+         )
+-
+     }
+ 
+     // =========================================================
+-
+     // FOLDER HISTORY
+-
+     // =========================================================
+ 
+     @objc
+-
+     func historyFolderAction() {
+ 
+         guard let item = selectedItem()
+-
+         else {
+-
+             return
+-
+         }
+ 
+         print("FOLDER HISTORY CLICKED")
+ 
+         writeRequest(
+-
+             command: "history-folder",
+-
+-            path: item.path
+-
++            path: item.standardizedFileURL.path
+         )
+-
+     }
+ 
+     // =========================================================
+-
+     // RESTORE VERSION
+-
+     //
+-
+     // Example menu item:
+-
+-    //
+-
+     // Version 1  4158d4042293b2fd7d2445435b89ad612005c7b6
+-
+     //
+-
+     // We extract the LAST value as the commit hash.
+-
+     //
+-
+     // This avoids relying on representedObject because Finder
+-
+     // can copy NSMenuItems internally.
+-
+     // =========================================================
+ 
+     @objc
+     func restoreVersionAction(
+         _ sender: NSMenuItem
+     ) {
++
+         print("================================")
+         print("RESTORE CLICKED")
+         print("================================")
+@@ -1141,7 +796,7 @@ class FinderSync: FIFinderSync {
+             return
+         }
+ 
+-        let path = item.path
++        let path = item.standardizedFileURL.path
+         let isFolder = isDirectory(item)
+ 
+         print("================================")
+@@ -1165,106 +820,63 @@ class FinderSync: FIFinderSync {
+             argument: commit
+         )
+     }
+-    // WRITE NORMAL REQUEST
+ 
++    // =========================================================
++    // WRITE NORMAL REQUEST
+     // =========================================================
+ 
+     private func writeRequest(
+-
+         command: String,
+-
+         path: String,
+-
+         argument: String? = nil
+-
+     ) {
+ 
+         guard let containerURL =
+-
+                 appGroupContainer()
+-
+         else {
+-
+-            print(
+-
+-                "ERROR: App Group unavailable"
+-
+-            )
+-
++            print("ERROR: App Group unavailable")
+             return
+-
+         }
+ 
+         let requestURL =
+-
+             containerURL.appendingPathComponent(
+-
+                 "pending_request.txt"
+-
+             )
+ 
+-        var contents =
++        let absolutePath =
++            URL(fileURLWithPath: path).standardizedFileURL.path
+ 
+-            "\(command)\n\(path)"
++        var contents =
++            "\(command)\n\(absolutePath)"
+ 
+         if let argument = argument {
+-
+-            contents +=
+-
+-                "\n\(argument)"
+-
++            contents += "\n\(argument)"
+         }
+ 
+         do {
+-
+             try contents.write(
+-
+                 to: requestURL,
+-
+                 atomically: true,
+-
+                 encoding: .utf8
+-
+             )
+ 
+             print("================================")
+-
+             print("VERSIONVAULT REQUEST")
+-
+             print("Command:")
+-
+             print(command)
+-
+             print("Path:")
+-
+-            print(path)
++            print(absolutePath)
+ 
+             if let argument = argument {
+-
+                 print("Argument:")
+-
+                 print(argument)
+-
+             }
+ 
+             print("================================")
+ 
+         } catch {
+-
+-            print(
+-
+-                "ERROR WRITING REQUEST:"
+-
+-            )
+-
+-            print(
+-
+-                error.localizedDescription
+-
+-            )
+-
++            print("ERROR WRITING REQUEST:")
++            print(error.localizedDescription)
+         }
+-
+     }
+-
+ }
+diff --git a/VersionVaultLauncher/VersionVaultFinderExtension/Info.plist b/VersionVaultLauncher/VersionVaultFinderExtension/Info.plist
+index 3f16c6c..dbf7093 100644
+--- a/VersionVaultLauncher/VersionVaultFinderExtension/Info.plist
++++ b/VersionVaultLauncher/VersionVaultFinderExtension/Info.plist
+@@ -2,8 +2,6 @@
+ <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+ <plist version="1.0">
+ <dict>
+-	<key>LSUIElement</key>
+-	<true/>
+ 	<key>NSExtension</key>
+ 	<dict>
+ 		<key>NSExtensionAttributes</key>
+diff --git a/VersionVaultLauncher/VersionVaultFinderExtension/VersionVaultFinderExtension.entitlements b/VersionVaultLauncher/VersionVaultFinderExtension/VersionVaultFinderExtension.entitlements
+index 8b7bfab..54ea7b2 100644
+--- a/VersionVaultLauncher/VersionVaultFinderExtension/VersionVaultFinderExtension.entitlements
++++ b/VersionVaultLauncher/VersionVaultFinderExtension/VersionVaultFinderExtension.entitlements
+@@ -2,12 +2,11 @@
+ <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+ <plist version="1.0">
+ <dict>
+-    <key>com.apple.security.app-sandbox</key>
+-    <true/>
+-
+-    <key>com.apple.security.application-groups</key>
+-    <array>
+-        <string>group.com.versionvault.shared</string>
+-    </array>
++	<key>com.apple.security.app-sandbox</key>
++	<true/>
++	<key>com.apple.security.application-groups</key>
++	<array>
++		<string>group.com.ridham.versionvault.shared</string>
++	</array>
+ </dict>
+-</plist>
+\ No newline at end of file
++</plist>
+diff --git a/VersionVaultLauncher/VersionVaultLauncher.xcodeproj/project.pbxproj b/VersionVaultLauncher/VersionVaultLauncher.xcodeproj/project.pbxproj
+index 2d8e593..ca787fa 100644
+--- a/VersionVaultLauncher/VersionVaultLauncher.xcodeproj/project.pbxproj
++++ b/VersionVaultLauncher/VersionVaultLauncher.xcodeproj/project.pbxproj
+@@ -158,7 +158,7 @@
+ 			attributes = {
+ 				BuildIndependentTargetsInParallel = 1;
+ 				LastSwiftUpdateCheck = 2610;
+-				LastUpgradeCheck = 2610;
++				LastUpgradeCheck = 2710;
+ 				TargetAttributes = {
+ 					0E2CDB16305874F600C1A32C = {
+ 						CreatedOnToolsVersion = 26.1.1;
+@@ -265,6 +265,7 @@
+ 				CLANG_WARN_UNREACHABLE_CODE = YES;
+ 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+ 				COPY_PHASE_STRIP = NO;
++				DEAD_CODE_STRIPPING = YES;
+ 				DEBUG_INFORMATION_FORMAT = dwarf;
+ 				DEVELOPMENT_TEAM = R57Q4LLUFM;
+ 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+@@ -290,6 +291,7 @@
+ 				MTL_FAST_MATH = YES;
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				SDKROOT = macosx;
++				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+ 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+ 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+ 			};
+@@ -329,6 +331,7 @@
+ 				CLANG_WARN_UNREACHABLE_CODE = YES;
+ 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+ 				COPY_PHASE_STRIP = NO;
++				DEAD_CODE_STRIPPING = YES;
+ 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+ 				DEVELOPMENT_TEAM = R57Q4LLUFM;
+ 				ENABLE_NS_ASSERTIONS = NO;
+@@ -347,6 +350,7 @@
+ 				MTL_ENABLE_DEBUG_INFO = NO;
+ 				MTL_FAST_MATH = YES;
+ 				SDKROOT = macosx;
++				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+ 				SWIFT_COMPILATION_MODE = wholemodule;
+ 			};
+ 			name = Release;
+@@ -360,7 +364,8 @@
+ 				CODE_SIGN_STYLE = Automatic;
+ 				COMBINE_HIDPI_IMAGES = YES;
+ 				CURRENT_PROJECT_VERSION = 1;
+-				DEVELOPMENT_TEAM = R57Q4LLUFM;
++				DEAD_CODE_STRIPPING = YES;
++				DEVELOPMENT_TEAM = A9NBS3NG7L;
+ 				ENABLE_APP_SANDBOX = NO;
+ 				ENABLE_HARDENED_RUNTIME = YES;
+ 				ENABLE_PREVIEWS = YES;
+@@ -371,7 +376,7 @@
+ 					"@executable_path/../Frameworks",
+ 				);
+ 				MARKETING_VERSION = 1.0;
+-				PRODUCT_BUNDLE_IDENTIFIER = com.versionvault.VersionVaultLauncher;
++				PRODUCT_BUNDLE_IDENTIFIER = com.ridham.versionvault.launcher;
+ 				PRODUCT_NAME = "$(TARGET_NAME)";
+ 				REGISTER_APP_GROUPS = YES;
+ 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+@@ -392,7 +397,8 @@
+ 				CODE_SIGN_STYLE = Automatic;
+ 				COMBINE_HIDPI_IMAGES = YES;
+ 				CURRENT_PROJECT_VERSION = 1;
+-				DEVELOPMENT_TEAM = R57Q4LLUFM;
++				DEAD_CODE_STRIPPING = YES;
++				DEVELOPMENT_TEAM = A9NBS3NG7L;
+ 				ENABLE_APP_SANDBOX = NO;
+ 				ENABLE_HARDENED_RUNTIME = YES;
+ 				ENABLE_PREVIEWS = YES;
+@@ -403,7 +409,7 @@
+ 					"@executable_path/../Frameworks",
+ 				);
+ 				MARKETING_VERSION = 1.0;
+-				PRODUCT_BUNDLE_IDENTIFIER = com.versionvault.VersionVaultLauncher;
++				PRODUCT_BUNDLE_IDENTIFIER = com.ridham.versionvault.launcher;
+ 				PRODUCT_NAME = "$(TARGET_NAME)";
+ 				REGISTER_APP_GROUPS = YES;
+ 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+@@ -422,13 +428,15 @@
+ 				CODE_SIGN_STYLE = Automatic;
+ 				COMBINE_HIDPI_IMAGES = YES;
+ 				CURRENT_PROJECT_VERSION = 1;
+-				DEVELOPMENT_TEAM = R57Q4LLUFM;
++				DEAD_CODE_STRIPPING = YES;
++				DEVELOPMENT_TEAM = A9NBS3NG7L;
+ 				ENABLE_APP_SANDBOX = YES;
+ 				ENABLE_HARDENED_RUNTIME = YES;
+ 				ENABLE_USER_SELECTED_FILES = readonly;
+ 				GENERATE_INFOPLIST_FILE = YES;
+ 				INFOPLIST_FILE = VersionVaultFinderExtension/Info.plist;
+ 				INFOPLIST_KEY_CFBundleDisplayName = VersionVaultFinderExtension;
++				INFOPLIST_KEY_LSUIElement = YES;
+ 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+ 				LD_RUNPATH_SEARCH_PATHS = (
+ 					"$(inherited)",
+@@ -436,7 +444,7 @@
+ 					"@executable_path/../../../../Frameworks",
+ 				);
+ 				MARKETING_VERSION = 1.0;
+-				PRODUCT_BUNDLE_IDENTIFIER = com.versionvault.VersionVaultLauncher.VersionVaultFinderExtension;
++				PRODUCT_BUNDLE_IDENTIFIER = com.ridham.versionvault.launcher.findersync;
+ 				PRODUCT_NAME = "$(TARGET_NAME)";
+ 				REGISTER_APP_GROUPS = YES;
+ 				SKIP_INSTALL = YES;
+@@ -455,13 +463,15 @@
+ 				CODE_SIGN_STYLE = Automatic;
+ 				COMBINE_HIDPI_IMAGES = YES;
+ 				CURRENT_PROJECT_VERSION = 1;
+-				DEVELOPMENT_TEAM = R57Q4LLUFM;
++				DEAD_CODE_STRIPPING = YES;
++				DEVELOPMENT_TEAM = A9NBS3NG7L;
+ 				ENABLE_APP_SANDBOX = YES;
+ 				ENABLE_HARDENED_RUNTIME = YES;
+ 				ENABLE_USER_SELECTED_FILES = readonly;
+ 				GENERATE_INFOPLIST_FILE = YES;
+ 				INFOPLIST_FILE = VersionVaultFinderExtension/Info.plist;
+ 				INFOPLIST_KEY_CFBundleDisplayName = VersionVaultFinderExtension;
++				INFOPLIST_KEY_LSUIElement = YES;
+ 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+ 				LD_RUNPATH_SEARCH_PATHS = (
+ 					"$(inherited)",
+@@ -469,7 +479,7 @@
+ 					"@executable_path/../../../../Frameworks",
+ 				);
+ 				MARKETING_VERSION = 1.0;
+-				PRODUCT_BUNDLE_IDENTIFIER = com.versionvault.VersionVaultLauncher.VersionVaultFinderExtension;
++				PRODUCT_BUNDLE_IDENTIFIER = com.ridham.versionvault.launcher.findersync;
+ 				PRODUCT_NAME = "$(TARGET_NAME)";
+ 				REGISTER_APP_GROUPS = YES;
+ 				SKIP_INSTALL = YES;
+diff --git a/VersionVaultLauncher/VersionVaultLauncher.xcodeproj/xcshareddata/xcschemes/VersionVaultFinderExtension.xcscheme b/VersionVaultLauncher/VersionVaultLauncher.xcodeproj/xcshareddata/xcschemes/VersionVaultFinderExtension.xcscheme
+index 63539de..6ef68f2 100644
+--- a/VersionVaultLauncher/VersionVaultLauncher.xcodeproj/xcshareddata/xcschemes/VersionVaultFinderExtension.xcscheme
++++ b/VersionVaultLauncher/VersionVaultLauncher.xcodeproj/xcshareddata/xcschemes/VersionVaultFinderExtension.xcscheme
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <Scheme
+-   LastUpgradeVersion = "2610"
++   LastUpgradeVersion = "2710"
+    wasCreatedForAppExtension = "YES"
+    version = "2.0">
+    <BuildAction
+diff --git a/VersionVaultLauncher/VersionVaultLauncher.xcodeproj/xcshareddata/xcschemes/VersionVaultLauncher.xcscheme b/VersionVaultLauncher/VersionVaultLauncher.xcodeproj/xcshareddata/xcschemes/VersionVaultLauncher.xcscheme
+index 226fa19..d888457 100644
+--- a/VersionVaultLauncher/VersionVaultLauncher.xcodeproj/xcshareddata/xcschemes/VersionVaultLauncher.xcscheme
++++ b/VersionVaultLauncher/VersionVaultLauncher.xcodeproj/xcshareddata/xcschemes/VersionVaultLauncher.xcscheme
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <Scheme
+-   LastUpgradeVersion = "2610"
++   LastUpgradeVersion = "2710"
+    version = "1.7">
+    <BuildAction
+       parallelizeBuildables = "YES"
+diff --git a/VersionVaultLauncher/VersionVaultLauncher/VersionVaultLauncher.entitlements b/VersionVaultLauncher/VersionVaultLauncher/VersionVaultLauncher.entitlements
+index 83d8497..b022de3 100644
+--- a/VersionVaultLauncher/VersionVaultLauncher/VersionVaultLauncher.entitlements
++++ b/VersionVaultLauncher/VersionVaultLauncher/VersionVaultLauncher.entitlements
+@@ -4,7 +4,7 @@
+ <dict>
+ 	<key>com.apple.security.application-groups</key>
+ 	<array>
+-		<string>group.com.versionvault.shared</string>
++		<string>group.com.ridham.versionvault.shared</string>
+ 	</array>
+ </dict>
+ </plist>
+diff --git a/VersionVaultLauncher/VersionVaultLauncher/VersionVaultLauncherApp.swift b/VersionVaultLauncher/VersionVaultLauncher/VersionVaultLauncherApp.swift
+index f7df898..a5a67c9 100644
+--- a/VersionVaultLauncher/VersionVaultLauncher/VersionVaultLauncherApp.swift
++++ b/VersionVaultLauncher/VersionVaultLauncher/VersionVaultLauncherApp.swift
+@@ -6,7 +6,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
+     private var timer: Timer?
+ 
+     private let appGroup =
+-        "group.com.versionvault.shared"
++        "group.com.ridham.versionvault.shared"
+ 
+     // =========================================================
+     // APP LAUNCH
+@@ -41,17 +41,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
+ 
+     private func startRequestWatcher() {
+ 
+-        timer = Timer.scheduledTimer(
+-            withTimeInterval: 0.05,
+-            repeats: true
+-        ) { [weak self] _ in
++            timer = Timer.scheduledTimer(
++                withTimeInterval: 0.05,
++                repeats: true
++            ) { [weak self] _ in
+ 
+-            self?.checkForHistoryRequest()
+-            self?.checkForNormalRequest()
+-        }
++                self?.checkForHistoryRequest()
++                self?.checkForNormalRequest()
++                self?.checkForTrackedRequest() // ADD THIS LINE
++            }
+ 
+-        print("Request watcher started")
+-    }
++            print("Request watcher started")
++        }
+ 
+     // =========================================================
+     // APP GROUP
+@@ -64,6 +65,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
+                 appGroup
+         )
+     }
++    private func checkForTrackedRequest() {
++        guard let c = appGroupContainer() else { return }
++        let req = c.appendingPathComponent("tracked_request.txt")
++        let res = c.appendingPathComponent("tracked_response.txt")
++        guard let text = try? String(contentsOf: req, encoding: .utf8) else { return }
++        try? FileManager.default.removeItem(at: req)
++        let path = text.trimmingCharacters(in: .whitespacesAndNewlines)
++        guard !path.isEmpty else { return }
++        let out = executeCLI(arguments: ["is-tracked", path]).output
++            .trimmingCharacters(in: .whitespacesAndNewlines)
++        try? "\(path)\n\(out)".write(to: res, atomically: true, encoding: .utf8)
++    }
+ 
+     // =========================================================
+     // HISTORY REQUEST
+diff --git a/code/src/bin/main.py b/code/src/bin/main.py
+index 20ae3d5..05644f2 100644
+--- a/code/src/bin/main.py
++++ b/code/src/bin/main.py
+@@ -39,6 +39,7 @@ Single File Commands:
+     vv save <file-path>
+     vv history <file-path>
+     vv restore <commit-hash> <file-path>
++    vv is-tracked <path>
+ 
+ Folder Commands:
+     vv track-folder <folder-path>
+@@ -56,13 +57,38 @@ def main():
+         return 1
+ 
+     command = sys.argv[1]
++    
++    
++    # ========================================================
++    # TRACKING STATUS
++    # ========================================================
++
++    elif_placeholder = False
++    
++    # vv is-tracked <path>
++    if command == "is-tracked":
++        if len(sys.argv) != 3:
++            print("Usage: vv is-tracked <path>")
++            return 1
++
++        path = sys.argv[2]
++        existingItem = getItemByPath(path)
++
++        if existingItem:
++            print("tracked")
++        else:
++            print("untracked")
++
++        return 0
++
++
+ 
+     # ========================================================
+     # INIT
+     # ========================================================
+ 
+     # vv init
+-    if command == "init":
++    elif command == "init":
+ 
+         if initRepo(REPO_PATH):
+             print("Repository initialized successfully.")
+@@ -420,4 +446,4 @@ def main():
+ 
+ 
+ if __name__ == "__main__":
+-    sys.exit(main())
+\ No newline at end of file
++    sys.exit(main())

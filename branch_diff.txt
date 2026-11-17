@@ -1,0 +1,4903 @@
+diff --git a/VersionVaultLauncher/VersionVaultFinderExtension/FinderSync.swift b/VersionVaultLauncher/VersionVaultFinderExtension/FinderSync.swift
+index 5c486fc..b1d5671 100644
+--- a/VersionVaultLauncher/VersionVaultFinderExtension/FinderSync.swift
++++ b/VersionVaultLauncher/VersionVaultFinderExtension/FinderSync.swift
+@@ -1,1270 +1,2641 @@
+ import Cocoa
+ 
++
++
+ import FinderSync
+ 
++
++
+ class FinderSync: FIFinderSync {
+ 
++
++
+     private let appGroup = "group.com.versionvault.shared"
+ 
++
++
+     override init() {
+ 
++
++
+         super.init()
+ 
++
++
+         FIFinderSyncController.default().directoryURLs = [
+ 
++
++
+             URL(fileURLWithPath: "/")
+ 
++
++
+         ]
+ 
++
++
+         print("================================")
+ 
++
++
+         print("VERSIONVAULT FINDER EXTENSION")
+ 
++
++
+         print("STARTED")
+ 
++
++
+         print("================================")
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
++
++
+     // MENU
+ 
++
++
+     // =========================================================
+ 
++
++
+     override func menu(for menuKind: FIMenuKind) -> NSMenu? {
+ 
++
++
+         guard menuKind == .contextualMenuForItems else {
+ 
++
++
+             return nil
+ 
++
++
+         }
+ 
++
++
+         guard let selectedURL = selectedItem() else {
+ 
++
++
+             return nil
+ 
++
++
+         }
+ 
++
++
+         let isFolder = isDirectory(selectedURL)
+ 
++
++
+         print("================================")
+ 
++
++
+         print("VERSIONVAULT CONTEXT MENU")
+ 
++
++
+         print("Path:")
+ 
++
++
+         print(selectedURL.path)
+ 
++
++
+         print("Is folder:")
+ 
++
++
+         print(isFolder)
+ 
++
++
+         print("================================")
+ 
++
++
+         let menu = NSMenu()
+ 
++
++
+         // =====================================================
+ 
++
++
+         // VERSIONVAULT
+ 
++
++
+         // =====================================================
+ 
++
++
+         let versionVaultItem = NSMenuItem(
+ 
++
++
+             title: "VersionVault",
+ 
++
++
+             action: nil,
+ 
++
++
+             keyEquivalent: ""
+ 
++
++
+         )
+ 
++
++
+         let versionVaultMenu = NSMenu(
+ 
++
++
+             title: "VersionVault"
+ 
++
++
+         )
+ 
++
++
+         versionVaultItem.submenu = versionVaultMenu
+ 
++
++
+         menu.addItem(versionVaultItem)
+ 
++
++
+         // =====================================================
+ 
++
++
+         // FILE OPTIONS
+ 
++
++
+         // =====================================================
+ 
++
++
+         if !isFolder {
+ 
++
++
+             addItem(
+ 
++
++
+                 to: versionVaultMenu,
+ 
++
++
+                 title: "Track",
+ 
++
++
+                 action: #selector(trackAction)
+ 
++
++
+             )
+ 
++
++
+             addItem(
+ 
++
++
+                 to: versionVaultMenu,
+ 
++
++
+                 title: "Save Version",
+ 
++
++
+                 action: #selector(saveAction)
+ 
++
++
+             )
+ 
++
++
+             addItem(
+ 
++
++
+                 to: versionVaultMenu,
+ 
++
++
+                 title: "History",
+ 
++
++
+                 action: #selector(historyAction)
+ 
++
++
+             )
+ 
++
++
++            if canIgnoreFileSynchronously(path: selectedURL.path) {
++                addItem(
++                    to: versionVaultMenu,
++                    title: "Ignore in VersionVault",
++                    action: #selector(ignoreAction)
++                )
++            }
++
+         } else {
+ 
++
++
+             // =================================================
+ 
++
++
+             // FOLDER OPTIONS
+ 
++
++
+             // =================================================
+ 
++
++
+             addItem(
+ 
++
++
+                 to: versionVaultMenu,
+ 
++
++
+                 title: "Track Folder",
+ 
++
++
+                 action: #selector(trackFolderAction)
+ 
++
++
+             )
+ 
++
++
+             addItem(
+ 
++
++
+                 to: versionVaultMenu,
+ 
++
++
+                 title: "Status",
+ 
++
++
+                 action: #selector(statusAction)
+ 
++
++
+             )
+ 
++
++
+             addItem(
+ 
++
++
+                 to: versionVaultMenu,
+ 
++
++
+                 title: "Save Folder Version",
+ 
++
++
+                 action: #selector(saveFolderAction)
+ 
++
++
+             )
+ 
++
++
+             addItem(
+ 
++
++
+                 to: versionVaultMenu,
+ 
++
++
+                 title: "History",
+ 
++
++
+                 action: #selector(historyFolderAction)
+ 
++
++
+             )
+ 
++
++
+         }
+ 
++
++
+         versionVaultMenu.addItem(
+ 
++
++
+             NSMenuItem.separator()
+ 
++
++
+         )
+ 
++
++
+         // =====================================================
+ 
++
++
+         // RESTORE SUBMENU
+ 
++
++
+         //
+ 
++
++
+         // Fresh history is fetched every time Finder creates
+ 
++
++
+         // this menu.
+ 
++
++
+         // =====================================================
+ 
++
++
+         let restoreItem = NSMenuItem(
+ 
++
++
+             title: "Restore",
+ 
++
++
+             action: nil,
+ 
++
++
+             keyEquivalent: ""
+ 
++
++
+         )
+ 
++
++
+         let restoreMenu = NSMenu(
+ 
++
++
+             title: "Restore"
+ 
++
++
+         )
+ 
++
++
+         restoreItem.submenu = restoreMenu
+ 
++
++
+         print("================================")
+ 
++
++
+         print("REQUESTING FRESH HISTORY")
+ 
++
++
+         print("Path:")
+ 
++
++
+         print(selectedURL.path)
+ 
++
++
+         print("================================")
+ 
++
++
+         let commits = requestHistorySynchronously(
+ 
++
++
+             path: selectedURL.path,
+ 
++
++
+             isFolder: isFolder
+ 
++
++
+         )
+ 
++
++
+         print("================================")
+ 
++
++
+         print("HISTORY RECEIVED")
+ 
++
++
+         print("Versions: \(commits.count)")
+ 
++
++
+         print("================================")
+ 
++
++
+         // =====================================================
+ 
++
++
+         // BUILD RESTORE MENU
+ 
++
++
+         //
+ 
++
++
+         // commits has already been reversed in
+ 
++
++
+         // requestHistorySynchronously().
+ 
+-        //
+ 
+-        // Therefore:
+ 
+         //
+ 
+-        // Version 1 = oldest
++
++
++        // Therefore:
++
++
++
++        //
++
++
++
++        // Version 1 = oldest
++
++
+ 
+         // Version 2 = newer
+ 
++
++
+         // Version N = newest
+ 
++
++
+         // =====================================================
+ 
++
++
+         if commits.isEmpty {
+ 
++
++
+             let emptyItem = NSMenuItem(
+ 
++
++
+                 title: "No versions found",
+ 
++
++
+                 action: nil,
+ 
++
++
+                 keyEquivalent: ""
+ 
++
++
+             )
+ 
++
++
+             emptyItem.isEnabled = false
+ 
++
++
+             restoreMenu.addItem(emptyItem)
+ 
++
++
+         } else {
+ 
++
++
+             for (index, commit) in commits.enumerated() {
+ 
++
++
+                 let title =
+ 
++
++
+                     "Version \(index + 1)  \(commit)"
+ 
++
++
+                 let item = NSMenuItem(
+ 
++
++
+                     title: title,
+ 
++
++
+                     action: #selector(
+ 
++
++
+                         restoreVersionAction(_:)
+ 
++
++
+                     ),
+ 
++
++
+                     keyEquivalent: ""
+ 
++
++
+                 )
+ 
++
++
+                 item.target = self
+ 
++
++
+                 // Keep the hash here too.
+ 
++
++
+                 // The click handler uses the title directly
+ 
++
++
+                 // because Finder can copy menu items.
+ 
++
++
+                 item.representedObject = commit
+ 
++
++
+                 restoreMenu.addItem(item)
+ 
++
++
+                 print("Added restore version:")
+ 
++
++
+                 print(title)
+ 
++
++
+             }
+ 
++
++
+         }
+ 
++
++
+         versionVaultMenu.addItem(
+ 
++
++
+             restoreItem
+ 
++
++
+         )
+ 
++
++
+         return menu
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
++
++
+     // ADD MENU ITEM
+ 
++
++
+     // =========================================================
+ 
++
++
+     private func addItem(
+ 
++
++
+         to menu: NSMenu,
+ 
++
++
+         title: String,
+ 
++
++
+         action: Selector
+ 
++
++
+     ) {
+ 
++
++
+         let item = NSMenuItem(
+ 
++
++
+             title: title,
+ 
++
++
+             action: action,
+ 
++
++
+             keyEquivalent: ""
+ 
++
++
+         )
+ 
++
++
+         item.target = self
+ 
++
++
+         menu.addItem(item)
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
++
++
+     // SELECTED ITEM
+ 
++
++
+     // =========================================================
+ 
++
++
+     private func selectedItem() -> URL? {
+ 
++
++
+         return FIFinderSyncController
+ 
++
++
+             .default()
+ 
++
++
+             .selectedItemURLs()?
+ 
++
++
+             .first
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
++
++
+     // CHECK DIRECTORY
+ 
++
++
+     // =========================================================
+ 
++
++
+     private func isDirectory(
+ 
++
++
+         _ url: URL
+ 
++
++
+     ) -> Bool {
+ 
++
++
+         var isDir: ObjCBool = false
+ 
++
++
+         FileManager.default.fileExists(
+ 
++
++
+             atPath: url.path,
+ 
++
++
+             isDirectory: &isDir
+ 
++
++
+         )
+ 
++
++
+         return isDir.boolValue
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
++
++
+     // APP GROUP CONTAINER
+ 
++
++
+     // =========================================================
+ 
++
++
+     private func appGroupContainer() -> URL? {
+ 
++
++
+         return FileManager.default.containerURL(
+ 
++
++
+             forSecurityApplicationGroupIdentifier:
+ 
++
++
+                 appGroup
+ 
++
++
+         )
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
++
++
+     // REQUEST HISTORY SYNCHRONOUSLY
+ 
++
++
+     //
+ 
++
++
+     // Finder:
+ 
++
++
+     //
+ 
++
++
+     // history_request.txt
+ 
++
++
+     //
+ 
++
++
+     // Main app:
+ 
++
++
+     //
+ 
+-    // vv history \<path>
++
++
++    // vv history \\<path>
++
++
+ 
+     //
+ 
++
++
+     // Main app:
+ 
++
++
+     //
+ 
++
++
+     // restore_history_response.txt
+ 
++
++
+     //
+ 
++
++
+     // Finder:
+ 
++
++
+     //
+ 
++
++
+     // reads hashes
+ 
++
++
+     //
+ 
++
++
+     // IMPORTANT:
+ 
++
++
+     //
+ 
++
++
+     // Git returns newest -> oldest.
+ 
++
++
+     // We reverse it before returning so the UI shows:
+ 
++
++
+     //
+ 
++
++
+     // oldest -> newest
+ 
++
++
+     // =========================================================
+ 
++
++
+     private func requestHistorySynchronously(
+ 
++
++
+         path: String,
+ 
++
++
+         isFolder: Bool
+ 
++
++
+     ) -> [String] {
+ 
++
++
+         guard let containerURL =
+ 
++
++
+                 appGroupContainer()
+ 
++
++
+         else {
+ 
+-            print(
+ 
+-                "ERROR: App Group unavailable"
+ 
+-            )
++            print(
+ 
+-            return []
+ 
+-        }
+ 
+-        let requestURL =
++                "ERROR: App Group unavailable"
+ 
+-            containerURL.appendingPathComponent(
+ 
+-                "history_request.txt"
+ 
+             )
+ 
+-        let responseURL =
++
++
++            return []
++
++
++
++        }
++
++
++
++        let requestURL =
++
++
++
++            containerURL.appendingPathComponent(
++
++
++
++                "history_request.txt"
++
++
++
++            )
++
++
++
++        let responseURL =
++
++
+ 
+             containerURL.appendingPathComponent(
+ 
++
++
+                 "restore_history_response.txt"
+ 
++
++
+             )
+ 
++
++
+         // =====================================================
+ 
++
++
+         // Remove old response.
+ 
++
++
+         // =====================================================
+ 
++
++
+         try? FileManager.default.removeItem(
+ 
++
++
+             at: responseURL
+ 
++
++
+         )
+ 
++
++
+         // =====================================================
+ 
++
++
+         // Remove old request.
+ 
++
++
+         // =====================================================
+ 
++
++
+         try? FileManager.default.removeItem(
+ 
++
++
+             at: requestURL
+ 
++
++
+         )
+ 
++
++
+         // =====================================================
+ 
++
++
+         // Select history command.
+ 
++
++
+         // =====================================================
+ 
++
++
+         let command =
+ 
++
++
+             isFolder
+ 
++
++
+                 ? "history-folder"
+ 
++
++
+                 : "history"
+ 
++
++
+         let requestContents =
+ 
++
++
+             "\(command)\n\(path)"
+ 
++
++
+         // =====================================================
+ 
++
++
+         // Write request.
+ 
++
++
+         // =====================================================
+ 
++
++
+         do {
+ 
++
++
+             try requestContents.write(
+ 
++
++
+                 to: requestURL,
+ 
++
++
+                 atomically: true,
+ 
++
++
+                 encoding: .utf8
+ 
++
++
+             )
+ 
++
++
+         } catch {
+ 
++
++
+             print(
+ 
++
++
+                 "ERROR WRITING HISTORY REQUEST:"
+ 
++
++
+             )
+ 
++
++
+             print(
+ 
++
++
+                 error.localizedDescription
+ 
++
++
+             )
+ 
++
++
+             return []
+ 
++
++
+         }
+ 
++
++
+         print("================================")
+ 
++
++
+         print("HISTORY REQUEST SENT")
+ 
++
++
+         print("Command: \(command)")
+ 
++
++
+         print("Path:")
+ 
++
++
+         print(path)
+ 
++
++
+         print("================================")
+ 
++
++
+         // =====================================================
+ 
++
++
+         // Wait for response.
+ 
++
++
+         // =====================================================
+ 
++
++
+         let timeout: TimeInterval = 3.0
+ 
++
++
+         let startTime = Date()
+ 
++
++
+         while Date().timeIntervalSince(startTime)
+ 
++
++
+                 < timeout {
+ 
++
++
+             if FileManager.default.fileExists(
+ 
++
++
+                 atPath: responseURL.path
+ 
++
++
+             ) {
+ 
++
++
+                 guard let response =
+ 
++
++
+                         try? String(
+ 
++
++
+                             contentsOf: responseURL,
+ 
++
++
+                             encoding: .utf8
+ 
++
++
+                         )
+ 
++
++
+                 else {
+ 
++
++
+                     break
+ 
++
++
+                 }
+ 
++
++
+                 let lines =
+ 
++
++
+                     response.components(
+ 
++
++
+                         separatedBy: .newlines
+ 
++
++
+                     )
+ 
++
++
+                 guard !lines.isEmpty else {
+ 
++
++
+                     break
+ 
++
++
+                 }
+ 
++
++
+                 // =================================================
+ 
++
++
+                 // Verify exact file path.
+ 
++
++
+                 // =================================================
+ 
++
++
+                 let responsePath =
+ 
++
++
+                     lines[0]
+ 
++
++
+                         .trimmingCharacters(
+ 
++
++
+                             in: .whitespacesAndNewlines
+ 
++
++
+                         )
+ 
++
++
+                 guard responsePath == path else {
+ 
++
++
+                     print(
+ 
++
++
+                         "ERROR: HISTORY RESPONSE PATH MISMATCH"
+ 
++
++
+                     )
+ 
++
++
+                     print("Expected:")
+ 
++
++
+                     print(path)
+ 
++
++
+                     print("Received:")
+ 
++
++
+                     print(responsePath)
+ 
++
++
+                     try? FileManager.default.removeItem(
+ 
++
++
+                         at: responseURL
+ 
++
++
+                     )
+ 
++
++
+                     return []
+ 
++
++
+                 }
+ 
++
++
+                 // =================================================
+ 
++
++
+                 // Extract hashes.
+ 
++
++
+                 // =================================================
+ 
++
++
+                 var commits: [String] = []
+ 
++
++
+                 for line in lines.dropFirst() {
+ 
++
++
+                     let hash =
+ 
++
++
+                         line.trimmingCharacters(
+ 
++
++
+                             in: .whitespacesAndNewlines
+ 
++
++
+                         )
+ 
++
++
+                     if isValidCommitHash(hash) {
+ 
++
++
+                         commits.append(hash)
+ 
++
++
+                     }
+ 
++
++
+                 }
+ 
++
++
+                 // =================================================
+ 
++
++
+                 // Delete response.
+ 
++
++
+                 // =================================================
+ 
++
++
+                 try? FileManager.default.removeItem(
+ 
++
++
+                     at: responseURL
+ 
++
++
+                 )
+ 
++
++
+                 print("================================")
+ 
+-                print("HISTORY RESPONSE ACCEPTED")
++
++
++                print("HISTORY RESPONSE ACCEPTED")
++
++
+ 
+                 print("Path:")
+ 
++
++
+                 print(path)
+ 
++
++
+                 print("Versions:")
+ 
++
++
+                 print(commits.count)
+ 
++
++
+                 print("================================")
+ 
++
++
+                 // =================================================
+ 
++
++
+                 // IMPORTANT:
+ 
++
++
+                 //
+ 
++
++
+                 // git log returns:
+ 
++
++
+                 //
+ 
++
++
+                 // newest
+ 
++
++
+                 // older
+ 
++
++
+                 // oldest
+ 
++
++
+                 //
+ 
++
++
+                 // Reverse it for VersionVault:
+ 
++
++
+                 //
+ 
++
++
+                 // Version 1 = oldest
+ 
++
++
+                 // Version N = newest
+ 
++
++
+                 // =================================================
+ 
++
++
+                 return Array(
+ 
++
++
+                     commits.reversed()
+ 
++
++
+                 )
+ 
++
++
+             }
+ 
++
++
+             // =================================================
+ 
++
++
+             // Small wait.
+ 
++
++
+             // =================================================
+ 
++
++
+             Thread.sleep(
+ 
++
++
+                 forTimeInterval: 0.05
+ 
++
++
+             )
+ 
++
++
+         }
+ 
++
++
+         // =====================================================
+ 
++
++
+         // Timeout.
+ 
++
++
+         // =====================================================
+ 
++
++
+         print("================================")
+ 
++
++
+         print("HISTORY REQUEST TIMED OUT")
+ 
++
++
+         print("Path:")
+ 
++
++
+         print(path)
+ 
++
++
+         print("================================")
+ 
++
++
+         try? FileManager.default.removeItem(
+ 
++
++
+             at: responseURL
+ 
++
++
+         )
+ 
++
++
+         return []
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
++
++
+     // VALID COMMIT HASH
+ 
++
++
+     // =========================================================
+ 
++
++
+     private func isValidCommitHash(
+ 
++
++
+         _ hash: String
+ 
++
++
+     ) -> Bool {
+ 
++
++
+         guard hash.count == 40 else {
+ 
++
++
+             return false
+ 
++
++
+         }
+ 
++
++
+         return hash.allSatisfy { character in
+ 
++
++
+             character.isNumber ||
+ 
++
++
+             (
+ 
++
++
+                 character >= "a" &&
+ 
++
++
+                 character <= "f"
+ 
++
++
+             ) ||
+ 
++
++
+             (
+ 
++
++
+                 character >= "A" &&
+ 
++
++
+                 character <= "F"
+ 
++
++
+             )
+ 
++
++
+         }
+ 
++
++
+     }
+ 
++
++
++    // =========================================================
++
++
++
++        // =========================================================
++    // CHECK WHETHER A FILE IS INSIDE A TRACKED VERSIONVAULT FOLDER
+     // =========================================================
+ 
+-    // TRACK FILE
++    private func canIgnoreFileSynchronously(path: String) -> Bool {
++        guard let containerURL = appGroupContainer() else {
++            print("ERROR: App Group unavailable")
++            return false
++        }
++
++        let requestURL = containerURL.appendingPathComponent(
++            "ignore_check_request.txt"
++        )
++        let responseURL = containerURL.appendingPathComponent(
++            "ignore_check_response.txt"
++        )
++
++        // Clear stale request/response data before this check.
++        try? FileManager.default.removeItem(at: requestURL)
++        try? FileManager.default.removeItem(at: responseURL)
++
++        do {
++            try path.write(
++                to: requestURL,
++                atomically: true,
++                encoding: .utf8
++            )
++        } catch {
++            print("ERROR WRITING IGNORE CHECK REQUEST")
++            print(error.localizedDescription)
++            return false
++        }
++
++        let timeout: TimeInterval = 1.5
++        let startTime = Date()
++
++        while Date().timeIntervalSince(startTime) < timeout {
++            if FileManager.default.fileExists(atPath: responseURL.path),
++               let response = try? String(
++                    contentsOf: responseURL,
++                    encoding: .utf8
++               ) {
++                let lines = response.components(separatedBy: .newlines)
++
++                if lines.count >= 2, lines[0] == path {
++                    let eligible = lines[1].trimmingCharacters(
++                        in: .whitespacesAndNewlines
++                    ) == "true"
++
++                    try? FileManager.default.removeItem(at: responseURL)
++                    return eligible
++                }
++            }
++
++            Thread.sleep(forTimeInterval: 0.02)
++        }
++
++        print("IGNORE CHECK TIMED OUT: \(path)")
++        try? FileManager.default.removeItem(at: requestURL)
++        try? FileManager.default.removeItem(at: responseURL)
++        return false
++    }
++
++
++// TRACK FILE
++
++
+ 
+     // =========================================================
+ 
++
++
+     @objc
+ 
++
++
+     func trackAction() {
+ 
++
++
+         guard let item = selectedItem()
+ 
++
++
+         else {
+ 
++
++
+             return
+ 
++
++
+         }
+ 
++
++
+         print("TRACK CLICKED")
+ 
++
++
+         writeRequest(
+ 
++
++
+             command: "track",
+ 
++
++
+             path: item.path
+ 
++
++
+         )
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
++
++
+     // SAVE FILE VERSION
+ 
++
++
+     // =========================================================
+ 
++
++
+     @objc
+ 
++
++
+     func saveAction() {
+ 
++
++
+         guard let item = selectedItem()
+ 
++
++
+         else {
+ 
++
++
+             return
+ 
++
++
+         }
+ 
++
++
+         print("SAVE VERSION CLICKED")
+ 
++
++
+         writeRequest(
+ 
++
++
+             command: "save",
+ 
++
++
+             path: item.path
+ 
++
++
+         )
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
++
++
+     // FILE HISTORY
+ 
++
++
+     // =========================================================
+ 
++
++
+     @objc
+ 
++
++
+     func historyAction() {
+ 
++
++
+         guard let item = selectedItem()
+ 
++
++
+         else {
+ 
++
++
+             return
+ 
++
++
+         }
+ 
++
++
+         print("HISTORY CLICKED")
+ 
++
++
+         writeRequest(
+ 
++
++
+             command: "history",
+ 
++
++
+             path: item.path
+ 
++
++
+         )
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
+-    // TRACK FOLDER
+ 
++
++        // =========================================================
++    // IGNORE FILE
+     // =========================================================
+ 
+     @objc
++    func ignoreAction() {
++        guard let item = selectedItem() else {
++            return
++        }
++
++        guard !isDirectory(item) else {
++            return
++        }
++
++        // Re-check eligibility when clicked, not just when menu opened.
++        guard canIgnoreFileSynchronously(path: item.path) else {
++            print("IGNORE CANCELLED: File is not inside a tracked folder")
++            return
++        }
++
++        print("IGNORE CLICKED")
++        print(item.path)
++
++        writeRequest(
++            command: "ignore",
++            path: item.path
++        )
++    }
++
++
++// TRACK FOLDER
++
++
++
++    // =========================================================
++
++
++
++    @objc
++
++
+ 
+     func trackFolderAction() {
+ 
++
++
+         guard let item = selectedItem()
+ 
++
++
+         else {
+ 
++
++
+             return
+ 
++
++
+         }
+ 
++
++
+         print("TRACK FOLDER CLICKED")
+ 
++
++
+         writeRequest(
+ 
++
++
+             command: "track-folder",
+ 
++
++
+             path: item.path
+ 
++
++
+         )
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
++
++
+     // FOLDER STATUS
+ 
++
++
+     // =========================================================
+ 
++
++
+     @objc
+ 
++
++
+     func statusAction() {
+ 
++
++
+         guard let item = selectedItem()
+ 
++
++
+         else {
+ 
++
++
+             return
+ 
++
++
+         }
+ 
++
++
+         print("STATUS CLICKED")
+ 
+-        writeRequest(
++
++
++        writeRequest(
++
++
+ 
+             command: "status",
+ 
++
++
+             path: item.path
+ 
++
++
+         )
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
++
++
+     // SAVE FOLDER VERSION
+ 
++
++
+     // =========================================================
+ 
++
++
+     @objc
+ 
++
++
+     func saveFolderAction() {
+ 
++
++
+         guard let item = selectedItem()
+ 
++
++
+         else {
+ 
++
++
+             return
+ 
++
++
+         }
+ 
++
++
+         print("SAVE FOLDER VERSION CLICKED")
+ 
++
++
+         writeRequest(
+ 
++
++
+             command: "save-folder",
+ 
++
++
+             path: item.path
+ 
++
++
+         )
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
++
++
+     // FOLDER HISTORY
+ 
++
++
+     // =========================================================
+ 
++
++
+     @objc
+ 
++
++
+     func historyFolderAction() {
+ 
++
++
+         guard let item = selectedItem()
+ 
++
++
+         else {
+ 
++
++
+             return
+ 
++
++
+         }
+ 
++
++
+         print("FOLDER HISTORY CLICKED")
+ 
++
++
+         writeRequest(
+ 
++
++
+             command: "history-folder",
+ 
++
++
+             path: item.path
+ 
++
++
+         )
+ 
++
++
+     }
+ 
++
++
+     // =========================================================
+ 
++
++
+     // RESTORE VERSION
+ 
++
++
+     //
+ 
++
++
+     // Example menu item:
+ 
++
++
+     //
+ 
++
++
+     // Version 1  4158d4042293b2fd7d2445435b89ad612005c7b6
+ 
++
++
+     //
+ 
++
++
+     // We extract the LAST value as the commit hash.
+ 
++
++
+     //
+ 
++
++
+     // This avoids relying on representedObject because Finder
+ 
++
++
+     // can copy NSMenuItems internally.
+ 
++
++
+     // =========================================================
+ 
++
++
+     @objc
++
+     func restoreVersionAction(
++
+         _ sender: NSMenuItem
++
+     ) {
++
+         print("================================")
++
+         print("RESTORE CLICKED")
++
+         print("================================")
+ 
++
++
+         let title = sender.title
+ 
++
++
+         print("Clicked menu item:")
++
+         print(title)
+ 
++
++
+         let parts =
++
+             title.components(
++
+                 separatedBy: .whitespaces
++
+             )
++
+             .filter {
++
+                 !$0.isEmpty
++
+             }
+ 
++
++
+         guard let commit = parts.last else {
++
+             print("ERROR: Could not extract commit hash")
++
+             return
++
+         }
+ 
++
++
+         guard isValidCommitHash(commit) else {
++
+             print("ERROR: Invalid commit hash:")
++
+             print(commit)
++
+             return
++
+         }
+ 
++
++
+         guard let item = selectedItem() else {
++
+             print("ERROR: No selected item")
++
+             return
++
+         }
+ 
++
++
+         let path = item.path
++
+         let isFolder = isDirectory(item)
+ 
++
++
+         print("================================")
++
+         print("RESTORE INFORMATION")
++
+         print("Commit:")
++
+         print(commit)
++
+         print("Path:")
++
+         print(path)
++
+         print("Is folder:")
++
+         print(isFolder)
++
+         print("================================")
+ 
++
++
+         let restoreCommand =
++
+             isFolder
++
+                 ? "restore-folder"
++
+                 : "restore"
+ 
++
++
+         writeRequest(
++
+             command: restoreCommand,
++
+             path: path,
++
+             argument: commit
++
+         )
++
+     }
++
+     // WRITE NORMAL REQUEST
+ 
++
++
+     // =========================================================
+ 
++
++
+     private func writeRequest(
+ 
++
++
+         command: String,
+ 
++
++
+         path: String,
+ 
++
++
+         argument: String? = nil
+ 
++
++
+     ) {
+ 
++
++
+         guard let containerURL =
+ 
++
++
+                 appGroupContainer()
+ 
++
++
+         else {
+ 
++
++
+             print(
+ 
++
++
+                 "ERROR: App Group unavailable"
+ 
++
++
+             )
+ 
++
++
+             return
+ 
++
++
+         }
+ 
++
++
+         let requestURL =
+ 
++
++
+             containerURL.appendingPathComponent(
+ 
++
++
+                 "pending_request.txt"
+ 
++
++
+             )
+ 
++
++
+         var contents =
+ 
++
++
+             "\(command)\n\(path)"
+ 
++
++
+         if let argument = argument {
+ 
++
++
+             contents +=
+ 
++
++
+                 "\n\(argument)"
+ 
++
++
+         }
+ 
++
++
+         do {
+ 
++
++
+             try contents.write(
+ 
++
++
+                 to: requestURL,
+ 
++
++
+                 atomically: true,
+ 
++
++
+                 encoding: .utf8
+ 
++
++
+             )
+ 
++
++
+             print("================================")
+ 
++
++
+             print("VERSIONVAULT REQUEST")
+ 
++
++
+             print("Command:")
+ 
++
++
+             print(command)
+ 
++
++
+             print("Path:")
+ 
++
++
+             print(path)
+ 
++
++
+             if let argument = argument {
+ 
++
++
+                 print("Argument:")
+ 
++
++
+                 print(argument)
+ 
++
++
+             }
+ 
++
++
+             print("================================")
+ 
++
++
+         } catch {
+ 
++
++
+             print(
+ 
++
++
+                 "ERROR WRITING REQUEST:"
+ 
++
++
+             )
+ 
++
++
+             print(
+ 
++
++
+                 error.localizedDescription
+ 
++
++
+             )
+ 
++
++
+         }
+ 
++
++
+     }
+ 
++
++
+ }
+diff --git a/VersionVaultLauncher/VersionVaultLauncher/VersionVaultLauncherApp.swift b/VersionVaultLauncher/VersionVaultLauncher/VersionVaultLauncherApp.swift
+index f7df898..ef55f28 100644
+--- a/VersionVaultLauncher/VersionVaultLauncher/VersionVaultLauncherApp.swift
++++ b/VersionVaultLauncher/VersionVaultLauncher/VersionVaultLauncherApp.swift
+@@ -1,653 +1,1363 @@
+ import SwiftUI
++
+ import AppKit
+ 
++
++
+ class AppDelegate: NSObject, NSApplicationDelegate {
+ 
++
++
+     private var timer: Timer?
+ 
++
++
+     private let appGroup =
++
+         "group.com.versionvault.shared"
+ 
++
++
+     // =========================================================
++
+     // APP LAUNCH
++
+     // =========================================================
+ 
++
++
+     func applicationDidFinishLaunching(
++
+         _ notification: Notification
++
+     ) {
+ 
++
++
+         print("================================")
++
+         print("VERSIONVAULT APP")
++
+         print("STARTED")
++
+         print("================================")
+ 
++
++
+         startRequestWatcher()
++
+     }
+ 
++
++
+     // =========================================================
++
+     // REQUEST WATCHER
++
+     //
++
+     // Checks both:
++
+     //
++
+     // pending_request.txt
++
+     //
++
+     // AND
++
+     //
++
+     // history_request.txt
++
+     //
++
+     // History has its own request file so it cannot interfere
++
+     // with Track / Save / Restore requests.
++
+     // =========================================================
+ 
++
++
+     private func startRequestWatcher() {
+ 
++
++
+         timer = Timer.scheduledTimer(
++
+             withTimeInterval: 0.05,
++
+             repeats: true
++
+         ) { [weak self] _ in
+ 
++
++
+             self?.checkForHistoryRequest()
++
++            self?.checkForIgnoreCheckRequest()
++
+             self?.checkForNormalRequest()
++
+         }
+ 
++
++
+         print("Request watcher started")
++
+     }
+ 
++
++
+     // =========================================================
++
+     // APP GROUP
++
+     // =========================================================
+ 
++
++
+     private func appGroupContainer() -> URL? {
+ 
++
++
+         return FileManager.default.containerURL(
++
+             forSecurityApplicationGroupIdentifier:
++
+                 appGroup
++
+         )
++
+     }
+ 
++
++
+     // =========================================================
++
+     // HISTORY REQUEST
++
+     //
++
+     // Finder sends:
++
+     //
++
+     // history_request.txt
++
+     //
++
+     // command
++
+     // path
++
+     //
++
+     // We execute:
++
+     //
++
+     // vv history path
++
+     //
++
+     // Then respond with:
++
+     //
++
+     // exact-path
++
+     // hash
++
+     // hash
++
+     // ...
++
+     // =========================================================
+ 
++
++
+     private func checkForHistoryRequest() {
+ 
++
++
+         guard let containerURL =
++
+                 appGroupContainer()
++
+         else {
++
+             return
++
+         }
+ 
++
++
+         let requestURL =
++
+             containerURL.appendingPathComponent(
++
+                 "history_request.txt"
++
+             )
+ 
++
++
+         guard FileManager.default.fileExists(
++
+             atPath: requestURL.path
++
+         ) else {
++
+             return
++
+         }
+ 
++
++
+         do {
+ 
++
++
+             let contents =
++
+                 try String(
++
+                     contentsOf: requestURL,
++
+                     encoding: .utf8
++
+                 )
+ 
++
++
+             let lines =
++
+                 contents.components(
++
+                     separatedBy: .newlines
++
+                 )
+ 
++
++
+             guard lines.count >= 2 else {
+ 
++
++
+                 try? FileManager.default.removeItem(
++
+                     at: requestURL
++
+                 )
+ 
++
++
+                 return
++
+             }
+ 
++
++
+             let command =
++
+                 lines[0]
++
+                     .trimmingCharacters(
++
+                         in: .whitespacesAndNewlines
++
+                     )
+ 
++
++
+             let path =
++
+                 lines[1]
++
+                     .trimmingCharacters(
++
+                         in: .whitespacesAndNewlines
++
+                     )
+ 
++
++
+             // Remove request BEFORE running CLI.
++
+             try FileManager.default.removeItem(
++
+                 at: requestURL
++
+             )
+ 
++
++
+             print("================================")
++
+             print("HISTORY REQUEST RECEIVED")
++
+             print("Command: \(command)")
++
+             print("Path: \(path)")
++
+             print("================================")
+ 
++
++
+             // =================================================
++
+             // Execute history command.
++
+             // =================================================
+ 
++
++
+             let result =
++
+                 executeCLI(
++
+                     arguments: [
++
+                         command,
++
+                         path
++
+                     ]
++
+                 )
+ 
++
++
+             print("History exit code:")
++
+             print(result.exitCode)
+ 
++
++
+             print("History output:")
++
+             print(result.output)
+ 
++
++
+             // =================================================
++
+             // Extract hashes.
++
+             // =================================================
+ 
++
++
+             let commits =
++
+                 extractCommitHashes(
++
+                     from: result.output
++
+                 )
+ 
++
++
+             print("Found \(commits.count) commits")
+ 
++
++
+             // =================================================
++
+             // Response.
++
+             //
++
+             // First line MUST be the exact path.
++
+             // This prevents another file's history from being
++
+             // accidentally displayed.
++
+             // =================================================
+ 
++
++
+             let responseURL =
++
+                 containerURL.appendingPathComponent(
++
+                     "restore_history_response.txt"
++
+                 )
+ 
++
++
+             var response =
++
+                 "\(path)\n"
+ 
++
++
+             for commit in commits {
++
+                 response += "\(commit)\n"
++
+             }
+ 
++
++
+             try response.write(
++
+                 to: responseURL,
++
+                 atomically: true,
++
+                 encoding: .utf8
++
+             )
+ 
++
++
+             print("================================")
++
+             print("HISTORY RESPONSE WRITTEN")
++
+             print("Path: \(path)")
++
+             print("Versions: \(commits.count)")
++
+             print("================================")
+ 
++
++
+         } catch {
+ 
++
++
+             print("================================")
++
+             print("ERROR HISTORY REQUEST")
++
+             print(error.localizedDescription)
++
+             print("================================")
++
+         }
++
+     }
+ 
++
++
++    // =========================================================
++
++    // =========================================================
++    // IGNORE ELIGIBILITY CHECK
+     // =========================================================
++
++    private func checkForIgnoreCheckRequest() {
++        guard let containerURL = appGroupContainer() else {
++            return
++        }
++
++        let requestURL = containerURL.appendingPathComponent(
++            "ignore_check_request.txt"
++        )
++
++        guard FileManager.default.fileExists(atPath: requestURL.path) else {
++            return
++        }
++
++        do {
++            let path = try String(
++                contentsOf: requestURL,
++                encoding: .utf8
++            ).trimmingCharacters(in: .whitespacesAndNewlines)
++
++            try? FileManager.default.removeItem(at: requestURL)
++
++            guard !path.isEmpty else {
++                return
++            }
++
++            let result = executeCLI(arguments: ["can-ignore", path])
++            let output = result.output.trimmingCharacters(
++                in: .whitespacesAndNewlines
++            )
++            let eligible = result.exitCode == 0 && output == "true"
++
++            let responseURL = containerURL.appendingPathComponent(
++                "ignore_check_response.txt"
++            )
++            let response = "\(path)\n\(eligible ? "true" : "false")"
++
++            try response.write(
++                to: responseURL,
++                atomically: true,
++                encoding: .utf8
++            )
++
++            print("IGNORE ELIGIBILITY CHECK")
++            print("Path: \(path)")
++            print("Eligible: \(eligible)")
++        } catch {
++            print("ERROR CHECKING IGNORE ELIGIBILITY")
++            print(error.localizedDescription)
++        }
++    }
++
++
+     // NORMAL REQUEST
++
+     //
++
+     // Track
++
+     // Save
++
+     // History
++
+     // Restore
++
+     // Folder commands
++
+     // =========================================================
+ 
++
++
+     private func checkForNormalRequest() {
+ 
++
++
+         guard let containerURL =
++
+                 appGroupContainer()
++
+         else {
++
+             return
++
+         }
+ 
++
++
+         let requestURL =
++
+             containerURL.appendingPathComponent(
++
+                 "pending_request.txt"
++
+             )
+ 
++
++
+         guard FileManager.default.fileExists(
++
+             atPath: requestURL.path
++
+         ) else {
++
+             return
++
+         }
+ 
++
++
+         do {
+ 
++
++
+             let contents =
++
+                 try String(
++
+                     contentsOf: requestURL,
++
+                     encoding: .utf8
++
+                 )
+ 
++
++
+             let lines =
++
+                 contents.components(
++
+                     separatedBy: .newlines
++
+                 )
+ 
++
++
+             guard lines.count >= 2 else {
+ 
++
++
+                 try? FileManager.default.removeItem(
++
+                     at: requestURL
++
+                 )
+ 
++
++
+                 return
++
+             }
+ 
++
++
+             let command =
++
+                 lines[0]
++
+                     .trimmingCharacters(
++
+                         in: .whitespacesAndNewlines
++
+                     )
+ 
++
++
+             let path =
++
+                 lines[1]
++
+                     .trimmingCharacters(
++
+                         in: .whitespacesAndNewlines
++
+                     )
+ 
++
++
+             let argument: String?
+ 
++
++
+             if lines.count >= 3 {
+ 
++
++
+                 let value =
++
+                     lines[2]
++
+                         .trimmingCharacters(
++
+                             in: .whitespacesAndNewlines
++
+                         )
+ 
++
++
+                 argument =
++
+                     value.isEmpty
++
+                         ? nil
++
+                         : value
+ 
++
++
+             } else {
+ 
++
++
+                 argument = nil
++
+             }
+ 
++
++
+             // Remove request BEFORE executing.
++
+             try FileManager.default.removeItem(
++
+                 at: requestURL
++
+             )
+ 
++
++
+             print("================================")
++
+             print("VERSIONVAULT REQUEST RECEIVED")
++
+             print("Command: \(command)")
++
+             print("Path: \(path)")
+ 
++
++
+             if let argument = argument {
++
+                 print("Argument: \(argument)")
++
+             }
+ 
++
++
+             print("================================")
+ 
++
++
+             handleCommand(
++
+                 command: command,
++
+                 path: path,
++
+                 argument: argument
++
+             )
+ 
++
++
+         } catch {
+ 
++
++
+             print("================================")
++
+             print("ERROR READING REQUEST")
++
+             print(error.localizedDescription)
++
+             print("================================")
++
+         }
++
+     }
+ 
++
++
+     // =========================================================
++
+     // COMMAND ROUTER
++
+     // =========================================================
+ 
++
++
+     private func handleCommand(
++
+         command: String,
++
+         path: String,
++
+         argument: String?
++
+     ) {
+ 
++
++
+         // =====================================================
++
+         // FILE RESTORE
++
+         //
+-        // vv restore <commit> <file>
++
++        // vv restore \<commit> \<file>
++
+         // =====================================================
+ 
++
++
+         if command == "restore" {
+ 
++
++
+             guard let commit = argument else {
+ 
++
++
+                 print(
++
+                     "ERROR: Missing commit hash"
++
+                 )
+ 
++
++
+                 return
++
+             }
+ 
++
++
+             runCLI(
++
+                 arguments: [
++
+                     "restore",
++
+                     commit,
++
+                     path
++
+                 ]
++
+             )
+ 
++
++
+             return
++
+         }
+ 
++
++
+         // =====================================================
++
+         // FOLDER RESTORE
++
+         //
+-        // vv restore-folder <folder> <commit>
++
++        // vv restore-folder \<folder> \<commit>
++
+         // =====================================================
+ 
++
++
+         if command == "restore-folder" {
+ 
++
++
+             guard let commit = argument else {
+ 
++
++
+                 print(
++
+                     "ERROR: Missing commit hash"
++
+                 )
+ 
++
++
+                 return
++
+             }
+ 
++
++
+             runCLI(
++
+                 arguments: [
++
+                     "restore-folder",
++
+                     path,
++
+                     commit
++
+                 ]
++
+             )
+ 
++
++
+             return
++
+         }
+ 
++
++
+         // =====================================================
++
+         // SAVE FOLDER
++
+         // =====================================================
+ 
++
++
+         if command == "save-folder" {
+ 
++
++
+             runCLI(
++
+                 arguments: [
++
+                     "save-folder",
++
+                     path,
++
+                     argument ?? "New folder version"
++
+                 ]
++
+             )
+ 
++
++
+             return
++
+         }
+ 
++
++
+         // =====================================================
++
+         // EVERYTHING ELSE
++
+         //
++
+         // track
++
+         // save
++
+         // history
++
+         // track-folder
++
+         // status
++
+         // history-folder
++
+         // =====================================================
+ 
++
++
+         runCLI(
++
+             arguments: [
++
+                 command,
++
+                 path
++
+             ]
++
+         )
++
+     }
+ 
++
++
+     // =========================================================
++
+     // EXTRACT COMMIT HASHES
++
+     // =========================================================
+ 
++
++
+     private func extractCommitHashes(
++
+         from output: String
++
+     ) -> [String] {
+ 
++
++
+         var commits: [String] = []
+ 
++
++
+         let lines =
++
+             output.components(
++
+                 separatedBy: .newlines
++
+             )
+ 
++
++
+         for line in lines {
+ 
++
++
+             let trimmed =
++
+                 line.trimmingCharacters(
++
+                     in: .whitespacesAndNewlines
++
+                 )
+ 
++
++
+             guard !trimmed.isEmpty else {
++
+                 continue
++
+             }
+ 
++
++
+             // vv history normally gives:
++
+             //
++
+             // 1. abcdef123...
++
+             //
++
+             // Extract the part after "1. "
++
+             // if necessary.
+ 
++
++
+             var candidate = trimmed
+ 
++
++
+             if let dotIndex =
++
+                 trimmed.firstIndex(of: ".") {
+ 
++
++
+                 let afterDot =
++
+                     trimmed.index(
++
+                         after: dotIndex
++
+                     )
+ 
++
++
+                 candidate =
++
+                     String(
++
+                         trimmed[afterDot...]
++
+                     )
++
+                     .trimmingCharacters(
++
+                         in: .whitespaces
++
+                     )
++
+             }
+ 
++
++
+             if isValidCommitHash(candidate) {
+ 
++
++
+                 commits.append(candidate)
++
+             }
++
+         }
+ 
++
++
+         return commits
++
+     }
+ 
++
++
+     // =========================================================
++
+     // VALID COMMIT HASH
++
+     // =========================================================
+ 
++
++
+     private func isValidCommitHash(
++
+         _ hash: String
++
+     ) -> Bool {
+ 
++
++
+         guard hash.count == 40 else {
++
+             return false
++
+         }
+ 
++
++
+         return hash.allSatisfy { character in
+ 
++
++
+             character.isNumber ||
++
+             (
++
+                 character >= "a" &&
++
+                 character <= "f"
++
+             ) ||
++
+             (
++
+                 character >= "A" &&
++
+                 character <= "F"
++
+             )
++
+         }
++
+     }
+ 
++
++
+     // =========================================================
++
+     // RUN CLI
++
+     // =========================================================
+ 
++
++
+     private func runCLI(
++
+         arguments: [String]
++
+     ) {
+ 
++
++
+         print("================================")
++
+         print("RUNNING VERSIONVAULT CLI")
++
+         print("================================")
+ 
++
++
+         print("Arguments:")
++
+         print(arguments)
+ 
++
++
+         let result =
++
+             executeCLI(
++
+                 arguments: arguments
++
+             )
+ 
++
++
+         print("Exit code:")
++
+         print(result.exitCode)
+ 
++
++
+         print("Output:")
++
+         print(result.output)
+ 
++
++
+         print("================================")
++
+     }
+ 
++
++
+     // =========================================================
++
+     // EXECUTE CLI
++
+     // =========================================================
+ 
++
++
+     private func executeCLI(
++
+         arguments: [String]
++
+     ) -> (
++
+         output: String,
++
+         exitCode: Int32
++
+     ) {
+ 
++
++
+         let process = Process()
+ 
++
++
+         process.executableURL =
++
+             URL(
++
+                 fileURLWithPath:
++
+                     "/usr/local/bin/vv"
++
+             )
+ 
++
++
+         // IMPORTANT:
++
+         //
++
+         // We pass arguments directly instead of constructing
++
+         // a shell command. This handles spaces in filenames
++
+         // safely.
++
+         //
+ 
++
++
+         process.arguments = arguments
+ 
++
++
+         let pipe = Pipe()
+ 
++
++
+         process.standardOutput = pipe
++
+         process.standardError = pipe
+ 
++
++
+         do {
+ 
++
++
+             try process.run()
+ 
++
++
+             process.waitUntilExit()
+ 
++
++
+             let data =
++
+                 pipe.fileHandleForReading
++
+                     .readDataToEndOfFile()
+ 
++
++
+             let output =
++
+                 String(
++
+                     data: data,
++
+                     encoding: .utf8
++
+                 ) ?? ""
+ 
++
++
+             return (
++
+                 output,
++
+                 process.terminationStatus
++
+             )
+ 
++
++
+         } catch {
+ 
++
++
+             return (
++
+                 "Failed to execute VersionVault: "
++
+                 + error.localizedDescription,
++
+                 -1
++
+             )
++
+         }
++
+     }
+ 
++
++
+     // =========================================================
++
+     // APP TERMINATION
++
+     // =========================================================
+ 
++
++
+     func applicationWillTerminate(
++
+         _ notification: Notification
++
+     ) {
+ 
++
++
+         timer?.invalidate()
++
+         timer = nil
++
+     }
++
+ }
+ 
+ 
++
++
++
+ // ============================================================
++
+ // VERSIONVAULT APP
++
+ // ============================================================
+ 
++
++
+ @main
++
+ struct VersionVaultApp: App {
+ 
++
++
+     @NSApplicationDelegateAdaptor(
++
+         AppDelegate.self
++
+     )
++
+     var appDelegate
+ 
++
++
+     var body: some Scene {
+ 
++
++
+         WindowGroup {
+ 
++
++
+             ContentView()
++
+         }
++
+     }
++
+ }
+diff --git a/code/src/bin/main.py b/code/src/bin/main.py
+index 20ae3d5..8852c8e 100644
+--- a/code/src/bin/main.py
++++ b/code/src/bin/main.py
+@@ -1,4 +1,5 @@
+ import sys
++import subprocess
+ from pathlib import Path
+ 
+ sys.path.append(str(Path(__file__).resolve().parents[2]))
+@@ -29,11 +30,19 @@ from src.lib.Bvr.version_vault.database import (
+ REPO_PATH = "/tmp/version_vault_repo"
+ 
+ 
++def executeCommand(command, cwd=None):
++    return subprocess.run(
++        command,
++        cwd=cwd
++    ).returncode == 0
++
++
+ def printUsage():
+     print("""
+ VersionVault CLI
+ 
+ Single File Commands:
++
+     vv init
+     vv track <file-path>
+     vv save <file-path>
+@@ -41,14 +50,287 @@ Single File Commands:
+     vv restore <commit-hash> <file-path>
+ 
+ Folder Commands:
++
+     vv track-folder <folder-path>
+     vv status <folder-path>
+     vv save-folder <folder-path> "<message>"
+     vv history-folder <folder-path>
+     vv restore-folder <folder-path> <commit-hash>
++
++Ignore Commands:
++
++    vv can-ignore <file-path>
++    vv ignore <file-or-folder-path>
++    vv ignore <file-or-folder-path> --remove
+ """)
+ 
+ 
++# ============================================================
++# FIND TRACKED PARENT
++# ============================================================
++
++def findTrackedParent(selectedPath):
++    """
++    Walk up the directory tree and find the nearest ancestor
++    registered as a tracked VersionVault folder.
++
++    Returns the absolute path of the tracked folder, or None.
++    """
++
++    selected = Path(selectedPath).expanduser().resolve()
++
++    if not selected.exists():
++        print(f"Error: Path does not exist: {selected}")
++        return None
++
++    current = selected if selected.is_dir() else selected.parent
++
++    while True:
++        currentPath = str(current)
++
++        item = getItemByPath(currentPath)
++
++        if item and item[1] == "folder":
++            return current
++
++        parent = current.parent
++
++        if parent == current:
++            break
++
++        current = parent
++
++    print("Error: No tracked VersionVault parent folder found.")
++    return None
++
++
++# ============================================================
++# FIND WHETHER A FILE CAN BE IGNORED FROM FINDER
++# ============================================================
++
++def canIgnorePath(selectedPath):
++    """Return True only for an existing file inside a registered tracked folder."""
++    selected = Path(selectedPath).expanduser().resolve()
++
++    if not selected.exists() or not selected.is_file():
++        return False
++
++    current = selected.parent
++
++    while True:
++        item = getItemByPath(str(current))
++        if item and len(item) > 1 and item[1] == "folder":
++            return True
++
++        parent = current.parent
++        if parent == current:
++            return False
++        current = parent
++
++
++# ============================================================
++# IGNORE / UNIGNORE
++# ============================================================
++
++def updateGitIgnore(selectedPath, remove=False):
++    """
++    Ignore a selected file or directory inside a tracked folder.
++
++    The selected path can be anywhere inside the tracked folder.
++    The CLI resolves the tracked parent automatically.
++
++    Files are removed from Git's index only when they match
++    the new ignore rule. They are never deleted from disk.
++    """
++
++    selected = Path(selectedPath).expanduser().resolve()
++
++    if not selected.exists():
++        print(f"Error: Path does not exist: {selected}")
++        return False
++
++    trackedRoot = findTrackedParent(selected)
++
++    if trackedRoot is None:
++        return False
++
++    try:
++        relativePath = selected.relative_to(trackedRoot)
++    except ValueError:
++        print("Error: Selected path is outside the tracked folder.")
++        return False
++
++    if not relativePath.parts:
++        print("Error: Cannot ignore the tracked folder itself.")
++        return False
++
++    # Git uses forward slashes in ignore patterns.
++    relativePattern = relativePath.as_posix()
++
++    if selected.is_dir():
++        # A trailing slash specifies a directory.
++        ignorePattern = f"/{relativePattern}/"
++    else:
++        ignorePattern = f"/{relativePattern}"
++
++    gitignore = trackedRoot / ".gitignore"
++
++    # Read existing .gitignore rules.
++    try:
++        content = (
++            gitignore.read_text(encoding="utf-8")
++            if gitignore.exists()
++            else ""
++        )
++    except OSError as error:
++        print(f"Error reading .gitignore: {error}")
++        return False
++
++    lines = content.splitlines()
++
++    if remove:
++        # Remove only the rule created for this exact path.
++        updatedLines = [
++            line for line in lines
++            if line.strip() != ignorePattern
++        ]
++
++        if len(updatedLines) == len(lines):
++            print(f"Ignore rule not found: {ignorePattern}")
++            return False
++
++        updatedContent = "\n".join(updatedLines)
++
++        if updatedContent:
++            updatedContent += "\n"
++
++        try:
++            gitignore.write_text(
++                updatedContent,
++                encoding="utf-8"
++            )
++        except OSError as error:
++            print(f"Error updating .gitignore: {error}")
++            return False
++
++        if not executeCommand(
++            ["git", "add", "--", ".gitignore"],
++            cwd=trackedRoot
++        ):
++            print("Error staging .gitignore.")
++            return False
++
++        print(f"Removed ignore rule: {ignorePattern}")
++        print("Run vv save-folder to save the change.")
++
++        return True
++
++    # Add the rule if it doesn't already exist.
++    if ignorePattern not in lines:
++        try:
++            with gitignore.open("a", encoding="utf-8") as file:
++                if content and not content.endswith("\n"):
++                    file.write("\n")
++
++                file.write(ignorePattern + "\n")
++
++        except OSError as error:
++            print(f"Error updating .gitignore: {error}")
++            return False
++
++        print(f"Added ignore rule: {ignorePattern}")
++    else:
++        print(f"Ignore rule already exists: {ignorePattern}")
++
++    # Find files that Git currently tracks but now ignores.
++    result = subprocess.run(
++        [
++            "git",
++            "ls-files",
++            "-ci",
++            "--exclude-standard",
++            "-z"
++        ],
++        cwd=trackedRoot,
++        capture_output=True
++    )
++
++    if result.returncode != 0:
++        print("Error checking tracked files.")
++        return False
++
++    trackedIgnoredFiles = [
++        path.decode("utf-8", errors="surrogateescape")
++        for path in result.stdout.split(b"\0")
++        if path
++    ]
++
++    # Restrict removal to the selected file or selected directory.
++    selectedRelative = relativePath.as_posix()
++
++    if selected.is_dir():
++        selectedPrefix = selectedRelative.rstrip("/") + "/"
++
++        pathsToUntrack = [
++            path for path in trackedIgnoredFiles
++            if path == selectedRelative
++            or path.startswith(selectedPrefix)
++        ]
++    else:
++        pathsToUntrack = [
++            path for path in trackedIgnoredFiles
++            if path == selectedRelative
++        ]
++
++    # Remove only matching paths from the index.
++    # --cached preserves files on the actual filesystem.
++    if pathsToUntrack:
++        result = subprocess.run(
++            [
++                "git",
++                "rm",
++                "-r",
++                "--cached",
++                "--ignore-unmatch",
++                "--",
++                *pathsToUntrack
++            ],
++            cwd=trackedRoot,
++            capture_output=True,
++            text=True
++        )
++
++        if result.returncode != 0:
++            print("Error updating Git index:")
++            print(result.stderr)
++            return False
++
++        print(
++            f"Removed {len(pathsToUntrack)} ignored path(s) "
++            "from Git's index. Files remain on disk."
++        )
++    else:
++        print("No tracked files needed to be removed from the index.")
++
++    # Stage .gitignore for the next folder version.
++    if not executeCommand(
++        ["git", "add", "--", ".gitignore"],
++        cwd=trackedRoot
++    ):
++        print("Error staging .gitignore.")
++        return False
++
++    print(f"Ignore rule applied to: {selected}")
++    print(f"Tracked folder: {trackedRoot}")
++    print('Run vv save-folder "<folder>" "<message>" to commit it.')
++
++    return True
++
++
++# ============================================================
++# MAIN CLI
++# ============================================================
++
+ def main():
+ 
+     if len(sys.argv) < 2:
+@@ -57,23 +339,22 @@ def main():
+ 
+     command = sys.argv[1]
+ 
+-    # ========================================================
++    # --------------------------------------------------------
+     # INIT
+-    # ========================================================
++    # --------------------------------------------------------
+ 
+-    # vv init
+     if command == "init":
+ 
+         if initRepo(REPO_PATH):
+             print("Repository initialized successfully.")
+         else:
+             print("Failed to initialize repository.")
++            return 1
+ 
+-    # ========================================================
++    # --------------------------------------------------------
+     # SINGLE FILE TRACK
+-    # ========================================================
++    # --------------------------------------------------------
+ 
+-    # vv track <file-path>
+     elif command == "track":
+ 
+         if len(sys.argv) != 3:
+@@ -82,7 +363,6 @@ def main():
+ 
+         filePath = sys.argv[2]
+ 
+-        # Check whether this file is already tracked
+         existingItem = getItemByPath(filePath)
+ 
+         if existingItem:
+@@ -92,36 +372,22 @@ def main():
+             )
+             return 1
+ 
+-        # Generate VersionVault ID
+         fileId = generateItemId("file")
+ 
+-        # Track the file using Git
+-        if not trackFile(
+-            REPO_PATH,
+-            fileId,
+-            filePath
+-        ):
++        if not trackFile(REPO_PATH, fileId, filePath):
+             print("Failed to track file.")
+             return 1
+ 
+-        # Store metadata in SQLite
+-        if not addItem(
+-            fileId,
+-            "file",
+-            filePath
+-        ):
++        if not addItem(fileId, "file", filePath):
+             print("Failed to register file in database.")
+             return 1
+ 
+-        print(
+-            f"File tracked successfully with ID: {fileId}"
+-        )
++        print(f"File tracked successfully with ID: {fileId}")
+ 
+-    # ========================================================
++    # --------------------------------------------------------
+     # SINGLE FILE SAVE
+-    # ========================================================
++    # --------------------------------------------------------
+ 
+-    # vv save <file-path>
+     elif command == "save":
+ 
+         if len(sys.argv) != 3:
+@@ -129,8 +395,6 @@ def main():
+             return 1
+ 
+         filePath = sys.argv[2]
+-
+-        # Find the VersionVault ID using the path
+         item = getItemByPath(filePath)
+ 
+         if not item:
+@@ -141,22 +405,16 @@ def main():
+             print("Error: Path is not a tracked file.")
+             return 1
+ 
+-        fileId = item[0]
+-
+-        if saveVersion(
+-            REPO_PATH,
+-            fileId,
+-            filePath
+-        ):
++        if saveVersion(REPO_PATH, item[0], filePath):
+             print("New version saved successfully.")
+         else:
+             print("Failed to save version.")
++            return 1
+ 
+-    # ========================================================
++    # --------------------------------------------------------
+     # SINGLE FILE HISTORY
+-    # ========================================================
++    # --------------------------------------------------------
+ 
+-    # vv history <file-path>
+     elif command == "history":
+ 
+         if len(sys.argv) != 3:
+@@ -164,8 +422,6 @@ def main():
+             return 1
+ 
+         filePath = sys.argv[2]
+-
+-        # Find the VersionVault ID
+         item = getItemByPath(filePath)
+ 
+         if not item:
+@@ -176,12 +432,7 @@ def main():
+             print("Error: Path is not a tracked file.")
+             return 1
+ 
+-        fileId = item[0]
+-
+-        history = getHistory(
+-            REPO_PATH,
+-            fileId
+-        )
++        history = getHistory(REPO_PATH, item[0])
+ 
+         if not history:
+             print("No version history found.")
+@@ -193,49 +444,36 @@ def main():
+         for i, commit in enumerate(history):
+             print(f"{i + 1}. {commit}")
+ 
+-    # ========================================================
++    # --------------------------------------------------------
+     # SINGLE FILE RESTORE
+-    # ========================================================
++    # --------------------------------------------------------
+ 
+-    # vv restore <commit-hash> <file-path>
+     elif command == "restore":
+ 
+         if len(sys.argv) != 4:
+-            print(
+-                "Usage: vv restore "
+-                "<commit-hash> <file-path>"
+-            )
++            print("Usage: vv restore <commit-hash> <file-path>")
+             return 1
+ 
+         commitHash = sys.argv[2]
+         filePath = sys.argv[3]
+ 
+-        # Make sure the file is tracked
+-
+-
+-        if restoreVersion(
+-            REPO_PATH,
+-            commitHash,
+-            filePath
+-        ):
++        if restoreVersion(REPO_PATH, commitHash, filePath):
+             print("Version restored successfully.")
+         else:
+             print("Failed to restore version.")
++            return 1
+ 
+-    # ========================================================
++    # --------------------------------------------------------
+     # FOLDER TRACK
+-    # ========================================================m
++    # --------------------------------------------------------
+ 
+-    # vv track-folder <folder-path>
+     elif command == "track-folder":
+ 
+         if len(sys.argv) != 3:
+             print("Usage: vv track-folder <folder-path>")
+             return 1
+ 
+-        folderPath = sys.argv[2]
+-
+-        # Check if folder is already tracked
++        folderPath = str(Path(sys.argv[2]).expanduser().resolve())
+         existingItem = getItemByPath(folderPath)
+ 
+         if existingItem:
+@@ -245,20 +483,13 @@ def main():
+             )
+             return 1
+ 
+-        # Initialize Git inside the folder
+         if not trackFolder(folderPath):
+             print("FAILED: Could not track folder.")
+             return 1
+ 
+-        # Generate VersionVault folder ID
+         folderId = generateItemId("folder")
+ 
+-        # Store folder metadata
+-        if not addItem(
+-            folderId,
+-            "folder",
+-            folderPath
+-        ):
++        if not addItem(folderId, "folder", folderPath):
+             print("FAILED: Could not register folder.")
+             return 1
+ 
+@@ -267,11 +498,10 @@ def main():
+             f"with ID: {folderId}"
+         )
+ 
+-    # ========================================================
++    # --------------------------------------------------------
+     # FOLDER STATUS
+-    # ========================================================
++    # --------------------------------------------------------
+ 
+-    # vv status <folder-path>
+     elif command == "status":
+ 
+         if len(sys.argv) != 3:
+@@ -279,8 +509,6 @@ def main():
+             return 1
+ 
+         folderPath = sys.argv[2]
+-
+-        # Make sure folder is tracked
+         item = getItemByPath(folderPath)
+ 
+         if not item:
+@@ -296,24 +524,19 @@ def main():
+         else:
+             print("No changes detected.")
+ 
+-    # ========================================================
++    # --------------------------------------------------------
+     # FOLDER SAVE
+-    # ========================================================
++    # --------------------------------------------------------
+ 
+-    # vv save-folder <folder-path> "<message>"
+     elif command == "save-folder":
+ 
+         if len(sys.argv) != 4:
+-            print(
+-                'Usage: vv save-folder '
+-                '<folder-path> "<message>"'
+-            )
++            print('Usage: vv save-folder <folder-path> "<message>"')
+             return 1
+ 
+         folderPath = sys.argv[2]
+         message = sys.argv[3]
+ 
+-        # Make sure folder is tracked
+         item = getItemByPath(folderPath)
+ 
+         if not item:
+@@ -324,31 +547,23 @@ def main():
+             print("Error: Path is not a tracked folder.")
+             return 1
+ 
+-        if saveFolderVersion(
+-            folderPath,
+-            message
+-        ):
++        if saveFolderVersion(folderPath, message):
+             print("SUCCESS: Folder version saved.")
+         else:
+             print("FAILED: Could not save version.")
++            return 1
+ 
+-    # ========================================================
++    # --------------------------------------------------------
+     # FOLDER HISTORY
+-    # ========================================================
++    # --------------------------------------------------------
+ 
+-    # vv history-folder <folder-path>
+     elif command == "history-folder":
+ 
+         if len(sys.argv) != 3:
+-            print(
+-                "Usage: vv history-folder "
+-                "<folder-path>"
+-            )
++            print("Usage: vv history-folder <folder-path>")
+             return 1
+ 
+         folderPath = sys.argv[2]
+-
+-        # Make sure folder is tracked
+         item = getItemByPath(folderPath)
+ 
+         if not item:
+@@ -371,11 +586,10 @@ def main():
+         for i, commit in enumerate(history):
+             print(f"{i + 1}. {commit}")
+ 
+-    # ========================================================
++    # --------------------------------------------------------
+     # FOLDER RESTORE
+-    # ========================================================
++    # --------------------------------------------------------
+ 
+-    # vv restore-folder <folder-path> <commit-hash>
+     elif command == "restore-folder":
+ 
+         if len(sys.argv) != 4:
+@@ -388,7 +602,6 @@ def main():
+         folderPath = sys.argv[2]
+         commitHash = sys.argv[3]
+ 
+-        # Make sure folder is tracked
+         item = getItemByPath(folderPath)
+ 
+         if not item:
+@@ -399,17 +612,53 @@ def main():
+             print("Error: Path is not a tracked folder.")
+             return 1
+ 
+-        if restoreFolderVersion(
+-            folderPath,
+-            commitHash
+-        ):
++        if restoreFolderVersion(folderPath, commitHash):
+             print("SUCCESS: Folder restored.")
+         else:
+             print("FAILED: Could not restore version.")
++            return 1
++
++    # --------------------------------------------------------
++    # FINDER IGNORE ELIGIBILITY CHECK
++    # Prints exactly true/false for the Swift request handler.
++    # --------------------------------------------------------
++
++    elif command == "can-ignore":
++
++        if len(sys.argv) != 3:
++            print("false")
++            return 1
++
++        eligible = canIgnorePath(sys.argv[2])
++        print("true" if eligible else "false")
++        return 0 if eligible else 1
++
++    # --------------------------------------------------------
++    # IGNORE / UNIGNORE
++    # --------------------------------------------------------
++
++    elif command == "ignore":
++
++        if len(sys.argv) not in (3, 4):
++            print(
++                "Usage: vv ignore <file-or-folder-path> [--remove]"
++            )
++            return 1
++
++        selectedPath = sys.argv[2]
++
++        if len(sys.argv) == 4 and sys.argv[3] != "--remove":
++            print("Error: The only supported option is --remove.")
++            return 1
++
++        remove = len(sys.argv) == 4
++
++        if not updateGitIgnore(selectedPath, remove):
++            return 1
+ 
+-    # ========================================================
++    # --------------------------------------------------------
+     # UNKNOWN COMMAND
+-    # ========================================================
++    # --------------------------------------------------------
+ 
+     else:
+         print(f"Unknown command: {command}")
+diff --git a/code/src/lib/Bvr/version_vault/track_folder.py b/code/src/lib/Bvr/version_vault/track_folder.py
+index 5e78c61..e3c9584 100644
+--- a/code/src/lib/Bvr/version_vault/track_folder.py
++++ b/code/src/lib/Bvr/version_vault/track_folder.py
+@@ -24,11 +24,46 @@ def executeCommand(command, cwd=None):
+ 
+ 
+ def isGitRepository(folderPath):
+-    return (Path(folderPath) / ".git").exists()
++    folder = Path(folderPath).expanduser().resolve()
++    return (folder / ".git").exists()
++
++
++def applyGitIgnore(folderPath):
++    folder = Path(folderPath).expanduser().resolve()
++
++    if not isGitRepository(folder):
++        print("Error: Folder is not a Git repository.")
++        return False
++
++    # Remove tracked files from the Git index without deleting them.
++    result = subprocess.run(
++        ["git", "rm", "-r", "--cached", "--ignore-unmatch", "."],
++        cwd=folder,
++        capture_output=True,
++        text=True
++    )
++
++    if result.returncode != 0:
++        print("Error updating Git index:", result.stderr)
++        return False
++
++    # Re-add files while respecting .gitignore.
++    result = subprocess.run(
++        ["git", "add", "."],
++        cwd=folder,
++        capture_output=True,
++        text=True
++    )
++
++    if result.returncode != 0:
++        print("Error adding files:", result.stderr)
++        return False
++
++    return True
+ 
+ 
+ def trackFolder(folderPath):
+-    folder = Path(folderPath).expanduser()
++    folder = Path(folderPath).expanduser().resolve()
+ 
+     if not folder.exists():
+         print("Error: Folder does not exist.")
+@@ -42,51 +77,49 @@ def trackFolder(folderPath):
+         print("Folder is already being tracked.")
+         return True
+ 
+-    # Initialize Git repository
+-    if not executeCommand(
+-        ["git", "init", str(folder)]
+-    ):
++    if not executeCommand(["git", "init", str(folder)]):
+         return False
+ 
+-    # Add existing files
+-    if not executeCommand(
+-        ["git", "add", "."],
+-        cwd=folder
+-    ):
++    if not executeCommand(["git", "add", "."], cwd=folder):
+         return False
+ 
+-    # Create initial version
+-    if not executeCommand(
+-        ["git", "commit", "--allow-empty", "-m", "Initial Version"],
++    return executeCommand(
++        [
++            "git",
++            "-c", "user.name=VersionVault",
++            "-c", "user.email=versionvault@localhost",
++            "commit",
++            "--allow-empty",
++            "-m", "Initial Version"
++        ],
+         cwd=folder
+-    ):
+-        return False
++    )
+ 
+-    return True
+ 
+ def saveFolderVersion(folderPath, message="New folder version"):
+-    folder = Path(folderPath).expanduser()
++    folder = Path(folderPath).expanduser().resolve()
+ 
+     if not isGitRepository(folder):
+         print("Error: Folder is not a VersionVault repository.")
+         return False
+ 
+-    # Stage all changes inside the folder
+-    if not executeCommand(
+-        ["git", "add", "."],
+-        cwd=folder
+-    ):
++    if not applyGitIgnore(folder):
+         return False
+ 
+-    # Create the commit
+     return executeCommand(
+-        ["git", "commit", "-m", message],
++        [
++            "git",
++            "-c", "user.name=VersionVault",
++            "-c", "user.email=versionvault@localhost",
++            "commit",
++            "-m", message
++        ],
+         cwd=folder
+     )
+ 
+ 
+ def getFolderHistory(folderPath):
+-    folder = Path(folderPath).expanduser()
++    folder = Path(folderPath).expanduser().resolve()
+ 
+     if not isGitRepository(folder):
+         print("Error: Folder is not a Git repository.")
+@@ -104,26 +137,9 @@ def getFolderHistory(folderPath):
+ 
+     return result.stdout.splitlines()
+ 
+-# def restoreFolderVersion(folderPath, commitHash):
+-#     folder = Path(folderPath).expanduser()
+-
+-#     if not isGitRepository(folder):
+-#         print("Error: Folder is not a Git repository.")
+-#         return False
+-
+-#     if not executeCommand(
+-#         ["git", "reset", "--hard", commitHash],
+-#         cwd=folder
+-#     ):
+-#         return False
+-
+-#     return executeCommand(
+-#         ["git", "clean", "-fd"],
+-#         cwd=folder
+-#     )
+ 
+ def restoreFolderVersion(folderPath, commitHash):
+-    folder = Path(folderPath).expanduser()
++    folder = Path(folderPath).expanduser().resolve()
+ 
+     if not isGitRepository(folder):
+         print("Error: Folder is not a Git repository.")
+@@ -136,7 +152,7 @@ def restoreFolderVersion(folderPath, commitHash):
+ 
+ 
+ def hasFolderChanged(folderPath):
+-    folder = Path(folderPath).expanduser()
++    folder = Path(folderPath).expanduser().resolve()
+ 
+     if not isGitRepository(folder):
+         print("Error: Folder is not a Git repository.")

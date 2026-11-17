@@ -24,11 +24,46 @@ def executeCommand(command, cwd=None):
 
 
 def isGitRepository(folderPath):
-    return (Path(folderPath) / ".git").exists()
+    folder = Path(folderPath).expanduser().resolve()
+    return (folder / ".git").exists()
+
+
+def applyGitIgnore(folderPath):
+    folder = Path(folderPath).expanduser().resolve()
+
+    if not isGitRepository(folder):
+        print("Error: Folder is not a Git repository.")
+        return False
+
+    # Remove tracked files from the Git index without deleting them.
+    result = subprocess.run(
+        ["git", "rm", "-r", "--cached", "--ignore-unmatch", "."],
+        cwd=folder,
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        print("Error updating Git index:", result.stderr)
+        return False
+
+    # Re-add files while respecting .gitignore.
+    result = subprocess.run(
+        ["git", "add", "."],
+        cwd=folder,
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        print("Error adding files:", result.stderr)
+        return False
+
+    return True
 
 
 def trackFolder(folderPath):
-    folder = Path(folderPath).expanduser()
+    folder = Path(folderPath).expanduser().resolve()
 
     if not folder.exists():
         print("Error: Folder does not exist.")
@@ -42,51 +77,49 @@ def trackFolder(folderPath):
         print("Folder is already being tracked.")
         return True
 
-    # Initialize Git repository
-    if not executeCommand(
-        ["git", "init", str(folder)]
-    ):
+    if not executeCommand(["git", "init", str(folder)]):
         return False
 
-    # Add existing files
-    if not executeCommand(
-        ["git", "add", "."],
+    if not executeCommand(["git", "add", "."], cwd=folder):
+        return False
+
+    return executeCommand(
+        [
+            "git",
+            "-c", "user.name=VersionVault",
+            "-c", "user.email=versionvault@localhost",
+            "commit",
+            "--allow-empty",
+            "-m", "Initial Version"
+        ],
         cwd=folder
-    ):
-        return False
+    )
 
-    # Create initial version
-    if not executeCommand(
-        ["git", "commit", "--allow-empty", "-m", "Initial Version"],
-        cwd=folder
-    ):
-        return False
-
-    return True
 
 def saveFolderVersion(folderPath, message="New folder version"):
-    folder = Path(folderPath).expanduser()
+    folder = Path(folderPath).expanduser().resolve()
 
     if not isGitRepository(folder):
         print("Error: Folder is not a VersionVault repository.")
         return False
 
-    # Stage all changes inside the folder
-    if not executeCommand(
-        ["git", "add", "."],
-        cwd=folder
-    ):
+    if not applyGitIgnore(folder):
         return False
 
-    # Create the commit
     return executeCommand(
-        ["git", "commit", "-m", message],
+        [
+            "git",
+            "-c", "user.name=VersionVault",
+            "-c", "user.email=versionvault@localhost",
+            "commit",
+            "-m", message
+        ],
         cwd=folder
     )
 
 
 def getFolderHistory(folderPath):
-    folder = Path(folderPath).expanduser()
+    folder = Path(folderPath).expanduser().resolve()
 
     if not isGitRepository(folder):
         print("Error: Folder is not a Git repository.")
@@ -104,26 +137,9 @@ def getFolderHistory(folderPath):
 
     return result.stdout.splitlines()
 
-# def restoreFolderVersion(folderPath, commitHash):
-#     folder = Path(folderPath).expanduser()
-
-#     if not isGitRepository(folder):
-#         print("Error: Folder is not a Git repository.")
-#         return False
-
-#     if not executeCommand(
-#         ["git", "reset", "--hard", commitHash],
-#         cwd=folder
-#     ):
-#         return False
-
-#     return executeCommand(
-#         ["git", "clean", "-fd"],
-#         cwd=folder
-#     )
 
 def restoreFolderVersion(folderPath, commitHash):
-    folder = Path(folderPath).expanduser()
+    folder = Path(folderPath).expanduser().resolve()
 
     if not isGitRepository(folder):
         print("Error: Folder is not a Git repository.")
@@ -136,7 +152,7 @@ def restoreFolderVersion(folderPath, commitHash):
 
 
 def hasFolderChanged(folderPath):
-    folder = Path(folderPath).expanduser()
+    folder = Path(folderPath).expanduser().resolve()
 
     if not isGitRepository(folder):
         print("Error: Folder is not a Git repository.")
