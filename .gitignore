@@ -19,7 +19,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -466,3 +465,22 @@ TSWLatexianTemp*
 # Uncomment the next line to have this generated file ignored.
 #*Notes.bib
  
+ # macOS
+.DS_Store
+
+# Xcode
+DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# Xcode build products
+*.app
+*.appex
+
+# VersionVault local database
+.versionvault/
+*.db
+
+# Temporary files
+*.tmp
+.vscode/

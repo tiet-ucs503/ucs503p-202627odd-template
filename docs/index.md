@@ -1,40 +1,81 @@
-﻿![Tiet Logo](assets/tiet-logo.svg){ .tiet-logo }
+﻿![TIET Logo](assets/tiet-logo.svg)
 
 **UCS503: Software Engineering (Project)**  
 **TIET Patiala**
 
-# The Sum Function in C++
+# Version Vault
 
-**Author(s)**:
+**Author(s):**
 
-`(RGB)` Raghav B. Venkataramaiyer `<bv.raghav -at-
-thapar -dot- edu>`
+Tanay Singh  
+Add team members here
 
-This project creates a sum function in c++ as a sample
-to illustrate how to compile a shared library and
-distribute it for use along with the binary.
+## Overview
 
-## Installation
+Version Vault is a file-level versioning system built using Git's internal storage and reference mechanisms.
 
-``` shell
-make -C code
-```
+The system allows users to track individual files, save multiple versions, view version history, and restore previous versions.
 
-This will create create a folder `dist` in `code`
-folder, with following contents
+Each tracked file maintains an independent version history.
 
-```
-dist
- +-lib
- |  \-libbvr_math.so
- +-bin
-    \-run
-```
+## Features
 
-## Usage
+- Track individual files
+- Save multiple versions of a file
+- View version history
+- Restore previous versions
+- Maintain independent histories for multiple files
+- Support empty files
+- Handle invalid or untracked file IDs gracefully
 
-``` shell
-cd code
-export LD_LIBRARY_PATH=dist/lib
-./dist/bin/run
-```
+## How It Works
+
+Each tracked file is associated with a unique file ID.
+
+```text
+File
+ │
+ ▼
+File ID
+ │
+ ▼
+refs/heads/file-<fileId>
+ │
+ ▼
+Independent version history
+````
+
+Versions are stored using Git's internal object model. File contents are stored as blobs, while tree and commit objects represent versions and their history.
+
+The implementation uses Git plumbing mechanisms rather than normal working-tree operations.
+
+## Current Development
+
+The current implementation focuses on the core file-level versioning engine.
+
+The main operations currently supported are:
+
+* Repository initialization
+* File tracking
+* Saving new versions
+* Retrieving version history
+* Restoring previous versions
+
+Folder-level tracking and more advanced file rename or move handling may be explored as future extensions.
+
+## Testing
+
+The project includes test cases for:
+
+* Repository initialization
+* Tracking files
+* Saving multiple versions
+* Version history retrieval
+* Restoring previous versions
+* Independent histories for different files
+* Tracking empty files
+* Handling invalid or untracked file IDs
+
+## Development Status
+
+Version Vault is currently under active development as part of the UCS503 Software Engineering Project.
