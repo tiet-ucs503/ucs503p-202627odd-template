@@ -1,4 +1,4 @@
-# Week 4 Progress Report — AgriConnect — Manbhav Kumar Terry
+# Weeks 4–6 Progress Report — AgriConnect — Manbhav Kumar Terry
 
 | | |
 |---|---|
@@ -7,14 +7,14 @@
 | **Teammate** | Kabir Manchanda (1024030415) |
 | **Project** | AgriConnect |
 | **Milestone** | Capstone UI Public Marketplace, Trade Widgets & 13-Locale Parity |
-| **Period** | Mon 5 Oct → Mon 12 Oct 2026 |
-| **Hours** | ~16 |
+| **Period** | Mon 5 Oct → Sun 25 Oct 2026 |
+| **Hours** | ~22 |
 
 ---
 
-## 1. Work Completed This Week
+## 1. Work Completed (Weeks 4–6)
 
-During Week 4, following the Grounded Kisan prototype close-out, I owned the customer-facing public surfaces and interactive trade widgets for AgriConnect's farm-authentic UI refresh. In addition, I resolved a major performance bottleneck where live mandi price queries and commodity lookups froze user interactions due to upstream government API timeouts. The goal was to elevate the public marketplace, listing discovery, mandi price intelligence, and in-trade widgets while strictly preserving all existing routes, API endpoints, and features.
+During Weeks 4–6, following the Grounded Kisan prototype close-out, I owned the customer-facing public surfaces and interactive trade widgets for AgriConnect's farm-authentic UI refresh. In addition, I resolved a major performance bottleneck where live mandi price queries and commodity lookups froze user interactions due to upstream government API timeouts. The goal was to elevate the public marketplace, listing discovery, mandi price intelligence, and in-trade widgets while strictly preserving all existing routes, API endpoints, and features.
 
 My primary focus areas for this week's sprint were:
 

@@ -1,4 +1,4 @@
-# Weeks 5–6 Progress Report — AgriConnect — Kabir Manchanda
+# Week 7 Progress Report — AgriConnect — Kabir Manchanda
 
 | | |
 |---|---|
@@ -7,14 +7,14 @@
 | **Teammate** | Manbhav Kumar Terry (1024030427) |
 | **Project** | AgriConnect |
 | **Milestone** | Capstone Bidding & Dynamic Price Discovery Architecture |
-| **Period** | Mon 12 Oct → Mon 26 Oct 2026 |
+| **Period** | Mon 26 Oct → Mon 2 Nov 2026 |
 | **Hours** | ~28 |
 
 ---
 
-## 1. Work Completed This Sprint (Weeks 5–6)
+## 1. Work Completed (Week 7)
 
-During Weeks 5–6, following the completion and faculty review of our farm-authentic UI refresh, we designed and implemented a core commercial milestone for AgriConnect: **B2B Bidding, Counter-Offer Negotiation & Dynamic Price Discovery**.
+During Week 7, following the completion and faculty review of our farm-authentic UI refresh, we designed and implemented a core commercial milestone for AgriConnect: **B2B Bidding, Counter-Offer Negotiation & Dynamic Price Discovery**.
 
 In traditional e-commerce, fixed-price retail checkout suffices. However, in wholesale agricultural commerce, fixed pricing breaks down due to lot quality variance, volatile daily APMC arrivals, and bulk commercial orders (e.g., 50–100 quintals). As the backend and database architecture lead, I took primary ownership and the higher weightage of this milestone, designing the end-to-end data model, PostgreSQL DDL migrations, Zod schema validation, transaction-safe inventory conversion, anti-disintermediation security, and automated database test seeding.
 

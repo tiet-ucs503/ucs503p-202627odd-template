@@ -6,8 +6,8 @@ Monday → Monday (IST). **Newest week on top.** On Monday close, move the finis
 |---|---|
 | **Team** | Kabir Manchanda, Manbhav Kumar Terry |
 | **Course** | UCS503P |
-| **Current week** | **Weeks 5–6** — Mon 12 Oct → Mon 26 Oct 2026 |
-| **Updated** | Wed 14 Oct 2026 |
+| **Current week** | **Week 7** — Mon 26 Oct → Mon 2 Nov 2026 |
+| **Updated** | Sun 1 Nov 2026 |
 | **Status** | **Green** — Capstone B2B bidding, counter-offer negotiation & dynamic price discovery shipped; 13-locale parity; 157 backend / 128 frontend tests passing |
 
 ## Project phase snapshot
@@ -20,7 +20,7 @@ _Phased growth model (PRD §5): **Lab → Prototype → Capstone** — not relea
 | **Prototype** | Real-time, production-shaped system | Complete (Week 2–3) | Chat, calls, mandi, logistics, escrow payments + webhook, 13-locale UI, contact guard — see board |
 | **Capstone** | AI advisory & B2B dynamic negotiation | In progress | Grounded Kisan RAG + UI refresh + B2B bidding & counter-offer engine |
 
-## Board — weeks 5–6
+## Board — week 7
 
 **Focus:** Capstone B2B bidding, counter-offer negotiation, Mandi benchmark fairness, atomic order conversion, and 13-locale parity; then faculty demo walkthrough.
 
@@ -54,7 +54,7 @@ _Phased growth model (PRD §5): **Lab → Prototype → Capstone** — not relea
 
 ## Archive
 
-### Week 4 — Mon 5 Oct → Mon 12 Oct 2026
+### Weeks 4–6 — Mon 5 Oct → Sun 25 Oct 2026
 
 | | |
 |---|---|

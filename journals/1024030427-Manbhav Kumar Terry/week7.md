@@ -1,4 +1,4 @@
-# Weeks 5–6 Progress Report — AgriConnect — Manbhav Kumar Terry
+# Week 7 Progress Report — AgriConnect — Manbhav Kumar Terry
 
 | | |
 |---|---|
@@ -7,14 +7,14 @@
 | **Teammate** | Kabir Manchanda (1024030415) |
 | **Project** | AgriConnect |
 | **Milestone** | Capstone Bidding UI, Mandi Benchmark Chips & 13-Locale Negotiation Parity |
-| **Period** | Mon 12 Oct → Mon 26 Oct 2026 |
+| **Period** | Mon 26 Oct → Mon 2 Nov 2026 |
 | **Hours** | ~20 |
 
 ---
 
-## 1. Work Completed This Sprint (Weeks 5–6)
+## 1. Work Completed (Week 7)
 
-During Weeks 5–6, following our farm-authentic UI refresh, my teammate Kabir and I implemented the **B2B Bidding & Counter-Offer Negotiation** module. While Kabir spearheaded the core backend engine, PostgreSQL schema migrations, and transaction-safe order conversion, I owned the frontend implementation: user interfaces, live price discovery calculations, Mandi benchmark fairness indicators, strict post-login role gating, and full 13-locale localization parity.
+During Week 7, following our farm-authentic UI refresh, my teammate Kabir and I implemented the **B2B Bidding & Counter-Offer Negotiation** module. While Kabir spearheaded the core backend engine, PostgreSQL schema migrations, and transaction-safe order conversion, I owned the frontend implementation: user interfaces, live price discovery calculations, Mandi benchmark fairness indicators, strict post-login role gating, and full 13-locale localization parity.
 
 My primary focus areas for this milestone sprint were:
 

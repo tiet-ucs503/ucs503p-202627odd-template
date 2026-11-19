@@ -1,4 +1,4 @@
-# Week 4 Progress Report — AgriConnect — Kabir Manchanda
+# Weeks 4–6 Progress Report — AgriConnect — Kabir Manchanda
 
 | | |
 |---|---|
@@ -7,14 +7,14 @@
 | **Teammate** | Manbhav Kumar Terry (1024030427) |
 | **Project** | AgriConnect |
 | **Milestone** | Capstone UI Authentic Farm Refresh & Chrome Systems |
-| **Period** | Mon 5 Oct → Mon 12 Oct 2026 |
-| **Hours** | ~16 |
+| **Period** | Mon 5 Oct → Sun 25 Oct 2026 |
+| **Hours** | ~24 |
 
 ---
 
-## 1. Work Completed This Week
+## 1. Work Completed (Weeks 4–6)
 
-During Week 4, following our Capstone Grounded Kisan milestone, we executed a comprehensive, farm-authentic UI/UX refresh across AgriConnect. The primary objective was making AgriConnect look and feel like a modern, dedicated agricultural operating platform during faculty walkthroughs, rather than stacked generic cards or a boilerplate SaaS theme.
+During Weeks 4–6, following our Capstone Grounded Kisan milestone, we executed a comprehensive, farm-authentic UI/UX refresh across AgriConnect. The primary objective was making AgriConnect look and feel like a modern, dedicated agricultural operating platform during faculty walkthroughs, rather than stacked generic cards or a boilerplate SaaS theme.
 
 All routes, API contracts, database schemas, RBAC rules, and user interaction flows were preserved 100% without breaking any existing features.
 
