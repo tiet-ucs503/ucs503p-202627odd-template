@@ -8,7 +8,9 @@ what the student actually answered.
 Built for UCS503P Software Engineering (2026-27 ODD), Thapar Institute of
 Engineering and Technology, Patiala.
 
-![A mission against Green Goblin, mid-combo](docs/screenshots/mission-combo.jpg)
+![A full mission against Venom: camera choice, story questions, a web strike, a combo, a counter-attack and the win](docs/screenshots/gameplay.gif)
+
+*A whole mission against Venom, recorded from the running app and shown at 1.5× speed: the camera choice, story questions, Spider-Man's web strikes, a combo, the villain's counter-attack, and the win.*
 
 ## Contents
 
@@ -63,6 +65,7 @@ missions and keeps a per-topic estimate of what the student knows.
 | **Parent report:** headline figures and practice over time | **Parent report:** mastery by topic, rule-based observations, badges |
 
 The demo screenshots show seeded sample data, labelled as such on every screen.
+The recording at the top and the mission screenshots were made with a local test account.
 
 ## Features
 
