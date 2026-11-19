@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { Badge, Button, Card, EmptyState, Spinner } from '@/components/ui';
+import { Alert, Badge, Button, Card, EmptyState, Spinner } from '@/components/ui';
 import { useLocale } from '@/features/i18n/locale-context';
 import { acceptBid, listListingBids, listMyBids, withdrawBid } from '@/lib/api/bids';
 import { getErrorMessage } from '@/lib/api/errors';
@@ -107,12 +107,9 @@ export function BuyerBidsList({ listingId, compact, onBidChanged }: BuyerBidsLis
   if (loading) return <Spinner />;
   if (loadError && !bids) {
     return (
-      <div className="rounded-xl border border-harvest/30 bg-harvest/15 p-4 text-soil">
+      <Alert tone="warn">
         <p className="text-sm font-semibold">{loadError}</p>
-        <Button variant="secondary" onClick={() => void loadBids()} className="mt-2 text-xs">
-          {t('common.retry')}
-        </Button>
-      </div>
+      </Alert>
     );
   }
 
@@ -231,7 +228,7 @@ export function BuyerBidsList({ listingId, compact, onBidChanged }: BuyerBidsLis
             type="button"
             onClick={() => setActionError('')}
             className="rounded p-1 font-bold text-soil/70 hover:text-soil"
-            aria-label={t('common.close')}
+            aria-label={t('weather.closeDetails')}
           >
             ✕
           </button>
