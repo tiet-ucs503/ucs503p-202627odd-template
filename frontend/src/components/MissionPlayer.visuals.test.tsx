@@ -71,9 +71,13 @@ describe('a strike by Spider-Man', () => {
     await screen.findByText(/^Puzzle \d+$/);
     fireEvent.click(option());
     await waitFor(() => expect(cuesOnScreen(view).length).toBeGreaterThan(0));
-    await waitFor(() => expect(cuesOnScreen(view)).toHaveLength(0), { timeout: 2000 });
+    // Both the effects in the lane and the portrait's own reaction must be gone within the time limit.
+    // They end a few milliseconds apart, so each is waited for rather than checked at one instant.
     const frame = view.container.querySelector('[data-portrait="goblin"] [data-portrait-frame]')!;
-    expect(frame.className).not.toContain('fx-react');
+    await waitFor(() => {
+      expect(cuesOnScreen(view)).toHaveLength(0);
+      expect(frame.className).not.toContain('fx-react');
+    }, { timeout: 2000 });
   });
 });
 
