@@ -423,6 +423,7 @@ export async function counterBid(farmerId: string, bidId: string, input: Counter
 export async function withdrawBid(buyerId: string, bidId: string) {
   const bid = await getPrismaClient().bid.findUnique({
     where: { id: bidId },
+    include: bidInclude,
   });
 
   if (!bid) {
@@ -431,6 +432,11 @@ export async function withdrawBid(buyerId: string, bidId: string) {
 
   if (bid.buyerId !== buyerId) {
     throw new AppError(403, 'FORBIDDEN', 'You did not place this bid');
+  }
+
+  // Idempotent: If already withdrawn, succeed cleanly
+  if (bid.status === 'withdrawn') {
+    return serializeBid(bid);
   }
 
   if (bid.status !== 'pending' && bid.status !== 'countered') {

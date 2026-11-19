@@ -10,6 +10,7 @@ import { listListings } from '@/lib/api/listings';
 import { listOrders } from '@/lib/api/orders';
 import { getErrorMessage } from '@/lib/api/errors';
 import { formatMoney } from '@/lib/format';
+import { FarmerBidsList } from '@/features/bids/FarmerBidsList';
 import type { FarmerReport } from '@/lib/api/types';
 
 function FarmerHome() {
@@ -61,21 +62,28 @@ function FarmerHome() {
             </h1>
             <p className="text-sm text-ink/75 sm:text-base">{t('dashboard.farmerSubtitle')}</p>
           </div>
-          <Link href="/farmer/listings/new">
-            <Button className="gap-2 shadow-sm">
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="2.5"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              {t('dashboard.addProduce')}
-            </Button>
-          </Link>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link href="/farmer/listings/new">
+              <Button className="gap-2 shadow-sm font-bold">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2.5"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                {t('dashboard.addProduce')}
+              </Button>
+            </Link>
+            <Link href="/farmer/bids">
+              <Button variant="secondary" className="font-semibold">
+                {t('bid.farmerIncomingTitle')}
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -183,6 +191,10 @@ function FarmerHome() {
             <span>{t('dashboard.pendingOrders', { count: openOrders })}</span>
           </div>
         </Card>
+      </div>
+
+      <div className="space-y-4">
+        <FarmerBidsList />
       </div>
 
       {totalListings === 0 ? (

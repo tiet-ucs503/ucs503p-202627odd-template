@@ -76,6 +76,9 @@ function BuyerHome() {
                 {t('dashboard.browseProduce')}
               </Button>
             </Link>
+            <Link href="/buyer/bids">
+              <Button variant="secondary">{t('bid.buyerSectionTitle')}</Button>
+            </Link>
             <Link href="/buyer/alerts">
               <Button variant="secondary">{t('dashboard.produceAlerts')}</Button>
             </Link>

@@ -8,6 +8,7 @@ import { Button, EmptyState, Spinner, Alert } from '@/components/ui';
 import { useLocale } from '@/features/i18n/locale-context';
 import { listListings } from '@/lib/api/listings';
 import { getErrorMessage } from '@/lib/api/errors';
+import { FarmerBidsList } from '@/features/bids/FarmerBidsList';
 import type { Listing } from '@/lib/api/types';
 
 function FarmerListings() {
@@ -46,6 +47,10 @@ function FarmerListings() {
           ))}
         </div>
       )}
+
+      <div className="border-t border-forest/10 pt-8 space-y-4">
+        <FarmerBidsList />
+      </div>
     </div>
   );
 }
