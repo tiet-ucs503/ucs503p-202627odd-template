@@ -35,6 +35,8 @@ class User(Base):
     link_code = Column(String, unique=True, index=True, nullable=True)
     # Demo accounts hold synthetic data and can never be linked with real accounts.
     is_demo = Column(Boolean, nullable=False, default=False)
+    # Set once the account has signed in with Google: Google's permanent account id.
+    google_sub = Column(String, unique=True, index=True, nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
 

@@ -167,7 +167,7 @@ All figures are counted from the code and test runs on 19 November 2026.
 | Computer vision | MediaPipe Tasks Vision (FaceLandmarker) | The optional camera estimate, run entirely in the browser via WebAssembly |
 | Backend | Python, FastAPI, Pydantic | The API, request validation (unknown fields rejected) |
 | Database | SQLAlchemy, SQLite | Accounts, missions, answers, mastery |
-| Security | bcrypt, JWT (python-jose) | Password hashing, sign-in tokens, role checks |
+| Security | bcrypt, JWT (python-jose), Google Identity Services + google-auth | Password hashing, sign-in tokens, role checks, optional "Sign in with Google" |
 | Optional AI | Groq API (`openai/gpt-oss-120b`) | Rewording a hint in character; nothing else |
 | Testing | pytest, Vitest, React Testing Library, Playwright | Backend, frontend and real-browser camera checks |
 | CI | GitHub Actions | Tests, typecheck, lint and build on every push |
@@ -300,7 +300,30 @@ Open `http://localhost:5173`.
 |---|---|
 | `DEMO_MODE=true` | Shows one-click demo buttons on the sign-in dialog. Run `python seed.py --demo` once first to create the three demo accounts with sample data. Off by default. |
 | `GROQ_API_KEY=...` | Lets a language model reword hints in character. Without it the built-in hints are used. |
+| `GOOGLE_CLIENT_ID=...` | Turns on "Sign in with Google". See below. Without it the button is hidden and email and password work as before. |
 | `CORS_ORIGINS=...` | Comma-separated frontend addresses allowed to call the API. |
+
+### Optional: "Sign in with Google"
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/), create a
+   project (any name), and open **APIs & Services → OAuth consent screen**.
+   Choose **External**, fill in the app name and your email, and save. While
+   the app is in "Testing", add the Google accounts that may sign in under
+   **Test users**.
+2. Open **APIs & Services → Credentials → Create credentials → OAuth client
+   ID**. Application type: **Web application**. Under **Authorised JavaScript
+   origins** add `http://localhost:5173`. No redirect URI is needed.
+3. Copy the **Client ID** (it ends in `.apps.googleusercontent.com`; it is not
+   a secret) into `backend/.env` as `GOOGLE_CLIENT_ID=...`, and restart the
+   backend. The frontend picks it up from the backend; nothing else to set.
+
+How it works: Google's own button signs the person in and gives the browser a
+signed ID token. The backend checks that token with Google's `google-auth`
+library (signature, this app's client ID, expiry, verified email) before
+trusting it. A new person gets an account with the role chosen on the sign-up
+tab; someone who already registered with the same email is linked to Google
+and keeps their password. Demo accounts can never be reached through Google.
+MathVerse never sees a Google password.
 
 ### Try it
 
@@ -338,6 +361,9 @@ npm run check:camera
 
 **What the tests cover**
 
+- Google sign-in: forged or unverified tokens refused, new accounts get the
+  chosen role, existing accounts are linked not duplicated, demo accounts and
+  other people's addresses cannot be taken over, and older databases upgrade in place.
 - Sign-in, roles, and that nobody can read another account's data by changing an
   id; demo login limits.
 - Every question type and every story at every tier, re-solved independently

@@ -70,7 +70,9 @@ Before saying work is done, run `pytest` and, for frontend changes,
    medical assessment".
 7. **Demo login** stays off by default (`DEMO_MODE=false`), returns only seeded
    `is_demo` accounts, never creates users, and demo and real accounts are never
-   linked.
+   linked. Google sign-in (`POST /auth/google`, off unless `GOOGLE_CLIENT_ID` is
+   set) must never return a demo account, must only trust tokens checked by
+   `services/google_auth.py`, and links an existing account only by a Google-verified email.
 8. **Questions are deterministic.** The generator computes each answer. A
    language model may only reword an existing verified hint; it never writes
    questions or maths, and the game must work with no `GROQ_API_KEY`. Story

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Shield, User as UserIcon, GraduationCap, Lock, Mail, UserPlus, LogIn, AlertTriangle, Play } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 import type { Role } from '@/lib/api';
 
 interface AuthModalProps {
@@ -16,7 +17,7 @@ const ROLES: { id: Role; label: string; icon: typeof UserIcon; active: string }[
 ];
 
 export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
-  const { login, register, demoLogin, demoEnabled } = useAuth();
+  const { login, register, demoLogin, demoEnabled, googleClientId, googleLogin } = useAuth();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [role, setRole] = useState<Role>('student');
@@ -154,6 +155,24 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             )}
           </button>
         </form>
+
+        {/* Shown only when the server has a Google client ID set. */}
+        {googleClientId && (
+          <div className="relative z-10 mt-5" data-google-signin>
+            <div className="flex items-center gap-3 mb-4 text-[11px] text-gray-500 uppercase tracking-wider">
+              <span className="flex-1 h-px bg-white/10" /> or <span className="flex-1 h-px bg-white/10" />
+            </div>
+            <GoogleSignInButton
+              clientId={googleClientId}
+              text={mode === 'login' ? 'signin_with' : 'continue_with'}
+              // Signing up: the role picked above. Signing in: none, so an existing account is used.
+              onCredential={(credential) => run(() => googleLogin(credential, mode === 'register' ? role : undefined))}
+            />
+            {mode === 'register' && (
+              <p className="text-[10px] text-gray-500 text-center mt-2">Creates a {role} account with your Google name and email.</p>
+            )}
+          </div>
+        )}
 
         <div className="relative z-10 text-center mt-5 text-xs text-gray-400">
           {mode === 'login' ? 'Need an account? ' : 'Already registered? '}

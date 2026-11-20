@@ -24,6 +24,11 @@ class LoginRequest(_Request):
     password: str = Field(min_length=1, max_length=72)
 
 
+class GoogleLoginRequest(_Request):
+    credential: str = Field(min_length=20, max_length=4096)  # the ID token Google gave the browser
+    role: Optional[Role] = None  # needed only to create a new account
+
+
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

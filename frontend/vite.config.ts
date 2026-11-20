@@ -14,7 +14,8 @@ import { fileURLToPath, URL } from 'node:url';
  * not data connections, so they are not affected.)
  */
 function onlyTalkToOurServer(apiUrl: string, dev: boolean): Plugin {
-  const allowed = ["'self'", new URL(apiUrl).origin, 'blob:', 'data:'];
+  // accounts.google.com is Google's sign-in service, used only when "Sign in with Google" is set up.
+  const allowed = ["'self'", new URL(apiUrl).origin, 'https://accounts.google.com', 'blob:', 'data:'];
   if (dev) allowed.push('ws:'); // the dev server's live reload
   return {
     name: 'only-talk-to-our-server',

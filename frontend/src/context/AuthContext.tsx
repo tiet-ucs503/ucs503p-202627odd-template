@@ -10,9 +10,13 @@ interface AuthContextType {
   loading: boolean;
   /** True only when the server has DEMO_MODE switched on. */
   demoEnabled: boolean;
+  /** The server's Google client ID, or null when Google sign-in is not set up. */
+  googleClientId: string | null;
   login: (email: string, password: string) => Promise<User>;
   register: (name: string, email: string, password: string, role: Role) => Promise<User>;
   demoLogin: (role: Role) => Promise<User>;
+  /** role is needed only to create a new account. */
+  googleLogin: (credential: string, role?: Role) => Promise<User>;
   logout: () => void;
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
@@ -37,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(() => readSavedToken() !== null);
   const [demoEnabled, setDemoEnabled] = useState(false);
+  const [googleClientId, setGoogleClientId] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const logout = useCallback(() => {
@@ -68,9 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // On page load: restore a saved login, and ask whether demo mode is on.
   useEffect(() => {
-    api<{ demo_mode: boolean }>('/health')
-      .then((h) => setDemoEnabled(h.demo_mode))
-      .catch(() => setDemoEnabled(false));
+    api<{ demo_mode: boolean; google_client_id?: string | null }>('/health')
+      .then((h) => {
+        setDemoEnabled(h.demo_mode);
+        setGoogleClientId(h.google_client_id || null);
+      })
+      .catch(() => {
+        setDemoEnabled(false);
+        setGoogleClientId(null);
+      });
 
     const saved = readSavedToken();
     if (!saved) return;
@@ -90,6 +101,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const demoLogin = async (role: Role) =>
     signIn(await api<TokenResponse>(`/auth/demo/${role}`, { method: 'POST' }));
 
+  const googleLogin = async (credential: string, role?: Role) =>
+    signIn(await api<TokenResponse>('/auth/google', { body: role ? { credential, role } : { credential } }));
+
   return (
     <AuthContext.Provider
       value={{
@@ -97,9 +111,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         loading,
         demoEnabled,
+        googleClientId,
         login,
         register,
         demoLogin,
+        googleLogin,
         logout,
         isAuthModalOpen,
         openAuthModal: () => setIsAuthModalOpen(true),

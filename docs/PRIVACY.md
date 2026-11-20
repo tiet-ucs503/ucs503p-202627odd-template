@@ -96,6 +96,7 @@ screen, and cannot be linked to real accounts in either direction.
 |---|---|---|
 | Google Fonts | When the site loads | A normal request for font files. No account or student data. |
 | Groq (only if the operator has set an API key) | When a student asks for a hint | The text of the maths question and the built-in hint. No name, email or other personal data. |
+| Google sign-in (only if the operator has set a Google client ID, and only for people who click it) | When someone chooses "Sign in with Google" | The person signs in on Google's own button. Google tells MathVerse their name, email and a permanent account id. MathVerse stores the name, email and that id; it never sees the Google password. Google learns that the person signed in to MathVerse. |
 
 **Blocked: the face-tracking library's usage log.** MediaPipe, the library that
 finds the face, tries to post a small usage log (about 140 bytes: its version

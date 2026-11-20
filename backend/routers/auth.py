@@ -9,6 +9,7 @@ from config import settings
 from database import get_db
 from deps import current_user
 from security import create_access_token, hash_password, verify_password
+from services.google_auth import verify_google_credential
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -56,6 +57,59 @@ def login(payload: schemas.LoginRequest, db: Session = Depends(get_db)):
     # cannot be used to discover which emails are registered.
     if user is None or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Incorrect email or password.")
+    return _token_response(user)
+
+
+@router.post("/google", response_model=schemas.TokenResponse)
+def google_login(payload: schemas.GoogleLoginRequest, db: Session = Depends(get_db)):
+    """
+    "Sign in with Google". The credential is checked with Google's library
+    (services/google_auth.py). Then, in this order:
+
+    1. An account already signed in with this Google account: sign it in.
+    2. An account with the same email: link it to Google and sign it in. Google
+       has confirmed the person owns that address; their password keeps working.
+    3. Otherwise, create a new account with the role chosen on the sign-up tab.
+
+    Demo accounts can never be reached this way.
+    """
+    if not settings.google_client_id:
+        raise HTTPException(status_code=404, detail="Google sign-in is not set up on this server.")
+    identity = verify_google_credential(payload.credential)
+    if identity is None:
+        raise HTTPException(status_code=401, detail="Google sign-in could not be verified. Please try again.")
+
+    user = db.query(models.User).filter_by(google_sub=identity["sub"]).first()
+    if user is None:
+        user = db.query(models.User).filter_by(email=identity["email"]).first()
+        if user is not None:
+            if user.is_demo:
+                raise HTTPException(status_code=403, detail="Demo accounts cannot be used with Google sign-in.")
+            if user.google_sub is not None:  # the email belongs to an account linked to a different Google account
+                raise HTTPException(status_code=409, detail="This email is already linked to another Google account.")
+            user.google_sub = identity["sub"]
+            db.commit()
+            db.refresh(user)
+    if user is None:
+        if payload.role is None:
+            raise HTTPException(
+                status_code=404,
+                detail="No MathVerse account uses this Google address yet. Choose Create account, pick your role, "
+                       "then continue with Google.",
+            )
+        user = models.User(
+            name=identity["name"][:80],
+            email=identity["email"],
+            # No password is set for a Google account. This random one is never shown,
+            # so the account can be reached only through Google.
+            password_hash=hash_password(secrets.token_urlsafe(32)),
+            role=payload.role,
+            link_code=new_link_code(db) if payload.role == "student" else None,
+            google_sub=identity["sub"],
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
     return _token_response(user)
 
 

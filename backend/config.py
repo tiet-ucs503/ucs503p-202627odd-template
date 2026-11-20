@@ -40,6 +40,10 @@ class Settings:
             if o.strip()
         ]
         self.groq_api_key: str = os.getenv("GROQ_API_KEY", "").strip()
+
+        # Optional. "Sign in with Google" is offered only when this is set. It is
+        # the OAuth client ID from Google Cloud Console (public, not a secret).
+        self.google_client_id: str = os.getenv("GOOGLE_CLIENT_ID", "").strip()
         self.groq_model: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
 
