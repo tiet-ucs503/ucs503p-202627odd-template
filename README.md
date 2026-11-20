@@ -148,6 +148,26 @@ All figures are counted from the code and test runs on 19 November 2026.
 | Easy below / hard above | 0.40 / 0.75 |
 | Stored range / shown range | 0.01–0.99 / 5–95% |
 
+**How well the mastery model works**
+
+Evaluated on 5,000 simulated students × 20 answers (100,000 predictions): each
+model predicts every answer before seeing it. There is no real-student dataset
+yet, so this is a simulation; the second test gives the students parameters
+deliberately different from the model's. Reproduce it with
+`python tools/evaluate_mastery.py` from `backend/`.
+
+| Model | AUC | Accuracy | Brier (lower is better) | AUC, students differ from model |
+|---|---|---|---|---|
+| **Bayesian Knowledge Tracing (this project)** | **0.770** | **78.3%** | **0.151** | **0.729** |
+| Running accuracy so far | 0.744 | 74.1% | 0.182 | 0.704 |
+| Last answer only | 0.696 | 74.7% | 0.173 | 0.646 |
+| Constant (overall rate) | 0.500 | 75.3% | 0.186 | 0.500 |
+
+The mastery estimate tracks the student's true (simulated) state with AUC 0.94,
+its easy/hard choices match that state 89.6% of the time, and a student who has
+learned a topic is recognised after a median of 3 answers. The parameters are
+textbook defaults, not yet fitted to real data.
+
 **Camera estimate**
 
 | Setting | Value |
