@@ -18,6 +18,9 @@ graph LR
     Driver --> UC16["Start Live Drive Simulation"]
     Driver --> UC17["Toggle Map Layers: Signals / Timers / Places"]
     Driver --> UC18["Enable Voice Guidance"]
+    Driver --> UC23["Switch View: 2D / 3D / Street"]
+    UC23 --> UC24["<<include>> Chase / Street Camera Follows Vehicle"]
+    UC23 --> UC25["<<extend>> Open Google Street View link"]
     Dispatcher(["Ambulance Dispatcher"]) --> UC19["Dispatch Ambulance (SOS mode)"]
     UC19 --> UC20["<<include>> Force Green Corridor"]
     UC19 --> UC21["<<include>> Make Other Vehicles Yield"]
@@ -54,6 +57,7 @@ graph LR
 | Choose Mode | Driver | Drive, Walk, Cycle (speed profiles) or SOS (ambulance) |
 | Start Live Drive Simulation | Driver | Race SyncDrive vs Normal GPS at 1x-16x with pause, follow-camera and manual speed |
 | Toggle Map Layers | Driver | All layers / Signals / Timers / Places on or off |
+| Switch View | Driver | 2D map, tilted 3D map with buildings, or street-level camera; optional link to Google Street View |
 | Enable Voice Guidance | Driver | Spoken advice in a female English voice, voice selectable |
 | Dispatch Ambulance | Dispatcher | SOS mode: ambulance run with green corridor |
 | Force Green Corridor | System | Signals within 500 m ahead of the ambulance forced green |

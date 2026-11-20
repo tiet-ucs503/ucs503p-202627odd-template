@@ -1,4 +1,4 @@
-# SyncDrive — Project Context File (v0.6)
+# SyncDrive — Project Context File (v0.7)
 
 > Paste this entire file into another AI (ChatGPT, Claude, Gemini, etc.) to continue development from where we left off.
 
@@ -27,7 +27,7 @@ It also has a separate **Emergency (SOS) mode**: an ambulance gets a green corri
 - **City**: Chandigarh, India — 14 places, 25 signals, 182 directed routes
 - **Tech**: Pure HTML + CSS + JavaScript, **single file** (`code/index.html`, mirrored to root `index.html` for GitHub Pages), no build step, no server needed
 - **Map tiles**: Esri World Dark Gray Canvas — free, no API key
-- **Map library**: Leaflet.js 1.9.4 (CDN)
+- **Map libraries**: Leaflet.js 1.9.4 (2D) and MapLibre GL JS 4.7.1 (3D / Street), both from CDN
 - **Font**: Inter (Google Fonts CDN)
 - **Data**: All fake/hardcoded — signal timings, routes, distances
 - **UI rule**: plain text only, no emojis or symbol icons
@@ -94,6 +94,12 @@ After editing `code/index.html`, copy it to `index.html`.
 
 - **Normal run**: SyncDrive car vs Normal GPS car. `advise()` suggests the speed reaching the next signal on green (1.5 s margin). Auto follows the advisor; Manual uses the slider. Follow camera, optional voice, finish card.
 - **Emergency run** (mode SOS): ambulance at 70 km/h starts 20 s after the others; `updateForced()` forces signals within 500 m ahead green; `yieldSpeed()` slows vehicles within 350 m ahead of it to 6-12 km/h; others treat forced signals as red until it passes (`gOthers` vs `gAmb`). 7 background cars with gently varying speed. Finish card: ambulance time vs normal signals, red lights cleared, vehicles yielded.
+
+---
+
+## 3D map and Street view
+
+`#view-seg` (2D / 3D / Street, key `V`). 3D uses MapLibre GL with the OpenFreeMap `positron` style, fetched by us and passed as an object (the library's own style fetch was unreliable), recoloured dark in the `load` handler, plus a `fill-extrusion` building layer. The route, progress trail and ambulance corridor are GeoJSON line layers; signals, place labels, pins and vehicles are DOM markers that reuse the 2D classes (`sEl3` mirrors `sEl`, `updateSignals` writes both). `follow3D()` glues a chase camera (pitch 62, zoom 16.8) or street camera (pitch 78, zoom 18.4, own car hidden) to the lead vehicle with smoothed heading. Not following when the user drags/rotates (only events with `originalEvent`). `#gsv` opens Google Street View for the current position via a keyless URL (a real embed needs an API key).
 
 ---
 

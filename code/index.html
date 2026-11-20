@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>SyncDrive</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -587,6 +588,27 @@ body.emg .panel-title{color:var(--red)}
 #layers #tg-all{color:var(--text);font-weight:700;border-bottom:1px solid var(--divider);margin-bottom:2px}
 #map.hide-places .pl-wrap{display:none}
 #map.zoom-far .sg:not(.ev){width:12px;height:12px;margin:6px;border-width:1px;font-size:0}
+#map3d{display:none;position:absolute;inset:0;background:#1c1c1e}
+#viewbar{position:absolute;top:12px;left:54px;z-index:500;display:flex;align-items:center;gap:8px}
+#viewbar .seg{background:rgba(28,28,30,.9);backdrop-filter:blur(16px)}
+.vbtn{background:rgba(28,28,30,.9);backdrop-filter:blur(16px);border:1px solid var(--border2);color:var(--sub);border-radius:16px;
+  padding:6px 12px;font-size:.7rem;font-weight:600;text-decoration:none;white-space:nowrap}
+.vbtn:hover{color:var(--accent);border-color:var(--accent)}
+#map3d.hide-sig .sg-wrap{display:none}
+#map3d.hide-timer .sg:not(.ev){font-size:0}
+#map3d.hide-places .pl-wrap{display:none}
+#map3d.zoom-far .sg:not(.ev){width:12px;height:12px;margin:6px;border-width:1px;font-size:0}
+.maplibregl-popup-content{background:rgba(44,44,46,.97);color:var(--text);border-radius:12px;border:1px solid var(--border2);font-family:'Inter',sans-serif;font-size:.8rem;padding:12px 14px}
+.maplibregl-popup-tip{border-top-color:rgba(44,44,46,.97)!important;border-bottom-color:rgba(44,44,46,.97)!important}
+.maplibregl-ctrl-group{background:rgba(28,28,30,.9);border:1px solid var(--border2);border-radius:10px;box-shadow:none}
+.maplibregl-ctrl-group button+button{border-top:1px solid var(--border2)}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon{filter:invert(1)}
+.maplibregl-ctrl-attrib{background:rgba(0,0,0,.45)!important;color:var(--muted)!important;font-size:9px}
+.maplibregl-ctrl-attrib a{color:var(--muted)!important}
+@media (max-width:760px){
+  .sim-chip{left:auto;right:10px;transform:none}
+  #viewbar .vbtn{display:none}
+}
 </style>
 </head>
 <body>
@@ -798,7 +820,7 @@ body.emg .panel-title{color:var(--red)}
         <div class="recents" id="recents"></div>
         <div class="kbd-hint">
           <kbd>Enter</kbd> sync · <kbd>S</kbd> swap · <kbd>Space</kbd> play/pause<br/>
-          <kbd>E</kbd> emergency mode · <kbd>L</kbd>/<kbd>T</kbd> lights/timers · <kbd>+</kbd><kbd>−</kbd> sim speed · <kbd>Esc</kbd> stop drive
+          <kbd>V</kbd> 2D/3D/Street · <kbd>E</kbd> emergency mode · <kbd>L</kbd>/<kbd>T</kbd> lights/timers · <kbd>+</kbd><kbd>−</kbd> sim speed · <kbd>Esc</kbd> stop drive
         </div>
       </div>
     </div>
@@ -842,6 +864,14 @@ body.emg .panel-title{color:var(--red)}
 <!-- ══ MAP ═══════════════════════════════════════════════ -->
 <div class="map-wrap">
   <div id="map"></div>
+  <div id="map3d"></div>
+
+  <div id="viewbar">
+    <div class="seg" id="view-seg">
+      <button data-v="2d" class="active">2D</button><button data-v="3d">3D</button><button data-v="street">Street</button>
+    </div>
+    <a id="gsv" class="vbtn" target="_blank" rel="noopener" href="#" title="Open this spot in Google Street View (new tab)">Google Street View</a>
+  </div>
 
   <div id="emg-banner"></div>
   <div class="sim-chip" id="sim-chip"><i></i><span id="sim-time">--:--:--</span><small id="sim-tag">LIVE</small></div>
@@ -917,6 +947,7 @@ body.emg .panel-title{color:var(--red)}
 <div id="toast"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════
 //  DATA — Chandigarh (extended: 8 places, 16 signals)
@@ -1362,7 +1393,7 @@ Object.entries(PLACES).forEach(([id,p])=>{
 });
 
 // Signals — live markers showing green/red + seconds left
-const smk = {}, sEl = {}, sCache = {};
+const smk = {}, sEl = {}, sEl3 = {}, sCache = {};
 SIGNALS.forEach(s=>{
   smk[s.id] = L.marker([s.lat,s.lng],{
     icon:L.divIcon({className:'sg-wrap',html:`<div class="sg" id="sg-${s.id}"></div>`,iconSize:[24,24],iconAnchor:[12,12]}),
@@ -1396,6 +1427,7 @@ function updateSignals(t){
     sCache[s.id]=key;
     const el=sEl[s.id];
     el.className=cls; el.textContent=forced?'EV':f;
+    const e3=sEl3[s.id]; if(e3){ e3.className=cls; e3.textContent=forced?'EV':f; }
     if(smk[s.id].isTooltipOpen()) smk[s.id].setTooltipContent(sigTip(s,t));
   });
 }
@@ -1482,7 +1514,7 @@ $('q').addEventListener('input',e=>renderPlaces(e.target.value));
 
 function setRoute(o,d){ selO.value=o; selD.value=d; }
 function pickPlace(id,which){
-  map.closePopup();
+  map.closePopup(); document.querySelectorAll('.maplibregl-popup').forEach(p=>p.remove());
   (which==='from'?selO:selD).value=id;
   switchView('dir');
   showToast(`${which==='from'?'Start':'Destination'}: ${PLACES[id].name}`);
@@ -1598,6 +1630,7 @@ function calc(silent){
   dMkr=L.circleMarker([d2.lat,d2.lng],{radius:10,color:'#fff',weight:2.5,fillColor:'#ff453a',fillOpacity:1}).addTo(map).bindPopup(`<b>End: ${d2.name}</b>`);
   sCache && Object.keys(sCache).forEach(k=>delete sCache[k]);
   updateSignals(curT());
+  draw3DRoute();
 
   renderResults();
   history.replaceState(null,'',hashFor());
@@ -1896,13 +1929,14 @@ function startDrive(emerg){
   if(D.follow) map.setView(p0,15,{animate:true});
   D.adv=advise();
   say(emerg?'Emergency run started. Green corridor active.':`Drive started. Hold ${fmtSpd(gw.spd)} kilometres per hour.`);
-  renderConsole(); drawDrive();
+  reset3DHeading(); renderConsole(); drawDrive();
 }
 
 function stopDrive(silent){
   if(!D.active && silent) return;
   D.active=false; D.emerg=false;
   [D.mS,D.mN,D.mA,D.rCorr,...D.bgM].forEach(m=>m&&map.removeLayer(m));
+  clear3DCars();
   D.mS=D.mN=D.mA=D.rCorr=null; D.bgM=[]; D.bg=[]; D.amb=null; D.forced.clear();
   if(rProg){ map.removeLayer(rProg); rProg=null; }
   $('console').classList.remove('show');
@@ -1941,7 +1975,8 @@ function sliceRange(geo,g1,g2){
   out.push(pointAt(geo,g2));
   return out;
 }
-function drawDrive(){
+function drawDrive(){ drawDrive2D(); if(VM!=='2d') draw3DCars(); }
+function drawDrive2D(){
   const g=S.geo, v=D.sync, n=D.ng;
   const gs=toGeo(g,v.d/v.km), gn=toGeo(g,n.d/n.km);
   D.mS.setLatLng(pointAt(g,gs)); D.mN.setLatLng(pointAt(g,gn));
@@ -2072,6 +2107,7 @@ document.addEventListener('keydown',e=>{
   else if(k==='Escape'){ if(D.active) stopDrive(); }
   else if(k==='Enter'){ calc(); }
   else if(k==='e'||k==='E'){ stopDrive(true); setModeUI(S.mode==='emerg'?'car':'emerg'); scheduleCalc(); }
+  else if(k==='v'||k==='V'){ setViewMode(VM==='2d'?'3d':VM==='3d'?'street':'2d'); }
   else if(k==='l'||k==='L'){ UI.sig=!UI.sig; applyUI(); }
   else if(k==='t'||k==='T'){ UI.tim=!UI.tim; applyUI(); }
   else if(k==='p'||k==='P'){ UI.plc=!UI.plc; applyUI(); }
@@ -2083,6 +2119,171 @@ document.addEventListener('keydown',e=>{
 // ═══════════════════════════════════════════════════════
 //  MAIN LOOP
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  3D MAP + STREET VIEW  (MapLibre GL, free OpenFreeMap vector tiles, no key)
+//  2D  = Leaflet map.  3D = tilted map with extruded buildings, chase camera.
+//  Street = first-person style camera at street level that rides along the route.
+//  Google Street View itself needs an API key, so a keyless link opens it in a new tab.
+// ═══════════════════════════════════════════════════════
+let VM='2d', M3=null, m3Ready=false, m3Heading=0;
+const m3Cars={}, m3Mk={};
+const EMPTY={type:'FeatureCollection',features:[]};
+const lnglat=p=>[p[1],p[0]];
+const lineF=c=>({type:'Feature',geometry:{type:'LineString',coordinates:c}});
+function bearingDeg(a,b){
+  const r=Math.PI/180, dl=(b[1]-a[1])*r, y=Math.sin(dl)*Math.cos(b[0]*r);
+  const x=Math.cos(a[0]*r)*Math.sin(b[0]*r)-Math.sin(a[0]*r)*Math.cos(b[0]*r)*Math.cos(dl);
+  return (Math.atan2(y,x)/r+360)%360;
+}
+const angDiff=(t,h)=>((t-h+540)%360)-180;
+
+let m3Starting=false;
+function init3D(){
+  if(M3||m3Starting) return true;
+  if(typeof maplibregl==='undefined'){ showToast('3D library could not load (are you offline?)'); return false; }
+  m3Starting=true;
+  fetch('https://tiles.openfreemap.org/styles/positron').then(r=>r.json()).then(create3D).catch(()=>{
+    m3Starting=false; showToast('3D map data could not load'); setViewMode('2d'); });
+  return true;
+}
+function create3D(style){
+  try{
+    M3=new maplibregl.Map({container:'map3d',style,
+      center:[76.7900,30.7250],zoom:13.5,pitch:60,bearing:-15,maxPitch:85,attributionControl:{compact:true}});
+  }catch(e){ showToast('3D needs WebGL, which is not available here'); M3=null; m3Starting=false; setViewMode('2d'); return; }
+  M3.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-left');
+  M3.on('load',()=>{
+    // dark theme to match the 2D map
+    M3.getStyle().layers.forEach(l=>{
+      try{
+        if(l.type==='background') M3.setPaintProperty(l.id,'background-color','#1c1c1e');
+        else if(l.type==='raster') M3.setLayoutProperty(l.id,'visibility','none');
+        else if(l.type==='fill') M3.setPaintProperty(l.id,'fill-color',/water/.test(l.id)?'#0f1013':'#262628');
+        else if(l.type==='line') M3.setPaintProperty(l.id,'line-color',/water/.test(l.id)?'#0f1013':'#3d3d40');
+        else if(l.type==='symbol'){ M3.setPaintProperty(l.id,'text-color','#aeaeb2'); M3.setPaintProperty(l.id,'text-halo-color','#1c1c1e'); }
+      }catch(e){}
+    });
+    M3.addLayer({id:'b3d',type:'fill-extrusion',source:'openmaptiles','source-layer':'building',minzoom:13,paint:{
+      'fill-extrusion-color':['interpolate',['linear'],['coalesce',['get','render_height'],10],0,'#3a3a3e',60,'#5a5a60'],
+      'fill-extrusion-height':['coalesce',['get','render_height'],10],
+      'fill-extrusion-base':['coalesce',['get','render_min_height'],0],
+      'fill-extrusion-opacity':.92,'fill-extrusion-vertical-gradient':true}});
+    ['r-ng','r-main','r-prog','r-corr'].forEach(id=>M3.addSource(id,{type:'geojson',data:EMPTY}));
+    const W=['interpolate',['linear'],['zoom'],12,4,18,14];
+    M3.addLayer({id:'r-ng',type:'line',source:'r-ng',paint:{'line-color':'#ff453a','line-opacity':.35,'line-width':4,'line-dasharray':[2,2]}});
+    M3.addLayer({id:'r-corr',type:'line',source:'r-corr',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#0a84ff','line-opacity':.45,'line-width':['interpolate',['linear'],['zoom'],12,10,18,34]}});
+    M3.addLayer({id:'r-main',type:'line',source:'r-main',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#0a84ff','line-width':W,'line-opacity':.95}});
+    M3.addLayer({id:'r-prog',type:'line',source:'r-prog',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#ffffff','line-width':['interpolate',['linear'],['zoom'],12,2,18,6]}});
+    m3Ready=true; build3DMarkers(); draw3DRoute(); applyUI();
+  });
+  M3.on('zoomend',()=>$('map3d').classList.toggle('zoom-far',M3.getZoom()<=14));
+  const unfollow=e=>{ if(e&&e.originalEvent&&D.active&&D.follow&&VM!=='2d'){ D.follow=false; $('cn-follow').classList.remove('active'); } };
+  ['dragstart','rotatestart','pitchstart'].forEach(ev=>M3.on(ev,unfollow));
+}
+
+function build3DMarkers(){
+  SIGNALS.forEach(s=>{
+    const w=document.createElement('div'); w.className='sg-wrap'; w.title=s.name; w.innerHTML='<div class="sg"></div>';
+    sEl3[s.id]=w.firstChild;
+    new maplibregl.Marker({element:w,anchor:'center'}).setLngLat([s.lng,s.lat]).addTo(M3);
+  });
+  sCache && Object.keys(sCache).forEach(k=>delete sCache[k]);
+  Object.entries(PLACES).forEach(([id,p])=>{
+    const w=document.createElement('div'); w.className='pl-wrap';
+    w.innerHTML=`<div style="background:rgba(28,28,30,.85);border:1.5px solid rgba(255,255,255,.2);color:#f5f5f7;font-size:10px;font-weight:600;padding:3px 9px;border-radius:16px;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.5);font-family:'Inter',sans-serif;cursor:pointer">${p.name.split(' ').slice(0,2).join(' ')}</div>`;
+    const pop=new maplibregl.Popup({offset:14,closeButton:false}).setHTML(
+      `<b>${p.name}</b><div class="pp-btns"><button class="a" onclick="pickPlace('${id}','from')">Start here</button><button class="b" onclick="pickPlace('${id}','to')">Go here</button></div>`);
+    new maplibregl.Marker({element:w,anchor:'left'}).setLngLat([p.lng,p.lat]).setPopup(pop).addTo(M3);
+  });
+}
+
+function pinEl(color){ const d=document.createElement('div'); d.style.cssText=`width:18px;height:18px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.6)`; return d; }
+function draw3DRoute(){
+  if(!m3Ready) return;
+  [m3Mk.o,m3Mk.d].forEach(m=>m&&m.remove()); m3Mk.o=m3Mk.d=null;
+  if(!S.route){ ['r-ng','r-main','r-prog','r-corr'].forEach(id=>M3.getSource(id).setData(EMPTY)); return; }
+  const line=lineF(S.route.pts.map(lnglat));
+  M3.getSource('r-ng').setData(line); M3.getSource('r-main').setData(line);
+  M3.getSource('r-prog').setData(EMPTY); M3.getSource('r-corr').setData(EMPTY);
+  const o=PLACES[S.orig], d=PLACES[S.dest];
+  m3Mk.o=new maplibregl.Marker({element:pinEl('#0a84ff')}).setLngLat([o.lng,o.lat]).addTo(M3);
+  m3Mk.d=new maplibregl.Marker({element:pinEl('#ff453a')}).setLngLat([d.lng,d.lat]).addTo(M3);
+  if(VM!=='2d') camStart();
+}
+// camera when not driving: overview for 3D, standing at the start for Street
+function camStart(){
+  if(!m3Ready||!S.route||D.active) return;
+  const p=S.route.pts;
+  if(VM==='street'){
+    m3Heading=bearingDeg(p[0],p[1]||p[0]);
+    M3.jumpTo({center:lnglat(p[0]),bearing:m3Heading,pitch:78,zoom:18.4});
+  } else {
+    const b=new maplibregl.LngLatBounds(); p.forEach(q=>b.extend(lnglat(q)));
+    M3.fitBounds(b,{padding:{top:100,bottom:90,left:60,right:60},pitch:58,bearing:-20,duration:800,maxZoom:16});
+  }
+}
+
+function car3(id,cls,html){
+  if(!m3Cars[id]){
+    const el=document.createElement('div'); el.className='car-wrap'; el.innerHTML=`<div class="car ${cls}">${html||''}</div>`;
+    m3Cars[id]=new maplibregl.Marker({element:el,anchor:'center'}).setLngLat([0,0]).addTo(M3);
+  }
+  return m3Cars[id];
+}
+function draw3DCars(){
+  if(!m3Ready||!D.active) return;
+  const g=S.geo, P=v=>lnglat(pointAt(g,toGeo(g,v.d/v.km)));
+  const ms=car3('sync','sync'); ms.setLngLat(P(D.sync));
+  ms.getElement().style.display=(VM==='street'&&!D.emerg)?'none':'';
+  car3('ng','ng').setLngLat(P(D.ng));
+  const gs=toGeo(g,D.sync.d/D.sync.km);
+  M3.getSource('r-prog').setData(lineF(slicePts(g,gs).map(lnglat)));
+  if(D.emerg){
+    const a=D.amb, ga=toGeo(g,a.d/a.km);
+    const ma=car3('amb','amb','A'); ma.setLngLat(P(a));
+    ma.getElement().style.display=(VM==='street')?'none':'';
+    D.bg.forEach((b,i)=>{ const m=car3('bg'+i,'bg'); m.setLngLat(P(b)); m.getElement().firstChild.classList.toggle('yield',isFinite(yieldSpeed(b))); });
+    const ahead=a.done||D.t<a.start?ga:toGeo(g,Math.min(1,(a.d+EMG_RANGE)/a.km));
+    M3.getSource('r-corr').setData(lineF(sliceRange(g,ga,Math.max(ahead,ga+1e-6)).map(lnglat)));
+  } else M3.getSource('r-corr').setData(EMPTY);
+}
+function clear3DCars(){
+  Object.values(m3Cars).forEach(m=>m.remove()); Object.keys(m3Cars).forEach(k=>delete m3Cars[k]);
+  if(m3Ready){ M3.getSource('r-prog').setData(EMPTY); M3.getSource('r-corr').setData(EMPTY); }
+  if(VM!=='2d') setTimeout(camStart,0);
+}
+function reset3DHeading(){ if(S.route&&S.route.pts.length>1) m3Heading=bearingDeg(S.route.pts[0],S.route.pts[1]); }
+
+// chase / first-person camera glued to the lead vehicle
+function follow3D(){
+  if(!m3Ready||!D.active) return;
+  const lead=D.emerg?D.amb:D.sync, g=S.geo;
+  const f0=toGeo(g,lead.d/lead.km), f1=Math.min(1,f0+0.01);
+  const p0=pointAt(g,f0), p1=pointAt(g,f1);
+  if(Math.abs(p1[0]-p0[0])+Math.abs(p1[1]-p0[1])>1e-6) m3Heading=(m3Heading+angDiff(bearingDeg(p0,p1),m3Heading)*0.12+360)%360;
+  const st=VM==='street';
+  M3.jumpTo({center:lnglat(p0),bearing:m3Heading,pitch:st?78:62,zoom:st?18.4:16.8});
+}
+
+function setViewMode(m){
+  if(m!=='2d'){ $('map3d').style.display='block'; if(!init3D()){ $('map3d').style.display='none'; m='2d'; } }
+  VM=m;
+  document.querySelectorAll('#view-seg button').forEach(b=>b.classList.toggle('active',b.dataset.v===m));
+  const is3=m!=='2d';
+  $('map').style.display=is3?'none':'block'; $('map3d').style.display=is3?'block':'none';
+  if(is3){ if(M3) M3.resize(); if(m3Ready){ camStart(); if(D.active) draw3DCars(); } if(!m3Ready) showToast('Loading 3D map...'); else if(m==='street'&&!D.active) showToast('Street view: press Start drive to ride along, or drag to look around'); }
+  else map.invalidateSize();
+}
+document.querySelectorAll('#view-seg button').forEach(b=>b.onclick=()=>setViewMode(b.dataset.v));
+
+function updateGsv(){
+  let p, h=0;
+  if(D.active&&S.geo){ const v=D.emerg?D.amb:D.sync; p=pointAt(S.geo,toGeo(S.geo,v.d/v.km)); h=m3Heading; }
+  else if(S.route) p=S.route.pts[0];
+  else { const c=(VM!=='2d'&&M3)?M3.getCenter():map.getCenter(); p=[c.lat,c.lng]; }
+  $('gsv').href=`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p[0].toFixed(6)},${p[1].toFixed(6)}&heading=${Math.round(h)}`;
+}
+
 function renderChip(t){
   const chip=$('sim-chip');
   chip.classList.toggle('sim',D.active);
@@ -2102,12 +2303,12 @@ function frame(ts){
       advance(dt*D.warp);
     }
     drawDrive();
-    if(D.follow && ts-lastFollow>90){ lastFollow=ts; map.setView((D.emerg?D.mA:D.mS).getLatLng(),map.getZoom(),{animate:false}); }
+    if(D.follow){ if(VM!=='2d') follow3D(); else if(ts-lastFollow>90){ lastFollow=ts; map.setView((D.emerg?D.mA:D.mS).getLatLng(),map.getZoom(),{animate:false}); } }
   }
   if(ts-lastUI>(D.active?100:250)){
     lastUI=ts;
     const t=curT();
-    updateSignals(t); updateStrips(t); renderChip(t);
+    updateSignals(t); updateStrips(t); renderChip(t); updateGsv();
     if(D.active) renderConsole();
     if(view==='signals') renderBoard(t);
     $('clock').textContent=fmtS(nowSec());
@@ -2131,8 +2332,8 @@ function showToast(msg){
 const UI={sig:true,tim:true,plc:true};
 try{ Object.assign(UI,JSON.parse(localStorage.getItem('syncdrive.ui')||'{}')); }catch(e){}
 function applyUI(){
-  $('map').classList.toggle('hide-sig',!UI.sig); $('map').classList.toggle('hide-timer',!UI.tim);
-  $('map').classList.toggle('hide-places',!UI.plc); $('tg-plc').classList.toggle('on',UI.plc); $('tg-all').classList.toggle('on',UI.sig||UI.plc);
+  ['map','map3d'].forEach(id=>{ $(id).classList.toggle('hide-sig',!UI.sig); $(id).classList.toggle('hide-timer',!UI.tim); $(id).classList.toggle('hide-places',!UI.plc); });
+  $('tg-plc').classList.toggle('on',UI.plc); $('tg-all').classList.toggle('on',UI.sig||UI.plc);
   $('tg-sig').classList.toggle('on',UI.sig); $('tg-tim').classList.toggle('on',UI.tim); $('tg-tim').classList.toggle('dis',!UI.sig);
   try{ localStorage.setItem('syncdrive.ui',JSON.stringify(UI)); }catch(e){}
 }

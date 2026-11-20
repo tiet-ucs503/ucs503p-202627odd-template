@@ -10,3 +10,4 @@ Name: Parth Puri
 + [W5 : Route coverage, comparison panel and deployment](./w5-ticket-resolution.md)
 + [W6 : Live signals, drive simulator and extended network](./w6-ticket-resolution.md)
 + [W7 : Emergency mode, map layer toggles, voice and UI cleanup](./w7-ticket-resolution.md)
++ [W8 : 3D map and Street View](./w8-ticket-resolution.md)

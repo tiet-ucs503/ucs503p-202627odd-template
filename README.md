@@ -27,6 +27,7 @@ SyncDrive is a signal-aware GPS prototype that tells a driver *when to leave* an
 - **Live Signals board**, place search, popular routes, recent routes, shareable route links
 - **Emergency mode (v0.6)** — separate `🚑 SOS` mode tab (or `E`); map signal lights and countdown timers can each be toggled on/off (`L`/`T`) — sends an ambulance down the route at 70 km/h with a green corridor: signals within 500 m ahead are forced green, while every other vehicle (SyncDrive car, Normal GPS car, 7 background cars) slows, pulls over and holds at those junctions until it passes
 - **14 places, 25 signals, any-to-any routing** over a road graph; finer speed steps and per-stretch "Smart" speed plans; Normal GPS now leaves at the naive time for a fair comparison
+- **3D and Street view (v0.7)** — `2D / 3D / Street` switch on the map: tilted map with extruded buildings (MapLibre GL + free OpenFreeMap tiles, no key), a chase camera that follows the car during a drive, a street-level first-person camera, and a keyless link that opens the same spot in Google Street View
 - Keyboard: `Enter` sync · `S` swap · `Space` play/pause · `+`/`-` sim speed · `Esc` stop
 
 ---
@@ -77,9 +78,9 @@ SyncDrive/
 │   └── 08-er.md                        ← Entity-Relationship diagram
 │
 ├── journals/
-│   ├── 1024030177-tarun/               ← 7 weekly entries (W1–W7)
-│   ├── 1024030178-parth/               ← 7 weekly entries (W1–W7)
-│   └── 1024031077-adhiraj/             ← 7 weekly entries (W1–W7)
+│   ├── 1024030177-tarun/               ← 8 weekly entries (W1–W8)
+│   ├── 1024030178-parth/               ← 8 weekly entries (W1–W8)
+│   └── 1024031077-adhiraj/             ← 8 weekly entries (W1–W8)
 │
 ├── project-proposal/
 │   ├── main.tex
@@ -153,8 +154,8 @@ A separate mode tab. An ambulance runs at 70 km/h with a green corridor: signals
 
 | Layer | Technology |
 |---|---|
-| Map | Leaflet.js 1.9.4 |
-| Tiles | Esri World Dark Gray Canvas (free, no key) |
+| Map | Leaflet.js 1.9.4 (2D), MapLibre GL JS 4.7.1 (3D) |
+| Tiles | Esri World Dark Gray Canvas (2D) / OpenFreeMap vector tiles (3D), both free, no key |
 | Font | Inter via Google Fonts |
 | Language | Vanilla JavaScript (ES6+) |
 | Build | None — single HTML file |
@@ -178,7 +179,7 @@ All UML and architecture diagrams are in [`diagrams/`](./diagrams/README.md), re
 
 ## Journals
 
-Weekly development journals for each team member (W1–W7):
+Weekly development journals for each team member (W1–W8):
 
 - [Tarun's Journal](./journals/1024030177-tarun/index.md)
 - [Parth's Journal](./journals/1024030178-parth/index.md)
