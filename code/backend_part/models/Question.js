@@ -33,6 +33,11 @@ const questionSchema = new mongoose.Schema(
       trim: true,
       default: ""
     },
+    notes: {
+      type: String,
+      trim: true,
+      default: ""
+    },
     confidence: {
       type: Number,
       min: 1,

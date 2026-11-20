@@ -17,6 +17,7 @@
     "papaparse": "^5.7.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-easy-crop": "^6.2.5",
     "react-router-dom": "^7.18.3",
     "tailwindcss": "^4.3.3"
   },

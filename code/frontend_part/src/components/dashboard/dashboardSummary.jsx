@@ -3,40 +3,30 @@ import api from "../../api";
 
 function DashboardSummary() {
     const [questions, setQuestions] = useState([]);
-    const [completedIds, setCompletedIds] = useState([]);
+const [completed, setCompleted] = useState(0);
+const [allocated, setAllocated] = useState(0);
+const [progress, setProgress] = useState(0);
 
     useEffect(() => {
         const loadDashboard = async () => {
             try {
-                const response = await api.get("/dashboard");
+                const response = await api.get("/dashboard/due-today");
 
                 const dashboardData = response.data;
 
                 setQuestions(dashboardData.questions || []);
 
-                setCompletedIds(
-                    (dashboardData.questions || [])
-                        .filter((question) => question.lastRevised)
-                        .map((question) => question._id)
-                );
+                setCompleted(dashboardData.completed || 0);
+                setAllocated(dashboardData.allocated || 0);
+                setProgress(dashboardData.progress || 0);
             } catch (error) {
                 console.error("Error loading dashboard:", error);
             }
         };
-
         loadDashboard();
     }, []);
 
-    const allocated = questions.length;
-
-    const completed = questions.filter((question) =>
-        completedIds.includes(question._id)
-    ).length;
-
-    const progress =
-        allocated === 0
-            ? 0
-            : Math.round((completed / allocated) * 100);
+    
 
     return (
         <div>
