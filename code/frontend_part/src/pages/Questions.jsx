@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Pencil, Trash2 } from "lucide-react";
+import api from "../api";
 
 function Questions() {
     const [questions, setQuestions] = useState([]);
@@ -8,16 +9,17 @@ function Questions() {
     const [selectedNotes, setSelectedNotes] = useState(null);
 
     useEffect(() => {
-        try {
-            const savedQuestions = JSON.parse(
-                localStorage.getItem("algoRecallQuestions") || "[]"
-            );
+        const loadQuestions = async () => {
+            try {
+                const response = await api.get("/questions");
+                setQuestions(response.data.questions);
+            } catch (error) {
+                console.error("Error loading questions:", error);
+                setQuestions([]);
+            }
+        };
 
-            setQuestions(savedQuestions);
-        } catch (error) {
-            console.error("Error loading questions:", error);
-            setQuestions([]);
-        }
+        loadQuestions();
     }, []);
 
     const formatDate = (dateValue) => {
@@ -35,7 +37,7 @@ function Questions() {
     };
 
     const handleEdit = (question) => {
-        setEditingId(question.id);
+        setEditingId(question._id);
         setEditForm({ ...question });
     };
 
@@ -48,26 +50,29 @@ function Questions() {
         }));
     };
 
-    const handleUpdate = (e) => {
+    const handleUpdate = async (e) => {
         e.preventDefault();
 
         try {
-            const updatedQuestions = questions.map((question) =>
-                question.id === editingId
-                    ? {
-                          ...question,
-                          ...editForm,
-                          confidence: Number(editForm.confidence),
-                      }
-                    : question
+            const response = await api.put(`/questions/${editingId}`, {
+                title: editForm.title,
+                topic: editForm.topic,
+                subtopic: editForm.subtopic,
+                difficulty: editForm.difficulty,
+                link: editForm.link,
+                confidence: Number(editForm.confidence),
+                dateSolved: editForm.dateSolved,
+                notes: editForm.notes,
+            });
+
+            setQuestions((prev) =>
+                prev.map((question) =>
+                    question._id === editingId
+                        ? response.data.question
+                        : question
+                )
             );
 
-            localStorage.setItem(
-                "algoRecallQuestions",
-                JSON.stringify(updatedQuestions)
-            );
-
-            setQuestions(updatedQuestions);
             setEditingId(null);
             setEditForm({});
         } catch (error) {
@@ -76,7 +81,7 @@ function Questions() {
         }
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         const confirmed = window.confirm(
             "Are you sure you want to delete this question?"
         );
@@ -84,23 +89,18 @@ function Questions() {
         if (!confirmed) return;
 
         try {
-            const updatedQuestions = questions.filter(
-                (question) => question.id !== id
-            );
+            await api.delete(`/questions/${id}`);
 
-            localStorage.setItem(
-                "algoRecallQuestions",
-                JSON.stringify(updatedQuestions)
+            setQuestions((prev) =>
+                prev.filter((question) => question._id !== id)
             );
-
-            setQuestions(updatedQuestions);
 
             if (editingId === id) {
                 setEditingId(null);
                 setEditForm({});
             }
 
-            if (selectedNotes?.id === id) {
+            if (selectedNotes?._id === id) {
                 setSelectedNotes(null);
             }
         } catch (error) {
@@ -162,7 +162,7 @@ function Questions() {
                         <tbody>
                             {questions.map((question) => (
                                 <tr
-                                    key={question.id}
+                                    key={question._id}
                                     className="border-t hover:bg-gray-50"
                                 >
                                     <td className="p-3 font-medium text-gray-800 break-words">
@@ -235,19 +235,23 @@ function Questions() {
                                     <td className="p-3">
                                         <div className="flex flex-wrap gap-2">
                                             <button
-                                            onClick={() => handleEdit(question)}
-                                            className="text-[#315B8C] hover:text-[#26476D] p-2 rounded"
-                                            title="Update"
+                                                onClick={() =>
+                                                    handleEdit(question)
+                                                }
+                                                className="text-[#315B8C] hover:text-[#26476D] p-2 rounded"
+                                                title="Update"
                                             >
-                                            <Pencil size={18} />
+                                                <Pencil size={18} />
                                             </button>
 
                                             <button
-                                            onClick={() => handleDelete(question.id)}
-                                            className="text-red-600 hover:text-red-800 p-2 rounded"
-                                            title="Delete"
+                                                onClick={() =>
+                                                    handleDelete(question._id)
+                                                }
+                                                className="text-red-600 hover:text-red-800 p-2 rounded"
+                                                title="Delete"
                                             >
-                                            <Trash2 size={18} />
+                                                <Trash2 size={18} />
                                             </button>
                                         </div>
                                     </td>
