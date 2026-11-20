@@ -168,6 +168,14 @@ its easy/hard choices match that state 89.6% of the time, and a student who has
 learned a topic is recognised after a median of 3 answers. The parameters are
 textbook defaults, not yet fitted to real data.
 
+**On real answers:** `python tools/evaluate_real_data.py` (from `backend/`) runs
+the same comparison on answers stored in the database, using the mastery the
+model held just before each answer. It counts real students only, leaving out
+demo and test accounts, and reports a 95% interval for whether the model beats
+the running-accuracy baseline. Below 200 answers from 10 students it marks the
+figures as not enough data. As of 20 November 2026 there are 9 real answers from
+1 student, so no real-data result is claimed yet.
+
 **Camera estimate**
 
 | Setting | Value |
