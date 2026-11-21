@@ -212,7 +212,7 @@ export async function createOrder(buyerId: string, input: CreateOrderInput) {
     );
 
     return order;
-  });
+  }, { maxWait: 10000, timeout: 20000 });
 
   return serializeOrder(created);
 }
@@ -306,7 +306,7 @@ export async function createOrderFromBid(params: {
     );
 
     return order;
-  });
+  }, { maxWait: 10000, timeout: 20000 });
 
   return serializeOrder(created);
 }
@@ -469,7 +469,7 @@ export async function updateOrderStatus(
     }
 
     return next;
-  });
+  }, { maxWait: 10000, timeout: 20000 });
 
   return serializeOrder(updated);
 }
@@ -538,7 +538,7 @@ export async function updateOrderLogistics(
     );
 
     return next;
-  });
+  }, { maxWait: 10000, timeout: 20000 });
 
   return serializeOrder(updated);
 }

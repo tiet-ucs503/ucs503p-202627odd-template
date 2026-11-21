@@ -122,7 +122,7 @@ export async function createReview(
     });
     await refreshProfileRating(toUserId, transaction);
     return created;
-  });
+  }, { maxWait: 10000, timeout: 20000 });
 
   return serializeReview(review);
 }
