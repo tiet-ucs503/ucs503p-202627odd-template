@@ -126,7 +126,7 @@ Faculty-facing growth model (**Lab → Prototype → Capstone**). Internal tags 
 |---|---|---|
 | **Lab** | Auth, RBAC, listings, orders, admin, notifications, reports | **Complete** |
 | **Prototype** | Chat, voice calls, mandi, logistics, escrow payments, 13-locale UI, Docker/CI | **Complete** |
-| **Capstone** | Grounded Kisan (RAG + cite/refuse), agronomist escalation, profile weather | **In progress** (core shipped) |
+| **Capstone** | Grounded Kisan (RAG + cite/refuse), agronomist escalation, profile weather | **Complete**  |
 
 ---
 
