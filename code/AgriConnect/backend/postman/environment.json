@@ -1,0 +1,14 @@
+{
+  "id": "agriconnect-local",
+  "name": "AgriConnect Local",
+  "values": [
+    { "key": "baseUrl", "value": "http://localhost:5001", "enabled": true },
+    { "key": "accessToken", "value": "", "enabled": true },
+    { "key": "listingId", "value": "", "enabled": true },
+    { "key": "orderId", "value": "", "enabled": true },
+    { "key": "notificationId", "value": "", "enabled": true },
+    { "key": "userId", "value": "", "enabled": true },
+    { "key": "razorpaySignature", "value": "", "enabled": true }
+  ],
+  "_postman_variable_scope": "environment"
+}

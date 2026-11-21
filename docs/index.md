@@ -1,40 +1,38 @@
-﻿![Tiet Logo](assets/tiet-logo.svg){ .tiet-logo }
+# AgriConnect Documentation
 
-**UCS503: Software Engineering (Project)**  
-**TIET Patiala**
+## Project
+AgriConnect — Smart Farm-to-Market & Crop Advisory Platform
 
-# The Sum Function in C++
+## Team
+- Kabir Manchanda (1024030415)
+- Manbhav Kumar Terry (1024030427)
 
-**Author(s)**:
+## Course
+UCS503P — TIET
 
-`(RGB)` Raghav B. Venkataramaiyer `<bv.raghav -at-
-thapar -dot- edu>`
+## Documentation
+- [Requirements](requirements.md)
+- [Architecture](architecture-overview.md)
+- [Testing](testing.md)
+- [Evaluation](evaluation.md)
+- [Roadmap](ROADMAP.md)
+- [Weekly progress](WEEKLY_PROGRESS.md)
 
-This project creates a sum function in c++ as a sample
-to illustrate how to compile a shared library and
-distribute it for use along with the binary.
+## Faculty demo deck
+- [AgriConnect — ordered presentation](AgriConnect_Presentation_Ordered.pptx)
 
-## Installation
+## Weekly progress decks
+- [Week 1](AgriConnect_Progress_Week1.pptx) — Lab (24–31 Aug 2026)
+- [Week 2](AgriConnect_Progress_Week2.pptx) — Prototype (31 Aug–7 Sep 2026)
+- [Week 3](AgriConnect_Progress_Week3.pptx) — Prototype close-out + Capstone start (7–14 Sep 2026)
 
-``` shell
-make -C code
-```
+## Engineering deep-dives
+- [Developer docs hub](README.md)
+- [API contract](API_CONTRACT.md)
+- [Database design](DATABASE_DESIGN.md)
+- [PRD](AgriConnect_PRD.md)
 
-This will create create a folder `dist` in `code`
-folder, with following contents
-
-```
-dist
- +-lib
- |  \-libbvr_math.so
- +-bin
-    \-run
-```
-
-## Usage
-
-``` shell
-cd code
-export LD_LIBRARY_PATH=dist/lib
-./dist/bin/run
-```
+## Project Goal
+Build a farmer-to-buyer marketplace with direct listing and ordering (Lab),
+real-time and production-shaped features (Prototype), and AI-assisted
+crop advisory with grounded answers (Capstone).

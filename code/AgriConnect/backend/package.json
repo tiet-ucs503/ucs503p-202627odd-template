@@ -1,0 +1,71 @@
+{
+  "name": "agriconnect-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AgriConnect V1 Express REST API",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:deploy:pooler": "tsx scripts/apply-pending-migration.ts",
+    "prisma:seed": "prisma db seed",
+    "fix:demo-passwords": "tsx scripts/fix-demo-passwords.ts",
+    "smoke:antibypass": "tsx scripts/smoke-antibypass-payments.ts",
+    "smoke:calls": "tsx scripts/smoke-call-signaling.ts",
+    "smoke:bids": "tsx scripts/smoke-bidding-edge-cases.ts",
+    "eval:grounded": "tsx scripts/eval-grounded-kisan.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "@supabase/supabase-js": "^2.112.3",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.6.2",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.2.0",
+    "nodemailer": "^9.0.5",
+    "pg": "^8.23.0",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
+    "socket.io": "^4.8.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^26.2.0",
+    "@types/nodemailer": "^8.0.1",
+    "@types/pg": "^8.21.0",
+    "@types/supertest": "^7.2.1",
+    "eslint": "^10.0.0",
+    "prisma": "^7.9.1",
+    "socket.io-client": "^4.8.3",
+    "supertest": "^7.2.2",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^4.1.10"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.0"
+  }
+}

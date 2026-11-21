@@ -1,0 +1,34 @@
+---
+description: Keep AgriConnect API docs in sync whenever routes, status codes, or API clients change.
+globs: backend/src/modules/**/*.ts,backend/src/routes/**/*.ts,backend/src/app.ts,backend/src/middleware/**/*.ts,backend/src/common/**/*.ts,frontend/src/lib/api/**/*.ts,docs/API_*.md,docs/FRONTEND_GUIDE.md,docs/BACKEND_GUIDE.md
+alwaysApply: true
+---
+
+# Update API documentation with the code
+
+When this session changes routes, controllers, Zod schemas, `AppError` codes, order/listing state machines, rate limits, or `frontend/src/lib/api/*`, update docs **in the same change**. Do not ship endpoint edits with stale docs.
+
+## Files to keep aligned
+
+- `docs/API_CONTRACT.md` — method, path, auth, request/response examples
+- `docs/API_STATUS_CODES.md` — every HTTP status, `error.code`, approve/discard/change scenarios
+- `docs/FRONTEND_GUIDE.md` — wrappers, screens, UI error handling
+- `docs/BACKEND_GUIDE.md` — pipeline, state machines, how to add endpoints
+- `docs/CHANGELOG.md` — Added / Changed / Removed; mark **breaking**
+- `frontend/src/lib/api/types.ts` plus the matching wrapper if the JSON shape changed
+- `backend/postman/collection.json` when a route is added or renamed
+
+## Must document
+
+1. New, renamed, or removed paths
+2. New or changed success codes (`200` / `201`)
+3. Every error possibility (400/401/403/404/409/413/415/429/500)
+4. Approve / discard / change (order status, listing publish/remove, admin moderate/verify/suspend)
+5. Auth, roles, and suspended-account behavior
+6. Breaking vs compatible changes
+
+If you also add an exploit/PoC, skip that; docs and the production-safe fix only.
+
+## Skip
+
+No API/status-code/client change → do not rewrite these docs.

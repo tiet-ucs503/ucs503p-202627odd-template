@@ -1,0 +1,9 @@
+Poly Haven (CC0 1.0) — https://polyhaven.com/
+
+- grass_medium_02
+- nettle_plant
+- shrub_03
+- rock_moss_set_01
+- fern_02
+- aerial_grass_rock textures
+- kloppenheim_06_puresky HDRI
