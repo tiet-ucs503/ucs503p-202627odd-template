@@ -48,8 +48,8 @@ function Settings() {
                             }}
                             className={`py-3 rounded-lg border font-semibold transition ${
                                 dailyTarget === number
-                                    ? "bg-[#315B8C] text-white border-[#315B8C]"
-                                    : "bg-white text-gray-700 border-gray-300 hover:bg-[#315B8C]/10 hover:border-[#315B8C]"
+                                    ? "bg-[#5f7f58] text-white border-[#5f7f58]"
+                                    : "bg-white text-gray-700 border-gray-300 hover:bg-[#5f7f58]/10 hover:border-[#5f7f58]"
                             }`}
                         >
                             {number}
@@ -65,7 +65,7 @@ function Settings() {
                     <button
                         type="button"
                         onClick={handleSave}
-                        className="bg-[#315B8C] text-white px-5 py-2 rounded-lg hover:bg-[#26476D] transition"
+                        className="bg-[#5f7f58] text-white px-5 py-2 rounded-lg hover:bg-[#4d6a47] transition"
                     >
                         Save Settings
                     </button>

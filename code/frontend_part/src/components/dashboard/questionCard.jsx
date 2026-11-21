@@ -56,7 +56,7 @@ function QuestionCard({ question, isCompleted, onRevised }) {
                                 : "Not yet revised"}
                         </span>
 
-                        <span className="font-medium text-[#315B8C]">
+                        <span className="font-medium text-[#5f7f58]">
                             Next revision:{" "}
                             {question.nextRevision
                                 ? new Date(
@@ -77,7 +77,7 @@ function QuestionCard({ question, isCompleted, onRevised }) {
                     className={`shrink-0 min-w-28 text-center font-medium text-white px-4 py-2 rounded-md shadow ${
                         isCompleted
                             ? "bg-green-700 hover:bg-green-800"
-                            : "bg-[#315B8C] hover:bg-[#26476D]"
+                            : "bg-[#5f7f58] hover:bg-[#4d6a47]"
                     }`}
                 >
                     {isCompleted ? "Revised ✓" : "Revise"}

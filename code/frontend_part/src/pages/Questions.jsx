@@ -127,7 +127,7 @@ function Questions() {
                     </p>
                 </div>
 
-                <div className="self-start bg-[#315B8C]/10 text-[#315B8C] px-4 py-2 rounded-lg font-medium">
+                <div className="self-start bg-[#5f7f58]/10 text-[#5f7f58] px-4 py-2 rounded-lg font-medium">
                     Total Questions: {questions.length}
                 </div>
             </div>
@@ -171,7 +171,7 @@ function Questions() {
                                                 href={question.link}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="text-[#315B8C] hover:underline"
+                                                className="text-[#5f7f58] hover:underline"
                                             >
                                                 {question.title}
                                             </a>
@@ -221,7 +221,7 @@ function Questions() {
                                                 onClick={() =>
                                                     setSelectedNotes(question)
                                                 }
-                                                className="text-[#315B8C] font-medium hover:underline"
+                                                className="text-[#5f7f58] font-medium hover:underline"
                                             >
                                                 View Notes
                                             </button>
@@ -238,7 +238,7 @@ function Questions() {
                                                 onClick={() =>
                                                     handleEdit(question)
                                                 }
-                                                className="text-[#315B8C] hover:text-[#26476D] p-2 rounded"
+                                                className="text-[#5f7f58] hover:text-[#4d6a47] p-2 rounded"
                                                 title="Update"
                                             >
                                                 <Pencil size={18} />
@@ -300,7 +300,7 @@ function Questions() {
                             <button
                                 type="button"
                                 onClick={() => setSelectedNotes(null)}
-                                className="bg-[#315B8C] text-white px-5 py-2 rounded-lg hover:bg-[#26476D] transition"
+                                className="bg-[#5f7f58] text-white px-5 py-2 rounded-lg hover:bg-[#4d6a47] transition"
                             >
                                 Close
                             </button>
@@ -336,7 +336,7 @@ function Questions() {
                                     name="title"
                                     value={editForm.title || ""}
                                     onChange={handleEditChange}
-                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#315B8C]"
+                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#5f7f58]"
                                     required
                                 />
                             </div>
@@ -351,7 +351,7 @@ function Questions() {
                                     name="topic"
                                     value={editForm.topic || ""}
                                     onChange={handleEditChange}
-                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#315B8C]"
+                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#5f7f58]"
                                     required
                                 />
                             </div>
@@ -366,7 +366,7 @@ function Questions() {
                                     name="subtopic"
                                     value={editForm.subtopic || ""}
                                     onChange={handleEditChange}
-                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#315B8C]"
+                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#5f7f58]"
                                 />
                             </div>
 
@@ -379,7 +379,7 @@ function Questions() {
                                     name="difficulty"
                                     value={editForm.difficulty || ""}
                                     onChange={handleEditChange}
-                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#315B8C]"
+                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#5f7f58]"
                                     required
                                 >
                                     <option value="">Select Difficulty</option>
@@ -400,7 +400,7 @@ function Questions() {
                                     value={editForm.link || ""}
                                     onChange={handleEditChange}
                                     placeholder="https://..."
-                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#315B8C]"
+                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#5f7f58]"
                                 />
                             </div>
 
@@ -417,7 +417,7 @@ function Questions() {
                                     step="1"
                                     value={editForm.confidence ?? 3}
                                     onChange={handleEditChange}
-                                    className="w-full accent-[#315B8C] mt-2"
+                                    className="w-full accent-[#5f7f58] mt-2"
                                 />
 
                                 <div className="flex justify-between text-sm text-gray-500">
@@ -436,7 +436,7 @@ function Questions() {
                                     name="dateSolved"
                                     value={editForm.dateSolved || ""}
                                     onChange={handleEditChange}
-                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#315B8C]"
+                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#5f7f58]"
                                     required
                                 />
                             </div>
@@ -469,14 +469,14 @@ function Questions() {
                                     onChange={handleEditChange}
                                     rows="3"
                                     placeholder="Record your approach, mistakes, or concepts to revisit..."
-                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#315B8C]"
+                                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#5f7f58]"
                                 />
                             </div>
 
                             <div className="md:col-span-2 flex flex-wrap gap-3 mt-2">
                                 <button
                                     type="submit"
-                                    className="bg-[#315B8C] text-white px-5 py-2 rounded-lg hover:bg-[#26476D] transition"
+                                    className="bg-[#5f7f58] text-white px-5 py-2 rounded-lg hover:bg-[#4d6a47] transition"
                                 >
                                     Save Changes
                                 </button>
