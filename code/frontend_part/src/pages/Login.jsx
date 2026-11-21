@@ -46,26 +46,26 @@ const Login = () => {
         }
     };
 
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
-            <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
+        return (
+        <div className="min-h-screen flex items-center justify-center bg-[#f7f8f4] px-4">
+            <div className="w-full max-w-md rounded-3xl bg-white p-10 shadow-sm border border-[#e3ebdf]">
 
                 <div className="mb-8 text-center">
-                    <h1 className="text-3xl font-bold text-slate-800">
+                    <h1 className="text-3xl font-bold text-[#24352b]">
                         Algo Recall
                     </h1>
 
-                    <p className="mt-2 text-sm text-slate-500">
+                    <p className="mt-2 text-sm text-[#657568]">
                         Your personal DSA revision companion
                     </p>
                 </div>
 
                 <div className="mb-8 text-center">
-                    <h2 className="text-2xl font-semibold text-slate-800">
+                    <h2 className="text-2xl font-semibold text-[#24352b]">
                         {isSignUp ? "Create Account" : "Welcome Back!"}
                     </h2>
 
-                    <p className="mt-2 text-sm text-slate-500">
+                    <p className="mt-2 text-sm text-[#657568]">
                         {isSignUp
                             ? "Sign up to start your revision journey."
                             : "Sign in to continue your revision journey."}
@@ -73,7 +73,7 @@ const Login = () => {
                 </div>
 
                 {error && (
-                    <div className="mb-4 rounded-lg bg-red-100 px-4 py-3 text-sm text-red-700">
+                    <div className="mb-4 rounded-2xl bg-[#fbeceb] px-4 py-3 text-sm text-[#9b3b2f]">
                         {error}
                     </div>
                 )}
@@ -82,7 +82,7 @@ const Login = () => {
 
                     {isSignUp && (
                         <div>
-                            <label className="block mb-1 font-medium text-slate-700">
+                            <label className="block mb-1 font-medium text-[#34483b]">
                                 Name
                             </label>
 
@@ -91,14 +91,14 @@ const Login = () => {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="Enter your name"
-                                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#315B8C]"
+                                className="w-full rounded-2xl border border-[#dce8d7] bg-[#fbfcf9] px-4 py-3 text-[#24352b] focus:outline-none focus:ring-2 focus:ring-[#aec5a7]"
                                 required
                             />
                         </div>
                     )}
 
                     <div>
-                        <label className="block mb-1 font-medium text-slate-700">
+                        <label className="block mb-1 font-medium text-[#34483b]">
                             Email
                         </label>
 
@@ -107,13 +107,13 @@ const Login = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="you@example.com"
-                            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#315B8C]"
+                            className="w-full rounded-2xl border border-[#dce8d7] bg-[#fbfcf9] px-4 py-3 text-[#24352b] focus:outline-none focus:ring-2 focus:ring-[#aec5a7]"
                             required
                         />
                     </div>
 
                     <div>
-                        <label className="block mb-1 font-medium text-slate-700">
+                        <label className="block mb-1 font-medium text-[#34483b]">
                             Password
                         </label>
 
@@ -122,7 +122,7 @@ const Login = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Enter your password"
-                            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#315B8C]"
+                            className="w-full rounded-2xl border border-[#dce8d7] bg-[#fbfcf9] px-4 py-3 text-[#24352b] focus:outline-none focus:ring-2 focus:ring-[#aec5a7]"
                             required
                         />
                     </div>
@@ -130,7 +130,7 @@ const Login = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-[#315B8C] text-white px-4 py-2.5 rounded-lg font-medium hover:bg-[#26476D] disabled:opacity-60"
+                        className="w-full rounded-2xl bg-[#5f7f58] px-4 py-3 font-semibold text-white transition hover:bg-[#4d6a47] disabled:opacity-60"
                     >
                         {loading
                             ? (isSignUp ? "Creating Account..." : "Logging in...")
@@ -139,7 +139,7 @@ const Login = () => {
 
                 </form>
 
-                <div className="mt-6 text-center text-sm text-slate-600">
+                <div className="mt-6 text-center text-sm text-[#657568]">
                     {isSignUp
                         ? "Already have an account? "
                         : "Don't have an account? "}
@@ -150,13 +150,13 @@ const Login = () => {
                             setIsSignUp(!isSignUp);
                             setError("");
                         }}
-                        className="font-semibold text-[#315B8C] hover:underline"
+                        className="font-semibold text-[#4d6a47] hover:underline"
                     >
                         {isSignUp ? "Log In" : "Sign Up"}
                     </button>
                 </div>
 
-                <p className="mt-6 text-center text-xs text-slate-400">
+                <p className="mt-6 text-center text-xs text-[#9aa89b]">
                     Secure authentication for your DSA journey.
                 </p>
 

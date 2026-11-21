@@ -108,3 +108,12 @@
         gap: 6px;
     }
 }
+
+/* Keep browser autofill boxes in the sage theme instead of blue */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #fbfcf9 inset;
+    -webkit-text-fill-color: #24352b;
+    caret-color: #24352b;
+}
