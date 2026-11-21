@@ -343,7 +343,7 @@ function QuestionsCSVImport() {
                     <button
                         type="button"
                         onClick={handleDownloadTemplate}
-                        className="bg-[#315B8C] text-white px-4 py-2 rounded-lg hover:bg-[#26476D] transition"
+                        className="bg-[#5f7f58] text-white px-4 py-2 rounded-lg hover:bg-[#4d6a47] transition"
                     >
                         Download CSV Template
                     </button>
@@ -363,8 +363,8 @@ function QuestionsCSVImport() {
                         className="block w-full text-sm text-gray-600
                             file:mr-4 file:py-2 file:px-4
                             file:rounded-lg file:border-0
-                            file:bg-[#315B8C]/10 file:text-[#315B8C]
-                            hover:file:bg-[#315B8C]/20"
+                            file:bg-[#5f7f58]/10 file:text-[#5f7f58]
+                            hover:file:bg-[#5f7f58]/20"
                     />
 
                     {selectedFile && (
@@ -380,7 +380,7 @@ function QuestionsCSVImport() {
                         type="button"
                         onClick={handleValidate}
                         disabled={!selectedFile || isProcessing}
-                        className="mt-4 bg-[#315B8C] text-white px-5 py-2 rounded-lg hover:bg-[#26476D] disabled:opacity-50 transition"
+                        className="mt-4 bg-[#5f7f58] text-white px-5 py-2 rounded-lg hover:bg-[#4d6a47] disabled:opacity-50 transition"
                     >
                         {isProcessing ? "Validating..." : "Validate CSV"}
                     </button>
@@ -428,7 +428,7 @@ function QuestionsCSVImport() {
                     <button
                         type="button"
                         onClick={handleImport}
-                        className="mt-4 bg-[#315B8C] text-white px-5 py-2 rounded-lg hover:bg-[#26476D] transition"
+                        className="mt-4 bg-[#5f7f58] text-white px-5 py-2 rounded-lg hover:bg-[#4d6a47] transition"
                     >
                         Import {previewQuestions.length} Questions
                     </button>

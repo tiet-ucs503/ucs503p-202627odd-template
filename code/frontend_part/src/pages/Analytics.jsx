@@ -157,7 +157,7 @@ function Analytics() {
 
                     <div className="w-full bg-gray-100 rounded-full h-3">
                       <div
-                        className="bg-[#315B8C] h-3 rounded-full"
+                        className="bg-[#5f7f58] h-3 rounded-full"
                         style={{
                           width: `${(topic.questions / maxQuestions) * 100}%`,
                         }}

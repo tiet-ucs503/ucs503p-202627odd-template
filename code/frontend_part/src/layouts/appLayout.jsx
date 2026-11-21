@@ -5,17 +5,19 @@ import { Outlet } from "react-router-dom";
 
 function AppLayout() {
     return (
-        <>
-            <Navbar />
+        <div className="flex min-h-screen bg-[#f7f8f4]">
 
-            <div className="flex">
-                <Sidebar />
+            <Sidebar />
 
-                <main className="flex-1 p-4">
+            <div className="flex-1">
+                <Navbar />
+
+                <main className="p-8">
                     <Outlet />
                 </main>
             </div>
-        </>
+
+        </div>
     );
 }
 

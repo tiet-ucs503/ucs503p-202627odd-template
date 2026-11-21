@@ -53,7 +53,7 @@ function RevisionModal({ question, onClose, onSave }) {
                             onChange={(e) =>
                                 setConfidence(Number(e.target.value))
                             }
-                            className="w-full accent-[#315B8C]"
+                            className="w-full accent-[#5f7f58]"
                         />
 
                         <div className="flex justify-between text-sm text-gray-500">
@@ -72,7 +72,7 @@ function RevisionModal({ question, onClose, onSave }) {
                             onChange={(e) => setNotes(e.target.value)}
                             rows="3"
                             placeholder="What did you learn or struggle with?"
-                            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#315B8C]"
+                            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#5f7f58]"
                         />
                     </div>
 
