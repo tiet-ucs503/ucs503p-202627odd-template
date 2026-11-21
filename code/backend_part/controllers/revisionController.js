@@ -7,7 +7,7 @@ const {
 
 async function reviseQuestion(req, res, next) {
   try {
-    const { confidence } = req.body;
+    const { confidence ,notes=""} = req.body;
     const newConfidence = Number(confidence);
 
     if (!Number.isInteger(newConfidence) || newConfidence < 1 || newConfidence > 5) {
@@ -37,7 +37,7 @@ async function reviseQuestion(req, res, next) {
       revisedAt
     );
     question.priority = calculatePriority(question, revisedAt);
-
+    question.notes=notes;
     await question.save();
 
     const history = await RevisionHistory.create({
@@ -46,7 +46,8 @@ async function reviseQuestion(req, res, next) {
       revisedAt,
       previousConfidence,
       newConfidence,
-      revisionNumber: question.revisionCount
+      revisionNumber: question.revisionCount,
+      notes
     });
 
     res.json({

@@ -40,16 +40,18 @@ async function getDueToday(req, res, next) {
       }
     });
 
-    res.json({
-      allocated: due.length,
-      completed: todayHistory,
-      remaining: Math.max(0, due.length - todayHistory),
-      progress:
-        due.length === 0
-          ? 0
-          : Number(((todayHistory / due.length) * 100).toFixed(1)),
-      questions: due
-    });
+    const allocated = Math.max(due.length, todayHistory);
+
+res.json({
+  allocated,
+  completed: todayHistory,
+  remaining: Math.max(0, allocated - todayHistory),
+  progress:
+    allocated === 0
+      ? 0
+      : Number(((todayHistory / allocated) * 100).toFixed(1)),
+  questions: due
+});
   } catch (error) {
     next(error);
   }

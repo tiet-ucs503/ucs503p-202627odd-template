@@ -32,7 +32,12 @@ const revisionHistorySchema = new mongoose.Schema(
     revisionNumber: {
       type: Number,
       required: true
-    }
+    },
+    notes: {
+      type: String,
+      trim: true,
+      default: ""
+    },
   },
   { timestamps: true }
 );

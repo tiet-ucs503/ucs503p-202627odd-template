@@ -142,7 +142,9 @@ async function updateQuestion(req, res, next) {
       "difficulty",
       "platform",
       "link",
-      "confidence"
+      "confidence",
+      "dateSolved",
+      "notes"
     ];
 
     const updates = {};
