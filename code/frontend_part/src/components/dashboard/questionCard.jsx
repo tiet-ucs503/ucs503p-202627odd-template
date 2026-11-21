@@ -20,7 +20,7 @@ function QuestionCard({ question, isCompleted, onRevised }) {
                                 href={question.link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline"
+                                className="text-[#4d6a47] font-medium hover:underline"
                             >
                                 {question.title}
                             </a>
