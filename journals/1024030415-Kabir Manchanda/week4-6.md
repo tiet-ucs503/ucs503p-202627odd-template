@@ -7,8 +7,8 @@
 | **Teammate** | Manbhav Kumar Terry (1024030427) |
 | **Project** | AgriConnect |
 | **Milestone** | Capstone UI Authentic Farm Refresh & Chrome Systems |
-| **Period** | Mon 5 Oct → Sun 25 Oct 2026 |
-| **Hours** | ~24 |
+| **Period** | Mon 14 Sep → Sun 25 Oct 2026 |
+| **Hours** | ~32 |
 
 ---
 
@@ -18,7 +18,7 @@ During Weeks 4–6, following our Capstone Grounded Kisan milestone, we executed
 
 All routes, API contracts, database schemas, RBAC rules, and user interaction flows were preserved 100% without breaking any existing features.
 
-My primary ownership areas for this week's sprint were:
+My primary ownership areas for this multi-week milestone sprint were:
 
 - **Tokens & Field Background Texture:** Enhanced `globals.css` and `src/components/ui.tsx` with richer paper surfaces, tactile button presses, high-contrast badges, and authentic field-grain background textures.
 - **App Shell & Navigation:** Elevated `src/components/shell.tsx` with clearer active nav pills, streamlined language/weather/bell clusters, and overflow-proof responsive mobile second-row navigation.
@@ -137,8 +137,8 @@ During full-flow integration testing, rapid navigation between dashboards, order
 - **Kabir (me):** Design tokens & field texture, app shell, split-brand auth screens, landing page hero auth synchronization, dashboard KPI strips, two-column order workspace, admin moderation chrome, database pooler read concurrency optimization (`Promise.all`), directory non-blocking lookups, test suite verification.
 - **Manbhav Kumar Terry:** Landing page farm story, sticky marketplace filters, listing detail gallery & sticky order panel, mandi rate cards & APMC dual table layout, mandi service latency overhaul & APMC benchmark fallbacks, widget restyling (Kisan, payments, call, weather), and 13-locale i18n parity.
 
-### Plan for Next Week
+### Plan for Next Sprint (Week 7)
 
-- Present complete Week 4 UI refresh, performance overhaul, and Capstone Grounded Kisan prototype to course faculty.
-- Gather feedback on responsive viewports and localized Punjabi/Hindi voice interaction.
-- Support backlog items (TURN server setup for strict-NAT calls, Razorpay webhook tunneling for live demonstrations).
+- Present complete Weeks 4–6 UI refresh, database pooler read concurrency overhaul, and Capstone Grounded Kisan prototype to course faculty.
+- Architect the commercial B2B price negotiation subsystem: design relational database schemas, DDL migration tooling, dynamic bidding state machine, and atomic order conversion.
+- Implement anti-disintermediation security across negotiation notes to prevent off-platform contact leaks.

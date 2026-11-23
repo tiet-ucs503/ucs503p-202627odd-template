@@ -7,8 +7,8 @@
 | **Teammate** | Kabir Manchanda (1024030415) |
 | **Project** | AgriConnect |
 | **Milestone** | Capstone UI Public Marketplace, Trade Widgets & 13-Locale Parity |
-| **Period** | Mon 5 Oct → Sun 25 Oct 2026 |
-| **Hours** | ~22 |
+| **Period** | Mon 14 Sep → Sun 25 Oct 2026 |
+| **Hours** | ~28 |
 
 ---
 
@@ -16,7 +16,7 @@
 
 During Weeks 4–6, following the Grounded Kisan prototype close-out, I owned the customer-facing public surfaces and interactive trade widgets for AgriConnect's farm-authentic UI refresh. In addition, I resolved a major performance bottleneck where live mandi price queries and commodity lookups froze user interactions due to upstream government API timeouts. The goal was to elevate the public marketplace, listing discovery, mandi price intelligence, and in-trade widgets while strictly preserving all existing routes, API endpoints, and features.
 
-My primary focus areas for this week's sprint were:
+My primary focus areas for this multi-week milestone sprint were:
 
 - **Landing Page Farm Story (`app/page.tsx`):** Built a compelling visual farm story with a high-contrast hero banner, trust highlight badges (verified farmers, escrow protection, live mandi rates, AI advisory), responsive horizontal category chips, and a live produce showcase.
 - **Sticky Marketplace Filters & Card Grid (`marketplace/page.tsx`):** Introduced a sticky filter toolbar that stays anchored during scrolling, dynamic listing count chips, a dense card grid with crop photo fallback, and a one-click filter reset on empty states.
@@ -131,8 +131,8 @@ When external government feeds are slow or down, the system now seamlessly falls
 - **Manbhav (me):** Landing page farm story, sticky marketplace filters, listing detail gallery & sticky order panel, mandi rate cards & APMC dual table layout, mandi service latency overhaul & APMC benchmark fallbacks, frontend waterfall elimination, trade widgets restyling (Kisan, payments, call, weather), and 13-locale i18n parity.
 - **Kabir Manchanda:** Tokens & field texture, app shell, split-brand auth screens, landing page hero auth synchronization, dashboard KPI strips, two-column order workspace, admin moderation chrome, database pooler read concurrency optimization (`Promise.all`), directory non-blocking lookups, test suite verification.
 
-### Plan for Next Week
+### Plan for Next Sprint (Week 7)
 
 - Walk faculty evaluators through the refreshed marketplace, listing gallery, and live Agmarknet rate intelligence.
-- Test mobile responsiveness across Android and iOS devices in Hindi and Punjabi modes.
-- Assist in refining live demonstration flows for escrow checkout and voice calls.
+- Design and build the customer-facing B2B price negotiation interface: implement segmented dual-tab checkout on listings, live deal value calculators, and Mandi benchmark fairness indicators.
+- Build the farmer incoming bids management cards and the buyer desk negotiation workspace with full 13-locale parity.

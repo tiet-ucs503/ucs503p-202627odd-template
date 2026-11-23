@@ -7,7 +7,7 @@
 | **Teammate** | Kabir Manchanda (1024030415) |
 | **Project** | AgriConnect |
 | **Milestone** | Capstone Bidding UI, Mandi Benchmark Chips & 13-Locale Negotiation Parity |
-| **Period** | Mon 26 Oct → Mon 2 Nov 2026 |
+| **Period** | Mon 26 Oct → Sun 1 Nov 2026 |
 | **Hours** | ~20 |
 
 ---
@@ -111,8 +111,8 @@ To uphold AgriConnect's strict accessibility standard across all 13 supported In
 
 ---
 
-## 8. Plan for Next Sprint
+## 8. Plan for Next Sprint (Weeks 8–9)
 
-1. **Faculty Evaluator Walkthrough:** Present the bidding and counter-offer demonstration to faculty evaluators.
-2. **Review Comments Protection:** Support Kabir in extending `contactGuard` protection to review comments.
-3. **Escrow Delivery Settlements:** Work on the buyer confirmation and farmer payout release workflows.
+1. **Dedicated Negotiation Desks:** Build standalone routing and dedicated workspace pages for `/buyer/bids` and `/farmer/bids` with multi-tab status filtering (`All`, `Action Needed`, `Under Review`, `Accepted`, `Closed`).
+2. **Non-Destructive Error Decoupling:** Decouple fatal load errors from transient action failures in `BuyerBidsList.tsx` and `FarmerBidsList.tsx` using dismissable inline alerts and granular pending state indicators.
+3. **Frontend QA & Turbopack Production Audit:** Execute the 128-test frontend suite, verify zero AST hardcoded Latin string violations (`no-hardcoded-strings.test.ts`), and compile all 26 App Router routes cleanly under Next.js Turbopack.

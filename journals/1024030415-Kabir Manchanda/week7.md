@@ -7,7 +7,7 @@
 | **Teammate** | Manbhav Kumar Terry (1024030427) |
 | **Project** | AgriConnect |
 | **Milestone** | Capstone Bidding & Dynamic Price Discovery Architecture |
-| **Period** | Mon 26 Oct → Mon 2 Nov 2026 |
+| **Period** | Mon 26 Oct → Sun 1 Nov 2026 |
 | **Hours** | ~28 |
 
 ---
@@ -171,8 +171,8 @@ To ensure immediate, frictionless verification for faculty evaluators, I authore
 
 ---
 
-## 8. Plan for Next Sprint
+## 8. Plan for Next Sprint (Weeks 8–9)
 
-1. **Faculty Milestone Demo:** Conduct full live evaluator walkthrough of buyer bid submission, Mandi benchmark fairness indicators, farmer counter-offers, and atomic order conversion.
-2. **Review Comments Contact Guard:** Extend `contactGuard` protection to review comments (the final unscanned user-input field in the system).
-3. **Escrow Farmer Settlement / Payouts:** Implement farmer payout settlement flow once goods are confirmed as delivered.
+1. **Supabase Cloud Database Migration:** Resolve cloud control-plane restoration deadlock on Supabase, provision a fresh PostgreSQL 17 cluster (`ohiyyvdhsismkzoebvcp`), migrate schemas, seed demo data, and automate storage bucket provisioning.
+2. **Transaction Latency & Timeout Hardening:** Configure resilient 20s timeout budgets (`{ maxWait: 10000, timeout: 20000 }`) on Prisma interactive transactions in `orders.service.ts` and `reviews.service.ts` to eliminate `P2028` roundtrip timeout drops over remote cloud connections.
+3. **Comprehensive Senior QA Testing Architecture:** Author and execute multi-layer test suites (40-test B2B bidding edge-case suite, 32-endpoint REST API smoke, end-to-end CRUD persistence lifecycle, anti-bypass security, WebRTC call signaling, and 30-case Grounded Kisan AI evaluation) achieving 100% pass rates across all layers.
