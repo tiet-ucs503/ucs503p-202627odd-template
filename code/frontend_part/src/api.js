@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "http://16.179.210.164:3000/api",
+    baseURL: "https://algorecall.mooo.com/api",
 });
 
 api.interceptors.request.use((config) => {
