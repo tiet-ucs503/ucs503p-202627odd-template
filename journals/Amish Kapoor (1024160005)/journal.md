@@ -58,3 +58,23 @@
 * Compared K-Means results with Agglomerative Clustering to examine whether different clustering approaches produced similar district groupings.
 * Calculated the Adjusted Rand Index (ARI) to measure the agreement between the two clustering methods.
 
+## Week 10 (Oct 19 – Oct 25): Classifier Evaluation
+* Analyzed the classification outputs generated using Logistic Regression and Random Forest to identify districts matching the underdeveloped district patterns.
+* Evaluated model performance using precision, recall, F1-score and confusion matrices.
+* Examined the relationship between model-predicted districts and the official Aspirational Districts Programme (ADP) list.
+
+## Week 11 (Oct 26 – Nov 1): ADP Validation
+* Performed validation of model-predicted districts against the official ADP list of 112 districts.
+* Examined district name mismatches, unmatched records and geographical boundary differences affecting validation.
+* Documented the validation results and limitations of using the ADP list as a reference for model evaluation.
+
+## Week 12 (Nov 2 – Nov 8): Final Report Preparation
+* Prepared the methodology and data preprocessing sections of the final PRISM project report.
+* Documented dataset integration, missing-value treatment, feature engineering, clustering and classification procedures.
+* Compiled model evaluation findings and forecasting results for inclusion in the final report.
+
+## Week 13 (Nov 9 – Nov 20): Final Documentation & Submission
+* Prepared the system architecture, implementation details and limitations sections of the final project report.
+* Finalized the technical documentation covering data acquisition, district matching, model validation and decision-support functionalities.
+* Prepared the final project documentation and presentation material for project submission and viva.
+
