@@ -53,5 +53,25 @@
 * Created a contingency table to compare the number and percentage of Aspirational Districts across the clusters.
 * Explored feature selection using L1-regularized Logistic Regression (Lasso) and Random Forest feature importance, and began evaluating model performance through stratified five-fold cross-validation using metrics such as F1-score, precision, and recall.
 
+## Week 10 (Oct 19 – Oct 25): Classification Model Evaluation
+* Evaluated Logistic Regression and Random Forest classifiers using stratified five-fold cross-validation.
+* Calculated and compared precision, recall, F1-score, Average Precision and ROC-AUC to determine classification performance.
+* Analyzed classification thresholds and selected an appropriate operating threshold based on the precision-recall trade-off.
+  
+## Week 11 (Oct 26 – Nov 1): Model Validation & Robustness
+* Implemented state-held-out validation to evaluate the generalization capability of the classification model across different geographical regions.
+* Examined the effect of class imbalance and evaluated model performance against the random-ranking baseline.
+* Performed robustness checks to examine the consistency and reliability of classification results.
+  
+## Week 12 (Nov 2 – Nov 8): Forecasting & Model Selection
+* Implemented and compared forecasting approaches, including Persistence, Proportional Reduction, Ridge Regression, Random Forest Regression and Gradient Boosting Regression.
+* Evaluated forecasting performance using RMSE, MAE and R² under state-held-out GroupKFold validation.
+* Selected the proportional-change forecasting approach based on its performance and simplicity compared with Ridge Regression.
+  
+## Week 13 (Nov 9 – Nov 20): Final Integration & Presentation
+* Verified the complete PRISM workflow, including data preprocessing, clustering, classification, validation and forecasting.
+* Prepared the final technical presentation covering the machine learning methodology, evaluation metrics, experimental results and limitations.
+* Prepared the project demonstration and viva explanations covering the model architecture, SHAP explainability, forecasting methodology and future scope.
+
 
 
