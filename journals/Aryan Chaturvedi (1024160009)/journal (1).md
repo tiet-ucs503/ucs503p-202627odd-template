@@ -8,7 +8,7 @@
 ## Week 1 (Aug 3 - Aug 9): ML Options \& Team Ideation
 
 * Evaluated classical ML options (Logistic Regression, Random Forest, SVM) suited to a tabular, syllabus-scope pipeline, ruling out satellite imagery/deep learning approaches as out of scope.
-* Participated in team brainstorming sessions and helped narrow the topic down to district-level poverty classification for UCS503.
+* Participated in team brainstorming sessions and helped narrow the topic down to district-level poverty classification for UCS50*
 * Drafted early notes on the pain points: outdated snapshots, fragmented indicators, no ground-truth check, and "no explanation, only a label."
 
 ## Week 2 (Aug 10 - Aug 16): Primary Metric \& Fusion Layer Design
@@ -52,4 +52,24 @@
 * Created the PRISM Sequence Diagram to illustrate the interactions between system components and the flow of operations during data processing, model evaluation, and output generation.
 * Designed the PRISM Class Diagram to represent the system's main components, their attributes, operations, and relationships.
 * Refined both diagrams to improve clarity and maintain consistency with the proposed system architecture and workflow.
+
+## Week 10 (Oct 19 – Oct 25): Feature Importance Analysis
+* Extracted feature importance values from the Random Forest classification model to identify the most influential poverty-related indicators.
+* Implemented SHAP TreeExplainer to analyze the contribution of individual features towards district-level predictions.
+* Examined the influence of demographic, household and multidimensional poverty indicators on classification outcomes.
+
+## Week 11 (Oct 26 – Nov 1): Explainability Implementation
+* Generated SHAP-based explanations to interpret individual district predictions made by the Random Forest classifier.
+* Analyzed global feature importance and individual feature contributions to understand the factors influencing model predictions.
+* Organized explainability outputs for integration into the PRISM dashboard.
+
+## Week 12 (Nov 2 – Nov 8): Streamlit Dashboard Development
+* Developed the PRISM interactive dashboard using Streamlit and integrated the precomputed model results.
+* Implemented district search, state filters, geographical maps and district-level information using Plotly and GeoJSON data.
+* Developed dashboard sections for Map, Find a District, Forecast, States and District Groups.
+
+## Week 13 (Nov 9 – Nov 20): Dashboard Integration & Testing
+* Implemented the remaining dashboard sections, including How Far to Trust It and Data and Limits, to display model evaluation and dataset limitations.
+* Integrated forecasting results, district classifications, cluster assignments and explainability information into the dashboard.
+* Tested the dashboard's CSV, JSON and GeoJSON data loading and finalized the interface for project demonstration.
 
