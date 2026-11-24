@@ -20,6 +20,17 @@
 \usepackage{fancyhdr}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit}
+\usepackage{colortbl}
+\tikzset{actor/.pic={
+  \draw[thick] (0,0.55) circle (0.14);
+  \draw[thick] (0,0.41) -- (0,0.05) (-0.22,0.3) -- (0.22,0.3)
+               (0,0.05) -- (-0.16,-0.27) (0,0.05) -- (0.16,-0.27);}}
+% A database table drawn as a two-column tabular with a black title row.
+\newcommand{\dbtab}[2]{{\scriptsize\renewcommand{\arraystretch}{1.15}\setlength{\tabcolsep}{0pt}%
+  \begin{tabular}{@{\hspace{3pt}}>{\bfseries\sffamily}l@{\hspace{10pt}}>{\sffamily}r@{\hspace{3pt}}}
+    \multicolumn{2}{@{}c@{}}{\cellcolor{black}\textcolor{white}{\bfseries\sffamily\small\strut #1}}\\
+    #2
+  \end{tabular}}}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usepackage[hidelinks,pagebackref]{hyperref}
@@ -144,7 +155,8 @@ estimate per student per topic, uses it to choose the next question's difficulty
 honest, data-only progress reports for linked parents and teachers. An optional webcam
 \emph{attention estimate} runs entirely inside the browser and is kept strictly separate from
 anything academic. Figure~\ref{fig:workflow} shows the overall workflow as it was planned in
-the Software Requirements Specification (SRS).
+the Software Requirements Specification (SRS), and Figure~\ref{fig:workflow-built}
+shows it as built.
 
 \begin{figure}[htbp]
   \centering
@@ -154,6 +166,48 @@ the Software Requirements Specification (SRS).
     gives a hint computed from the question's own numbers, optionally reworded by a language
     model (Section~\ref{sec:secondary}).}
   \label{fig:workflow}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners=2pt, fill=gray!8, align=center, font=\footnotesize,
+                  text width=27mm, minimum height=13mm},
+      opt/.style={box, dashed, fill=white},
+      arr/.style={-{Stealth[length=2.2mm]}, thick},
+      darr/.style={arr, dashed},
+      lbl/.style={font=\scriptsize, fill=white, inner sep=1pt, align=center}]
+    \node[box] (stu)  at (0,0)      {\textbf{Student}};
+    \node[box] (mis)  at (4.1,0)    {Mission\\(unlocked villain,\\one topic)};
+    \node[box] (q)    at (8.2,0)    {Question\\(generated; answer\\kept on server)};
+    \node[box] (att)  at (12.3,0)   {Attempt\\(choice, time, hint;\\points by server)};
+    \node[opt] (cam)  at (12.3,2.6) {Webcam estimate\\(optional,\\in browser)};
+    \node[box] (mas)  at (12.3,-2.8) {Topic mastery\\(BKT)};
+    \node[box] (tier) at (8.2,-2.8) {Difficulty tier\\(easy, medium,\\or hard)};
+    \node[box] (gwen) at (4.1,-2.8) {Gwen hint\\(computed from\\the question)};
+    \node[opt] (groq) at (0,-2.8)   {Groq LLM\\(optional) only\\rewords the hint};
+    \node[box] (rep)  at (12.3,-5.6) {Reports and\\badges (computed\\on request)};
+    \node[box] (gua)  at (8.2,-5.6) {\textbf{Parent or}\\\textbf{teacher}\\(linked by code)};
+    \draw[arr] (stu) -- node[lbl, above=3pt] {starts} (mis);
+    \draw[arr] (mis) -- node[lbl, above=3pt] {serves} (q);
+    \draw[arr] (q) -- node[lbl, above=3pt] {answered} (att);
+    \draw[darr] (cam) -- node[lbl, right=2pt] {4 numbers,\\reported only} (att);
+    \draw[arr] (att) -- node[lbl, right=2pt] {right or\\wrong only} (mas);
+    \draw[arr] (mas) -- node[lbl, above=3pt] {sets} (tier);
+    \draw[arr] (tier) -- node[lbl, right=2pt] {next\\question} (q);
+    \draw[arr] (q.south west) -- node[lbl, sloped, above=1pt] {on request} (gwen.north east);
+    \draw[arr] (gwen.north west) -- node[lbl, sloped, above=1pt] {hint} (stu.south east);
+    \draw[{Stealth[length=2.2mm]}-{Stealth[length=2.2mm]}, thick, dashed] (gwen) --
+      node[lbl, above=3pt] {reword} (groq);
+    \draw[arr] (mas) -- node[lbl, right=2pt] {feeds} (rep);
+    \draw[arr] (rep) -- node[lbl, above=3pt] {viewed by} (gua);
+  \end{tikzpicture}}
+  \caption[Overall workflow of MathVerse as built]{Overall workflow of MathVerse as built.
+    Solid boxes are always present; dashed boxes are optional and the game works without them.
+    The attention estimate is stored and reported but never reaches mastery, difficulty or
+    points.}
+  \label{fig:workflow-built}
 \end{figure}
 
 The project was built for UCS503P Software Engineering (2026--27, odd semester) at Thapar
@@ -312,7 +366,7 @@ question rather than retrieved (RAG), and a language model may only reword them;
 explainable BKT model replaces the LSTM, which needed a large real interaction dataset that did
 not exist. Table~\ref{tab:planned} lists every planned technology next to what was built and
 the reason for each change. Figure~\ref{fig:usecase} shows the use cases from the SRS, which
-the implementation keeps, adding guardian linking by code and the optional camera.
+the implementation keeps; Figure~\ref{fig:usecase-built} shows them as built.
 
 \begin{table}[htbp]
   \centering
@@ -351,12 +405,51 @@ the implementation keeps, adding guardian linking by code and the optional camer
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.78\textwidth]{figures/srs_usecase.png}
-  \caption{Use case diagram of MathVerse, from the SRS}
+  \caption{Use case diagram of MathVerse as planned in the SRS}
   \label{fig:usecase}
 \end{figure}
 
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+      uc/.style={draw, ellipse, align=center, font=\footnotesize, minimum width=31mm,
+                 minimum height=11mm, inner sep=1pt, fill=white},
+      dep/.style={-{Stealth[length=2mm]}, dashed, thick},
+      lbl/.style={font=\scriptsize, fill=white, inner sep=1pt}]
+    \draw[dashed] (1.6,-0.6) rectangle (12.6,6.3);
+    \node[font=\small] at (7.1,6.6) {MathVerse system (as built)};
+    \pic at (0,2.4) {actor};   \node[font=\small\bfseries] at (0,1.85) {Student};
+    \pic at (14.1,2.6) {actor};
+    \node[font=\small\bfseries, align=center] at (14.1,1.8) {Parent or\\teacher};
+    \node[uc] (login) at (7.4,5.4)  {Register / log in\\(password or Google)};
+    \node[uc] (play)  at (3.9,3.0)  {Play a mission\\(unlocked villain)};
+    \node[uc] (prog)  at (3.9,0.6)  {View own progress\\and link code};
+    \node[uc] (judge) at (8.0,4.1)  {Judge answer, award\\points, update mastery};
+    \node[uc] (hint)  at (7.6,2.2)  {Ask Gwen\\for a hint};
+    \node[uc] (cam)   at (7.6,0.4)  {Share attention\\estimate (optional)};
+    \node[uc] (link)  at (10.9,3.0) {Link to a student\\with their code};
+    \node[uc] (rep)   at (10.9,1.0) {View a linked\\student's report};
+    \draw (0.25,2.7) -- (login);
+    \draw (0.25,2.7) -- (play);
+    \draw (0.25,2.7) -- (prog);
+    \draw (13.85,2.9) -- (login);
+    \draw (13.85,2.9) -- (link);
+    \draw (13.85,2.9) -- (rep);
+    \draw[dep] (play) -- node[lbl, sloped, above=1pt] {include} (judge);
+    \draw[dep] (hint) -- node[lbl, sloped, above=1pt] {extend} (play);
+    \draw[dep] (cam) -- node[lbl, sloped, below=1pt] {extend} (play);
+    \draw[dep] (rep) -- node[lbl, right=2pt] {needs} (link);
+  \end{tikzpicture}
+  \caption[Use case diagram of MathVerse as built]{Use case diagram of MathVerse as built.
+    Parents and teachers use the same features, so they are drawn as one actor. Compared
+    with the SRS it adds Google sign-in, unlocking villains in order, linking a
+    parent or teacher to a student by code, and the optional camera estimate; answers are
+    judged and scored only by the server.}
+  \label{fig:usecase-built}
+\end{figure}
+
 \paragraph{One question, start to finish.} Figure~\ref{fig:activity} shows the student
-learning journey from the SRS. One question passes through the implemented system as follows:
+learning journey from the SRS, and Figure~\ref{fig:activity-built} shows a mission as built. One question passes through the implemented system as follows:
 \begin{enumerate}
   \item The mission screen asks the server to start a mission (or the previous answer requests
     the next question).
@@ -382,8 +475,56 @@ learning journey from the SRS. One question passes through the implemented syste
   \label{fig:activity}
 \end{figure}
 
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+      stp/.style={draw, rounded corners=3pt, align=center, font=\footnotesize,
+                   text width=72mm, minimum height=8mm, fill=gray!8},
+      side/.style={stp, text width=40mm},
+      opt/.style={side, dashed, fill=white},
+      dec/.style={draw, diamond, aspect=2.4, align=center, font=\scriptsize, inner sep=1pt},
+      arr/.style={-{Stealth[length=2.2mm]}, thick},
+      lbl/.style={font=\scriptsize, fill=white, inner sep=1pt}]
+    \node[circle, fill, minimum size=3mm, inner sep=0] (s) at (0,0) {};
+    \node[stp] (a1) at (0,-1.0) {Log in (password, Google or demo account)};
+    \node[stp] (a2) at (0,-2.1) {Choose an unlocked villain};
+    \node[stp] (a3) at (0,-3.35) {Server picks the tier from topic mastery and generates a
+      question; the answer stays on the server};
+    \node[stp] (a4) at (0,-4.7) {Student answers within 5 minutes\\(may ask Gwen for a hint)};
+    \node[stp] (a5) at (0,-6.05) {Server judges the answer, updates mastery from right or
+      wrong only, and awards points};
+    \node[dec] (d1) at (0,-7.6) {7 correct\\answers?};
+    \node[dec] (d2) at (0,-9.4) {7 wrong\\answers?};
+    \node[opt] (cam) at (7.0,-6.05) {Optional: browser sends the 4-number attention summary};
+    \node[side] (vic) at (7.0,-7.6) {Victory: bonus points, level up, next villain unlocked};
+    \node[side] (def) at (7.0,-9.4) {Defeat: points earned so far are kept};
+    \node[side] (rep) at (7.0,-10.9) {Progress and the reports for parents and teachers reflect the new answers};
+    \node[circle, draw, thick, minimum size=4mm, inner sep=0] (e) at (7.0,-12.1) {};
+    \node[circle, fill, minimum size=2.2mm, inner sep=0] at (e) {};
+    \draw[arr] (s) -- (a1);
+    \draw[arr] (a1) -- (a2);
+    \draw[arr] (a2) -- (a3);
+    \draw[arr] (a3) -- (a4);
+    \draw[arr] (a4) -- (a5);
+    \draw[arr] (a5) -- (d1);
+    \draw[arr, dashed] (cam) -- node[lbl, above=2pt] {stored only} (a5);
+    \draw[arr] (d1) -- node[lbl, above=2pt] {yes} (vic);
+    \draw[arr] (d1) -- node[lbl, right=2pt] {no} (d2);
+    \draw[arr] (d2) -- node[lbl, above=2pt] {yes} (def);
+    \draw[arr] (d2.west) -- node[lbl, above=2pt] {no} (-4.3,-9.4) |- (a3.west);
+    \draw[arr] (def) -- (rep);
+    \draw[arr] (vic.east) -- ++(0.5,0) |- (rep.east);
+    \draw[arr] (rep) -- (e);
+  \end{tikzpicture}
+  \caption[Activity diagram of a mission as built]{Activity diagram of a mission as built.
+    There is no separate analysis step: mastery is updated as part of judging each answer,
+    and reports and badges are computed from stored answers when they are opened.}
+  \label{fig:activity-built}
+\end{figure}
+
 \paragraph{Data model.} Figure~\ref{fig:schema} shows the schema designed in the SRS; the
-implementation consolidates it into five tables (Table~\ref{tab:tables}). Questions are
+implementation consolidates it into five tables (Figure~\ref{fig:schema-built} and
+Table~\ref{tab:tables}). Questions are
 generated, so each served question is stored on its \texttt{attempts} row instead of in a
 question bank; reports and badges are computed from stored answers instead of being stored
 separately; and the hint is recorded on the attempt. A deliberate simplification was to store
@@ -396,6 +537,55 @@ measured'' and is never converted to zero.
   \includegraphics[width=\textwidth]{figures/srs_schema.png}
   \caption{Database schema overview (entity relationships) as designed in the SRS}
   \label{fig:schema}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[
+      tab/.style={draw, fill=gray!8, inner sep=0pt, anchor=north},
+      arr/.style={-{Stealth[length=2.2mm]}, thick},
+      lbl/.style={font=\scriptsize, fill=white, inner sep=1pt}]
+    \node[tab] (users) at (0,0) {\dbtab{users}{
+      id & INT, PK\\ name & VARCHAR\\ email & VARCHAR\\ password\_hash & VARCHAR\\
+      role & VARCHAR\\ points & INT\\ level & INT\\ link\_code & VARCHAR\\
+      is\_demo & BOOLEAN\\ google\_sub & VARCHAR\\ created\_at & DATETIME}};
+    \node[tab] (tm) at (0,-5.9) {\dbtab{topic\_mastery}{
+      id & INT, PK\\ student\_id & INT, FK\\ topic & VARCHAR\\ p\_mastery & FLOAT\\
+      attempts\_count & INT\\ updated\_at & DATETIME}};
+    \node[tab] (gl) at (6.0,0) {\dbtab{guardian\_links}{
+      id & INT, PK\\ guardian\_id & INT, FK\\ student\_id & INT, FK\\ created\_at & DATETIME}};
+    \node[tab] (ps) at (6.0,-3.0) {\dbtab{play\_sessions}{
+      id & INT, PK\\ student\_id & INT, FK\\ boss\_id & VARCHAR\\ topic & VARCHAR\\
+      status & VARCHAR\\ correct\_count & INT\\ wrong\_count & INT\\ streak & INT\\
+      points\_awarded & INT\\ started\_at & DATETIME\\ ended\_at & DATETIME}};
+    \node[tab] (att) at (12.3,0) {\dbtab{attempts}{
+      id & INT, PK\\ session\_id & INT, FK\\ student\_id & INT, FK\\ topic & VARCHAR\\
+      difficulty & VARCHAR\\ question\_text & TEXT\\ options\_json & TEXT\\
+      correct\_index & INT\\ hint\_text & TEXT\\ hint\_used & BOOLEAN\\
+      selected\_index & INT\\ is\_correct & BOOLEAN\\ response\_time\_ms & INT\\
+      points\_awarded & INT\\ mastery\_before & FLOAT\\ mastery\_after & FLOAT\\
+      \multicolumn{2}{@{\hspace{3pt}}l@{\hspace{3pt}}}{\textit{+ 5 attention columns (nullable)}}\\
+      served\_at & DATETIME\\ answered\_at & DATETIME}};
+    \draw[arr] ([yshift=-8mm]users.north east) -- node[lbl, above=1pt] {1:N, twice}
+      ([yshift=-8mm]users.north east -| gl.west);
+    \draw[arr] ([yshift=-42mm]users.north east) -- node[lbl, above=1pt] {1:N}
+      ([yshift=-42mm]users.north east -| ps.west);
+    \draw[arr] ([yshift=-12mm]ps.north east) -- node[lbl, above=1pt] {1:N}
+      ([yshift=-12mm]ps.north east -| att.west);
+    \draw[arr] (users.north) -- ++(0,0.55) -| node[lbl, pos=0.25, above=1pt] {1:N}
+      (att.north);
+    \draw[arr] (users.south) -- node[lbl, right=2pt] {1:N} (tm.north);
+  \end{tikzpicture}}
+  \caption[Database schema as built]{Database schema as built: five tables. The SRS tables
+    \texttt{Mission}, \texttt{Question}, \texttt{HintHistory}, \texttt{LearningReport} and
+    \texttt{Badge} were folded into these: a served question and its hint live on its
+    \texttt{attempts} row, and reports and badges are computed from stored answers.
+    \texttt{guardian\_links} refers to \texttt{users} twice (the guardian and the student);
+    \texttt{email}, \texttt{link\_code} and \texttt{google\_sub} are unique. The five attention
+    columns (\texttt{face\_present\_pct}, \texttt{on\_screen\_pct}, \texttt{blink\_rate\_per\_min},
+    \texttt{attention\_score}, \texttt{attention\_label}) are \texttt{NULL} when not measured.}
+  \label{fig:schema-built}
 \end{figure}
 
 \begin{table}[htbp]
