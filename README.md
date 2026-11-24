@@ -24,6 +24,8 @@ Engineering and Technology, Patiala.
 - [Run it locally](#run-it-locally)
 - [Tests](#tests)
 - [Project layout](#project-layout)
+- [Team](#team)
+- [Documents](#documents)
 - [Known limits](#known-limits)
 
 ## The problem and who it is for
@@ -103,7 +105,7 @@ The recording at the top and the mission screenshots were made with a local test
 
 ## By the numbers
 
-All figures are counted from the code and test runs on 19 November 2026.
+All figures are counted from the code and test runs (test counts as of 24 November 2026).
 
 | | |
 |---|---|
@@ -454,6 +456,26 @@ project-proposal/, project-report-prototype-stage/, srs/   earlier coursework
 Details are in `journals/`. The original plan used Node.js, PostgreSQL, RAG and
 an LSTM; what was built instead, and why, is in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#planned-versus-implemented).
+
+## Documents
+
+Everything written for the course and about the system, in the order it was produced.
+
+| Document | Where | What it is |
+|---|---|---|
+| Project proposal | [project-proposal/Proposal.pdf](project-proposal/Proposal.pdf) | The original idea, objectives and plan (Aug 2026) |
+| Early project report | [project-proposal/MathVerse_AI_Project_Report.pdf](project-proposal/MathVerse_AI_Project_Report.pdf) | First design: use case, sequence, activity and class diagrams (Sep 2026) |
+| Prototype-stage report | [project-report-prototype-stage/](project-report-prototype-stage/) | LaTeX source of the frontend prototype report (Sep 2026) |
+| Software Requirements Specification | [srs/srs_mathverse_preview.pdf](srs/srs_mathverse_preview.pdf) | Functional and non-functional requirements, planned architecture and schema (Oct 2026) |
+| Team journals | [journals/](journals/) | Each member's original plan and final work record |
+| Audit and rebuild plan | [docs/AUDIT_AND_PLAN.md](docs/AUDIT_AND_PLAN.md) | What was wrong with the prototype and the phased plan that fixed it (Nov 2026) |
+| Architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the system works, planned versus implemented, and where each requirement is tested |
+| Privacy | [docs/PRIVACY.md](docs/PRIVACY.md) | What data is collected and what is not |
+| Webcam test plan | [docs/WEBCAM_TEST_PLAN.md](docs/WEBCAM_TEST_PLAN.md) | Real-device camera checklist and results |
+| **Final report** | [project-report-final/MathVerse_Project_Report.pdf](project-report-final/MathVerse_Project_Report.pdf) | End-semester report, with its LaTeX source in the same folder (Nov 2026) |
+
+The proposal and SRS describe the system as first planned; the final report and
+`docs/ARCHITECTURE.md` explain every change made since.
 
 ## Known limits
 
