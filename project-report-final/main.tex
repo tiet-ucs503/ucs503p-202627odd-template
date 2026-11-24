@@ -465,6 +465,74 @@ learning journey from the SRS, and Figure~\ref{fig:activity-built} shows a missi
     signature move, victory) and plays the matching sounds and visual effects.
 \end{enumerate}
 
+Figure~\ref{fig:sequence} shows the mission-run sequence from the early project report, and
+Figure~\ref{fig:sequence-built} shows the same exchange as built, with the real API calls.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.92\textwidth]{figures/early_sequence.png}
+  \caption[Sequence diagram of a mission run as planned]{Sequence diagram of a mission run as
+    planned in the early project report. The asynchronous ``analyse behaviour, predict risk''
+    call was the planned LSTM and was not built.}
+  \label{fig:sequence}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[
+      head/.style={draw, rounded corners=2pt, fill=gray!10, font=\small\bfseries,
+                   minimum width=26mm, minimum height=8mm, align=center},
+      opthead/.style={head, dashed, fill=white},
+      life/.style={gray!70, thick},
+      msg/.style={-{Stealth[length=2.2mm]}, thick},
+      ret/.style={-{Stealth[length=2.2mm]}, thick, dashed},
+      lbl/.style={font=\scriptsize, above=1pt, inner sep=1.5pt, align=center, fill=white},
+      note/.style={draw, fill=yellow!10, font=\scriptsize, align=left, inner sep=2pt}]
+    \def\yend{-14.6}
+    \foreach \x/\n/\t/\st in {0/stu/Student/head, 4.0/fe/Browser\\(React)/head,
+                              8.0/be/Backend\\(FastAPI)/head, 12.0/db/Database\\(SQLite)/head,
+                              15.6/llm/Groq LLM\\(optional)/opthead} {
+      \node[\st] (\n) at (\x,0) {\t};
+      \draw[life] (\n.south) -- (\x,\yend);
+    }
+    % start a mission
+    \draw[msg] (0,-1.00) -- node[lbl] {choose an unlocked villain} (4.0,-1.00);
+    \draw[msg] (4.0,-1.70) -- node[lbl] {\texttt{POST /sessions}\\(villain, token)} (8.0,-1.70);
+    \draw[msg] (8.0,-2.50) -- node[lbl] {check level,\\read topic mastery} (12.0,-2.50);
+    \node[note, anchor=west] at (8.15,-3.15) {pick tier, generate question,\\compute the answer};
+    \draw[msg] (8.0,-4.25) -- node[lbl] {store attempt (with answer)} (12.0,-4.25);
+    \draw[ret] (8.0,-5.15) -- node[lbl] {question text, 4 options\\(no answer)} (4.0,-5.15);
+    \draw[ret] (4.0,-5.75) -- node[lbl] {show question} (0,-5.75);
+    % optional hint
+    \draw[dashed, gray] (-0.7,-6.10) rectangle (16.6,-8.70);
+    \node[draw, fill=white, font=\scriptsize\bfseries, anchor=north west, inner sep=2pt]
+      at (-0.7,-6.10) {opt: hint};
+    \draw[msg] (0,-6.65) -- node[lbl] {ask Gwen} (4.0,-6.65);
+    \draw[msg] (4.0,-7.20) -- node[lbl] {\texttt{GET /attempts/\{id\}/hint}} (8.0,-7.20);
+    \draw[msg, dashed] (8.0,-7.70) -- node[lbl] {reword the computed hint (6\,s limit)} (15.6,-7.70);
+    \draw[ret] (8.0,-8.45) -- node[lbl] {hint (reworded, or\\the computed one)} (4.0,-8.45);
+    % answer
+    \draw[msg] (0,-9.20) -- node[lbl] {pick an option} (4.0,-9.20);
+    \draw[msg] (4.0,-10.35) -- node[lbl] {\texttt{POST /attempts/\{id\}/answer}\\index, time, hint used,\\
+      camera summary or \texttt{null}} (8.0,-10.35);
+    \node[note, anchor=west] at (8.15,-11.00) {judge; update mastery (BKT) from\\right or wrong;
+      award points;\\check 7 correct / 7 wrong};
+    \draw[msg] (8.0,-12.50) -- node[lbl] {save attempt, mastery,\\session, points} (12.0,-12.50);
+    \draw[ret] (8.0,-13.35) -- node[lbl] {result, points, mastery, next\\question or victory/defeat}
+      (4.0,-13.35);
+    \draw[ret] (4.0,-13.90) -- node[lbl] {strike, combo, sounds} (0,-13.90);
+    \node[font=\scriptsize\itshape, anchor=west, fill=white, inner sep=1pt] at (0.15,-14.30)
+      {repeat from ``show question'' until the mission ends};
+  \end{tikzpicture}}
+  \caption[Sequence diagram of a mission run as built]{Sequence diagram of a mission run as
+    built. Every call carries the student's token, and the browser never receives the answer
+    before replying. The camera summary is stored as received and read by nothing academic;
+    there is no asynchronous analysis step. The Groq call is optional: without a key, or if it
+    takes longer than 6\,s, the computed hint is returned unchanged.}
+  \label{fig:sequence-built}
+\end{figure}
+
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.6\textwidth]{figures/srs_activity.png}
