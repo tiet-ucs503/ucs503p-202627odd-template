@@ -154,19 +154,8 @@ correct answer is a ``hit'' on the villain. Behind the game, the server keeps on
 estimate per student per topic, uses it to choose the next question's difficulty, and builds
 honest, data-only progress reports for linked parents and teachers. An optional webcam
 \emph{attention estimate} runs entirely inside the browser and is kept strictly separate from
-anything academic. Figure~\ref{fig:workflow} shows the overall workflow as it was planned in
-the Software Requirements Specification (SRS), and Figure~\ref{fig:workflow-built}
-shows it as built.
+anything academic. Figure~\ref{fig:workflow-built} shows the overall workflow of the system.
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.85\textwidth]{figures/srs_workflow.png}
-  \caption[Overall workflow of MathVerse as planned in the SRS]{Overall workflow of
-    MathVerse as planned in the SRS. In the implemented system, Gwen does not use RAG: she
-    gives a hint computed from the question's own numbers, optionally reworded by a language
-    model (Section~\ref{sec:secondary}).}
-  \label{fig:workflow}
-\end{figure}
 
 \begin{figure}[htbp]
   \centering
@@ -203,7 +192,7 @@ shows it as built.
     \draw[arr] (mas) -- node[lbl, right=2pt] {feeds} (rep);
     \draw[arr] (rep) -- node[lbl, above=3pt] {viewed by} (gua);
   \end{tikzpicture}}
-  \caption[Overall workflow of MathVerse as built]{Overall workflow of MathVerse as built.
+  \caption[Overall workflow of MathVerse]{Overall workflow of MathVerse.
     Solid boxes are always present; dashed boxes are optional and the game works without them.
     The attention estimate is stored and reported but never reaches mastery, difficulty or
     points.}
@@ -354,19 +343,18 @@ scoring, hints and reports.
     \draw[arr] (cam) -- node[lbl, right=1pt] {4 numbers} (fe);
     \draw[arr] (be) -- node[lbl, right=1pt] {hint text} (groq);
   \end{tikzpicture}
-  \caption{Architecture of MathVerse as implemented}
+  \caption{Architecture of MathVerse}
   \label{fig:arch-impl}
 \end{figure}
 
 \paragraph{Planned design and what changed.} The SRS planned a layered system with a Node.js
-and Express backend and an asynchronous AI/analytics layer containing a RAG tutor and an LSTM
-(Figure~\ref{fig:arch-srs}). The implemented system keeps the layering and the REST style but
+and Express backend and an asynchronous AI/analytics layer containing a RAG tutor and an
+LSTM. The implemented system keeps the layering and the REST style but
 differs in three ways: the backend is Python and FastAPI; Gwen's hints are computed from each
 question rather than retrieved (RAG), and a language model may only reword them; and an
 explainable BKT model replaces the LSTM, which needed a large real interaction dataset that did
 not exist. Table~\ref{tab:planned} lists every planned technology next to what was built and
-the reason for each change. Figure~\ref{fig:usecase} shows the use cases from the SRS, which
-the implementation keeps; Figure~\ref{fig:usecase-built} shows them as built.
+the reason for each change. Figure~\ref{fig:usecase-built} shows the use cases.
 
 \begin{table}[htbp]
   \centering
@@ -393,21 +381,7 @@ the implementation keeps; Figure~\ref{fig:usecase-built} shows them as built.
   \label{tab:planned}
 \end{table}
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.72\textwidth]{figures/srs_architecture.png}
-  \caption[Layered system architecture as planned in the SRS]{Layered system architecture as
-    planned in the SRS. The implemented backend is Python and FastAPI rather than Node.js and
-    Express, and there is no RAG tutor or LSTM (see Figure~\ref{fig:arch-impl}).}
-  \label{fig:arch-srs}
-\end{figure}
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.78\textwidth]{figures/srs_usecase.png}
-  \caption{Use case diagram of MathVerse as planned in the SRS}
-  \label{fig:usecase}
-\end{figure}
 
 \begin{figure}[htbp]
   \centering
@@ -417,7 +391,7 @@ the implementation keeps; Figure~\ref{fig:usecase-built} shows them as built.
       dep/.style={-{Stealth[length=2mm]}, dashed, thick},
       lbl/.style={font=\scriptsize, fill=white, inner sep=1pt}]
     \draw[dashed] (1.6,-0.6) rectangle (12.6,6.3);
-    \node[font=\small] at (7.1,6.6) {MathVerse system (as built)};
+    \node[font=\small] at (7.1,6.6) {MathVerse system};
     \pic at (0,2.4) {actor};   \node[font=\small\bfseries] at (0,1.85) {Student};
     \pic at (14.1,2.6) {actor};
     \node[font=\small\bfseries, align=center] at (14.1,1.8) {Parent or\\teacher};
@@ -440,16 +414,15 @@ the implementation keeps; Figure~\ref{fig:usecase-built} shows them as built.
     \draw[dep] (cam) -- node[lbl, sloped, below=1pt] {extend} (play);
     \draw[dep] (rep) -- node[lbl, right=2pt] {needs} (link);
   \end{tikzpicture}
-  \caption[Use case diagram of MathVerse as built]{Use case diagram of MathVerse as built.
-    Parents and teachers use the same features, so they are drawn as one actor. Compared
-    with the SRS it adds Google sign-in, unlocking villains in order, linking a
-    parent or teacher to a student by code, and the optional camera estimate; answers are
-    judged and scored only by the server.}
+  \caption[Use case diagram of MathVerse]{Use case diagram of MathVerse.
+    Parents and teachers use the same features, so they are drawn as one actor. Answers
+    are judged and scored only by the server.}
   \label{fig:usecase-built}
 \end{figure}
 
-\paragraph{One question, start to finish.} Figure~\ref{fig:activity} shows the student
-learning journey from the SRS, and Figure~\ref{fig:activity-built} shows a mission as built. One question passes through the implemented system as follows:
+\paragraph{One question, start to finish.} Figure~\ref{fig:activity-built} shows a whole
+mission and Figure~\ref{fig:sequence-built} the messages exchanged for each question. One
+question passes through the system as follows:
 \begin{enumerate}
   \item The mission screen asks the server to start a mission (or the previous answer requests
     the next question).
@@ -465,17 +438,7 @@ learning journey from the SRS, and Figure~\ref{fig:activity-built} shows a missi
     signature move, victory) and plays the matching sounds and visual effects.
 \end{enumerate}
 
-Figure~\ref{fig:sequence} shows the mission-run sequence from the early project report, and
-Figure~\ref{fig:sequence-built} shows the same exchange as built, with the real API calls.
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.92\textwidth]{figures/early_sequence.png}
-  \caption[Sequence diagram of a mission run as planned]{Sequence diagram of a mission run as
-    planned in the early project report. The asynchronous ``analyse behaviour, predict risk''
-    call was the planned LSTM and was not built.}
-  \label{fig:sequence}
-\end{figure}
 
 \begin{figure}[htbp]
   \centering
@@ -525,23 +488,13 @@ Figure~\ref{fig:sequence-built} shows the same exchange as built, with the real 
     \node[font=\scriptsize\itshape, anchor=west, fill=white, inner sep=1pt] at (0.15,-14.30)
       {repeat from ``show question'' until the mission ends};
   \end{tikzpicture}}
-  \caption[Sequence diagram of a mission run as built]{Sequence diagram of a mission run as
-    built. Every call carries the student's token, and the browser never receives the answer
+  \caption[Sequence diagram of a mission run]{Sequence diagram of a mission run. Every call carries the student's token, and the browser never receives the answer
     before replying. The camera summary is stored as received and read by nothing academic;
     there is no asynchronous analysis step. The Groq call is optional: without a key, or if it
     takes longer than 6\,s, the computed hint is returned unchanged.}
   \label{fig:sequence-built}
 \end{figure}
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/srs_activity.png}
-  \caption[Activity diagram of the student learning journey, from the SRS]{Activity diagram
-    of the student learning journey, from the SRS. The asynchronous ``analyse behaviour,
-    predict risk'' step was the planned LSTM and was not built; in the final system the
-    optional attention estimate runs in the browser alongside play and never affects scoring.}
-  \label{fig:activity}
-\end{figure}
 
 \begin{figure}[htbp]
   \centering
@@ -584,15 +537,14 @@ Figure~\ref{fig:sequence-built} shows the same exchange as built, with the real 
     \draw[arr] (vic.east) -- ++(0.5,0) |- (rep.east);
     \draw[arr] (rep) -- (e);
   \end{tikzpicture}
-  \caption[Activity diagram of a mission as built]{Activity diagram of a mission as built.
+  \caption[Activity diagram of a mission]{Activity diagram of a mission.
     There is no separate analysis step: mastery is updated as part of judging each answer,
     and reports and badges are computed from stored answers when they are opened.}
   \label{fig:activity-built}
 \end{figure}
 
-\paragraph{Data model.} Figure~\ref{fig:schema} shows the schema designed in the SRS; the
-implementation consolidates it into five tables (Figure~\ref{fig:schema-built} and
-Table~\ref{tab:tables}). Questions are
+\paragraph{Data model.} The database has five tables (Figure~\ref{fig:schema-built} and
+Table~\ref{tab:tables}); the SRS design had nine, and they were consolidated as follows. Questions are
 generated, so each served question is stored on its \texttt{attempts} row instead of in a
 question bank; reports and badges are computed from stored answers instead of being stored
 separately; and the hint is recorded on the attempt. A deliberate simplification was to store
@@ -600,12 +552,6 @@ the optional attention numbers as five nullable columns on \texttt{attempts}: th
 one summary per question, so a separate table would only add joins. \texttt{NULL} means ``not
 measured'' and is never converted to zero.
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{figures/srs_schema.png}
-  \caption{Database schema overview (entity relationships) as designed in the SRS}
-  \label{fig:schema}
-\end{figure}
 
 \begin{figure}[htbp]
   \centering
@@ -645,7 +591,7 @@ measured'' and is never converted to zero.
       (att.north);
     \draw[arr] (users.south) -- node[lbl, right=2pt] {1:N} (tm.north);
   \end{tikzpicture}}
-  \caption[Database schema as built]{Database schema as built: five tables. The SRS tables
+  \caption[Database schema]{Database schema: five tables. The SRS tables
     \texttt{Mission}, \texttt{Question}, \texttt{HintHistory}, \texttt{LearningReport} and
     \texttt{Badge} were folded into these: a served question and its hint live on its
     \texttt{attempts} row, and reports and badges are computed from stored answers.
