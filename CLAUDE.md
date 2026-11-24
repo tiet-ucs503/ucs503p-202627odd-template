@@ -179,7 +179,11 @@ Known and open:
    not seen in a browser.
 10. One unexplained stall of about half a second was seen once during the F5
     performance check; it did not repeat.
-11. CI (`.github/workflows`) has never run, because nothing has been pushed.
+11. CI runs on every push to `origin` and passes (469 backend, 231 frontend
+    tests as of 2026-11-24).
+12. The final report's LaTeX source, figures and PDF are in
+    `project-report-final/`. The journals hold each member's original plan and
+    final work record; the work split was set by the user.
 
 ## Known gaps
 

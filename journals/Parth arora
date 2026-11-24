@@ -1,7 +1,42 @@
-
+ORIGINAL PLAN (October 2026)
 Parth Arora: Backend and Database (FR-1, FR-2, FR-3 foundation)
 W1: Set up the Node/Express project structure with route → service layering. Design the Prisma schema for User, Mission, Question, MissionAttempt, TopicMastery, HintHistory, LearningReport and Badge, then run the first migrations and seed data.
 W2: Build authentication (registration, login, salted password hashes, JWT) and role-based access control for Student, Teacher and Parent. Add the teacher/parent-to-student linking.
 W3: Build mission selection and question delivery by topic and difficulty. Build the answer submission endpoint with verification and attempt logging (correctness, time, hints).
 W4: Add the async job/queue that calls the AI layer without blocking the next question. Build the Reward, Progress and Report services and the dashboard read endpoints (they must work without the AI layer).
 W5: Add indexing and pagination, then handle security hardening, HTTPS config and deployment. Fix integration bugs.
+
+FINAL WORK RECORD (project completed, November 2026)
+Role: technical lead; backend, database, security, testing and integration.
+
+- Audited the September prototype against the requirements, wrote the findings
+  and the rebuild plan (docs/AUDIT_AND_PLAN.md), and led the five-phase rebuild
+  (A to E) and the later increments.
+- Backend and database: rebuilt the FastAPI service with thin routers and
+  services, the five-table SQLAlchemy model (users, guardian_links,
+  play_sessions, attempts, topic_mastery) and an in-place upgrade for older
+  databases.
+- Security: bcrypt password hashing, JWT sign-in, role checks on every
+  endpoint, guardian linking by the student's code, demo-account isolation,
+  strict request validation, and the optional "Sign in with Google" with
+  server-side token verification.
+- Gameplay on the server: the 18 deterministic question generators with
+  computed answers, answer judging, points, streaks, levels and unlocks, the
+  question_or_backup fallback, and integration of the story questions and the
+  mastery model.
+- Camera privacy pipeline: moved face tracking into the browser (MediaPipe),
+  the four-number summary, the consent flow, the content-security rule that
+  blocks third-party telemetry, the real-webcam test run and the fixes it led
+  to.
+- Effects engine: the Web Audio sound engine, sound limits and the effects
+  director that turns server results into game events.
+- Testing and CI: the backend test suite, the T1-T12 requirement map, the
+  real-browser camera check (Playwright) and the GitHub Actions pipeline.
+- Documentation: README, ARCHITECTURE, PRIVACY, WEBCAM_TEST_PLAN, and editing
+  and integration of the final report.
+
+Changes from the plan: the backend is Python and FastAPI instead of Node.js
+and Express, and SQLite with SQLAlchemy instead of PostgreSQL with Prisma (see
+docs/ARCHITECTURE.md, "Planned versus implemented"). The async job queue was
+not needed, because mastery updates are fast and the only slow call (hint
+wording) has a timeout and fallback.

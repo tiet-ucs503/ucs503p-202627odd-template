@@ -118,8 +118,8 @@ All figures are counted from the code and test runs on 19 November 2026.
 | Synthesised sounds | 79, all generated in code |
 | Visual effect types | 57 |
 | Effect variations | 95, dealt so the same one does not repeat back to back |
-| Backend tests | 443 (pytest) |
-| Frontend tests | 225 (Vitest) |
+| Backend tests | 469 (pytest) |
+| Frontend tests | 231 (Vitest) |
 | Real-browser camera checks | 32 (`npm run check:camera`) |
 | Backend code | about 2,600 lines of Python, plus 1,600 lines of tests |
 | Frontend code | about 7,200 lines of TypeScript and CSS, plus 2,000 lines of tests |
@@ -421,7 +421,9 @@ backend/
   seed.py              demo accounts (--demo) and database reset (--reset)
   routers/             auth, sessions (gameplay), guardians, reports
   services/            questions, story questions, backup bank, mastery,
-                       hints, attention, game rules, report builder
+                       hints, attention, Google sign-in, game rules, report builder
+  tools/               evaluate_mastery.py (simulation), evaluate_real_data.py,
+                       verify_attempts.py
   tests/
 frontend/src/
   lib/api.ts           the one client for the backend
@@ -435,8 +437,23 @@ docs/
   WEBCAM_TEST_PLAN.md  real-device camera checklist and results
   AUDIT_AND_PLAN.md    the audit this version was built from
   screenshots/         the images in this README
-journals/, project-proposal/, project-report-prototype-stage/, srs/   coursework
+project-report-final/  final report: LaTeX source, figures and PDF
+journals/              each member's original plan and final work record
+project-proposal/, project-report-prototype-stage/, srs/   earlier coursework
 ```
+
+## Team
+
+| Member | Area |
+|---|---|
+| Parth Arora | Technical lead: backend, database, security, server gameplay, camera privacy pipeline, testing, CI and documentation |
+| Harshit Negi | Frontend: screens, dashboards and charts, consent flow, visual character effects, UI tests |
+| Raghu Raja | Gwen tutor: curriculum, hints, AI wording with fallback, story-question content |
+| Ramneek Kaur | Mastery model, adaptive difficulty and its evaluation |
+
+Details are in `journals/`. The original plan used Node.js, PostgreSQL, RAG and
+an LSTM; what was built instead, and why, is in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#planned-versus-implemented).
 
 ## Known limits
 

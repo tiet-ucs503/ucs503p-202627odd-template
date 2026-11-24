@@ -1,6 +1,30 @@
+ORIGINAL PLAN (October 2026)
 Raghu Raja: Gwen AI Tutor / RAG (FR-4)
 W1: Collect and curate syllabus-aligned content (definitions, formulas, worked examples) by topic. Choose the vector store and embedding approach.
 W2: Build the ingestion pipeline (chunking, embedding, indexing) and the retrieval step with a test set of queries.
 W3: Build the Gwen hint and explanation generator on top of retrieval, with grounding prompts and graduated hints (nudge → hint → full explanation). Expose it as an API.
 W4: Integrate with the backend. Store each hint in the hint history and add mistake analysis for wrong answers. Connect Harshit’s hint panel to the real API.
 W5: Evaluate answer correctness and syllabus relevance on a test set. Handle fallbacks when the AI is down or slow, and document the RAG pipeline.
+
+FINAL WORK RECORD (project completed, November 2026)
+Role: Gwen tutor, curriculum and question content.
+
+- Curriculum: the six villains and their topics, the unlock order, and the key
+  idea for each topic that Gwen's hints are built around.
+- Gwen's hints: a correct hint for every question type, written from the
+  question's own numbers so it can never be wrong or give the answer away.
+- AI wording: integration with the Groq language model (openai/gpt-oss-120b)
+  with a prompt that may only re-say the verified hint in Spider-Gwen's voice,
+  a 6-second timeout, a 400-character limit and a fallback to the built-in
+  hint, so the game never depends on the AI.
+- Story questions: the villain story themes and wording for the 36 story
+  templates (six per villain, two per difficulty tier) and the hand-checked
+  backup bank of 36 questions.
+- Connected the "Ask Gwen for a hint" panel to the hint endpoint and recorded
+  hint use on each attempt.
+- Tests for hints and their fallbacks, and the story-question checks.
+
+Changes from the plan: RAG over a curated syllabus corpus was replaced by
+hints computed from each question, because no curated corpus existed and a
+computed hint cannot contain a mistake. The separate hint-history table became
+two fields on each attempt.

@@ -152,6 +152,16 @@ within 5–95, that ordering between students is preserved, that bands match the
 difficulty thresholds, and that building a report leaves stored values
 untouched.
 
+### How the model is evaluated
+
+`backend/tools/evaluate_mastery.py` simulates 5,000 students x 20 answers and
+asks each model to predict every answer before seeing it. BKT beats running
+accuracy, last answer and a constant rate on AUC (0.770 vs 0.744, 0.696, 0.500),
+accuracy and Brier score, and still wins when the simulated students follow
+different parameters (AUC 0.729 vs 0.704). `backend/tools/evaluate_real_data.py`
+runs the same comparison on real stored answers, excluding demo and test
+accounts, and refuses to report results below 200 answers from 10 students.
+
 ## Questions
 
 `backend/services/questions.py` has one small generator per boss per tier
@@ -244,8 +254,37 @@ Identity always comes from the sign-in token, never from an id in the request.
 | Read a student's report | own only | linked students only |
 | Link to a student | no | with that student's link code |
 | Demo login | only when `DEMO_MODE=true`, and only the seeded demo accounts |
+| Sign in with Google | optional (when `GOOGLE_CLIENT_ID` is set); never reaches a demo account |
 
 Demo accounts and real accounts can never be linked to each other.
+
+**Sign-in.** Passwords are hashed with bcrypt; a successful sign-in returns a
+JWT whose subject is the user id. "Sign in with Google" sends Google's signed ID
+token to `POST /auth/google`, where `services/google_auth.py` checks it with
+Google's own library (signature, this app's client ID, expiry, verified email)
+before trusting it. A new person gets an account with the role chosen on the
+sign-up tab; an existing account with the same email is linked, and its password
+keeps working.
+
+## Planned versus implemented
+
+The proposal and the SRS described a different stack. Each change was made
+during the rebuild for the reason given.
+
+| Area | Planned (proposal, SRS) | Implemented | Reason |
+|---|---|---|---|
+| Backend | Node.js + Express | Python + FastAPI | Automatic request validation and API docs; same REST design |
+| Database | PostgreSQL via Prisma | SQLite via SQLAlchemy | No database server to install; `DATABASE_URL` can point at PostgreSQL later |
+| Frontend language | JavaScript | TypeScript | Type checking catches mistakes before run time |
+| Game state | In the browser (prototype) | On the server | A browser could otherwise award itself points |
+| Questions | Written by a language model; question table | Code generators with computed answers; 36 story templates; backup bank | Language models make arithmetic mistakes |
+| Gwen tutor | RAG over syllabus content | Hint computed from the question; a language model may only reword it | No curated corpus existed; a computed hint cannot be wrong |
+| Learning model | LSTM | Bayesian Knowledge Tracing | No dataset to train an LSTM; BKT works from the first answer and is explainable |
+| AI processing | Asynchronous job queue | Synchronous BKT; hint call with timeout and fallback | The next question is never blocked, without a queue |
+| Hint history | `HintHistory` table | `hint_used` and hint text on each attempt | One hint per question |
+| Reports, badges | `LearningReport`, `Badge` tables | Computed from stored answers on request | No stale copies; every figure traces to an answer |
+| Eye tracking | Future scope | Optional in-browser MediaPipe estimate | Built with no image leaving the browser |
+| Transport | HTTPS | HTTP on a local machine | Deployment postponed; HTTPS needed before real use |
 
 ## Where each requirement is tested
 

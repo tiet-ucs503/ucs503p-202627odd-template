@@ -1,0 +1,1189 @@
+\documentclass[11pt,a4paper]{report}
+
+% ---------------------------------------------------------------------------
+% Packages
+% ---------------------------------------------------------------------------
+\usepackage[a4paper,margin=1in,headheight=14pt]{geometry}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage[hidelinks,pagebackref]{hyperref}
+
+% ---------------------------------------------------------------------------
+% Chapter and section style
+% ---------------------------------------------------------------------------
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\filleft}
+  {\large\chaptertitlename\ \thechapter}
+  {2pt}
+  {\Huge}
+  [\vspace{2pt}\titlerule]
+\titlespacing*{\chapter}{0pt}{30pt}{30pt}
+
+% ---------------------------------------------------------------------------
+% Running header: page number and course on the left, section on the right
+% ---------------------------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\thepage\quad UCS503P - Software Engineering}
+\fancyhead[R]{\small\rightmark}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\sectionmark}[1]{\markright{\thesection\quad #1}}
+\renewcommand{\chaptermark}[1]{}
+\fancypagestyle{plain}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}}
+
+% ---------------------------------------------------------------------------
+% Listings
+% ---------------------------------------------------------------------------
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  numbers=left, numberstyle=\tiny\color{gray}, numbersep=6pt,
+  frame=tb, framerule=0.6pt,
+  columns=fullflexible, keepspaces=true,
+  showstringspaces=false, breaklines=true,
+  captionpos=t, xleftmargin=1.2em, framexleftmargin=1.2em
+}
+\renewcommand{\lstlistingname}{Listing}
+
+% ---------------------------------------------------------------------------
+% "(cit. on p. N)" after each bibliography entry
+% ---------------------------------------------------------------------------
+\renewcommand*{\backref}[1]{}
+\renewcommand*{\backrefalt}[4]{%
+  \ifcase #1 %
+  \or (cit. on p.~#2).%
+  \else (cit. on pp.~#2).%
+  \fi}
+
+\setlist{itemsep=2pt,topsep=4pt}
+\setlength{\emergencystretch}{1.5em}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\begin{document}
+
+% ===========================================================================
+% Title page
+% ===========================================================================
+\begin{titlepage}
+  \centering
+  \vspace*{1cm}
+  {\bfseries UCS503P - Software Engineering\par}
+  \vspace{1.6cm}
+  {\LARGE\bfseries MathVerse\par}
+  \vspace{0.3cm}
+  {\small Adaptive, Gamified Mathematics Practice with Superhero Boss Battles\par}
+  \vspace{2.4cm}
+  {\bfseries Submitted by:\par}
+  \vspace{0.2cm}
+  {\small
+  1024030100 Harshit Negi\par
+  1024030122 Parth Arora\par
+  1024030097 Raghu Raja\par
+  1024030113 Ramneek Kaur\par}
+  \vspace{0.4cm}
+  {\small Group: \texttt{3C14} BE Third Year, CSE\par}
+  \vspace{2cm}
+  {\bfseries Submitted to:\par}
+  \vspace{0.2cm}
+  {\small Ms. Anushka\par}
+  \vfill
+  {\small End-Semester Evaluation\par}
+  \vspace{0.1cm}
+  {\bfseries Computer Science and Engineering Department\par}
+  {\small Thapar Institute of Engineering and Technology, Patiala\par}
+  \vspace{0.6cm}
+  {\small November 2026\par}
+  \vspace*{1.5cm}
+\end{titlepage}
+\setcounter{page}{2}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+% ===========================================================================
+\chapter{Introduction}
+% ===========================================================================
+
+\section{Background and Context}
+
+Mathematics is the subject in which school students most often lose confidence. Practice
+is repetitive, a wrong answer feels like a verdict, and \emph{math anxiety} is well documented
+to depress performance independently of ability~\cite{Ash02}. At the same time, the people
+who support a child---parents and teachers---usually see only a worksheet score. A score of
+6/10 does not say \emph{which} topic is weak, whether the child is improving, or whether they
+practised at all this week.
+
+Two lines of work suggest a way forward. \emph{Gamification}, the use of game design
+elements in non-game contexts~\cite{Det11}, has been shown to increase engagement in a
+majority of empirical studies, provided the game mechanics support rather than distract from
+the task~\cite{HKS14}. \emph{Knowledge tracing}, in particular Bayesian Knowledge Tracing
+(BKT)~\cite{CA94}, gives a principled, explainable way to estimate from right and wrong
+answers alone how likely it is that a student has learned a skill, and therefore which
+difficulty to serve next.
+
+\textbf{MathVerse}~\cite{Neg26} combines the two. Students play Spider-Man in short
+\emph{missions} against six villains; each villain stands for one mathematics topic, and each
+correct answer is a ``hit'' on the villain. Behind the game, the server keeps one mastery
+estimate per student per topic, uses it to choose the next question's difficulty, and builds
+honest, data-only progress reports for linked parents and teachers. An optional webcam
+\emph{attention estimate} runs entirely inside the browser and is kept strictly separate from
+anything academic. Figure~\ref{fig:workflow} shows the overall workflow as it was planned in
+the Software Requirements Specification (SRS).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{figures/srs_workflow.png}
+  \caption[Overall workflow of MathVerse as planned in the SRS]{Overall workflow of
+    MathVerse as planned in the SRS. In the implemented system, Gwen does not use RAG: she
+    gives a hint computed from the question's own numbers, optionally reworded by a language
+    model (Section~\ref{sec:secondary}).}
+  \label{fig:workflow}
+\end{figure}
+
+The project was built for UCS503P Software Engineering (2026--27, odd semester) at Thapar
+Institute of Engineering and Technology. In line with the course's project-selection criteria
+it was developed in short build--test--ship iterations backed by continuous integration (CI).
+
+\subsection{Problem Statement}
+
+The problem MathVerse addresses has four parts:
+\begin{enumerate}
+  \item \textbf{Engagement.} Plain drill sheets give no reason to continue after a few wrong
+    answers. Practice needs immediate, motivating feedback without turning into a distraction.
+  \item \textbf{Fit.} A fixed question set is too hard for some students and too easy for
+    others. Difficulty should follow what \emph{this} student currently knows in \emph{this}
+    topic.
+  \item \textbf{Visibility.} Parents and teachers need per-topic, over-time
+    information---not one total---and every number they are shown must be traceable to the
+    child's actual answers.
+  \item \textbf{Trust and privacy.} The users are children. A client must not be able to
+    award itself points; any use of the camera must be optional, local and non-judgemental;
+    and no AI component may invent maths, scores or ``insights''.
+\end{enumerate}
+
+An audit of the project's first, prototype-stage implementation (Section~\ref{sec:analysis})
+found that it failed several of these points: answers were judged on the client, webcam frames
+were uploaded to the server, attention metrics and dashboard summaries were partly fabricated,
+and an LSTM model had been trained only on synthetic data. The final system described in this
+report is the rebuild that resolved those findings.
+
+\section{Project Objectives}
+
+\begin{enumerate}
+  \item \textbf{Objective 1 -- Server-authoritative, adaptive gameplay:} deliver six playable
+    villain missions (one per topic) with three difficulty tiers each, where the server
+    generates every question, keeps the answer, judges the response and awards all points, so
+    that a modified client cannot score itself. \emph{Measure:} every one of the
+    $6\times 3$ generator/tier combinations re-solved independently from the question text in
+    automated tests.
+  \item \textbf{Objective 2 -- Explainable mastery model:} maintain a BKT mastery estimate per
+    student per topic that is driven only by right and wrong answers, always rises after a
+    correct answer and falls after an incorrect one, and selects the next tier.
+    \emph{Measure:} it must predict next answers better than simple baselines (running
+    accuracy, last answer) in AUC and Brier score on 100{,}000 simulated predictions.
+  \item \textbf{Objective 3 -- Privacy-preserving optional attention estimate:} offer a webcam
+    estimate that runs inside the browser, sends at most four numbers per question, never
+    stores or uploads an image, and never affects mastery, difficulty, points or unlocks.
+    \emph{Measure:} automated tests T1--T6 (Table~\ref{tab:requirements}).
+  \item \textbf{Objective 4 -- Honest guardian reporting:} let parents and teachers link to a
+    student only with the student's link code, and show accuracy, practice over time, mastery
+    per topic, earned badges and rule-based observations computed solely from stored rows.
+    \emph{Measure:} report fields checked against hand-computed values (T10--T12).
+  \item \textbf{Objective 5 -- Engineering quality:} keep backend and frontend test suites,
+    type-checking, linting and a production build green in a CI pipeline that runs on every
+    push, before the end of the semester (November 2026).
+\end{enumerate}
+
+These objectives are \emph{Specific} (one subsystem each), \emph{Measurable} (a named test
+suite or metric), \emph{Achievable} within a four-person, one-semester project,
+\emph{Relevant} to the problem statement above, and \emph{Time-bound} to the end of the odd
+semester. Their outcome is assessed in Chapter~\ref{ch:results}.
+
+\section{Team and Responsibilities}
+
+Table~\ref{tab:team} lists each member's area of responsibility, as recorded in the team
+journals kept in the repository. Each journal holds the member's original plan (which assumed
+Node.js, a RAG pipeline and an LSTM) and a final work record of what was built; the reasons
+for the changes are given in Table~\ref{tab:planned}.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabularx}{\textwidth}{@{}lL@{}}
+    \toprule
+    \textbf{Member} & \textbf{Area of responsibility} \\
+    \midrule
+    Harshit Negi & Frontend (React, Vite): screens, mission player, rewards UI,
+      student/parent/teacher dashboards, responsive layout, UI testing. \\
+    Parth Arora & Backend and database: FastAPI service, data model, authentication and
+      role-based access, gameplay and report endpoints, integration and hardening. \\
+    Raghu Raja & Gwen tutor: curriculum content per topic, hint generation, AI wording with
+      fallback when the model is slow or unavailable. \\
+    Ramneek Kaur & Mastery and adaptive difficulty: mastery update rule, difficulty
+      thresholds, simulated-student data and model evaluation. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Team members and areas of responsibility}
+  \label{tab:team}
+\end{table}
+
+% ===========================================================================
+\chapter{Methodology and Design}\label{ch:design}
+% ===========================================================================
+
+\section{System Architecture}
+
+MathVerse is a \textbf{three-tier client--server} web application: a React single-page
+application in the browser (presentation tier), a Python FastAPI service (application tier)
+and an SQLite database (data tier). Four architectural rules, written down before the rebuild
+and enforced by tests, shape every component:
+\begin{enumerate}
+  \item \textbf{The server owns the truth.} It writes each question, keeps the answer, decides
+    whether a response is right, and awards points, levels and unlocks. The browser only
+    reports which option was picked.
+  \item \textbf{The browser owns the camera.} Face tracking runs in the browser; at most four
+    numbers per question are sent.
+  \item \textbf{Academic and attention data are separate tracks.} Mastery, difficulty, points
+    and progression depend only on maths answers.
+  \item \textbf{Nothing is invented.} Every dashboard number is counted from stored rows;
+    missing data is shown as missing.
+\end{enumerate}
+
+\subsection{High-Level Design}
+
+Figure~\ref{fig:arch-impl} shows the architecture as implemented. On the browser side, the
+mission screen drives a game; an optional attention tracker turns webcam frames into numbers
+locally; an \emph{effects director} turns server results into sounds and animations; and a
+single HTTP client, \texttt{lib/api.ts}, is the only code that talks to the backend. On the
+server, \texttt{deps.py} establishes who is calling from the JSON Web Token~\cite{JBS15} and
+what they may see; thin routers delegate to services for question generation, mastery,
+scoring, hints and reports.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+      node distance=8mm and 10mm,
+      tier/.style={draw, rounded corners=2pt, fill=gray!8, align=center, font=\footnotesize,
+                   text width=37mm, minimum height=18mm},
+      ext/.style={draw, rounded corners=2pt, dashed, fill=white, align=center,
+                  font=\footnotesize, minimum width=34mm, minimum height=11mm},
+      arr/.style={-{Stealth[length=2.2mm]}, thick},
+      lbl/.style={font=\scriptsize, fill=white, inner sep=1pt}]
+    \node[tier] (fe) {\textbf{Presentation tier}\\React 18, TypeScript\\
+      screens, dashboards,\\effects, camera estimate};
+    \node[tier, right=17mm of fe] (be) {\textbf{Application tier}\\Python FastAPI\\
+      routers $\rightarrow$ services\\validation, JWT, roles};
+    \node[tier, right=11mm of be] (db) {\textbf{Data tier}\\SQLite via SQLAlchemy\\
+      5 tables};
+    \node[ext, above=10mm of fe] (google) {Google sign-in\\(optional)};
+    \node[ext, below=10mm of fe] (cam) {Webcam (optional)\\frames stay in browser};
+    \node[ext, below=10mm of be] (groq) {Groq LLM (optional)\\rewords a hint only};
+    \draw[arr] ([yshift=3mm]fe.east) -- node[lbl, above=2pt] {request} ([yshift=3mm]be.west);
+    \draw[arr] ([yshift=-3mm]be.west) -- node[lbl, below=2pt] {JSON} ([yshift=-3mm]fe.east);
+    \draw[arr] (be) -- node[lbl, above=1pt] {SQL} (db);
+    \draw[arr] (google) -- node[lbl, right=1pt] {ID token} (fe);
+    \draw[arr] (cam) -- node[lbl, right=1pt] {4 numbers} (fe);
+    \draw[arr] (be) -- node[lbl, right=1pt] {hint text} (groq);
+  \end{tikzpicture}
+  \caption{Architecture of MathVerse as implemented}
+  \label{fig:arch-impl}
+\end{figure}
+
+\paragraph{Planned design and what changed.} The SRS planned a layered system with a Node.js
+and Express backend and an asynchronous AI/analytics layer containing a RAG tutor and an LSTM
+(Figure~\ref{fig:arch-srs}). The implemented system keeps the layering and the REST style but
+differs in three ways: the backend is Python and FastAPI; Gwen's hints are computed from each
+question rather than retrieved (RAG), and a language model may only reword them; and an
+explainable BKT model replaces the LSTM, which needed a large real interaction dataset that did
+not exist. Table~\ref{tab:planned} lists every planned technology next to what was built and
+the reason for each change. Figure~\ref{fig:usecase} shows the use cases from the SRS, which
+the implementation keeps, adding guardian linking by code and the optional camera.
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.3cm}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{3.1cm}L@{}}
+    \toprule
+    \textbf{Area} & \textbf{Planned (proposal, SRS)} & \textbf{Implemented} & \textbf{Reason} \\
+    \midrule
+    Backend & Node.js + Express REST API & Python + FastAPI & Automatic request validation and API documentation; the same REST design. \\
+    Database & PostgreSQL via Prisma migrations & SQLite via SQLAlchemy & No server to install for a course project; the ORM keeps PostgreSQL a configuration change (\texttt{DATABASE\_URL}). \\
+    Frontend language & JavaScript & TypeScript & Type checking catches mistakes before run time. \\
+    Game state & Kept in the browser (prototype) & Owned by the server & A browser could otherwise award itself points. \\
+    Questions & Written by a language model; a question table & Generated by code with computed answers; 36 story templates; backup bank & Language models make arithmetic mistakes; computed answers are always right and testable. \\
+    Gwen tutor & RAG over curated syllabus content & Hint computed from the question; a language model (Groq) may only reword it & No curated corpus existed; a hint built from the question's own numbers cannot be wrong. \\
+    Learning model & LSTM over response sequences & Bayesian Knowledge Tracing & An LSTM needs a large real dataset; BKT works from the first answer and is explainable. \\
+    AI processing & Asynchronous job queue & Synchronous BKT; hint call with a 6\,s timeout and fallback & The goal of never blocking the next question is met without a queue. \\
+    Hint history & \texttt{HintHistory} table & \texttt{hint\_used} and hint text on each attempt & One hint per question, so a separate table added nothing. \\
+    Reports, badges & \texttt{LearningReport} and \texttt{Badge} tables & Computed on request from stored answers & No stale copies; every figure traces to a stored answer. \\
+    Eye tracking & Future scope (hardware SDK) & Optional in-browser MediaPipe estimate & Built with strict privacy rules: no image leaves the browser. \\
+    Transport & HTTPS & HTTP on a local machine & Deployment postponed; HTTPS is required before real use. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Planned versus implemented technology}
+  \label{tab:planned}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{figures/srs_architecture.png}
+  \caption[Layered system architecture as planned in the SRS]{Layered system architecture as
+    planned in the SRS. The implemented backend is Python and FastAPI rather than Node.js and
+    Express, and there is no RAG tutor or LSTM (see Figure~\ref{fig:arch-impl}).}
+  \label{fig:arch-srs}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\textwidth]{figures/srs_usecase.png}
+  \caption{Use case diagram of MathVerse, from the SRS}
+  \label{fig:usecase}
+\end{figure}
+
+\paragraph{One question, start to finish.} Figure~\ref{fig:activity} shows the student
+learning journey from the SRS. One question passes through the implemented system as follows:
+\begin{enumerate}
+  \item The mission screen asks the server to start a mission (or the previous answer requests
+    the next question).
+  \item The server reads the student's mastery for the villain's topic, picks a tier (below
+    0.40 easy, above 0.75 hard, otherwise medium) and builds a question from random numbers.
+    The answer is computed and stored with the question; only the text and four options go to
+    the browser.
+  \item The student picks an option. The browser sends the option index, the time taken and
+    the camera summary (or \texttt{null}).
+  \item The server judges the answer, updates mastery from right or wrong alone, awards
+    points, updates the mission and replies with the result and the next question.
+  \item The browser turns the result into game events (strike, counter-attack, combo,
+    signature move, victory) and plays the matching sounds and visual effects.
+\end{enumerate}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{figures/srs_activity.png}
+  \caption[Activity diagram of the student learning journey, from the SRS]{Activity diagram
+    of the student learning journey, from the SRS. The asynchronous ``analyse behaviour,
+    predict risk'' step was the planned LSTM and was not built; in the final system the
+    optional attention estimate runs in the browser alongside play and never affects scoring.}
+  \label{fig:activity}
+\end{figure}
+
+\paragraph{Data model.} Figure~\ref{fig:schema} shows the schema designed in the SRS; the
+implementation consolidates it into five tables (Table~\ref{tab:tables}). Questions are
+generated, so each served question is stored on its \texttt{attempts} row instead of in a
+question bank; reports and badges are computed from stored answers instead of being stored
+separately; and the hint is recorded on the attempt. A deliberate simplification was to store
+the optional attention numbers as five nullable columns on \texttt{attempts}: there is exactly
+one summary per question, so a separate table would only add joins. \texttt{NULL} means ``not
+measured'' and is never converted to zero.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{figures/srs_schema.png}
+  \caption{Database schema overview (entity relationships) as designed in the SRS}
+  \label{fig:schema}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabularx}{\textwidth}{@{}lL@{}}
+    \toprule
+    \textbf{Table} & \textbf{What a row is} \\
+    \midrule
+    \texttt{users} & An account: name, email, bcrypt password hash, role (student, parent,
+      teacher), points, level, the student's link code, demo flag, Google account id. \\
+    \texttt{guardian\_links} & ``This parent or teacher may view this student''
+      (many-to-many, unique per pair). \\
+    \texttt{play\_sessions} & One boss battle: villain, status (active, victory, defeat,
+      abandoned), correct and wrong counts, streak, points. \\
+    \texttt{attempts} & One question served: its text, options and stored answer; the choice,
+      time and hint use; points; mastery before and after; optional camera numbers. \\
+    \texttt{topic\_mastery} & One BKT estimate per student per topic. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Database tables}
+  \label{tab:tables}
+\end{table}
+
+\subsection{Technical Stack}
+
+\begin{itemize}
+  \item \textbf{Framework/Language:} TypeScript with React~18~\cite{Met26} and Vite for the
+    single-page app; Python with FastAPI~\cite{Ram26} and Pydantic for the API. Request
+    schemas reject unknown fields (\texttt{extra="forbid"}), which also guarantees that no
+    image or binary field can be smuggled into an answer.
+  \item \textbf{Database:} SQLite accessed through SQLAlchemy~\cite{Bay26}; the database file
+    is created on first start and a small start-up step adds new columns to older databases in
+    place.
+  \item \textbf{Tools:} Git and GitHub; GitHub Actions for CI; pytest, Vitest, React Testing
+    Library and Playwright for testing; ESLint and the TypeScript compiler for static checks.
+  \item \textbf{Libraries:} MediaPipe Tasks Vision FaceLandmarker~\cite{Lug19} (in-browser,
+    WebAssembly) for the camera estimate; the Web Audio API~\cite{W3C21} for all character
+    sounds; Tailwind CSS and inline SVG for styling and effects; bcrypt~\cite{PM99} and
+    python-jose for passwords and tokens; google-auth for the optional ``Sign in with Google'';
+    the Groq API (\texttt{openai/gpt-oss-120b}) only to reword a hint in character. The
+    frontend has just four runtime dependencies (React, React DOM, MediaPipe and an icon set).
+\end{itemize}
+
+Table~\ref{tab:stack} summarises the stack by layer.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabularx}{\textwidth}{@{}llL@{}}
+    \toprule
+    \textbf{Layer} & \textbf{Technology} & \textbf{Used for} \\
+    \midrule
+    Frontend & React 18, TypeScript, Vite & The single-page app \\
+    Styling & Tailwind CSS, CSS animation, SVG & Layout, comic styling, character effects \\
+    Sound & Web Audio API & Every sound, synthesised in code \\
+    Computer vision & MediaPipe FaceLandmarker (WASM) & Optional, in-browser attention estimate \\
+    Backend & Python, FastAPI, Pydantic & API and strict request validation \\
+    Database & SQLAlchemy, SQLite & Accounts, missions, answers, mastery \\
+    Security & bcrypt, JWT, Google Identity & Hashing, sign-in tokens, roles \\
+    Optional AI & Groq API & Rewording a verified hint; nothing else \\
+    Testing & pytest, Vitest, RTL, Playwright & Backend, frontend, real-browser camera checks \\
+    CI & GitHub Actions & Tests, typecheck, lint, build on every push \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Technology stack}
+  \label{tab:stack}
+\end{table}
+
+\subsection{Development Process}
+
+Development followed short iterations, each ending in a working, tested increment.
+Table~\ref{tab:timeline} summarises the history recorded in the repository's 80 commits.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabularx}{\textwidth}{@{}lL@{}}
+    \toprule
+    \textbf{Period (2026)} & \textbf{Increment} \\
+    \midrule
+    Jul--Aug & Course repository created; project proposal, diagrams (use case, sequence,
+      activity, class) and team journals. \\
+    Sep & Prototype: React frontend with boss battles and missions; first FastAPI backend with
+      server-side eye tracking, an LSTM model and LLM-generated questions. \\
+    Oct & Software Requirements Specification; authentication, ownership checks and
+      per-question progress saving. \\
+    9--13 Nov & Audit of the prototype and a five-phase rebuild: (A) backend foundation and
+      security, (B) optional in-browser attention, (C) BKT mastery and tiered deterministic
+      questions, (D) real parent/teacher dashboards, (E) clean-up, documentation and CI. \\
+    13--16 Nov & Mastery shown as a band with a 5--95\% estimate; sound engine, character
+      effects for all seven characters, combo specials and signature moves; real-browser and
+      real-webcam camera checks. \\
+    16--20 Nov & Villain story questions and a hand-checked backup bank; README with
+      screenshots; optional Google sign-in; evaluation of the mastery model on simulated and
+      real data. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Development timeline}
+  \label{tab:timeline}
+\end{table}
+
+\section{Implementation Details}
+
+The backend is about 2,600 lines of Python (plus about 1,600 lines of tests); the frontend
+about 7,200 lines of TypeScript and CSS (plus about 2,000 lines of tests). The API exposes
+twelve endpoints (Table~\ref{tab:endpoints}); identity is always taken from the bearer token,
+never from an id in the request.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{5.2cm}lL@{}}
+    \toprule
+    \textbf{Endpoint} & \textbf{Caller} & \textbf{Purpose} \\
+    \midrule
+    \texttt{POST /auth/register}, \texttt{/auth/login} & anyone & Create account / sign in;
+      returns a JWT \\
+    \texttt{POST /auth/google} & anyone & Sign in with a verified Google ID token (optional) \\
+    \texttt{GET /auth/me} & signed in & The caller's own account \\
+    \texttt{POST /auth/demo/\{role\}} & anyone & Seeded demo account; 404 unless
+      \texttt{DEMO\_MODE} \\
+    \texttt{GET /students/me/progress} & student & Points, level, unlocked villains, link
+      code \\
+    \texttt{POST /sessions} & student & Start a mission; returns the first question \\
+    \texttt{GET /attempts/\{id\}/hint} & owner & Gwen's hint for this question \\
+    \texttt{POST /attempts/\{id\}/answer} & owner & Judge, score, update mastery, next
+      question \\
+    \texttt{POST /guardians/links} & parent, teacher & Link to a student by link code \\
+    \texttt{GET /guardians/students} & parent, teacher & Linked students with summaries \\
+    \texttt{GET /students/\{id\}/report} & self or linked & Full progress report \\
+    \bottomrule
+  \end{tabularx}
+  \caption[REST API endpoints]{REST API endpoints (plus an unauthenticated
+    \texttt{GET /health})}
+  \label{tab:endpoints}
+\end{table}
+
+\subsection{Module 1: Core Functionality}
+
+The core module is the gameplay loop on the server: question generation, answer judging, the
+mastery model and the game rules.
+
+\paragraph{Curriculum.} Six villains are unlocked in order, each teaching one topic: Green
+Goblin (linear equations), Doctor Octopus (area and perimeter), Mysterio (sequences and
+patterns), Venom (percentages), The Lizard (exponents and roots) and Kingpin (ratios and
+proportions).
+
+\paragraph{Deterministic question generation.} \texttt{services/questions.py} contains one
+small generator per villain per tier ($6\times 3 = 18$). Each picks random numbers, writes the
+question and computes the answer, so the stored answer cannot be wrong and the number of
+distinct questions is effectively unlimited. A helper builds four distinct options containing
+the answer exactly once, pads colliding distractors with nearby values and shuffles them. About
+half of all questions are \emph{story questions} (\texttt{story\_questions.py}): 36 templates,
+six per villain and two per tier, that ask the same skill through the villain's world---the
+Goblin's pumpkin bombs, Doc Ock's arms, Mysterio's illusions, Venom's symbiote, the Lizard's
+serum and Kingpin's empire. Each generated question also carries a plain hint written from its
+own numbers. Table~\ref{tab:tiers} shows what each tier asks.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.1cm}LLL@{}}
+    \toprule
+    \textbf{Villain / topic} & \textbf{Easy} & \textbf{Medium} & \textbf{Hard} \\
+    \midrule
+    Green Goblin, linear equations & $Y+7=12$, $4Y=20$ & $3Y+5=20$ & $3(Y+2)=21$,
+      $5Y+3=2Y+18$ \\
+    Doctor Octopus, area/perimeter & small rectangles & larger rectangles & triangle area; area
+      from a perimeter \\
+    Mysterio, sequences & next term (adding) & adding or multiplying & the 10th term \\
+    Venom, percentages & 10, 25, 50\% of a number & 15--60\% of a number & \% increase; one
+      number as a \% of another \\
+    The Lizard, exponents/roots & $7^2$, $\sqrt{49}$ & $3^2+\sqrt{16}$ & $2^3\times 2^2$,
+      $(3^2)^2$ \\
+    Kingpin, ratios & $1:4=3:X$ & $2:5=6:X$ & share an amount in a ratio \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Question types by villain and difficulty tier}
+  \label{tab:tiers}
+\end{table}
+
+All questions are requested through \texttt{question\_or\_backup}, which falls back to a
+fixed, hand-checked bank of 36 questions (six per villain) only if the generator raises an
+unexpected error. Because no question depends on an external AI service, an AI outage cannot
+stop a mission.
+
+\paragraph{Answer judging.} When a question is served it is stored as an \texttt{attempts}
+row including its \texttt{correct\_index}; only the text and options leave the server. On
+\texttt{POST /attempts/\{id\}/answer} the server checks ownership (another student's attempt
+returns 404, so ids cannot be probed), rejects a second answer with 409, compares the chosen
+index with the stored one, and then runs two strictly separated tracks: the \emph{academic}
+track (mastery, points, mission state) uses only \texttt{is\_correct}; the \emph{attention}
+track copies the optional summary onto the row and is read by nothing else in the request.
+
+\paragraph{Mastery model (BKT).} For every student and topic the server keeps $p$, the
+probability that the topic has been learned~\cite{CA94}. With guess $g = 0.25$ (four options),
+slip $s = 0.10$ and learning rate $\ell = 0.15$, a correct answer applies Bayes' rule followed
+by the learning step:
+\begin{equation}
+  p' = \frac{p(1-s)}{p(1-s) + (1-p)\,g}, \qquad p_{\text{new}} = p' + (1-p')\,\ell,
+  \label{eq:correct}
+\end{equation}
+and an incorrect answer applies Bayes' rule only:
+\begin{equation}
+  p_{\text{new}} = \frac{p\,s}{p\,s + (1-p)(1-g)}.
+  \label{eq:wrong}
+\end{equation}
+From the prior $p = 0.30$, a correct answer gives $0.607 \rightarrow 0.666$ and an incorrect
+one gives $0.054$. Values are clamped to $[0.01, 0.99]$ so the model never claims certainty.
+The next tier is easy below 0.40, hard above 0.75 and medium otherwise.
+
+The implementation makes one deliberate change to textbook BKT. The textbook applies the
+learning step after every answer, so at low mastery a wrong answer can \emph{raise} the
+estimate (from 0.05 to about 0.16). That is statistically defensible but confusing on a
+child's report, so MathVerse applies the learning step only after correct answers. As a
+result, a correct answer always raises mastery and an incorrect one always lowers it---a
+property the tests check for every starting value from 0.01 to 0.99. The function's signature
+makes the separation from attention structural: there is no parameter through which camera
+data could reach it (Listing~\ref{lst:mastery}).
+
+\begin{lstlisting}[language=Python, caption={The mastery update and tier selection (\texttt{services/mastery.py})}, label={lst:mastery}]
+PRIOR, P_GUESS, P_SLIP, P_LEARN = 0.30, 0.25, 0.10, 0.15
+P_MIN, P_MAX = 0.01, 0.99            # never claim total certainty
+EASY_BELOW, HARD_ABOVE = 0.40, 0.75
+
+def update_mastery(p_mastery: float, is_correct: bool) -> float:
+    p = min(P_MAX, max(P_MIN, p_mastery))
+    if is_correct:
+        posterior = p * (1 - P_SLIP) / (p * (1 - P_SLIP) + (1 - p) * P_GUESS)
+        new_p = posterior + (1 - posterior) * P_LEARN
+    else:
+        new_p = p * P_SLIP / (p * P_SLIP + (1 - p) * (1 - P_GUESS))
+    return round(min(P_MAX, max(P_MIN, new_p)), 4)
+
+def difficulty_for(p_mastery: float) -> str:
+    if p_mastery < EASY_BELOW:
+        return "easy"
+    if p_mastery > HARD_ABOVE:
+        return "hard"
+    return "medium"
+\end{lstlisting}
+
+Figure~\ref{fig:bkt} shows how the estimate, and therefore the tier, follows two example
+answer sequences.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        width=0.82\textwidth, height=6.2cm,
+        xmin=0, xmax=8, ymin=0, ymax=1,
+        xtick={0,...,8}, ytick={0,0.2,...,1},
+        xlabel={Answers given}, ylabel={Mastery estimate $p$},
+        grid=major, grid style={gray!20},
+        legend style={at={(0.5,-0.22)}, anchor=north, legend columns=2, font=\footnotesize},
+        tick label style={font=\footnotesize}, label style={font=\small}]
+      \fill[green!12] (axis cs:0,0.75) rectangle (axis cs:8,1);
+      \fill[orange!12] (axis cs:0,0) rectangle (axis cs:8,0.40);
+      \node[font=\scriptsize, anchor=south east] at (axis cs:7.95,0.76) {hard tier};
+      \node[font=\scriptsize, anchor=north east] at (axis cs:7.95,0.39) {easy tier};
+      \addplot[blue!70!black, thick, mark=*] coordinates
+        {(0,0.30) (1,0.666) (2,0.896) (3,0.534) (4,0.834) (5,0.956) (6,0.989) (7,0.924) (8,0.981)};
+      \addlegendentry{C, C, W, C, C, C, W, C}
+      \addplot[red!70!black, thick, mark=square*] coordinates
+        {(0,0.30) (1,0.054) (2,0.01) (3,0.18) (4,0.525) (5,0.829) (6,0.954)};
+      \addlegendentry{W, W, C, C, C, C}
+    \end{axis}
+  \end{tikzpicture}
+  \caption[BKT mastery after each answer]{BKT mastery after each answer (C = correct,
+    W = wrong), computed with the project's own \texttt{update\_mastery}}
+  \label{fig:bkt}
+\end{figure}
+
+\paragraph{Game rules.} Scoring and progression live in \texttt{services/game.py} and are
+summarised in Table~\ref{tab:rules}. Because the client sends only the chosen index and the
+time taken, it cannot award itself points.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.2cm}L@{}}
+    \toprule
+    \textbf{Rule} & \textbf{Value} \\
+    \midrule
+    Correct answers to win a mission & 7 \\
+    Wrong answers or time-outs to lose & 7 \\
+    Time per question & 5 minutes \\
+    Points for a correct answer & 50, plus 15 for each answer already in the current streak,
+      plus 20 if answered within 15\,s \\
+    Points for a wrong attempt & 5 (a time-out earns 0) \\
+    Victory bonus & $300 + 50\times$ final streak \\
+    Levels & 1 to 6: one more for each different villain defeated; level $N$ unlocks the
+      first $N$ villains \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Game rules enforced by the server}
+  \label{tab:rules}
+\end{table}
+
+\subsection{Module 2: Secondary Features}\label{sec:secondary}
+
+\paragraph{Authentication and access control.} Passwords are hashed with bcrypt using a
+per-password random salt~\cite{PM99}; sign-in returns a signed JWT~\cite{JBS15} whose subject
+is the user id. Three FastAPI dependencies in \texttt{deps.py} implement all access rules:
+\texttt{current\_user} (401 without a valid token), \texttt{require\_role} (403 for the wrong
+role) and \texttt{student\_for\_viewer}, which allows a report to be read only by the student
+themself or by a guardian with a link. The login error is identical for an unknown email and a
+wrong password, so the form cannot be used to discover registered addresses. The optional
+``Sign in with Google'' verifies Google's signed ID token with Google's own library
+(signature, this app's client id, expiry, verified email) before trusting it, links an
+existing account only by a Google-verified email, and can never reach a demo account.
+
+\paragraph{Guardian linking and demo isolation.} Each student account has a link code such as
+\texttt{SPIDER-7KQ2MX}, drawn from an alphabet without the easily confused characters 0/O and
+1/I and shown only inside the student's own account. A parent or teacher must enter it to
+link; possessing the code is the consent step. Demo accounts (created only by
+\texttt{python seed.py --demo}, reachable only when \texttt{DEMO\_MODE=true}) can never be
+linked with real accounts in either direction, and every screen of a demo account carries a
+``Demo account, sample data'' banner.
+
+\paragraph{Progress reports.} \texttt{services/report\_builder.py} builds a student report
+entirely from stored rows: accuracy, questions answered, practice time, a 14-day daily trend,
+mastery per topic over time, topics to practise next, badges and short observations. Badges are
+earned, never handed out by default (``Green Goblin defeated'', ``Flawless mission'',
+25/100/250 questions answered). Observations are fixed-rule sentences that appear only once
+there are at least ten answers, for example ``Accuracy over the last 7 days was 72\%, up from
+60\% the week before.'' Because BKT moves quickly, mastery is shown as a band first (Needs
+practice / Developing / Strong, using the same thresholds as the tiers), then a percentage
+limited to 5--95\% (``95\% or more'' at the limit), next to the plain count of correct
+answers. The stored values and every decision continue to use the raw model output. The report
+is drawn with single-series inline SVG charts, with no chart library.
+
+\paragraph{Optional attention estimate.} After the student chooses \emph{Enable camera} on a
+consent screen with two equal buttons, the tracker reads the webcam into an off-screen
+\texttt{<video>} element (never added to the page, never drawn to a canvas) and runs MediaPipe
+FaceLandmarker in the browser about ten times a second~\cite{Lug19}. Each reading becomes four
+values: face present, head yaw, head pitch and eyes closed. The first five seconds with a face
+set the student's own resting head position; afterwards a reading counts as facing the screen
+if the head is within $30^\circ$ left/right and $20^\circ$ up/down of that baseline. A blink is
+eyes closed followed by open. Per question, only four numbers are sent: face-present
+percentage, facing-the-screen percentage, blinks per minute (or \texttt{null} if fewer than
+five seconds were measured or no face was seen) and seconds measured. Permission denied, no
+camera, a busy camera or a model failure all show one calm line and the game continues; the
+camera is switched off at the end screens and from a toggle that stays visible during play.
+The estimate is reported in its own panel as ``an estimate, not a medical assessment'' and is
+read by nothing academic.
+
+\paragraph{Gwen's hints.} Every question carries a correct hint written by the generator. If a
+Groq API key is configured, a language model is asked to do exactly one thing: re-say that
+verified hint in Spider-Gwen's voice, in at most two sentences, keeping every number and step
+and never giving the answer. If the model is slow (6-second timeout), fails, or returns more
+than 400 characters, the plain hint is shown. The model adds character, not content, and the
+game never depends on it.
+
+\paragraph{Character effects.} A frontend-only \emph{effects director} turns server results
+into game events---player strike, villain attack, combo specials at streaks of 3, 5 and 7, a
+villain signature move and a defeat sequence---and plays them per character. All 79 sounds are
+synthesised in code with the Web Audio API~\cite{W3C21}; there are 57 visual effect types (web
+shots, pumpkin bombs, tentacles, illusions, tail sweeps, shock rings) and 95 variations, dealt
+so that the same one does not repeat back to back. At most four sounds play at once, nothing
+covers the question, and mute, volume and reduced motion are remembered on the device. The
+director has no access to the camera or to the server.
+
+\paragraph{Screens.} Figures~\ref{fig:screens-student} and~\ref{fig:screens-results} show the
+running application.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\textwidth}
+    \includegraphics[width=\linewidth]{figures/landing.jpg}
+    \caption{Landing page}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\textwidth}
+    \includegraphics[width=\linewidth]{figures/camera-consent.jpg}
+    \caption{Camera consent: either choice gives the same game}
+  \end{subfigure}\\[6pt]
+  \begin{subfigure}[t]{0.49\textwidth}
+    \includegraphics[width=\linewidth]{figures/mission-question.jpg}
+    \caption{A story question against Green Goblin}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\textwidth}
+    \includegraphics[width=\linewidth]{figures/mission-combo.jpg}
+    \caption{A three-answer combo special}
+  \end{subfigure}
+  \caption{Student-facing screens}
+  \label{fig:screens-student}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\textwidth}
+    \includegraphics[width=\linewidth]{figures/mission-victory.jpg}
+    \caption{Victory: points earned and best streak}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\textwidth}
+    \includegraphics[width=\linewidth]{figures/student-dashboard.jpg}
+    \caption{Student dashboard (demo account)}
+  \end{subfigure}\\[6pt]
+  \begin{subfigure}[t]{0.49\textwidth}
+    \includegraphics[width=\linewidth]{figures/parent-report.jpg}
+    \caption{Parent report: headline figures and trends}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\textwidth}
+    \includegraphics[width=\linewidth]{figures/parent-report-2.jpg}
+    \caption{Parent report: mastery by topic, observations, badges}
+  \end{subfigure}
+  \caption[Results and reporting screens]{Results and reporting screens (demo screens show
+    seeded sample data, labelled as such)}
+  \label{fig:screens-results}
+\end{figure}
+
+% ===========================================================================
+\chapter{Results and Evaluation}\label{ch:results}
+% ===========================================================================
+
+\section{Testing Methodology}
+
+Testing was written alongside each feature rather than at the end, and twelve requirements
+(T1--T12) were mapped to specific test files (Table~\ref{tab:requirements}).
+\begin{itemize}
+  \item \textbf{Unit Testing:} pytest tests for the mastery model (both update directions
+    across the whole range, topic independence, thresholds), game rules, hints and their
+    fallbacks, mastery display, and the question generators. The generator tests re-solve 300
+    random questions for each of the 18 villain/tier combinations from the question text alone
+    and compare with the stored answer; every story template and every backup-bank entry is
+    re-solved the same way. Vitest unit tests cover the attention summary logic, effect
+    selection and variation dealing.
+  \item \textbf{Integration Testing:} FastAPI's TestClient drives the real API against an
+    in-memory SQLite database: whole missions to victory and defeat, a mission won on backup
+    questions alone, access control (401 without a token, 403 for another student, 404 for
+    another student's attempt), demo isolation, guardian linking with several children, Google
+    sign-in with forged or unverified tokens, and reports compared field by field with
+    hand-computed values. On the frontend, React Testing Library plays missions against a fake
+    server with a mocked camera.
+  \item \textbf{Performance Testing:} the mastery model was evaluated offline on 5,000
+    simulated students $\times$ 20 answers per scenario (Section~\ref{sec:metrics}); the camera
+    tracker's sampling rate, answer payload size and the four-sound limit were measured; the
+    production build size was recorded.
+  \item \textbf{User Testing:} a scripted real-webcam run on one laptop (Chrome on Windows 11,
+    one adult tester, 16 November 2026), a Playwright run of the real app in headless Chrome
+    with a pretend webcam (32 checks, \texttt{npm run check:camera}), and sign-off of every
+    sound batch by ear by the project owner.
+\end{itemize}
+Every push runs the CI workflow (Listing~\ref{lst:ci}): backend tests on Python 3.12, and on
+Node 20 the frontend type-check, lint, tests and production build.
+
+\begin{lstlisting}[caption={Continuous integration (\texttt{.github/workflows/ci.yml}, abridged)}, label={lst:ci}]
+jobs:
+  backend:                          # Python 3.12
+    steps:
+      - run: pip install -r requirements.txt
+      - run: pytest                 # own JWT secret, in-memory database
+  frontend:                         # Node 20
+    steps:
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+\end{lstlisting}
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabularx}{\textwidth}{@{}lLl@{}}
+    \toprule
+    \textbf{\#} & \textbf{Requirement} & \textbf{Tested in} \\
+    \midrule
+    T1 & Gameplay without camera permission & \texttt{MissionPlayer.test.tsx}, \texttt{test\_sessions.py} \\
+    T2 & Gameplay with camera permission & \texttt{MissionPlayer.test.tsx}, \texttt{test\_sessions.py} \\
+    T3 & Camera denied or missing: game carries on & \texttt{MissionPlayer.test.tsx} \\
+    T4 & Camera switched off during a mission & \texttt{MissionPlayer.test.tsx} \\
+    T5 & No webcam image is ever uploaded & \texttt{MissionPlayer.test.tsx}, \texttt{test\_sessions.py} \\
+    T6 & Mastery unchanged by attention data & \texttt{test\_mastery.py} \\
+    T7 & Correct/incorrect answers update BKT properly & \texttt{test\_mastery.py} \\
+    T8 & Demo login unavailable when \texttt{DEMO\_MODE=false} & \texttt{test\_auth.py} \\
+    T9 & Demo login reaches only seeded demo accounts & \texttt{test\_auth.py}, \texttt{test\_guardians.py} \\
+    T10 & Parent and teacher access restrictions & \texttt{test\_guardians.py}, \texttt{test\_dashboard.py} \\
+    T11 & Dashboard statistics match the database & \texttt{test\_dashboard.py} \\
+    T12 & Several children linked to one parent & \texttt{test\_guardians.py}, \texttt{test\_dashboard.py} \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Requirements and the tests that enforce them}
+  \label{tab:requirements}
+\end{table}
+
+\section{Performance Metrics}\label{sec:metrics}
+
+\paragraph{Mastery model against baselines.} Since no real-student dataset exists yet, the
+model was evaluated in the standard way for knowledge tracing without data: simulate students
+whose true state is known and ask each model to predict every answer \emph{before} seeing it.
+Two scenarios were run with 5,000 students $\times$ 20 answers each (100,000 predictions per
+scenario). In the second, the simulated students follow parameters deliberately different from
+the model's (prior 0.20, guess 0.30, slip 0.15, learn 0.10), so the model is not graded only on
+data shaped like its own assumptions. Metrics are the area under the ROC curve
+(AUC)~\cite{Faw06}, accuracy, and the Brier score~\cite{Bri50} (lower is better). The results
+in Table~\ref{tab:bkt} and Figure~\ref{fig:auc} were reproduced for this report by running
+\texttt{python tools/evaluate\_mastery.py}.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    & \multicolumn{3}{c}{\textbf{Students match model}} & \textbf{Students differ} \\
+    \cmidrule(lr){2-4}\cmidrule(l){5-5}
+    \textbf{Model} & \textbf{AUC} & \textbf{Accuracy} & \textbf{Brier} & \textbf{AUC} \\
+    \midrule
+    \textbf{BKT (this project)} & \textbf{0.770} & \textbf{78.3\%} & \textbf{0.151} & \textbf{0.729} \\
+    Running accuracy so far & 0.744 & 74.1\% & 0.182 & 0.704 \\
+    Last answer only & 0.696 & 74.7\% & 0.173 & 0.646 \\
+    Constant (overall rate) & 0.500 & 75.3\% & 0.186 & 0.500 \\
+    \bottomrule
+  \end{tabular}
+  \caption[Next-answer prediction on simulated students]{Next-answer prediction on simulated
+    students (100,000 predictions per scenario)}
+  \label{tab:bkt}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        ybar=3pt, bar width=13pt, width=0.92\textwidth, height=6.4cm,
+        ymin=0.4, ymax=0.88, ylabel={AUC},
+        symbolic x coords={BKT (this project),Running accuracy,Last answer,Constant},
+        xtick=data, x tick label style={font=\footnotesize},
+        tick label style={font=\footnotesize},
+        nodes near coords, nodes near coords style={font=\tiny, rotate=90, anchor=west},
+        every node near coord/.append style={/pgf/number format/.cd, fixed, precision=3, fixed zerofill},
+        legend style={at={(0.5,-0.18)}, anchor=north, legend columns=2, font=\footnotesize},
+        enlarge x limits=0.18]
+      \addplot[fill=blue!55, draw=blue!70!black] coordinates
+        {(BKT (this project),0.770) (Running accuracy,0.744) (Last answer,0.696) (Constant,0.500)};
+      \addplot[fill=orange!55, draw=orange!70!black] coordinates
+        {(BKT (this project),0.729) (Running accuracy,0.704) (Last answer,0.646) (Constant,0.500)};
+      \legend{Students match model, Students differ from model}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{AUC of each model in both simulation scenarios}
+  \label{fig:auc}
+\end{figure}
+
+Beyond prediction, the mastery estimate tracks the simulated students' true state with AUC
+0.941 (0.916 in the mismatched scenario); its easy/hard choices match that true state 89.6\% of
+the time (87.3\%); and a student who has learned a topic is recognised after a median of 3
+answers (90th percentile: 5) in both scenarios.
+
+\paragraph{Overall results.} Table~\ref{tab:results} collects the measured results. The
+\emph{Reference} column gives the value each result is compared with: the best baseline where
+one exists, otherwise an acceptance threshold chosen for this report.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    \textbf{Metric} & \textbf{Reference} & \textbf{Achieved} \\
+    \midrule
+    Backend tests passing (pytest) & all & 469 / 469 \\
+    Frontend tests passing (Vitest) & all & 231 / 231 \\
+    Real-browser camera checks (Playwright)$^{*}$ & all & 32 / 32 \\
+    TypeScript type errors & 0 & 0 \\
+    Production build & succeeds & built \\
+    Main JavaScript bundle (gzip) & $<$ 150 kB & 92.8 kB \\
+    Generator/tier combinations verified & 18 & 18 (300 questions each) \\
+    BKT AUC vs.\ running-accuracy baseline & 0.744 (baseline) & 0.770 \\
+    BKT AUC, students differ from model & 0.704 (baseline) & 0.729 \\
+    BKT Brier score (lower is better) & 0.182 (baseline) & 0.151 \\
+    Easy/hard choice matches true state & $>$ 85\% & 89.6\% \\
+    Answers to recognise a learned topic (median) & $\le$ 5 & 3 \\
+    Camera readings per second & $\approx$ 10 & 10 \\
+    Values sent per question from the camera & $\le$ 4 & 4 \\
+    Images or video uploaded & 0 & 0 \\
+    Largest answer request body (real device) & small JSON & 166 bytes \\
+    Simultaneous sounds & $\le$ 4 & $\le$ 4 \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{4pt}
+  {\footnotesize $^{*}$Needs both servers and Chrome running; figure from the project's own
+  test record. All other test, build and model figures were re-run for this report on
+  24 November 2026.\par}
+  \caption{Performance results summary}
+  \label{tab:results}
+\end{table}
+
+\paragraph{Real-webcam run.} On the real device the tracker found a face, calibrated and
+produced ten readings a second; switching the camera off mid-mission stopped the stream at once
+and the next answer carried no attention data; switching it back on resumed without a second
+consent screen; and leaning out of view dropped ``face present'' to about 50\%. The network log
+showed only the app, its backend and the font hosts being contacted. Table~\ref{tab:poses}
+shows how head angle separated poses (recorded with the earlier $25^\circ$ turn limit).
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{@{}lrrrl@{}}
+    \toprule
+    \textbf{Pose} & \textbf{Yaw ($^\circ$)} & \textbf{Pitch ($^\circ$)} & \textbf{Counted as facing}
+      & \textbf{Should count?} \\
+    \midrule
+    Centre of the screen & $-2.2$ & $-0.6$ & 100\% & yes \\
+    Top-left corner & 13.4 & $-7.8$ & 94\% & yes \\
+    Top-right corner & $-24.1$ & $-8.3$ & 53\% & yes \\
+    Bottom-right corner & $-24.3$ & 7.2 & 83\% & yes \\
+    Keyboard & 4.9 & 21.5 & 83\% & probably not \\
+    Lap, as if at a phone & $-4.6$ & 22.3 & 78\% & no \\
+    Turned to the left & 43.0 & 1.5 & 0\% & no \\
+    Turned to the right & $-41.8$ & $-4.3$ & 11\% & no \\
+    Leaning out of view & -- & -- & 0\% & no \\
+    \bottomrule
+  \end{tabular}
+  \caption[Head angles by pose on the real-webcam run]{Head angles by pose on the real-webcam
+    run (one device, one tester)}
+  \label{tab:poses}
+\end{table}
+
+\section{Analysis}\label{sec:analysis}
+
+\paragraph{Did we meet the objectives?} Yes, with the limits stated below. \emph{Objective 1}
+is met: all six missions and 18 generator/tier combinations exist, every one is re-solved in
+tests, and the client cannot influence scoring. \emph{Objective 2} is met: BKT beats every
+baseline on AUC, accuracy and Brier score in both scenarios, including the one designed to
+break its assumptions, and its monotonic update rule is verified across the whole range.
+\emph{Objective 3} is met in software (T1--T6 pass, at most four numbers leave the browser, no
+image is ever produced) and partly met on real hardware (one device). \emph{Objective 4} is
+met: reports are built only from stored rows and match hand-computed values, and guardians
+reach a student only through a link code. \emph{Objective 5} is met: all 700 automated tests
+(469 backend, 231 frontend) pass, the type-check is clean and the build succeeds.
+
+\paragraph{Where we exceeded expectations.} Story questions (36 templates) and a backup bank
+were added beyond the original plan, as were the effects system (79 synthesised sounds, 95
+variations, combo and signature moves), optional Google sign-in, a real-browser camera check,
+and a reproducible evaluation of the mastery model with a robustness scenario.
+
+\paragraph{Challenges encountered and how they were resolved.}
+\begin{itemize}
+  \item \textbf{A prototype that looked right but was not.} The September prototype judged
+    correctness from a client-sent ``score'' (so wrong answers counted as right), uploaded a
+    webcam frame every 1.2\,s (too slow to measure blinks at all), showed constant or randomly
+    jittered ``eye metrics'', printed a fixed ``AI summary'' whatever the data, and used an LSTM
+    trained only on synthetic students. A written audit classified each finding and a
+    five-phase rebuild replaced it: server-side judging, in-browser tracking, BKT in place of
+    the LSTM, deterministic questions, and reports with no invented values.
+  \item \textbf{Textbook BKT could raise mastery after a wrong answer.} Applying the learning
+    step only after correct answers fixed this while keeping the model explainable; the change
+    is documented and tested.
+  \item \textbf{Mastery moved fast and read as certainty.} Two correct answers from the prior
+    reach about 0.90. Showing a band first and limiting the printed percentage to 5--95\% fixed
+    the presentation without altering stored values or decisions.
+  \item \textbf{LLM-written maths was unverifiable.} Questions are now generated with computed
+    answers; the model may only reword a verified hint, with a timeout and fallback.
+  \item \textbf{Real-device findings.} The real-webcam run showed the camera stayed on at the
+    end screens (fixed), and that the right-hand screen corners sat at about $24^\circ$, right
+    at the old $25^\circ$ limit; the limit was raised to $30^\circ$. A real-browser check also
+    found MediaPipe sending a usage log to Google, now blocked by a \texttt{connect-src}
+    content-security rule.
+\end{itemize}
+
+\paragraph{Limitations.} The camera path has been checked on one real device only; ``facing
+the screen'' reflects head direction, not eye gaze, and could not separate the bottom of a
+laptop screen from the keyboard. The BKT parameters are textbook defaults, not fitted, and
+topics are treated independently. Only 9 real answers from one student were stored as of
+20 November 2026, below the 200-answer/10-student threshold the real-data evaluation tool
+requires, so no real-data result is claimed.
+
+% ===========================================================================
+\chapter{Conclusion}
+% ===========================================================================
+
+\section{Summary of Work}
+
+MathVerse turns mathematics practice into short superhero boss battles while keeping every
+academic decision on the server and every number honest. We built a React/TypeScript
+single-page app and a FastAPI/SQLite backend with twelve endpoints and five tables; six villain
+missions with deterministic, tiered and story questions; a Bayesian Knowledge Tracing mastery
+model that selects difficulty; scoring, levels and earned badges; parent and teacher reports
+built only from stored answers; an optional, in-browser, four-number attention estimate; and a
+synthesised character-effects system. All five objectives set in Chapter~1 were met,
+Objective~3 with real-hardware checks on one device so far, and the work is backed by 700
+automated tests that run in CI on every push.
+
+\section{Key Findings}
+
+\begin{itemize}
+  \item \textbf{Finding 1:} A simple, explainable model is enough to adapt difficulty usefully.
+    BKT with four fixed parameters predicted next answers better than running accuracy (AUC
+    0.770 vs.\ 0.744, Brier 0.151 vs.\ 0.182) and recognised a learned topic after a median of
+    three answers, even when students did not follow its assumptions.
+  \item \textbf{Finding 2:} Privacy and engagement are not in conflict. All face analysis can
+    run in the browser; four numbers per question are enough for an attention panel, and a
+    student who declines the camera gets an identical game.
+  \item \textbf{Finding 3 (unexpected):} The largest quality gains came from \emph{removing}
+    ``AI''. Replacing LLM-written questions, a synthetic-data LSTM and server-side eye metrics
+    with computed answers, BKT and an honest estimate made the system more correct, testable
+    and trustworthy, and made reports defensible to a parent line by line.
+\end{itemize}
+
+\section{Future Work and Recommendations}
+
+\begin{enumerate}
+  \item \textbf{Fit the model to real data.} Once enough real answers exist, fit the BKT
+    parameters per topic and compare against richer models such as Deep Knowledge
+    Tracing~\cite{Pie15}, using the existing real-data evaluation tool and its confidence
+    interval.
+  \item \textbf{Alternative approaches.} Link related topics so that strength in one informs
+    the starting point of another, and add spaced repetition so that mastered topics are
+    revisited.
+  \item \textbf{Scalability.} Move from SQLite to PostgreSQL with migrations, add pagination to
+    reports, and serve the built frontend and API from one container, as already planned for
+    deployment.
+  \item \textbf{Integration with other systems.} Map topics to the school syllabus, allow
+    teachers to export class reports, and widen camera testing across browsers, cameras,
+    lighting and devices.
+  \item \textbf{Real-world deployment.} Real use with children needs verified parent or
+    guardian consent and a guardian control to switch the camera off, in line with children's
+    privacy law~\cite{FTC13,GoI23}; self-hosted fonts; and original characters in place of
+    Marvel's, which are used here only for a non-commercial course project.
+\end{enumerate}
+
+\section{Final Remarks}
+
+The most important lesson of this project was that a learning product for children is judged
+on trust as much as on features. The first version had impressive labels---``LSTM'', ``RAG'',
+``ADHD diagnostics''---and numbers that were not real. The final version claims less and proves
+more: every answer is computed, every report figure can be traced to a stored row, the camera
+is optional and stays on the device, and the claims in this report are backed by tests that
+anyone can rerun. Along the way we practised the full software-engineering cycle the course
+asked for: requirements, design diagrams, an honest audit, phased refactoring, test-first
+development, continuous integration and documentation. We believe MathVerse is a sound
+foundation for an engaging and honest mathematics tutor.
+
+% ===========================================================================
+% Bibliography
+% ===========================================================================
+\begin{thebibliography}{Lug+19}
+\addcontentsline{toc}{chapter}{Bibliography}
+\markright{Bibliography}
+
+\bibitem[Ash02]{Ash02} M.~H. Ashcraft. ``Math Anxiety: Personal, Educational, and Cognitive
+  Consequences''. In: \emph{Current Directions in Psychological Science} 11.5 (2002),
+  pp.~181--185.
+
+\bibitem[Bay26]{Bay26} M.~Bayer. \emph{SQLAlchemy: The Database Toolkit for Python}.
+  \url{https://www.sqlalchemy.org}. 2026.
+
+\bibitem[Bri50]{Bri50} G.~W. Brier. ``Verification of Forecasts Expressed in Terms of
+  Probability''. In: \emph{Monthly Weather Review} 78.1 (1950), pp.~1--3.
+
+\bibitem[CA94]{CA94} A.~T. Corbett and J.~R. Anderson. ``Knowledge Tracing: Modeling the
+  Acquisition of Procedural Knowledge''. In: \emph{User Modeling and User-Adapted Interaction}
+  4.4 (1994), pp.~253--278.
+
+\bibitem[Det+11]{Det11} S.~Deterding, D.~Dixon, R.~Khaled, and L.~Nacke. ``From Game Design
+  Elements to Gamefulness: Defining `Gamification'\,''. In: \emph{Proceedings of the 15th
+  International Academic MindTrek Conference}. 2011, pp.~9--15.
+
+\bibitem[Faw06]{Faw06} T.~Fawcett. ``An Introduction to ROC Analysis''. In: \emph{Pattern
+  Recognition Letters} 27.8 (2006), pp.~861--874.
+
+\bibitem[FTC13]{FTC13} U.S. Federal Trade Commission. \emph{Children's Online Privacy
+  Protection Rule (COPPA), 16 CFR Part 312}. 2013.
+
+\bibitem[GoI23]{GoI23} Government of India. \emph{The Digital Personal Data Protection Act,
+  2023}. Ministry of Electronics and Information Technology, 2023.
+
+\bibitem[HKS14]{HKS14} J.~Hamari, J.~Koivisto, and H.~Sarsa. ``Does Gamification Work? A
+  Literature Review of Empirical Studies on Gamification''. In: \emph{47th Hawaii International
+  Conference on System Sciences}. 2014, pp.~3025--3034.
+
+\bibitem[JBS15]{JBS15} M.~B. Jones, J.~Bradley, and N.~Sakimura. \emph{JSON Web Token (JWT)}.
+  RFC 7519, Internet Engineering Task Force. 2015.
+
+\bibitem[Lug+19]{Lug19} C.~Lugaresi et~al. \emph{MediaPipe: A Framework for Building
+  Perception Pipelines}. arXiv preprint arXiv:1906.08172. 2019.
+
+\bibitem[Met26]{Met26} Meta Open Source. \emph{React: The Library for Web and Native User
+  Interfaces}. \url{https://react.dev}. 2026.
+
+\bibitem[Neg+26]{Neg26} H.~Negi, P.~Arora, R.~Raja, and R.~Kaur. \emph{MathVerse: Source Code
+  Repository}. \url{https://github.com/Harshitnegii27/Mathverse-ai_2026-27}. 2026.
+
+\bibitem[Pie+15]{Pie15} C.~Piech, J.~Bassen, J.~Huang, S.~Ganguli, M.~Sahami, L.~J. Guibas,
+  and J.~Sohl-Dickstein. ``Deep Knowledge Tracing''. In: \emph{Advances in Neural Information
+  Processing Systems} 28 (2015).
+
+\bibitem[PM99]{PM99} N.~Provos and D.~Mazi\`eres. ``A Future-Adaptable Password Scheme''. In:
+  \emph{Proceedings of the USENIX Annual Technical Conference, FREENIX Track}. 1999,
+  pp.~81--91.
+
+\bibitem[Ram26]{Ram26} S.~Ram\'irez. \emph{FastAPI: Modern, Fast Web Framework for Building
+  APIs with Python}. \url{https://fastapi.tiangolo.com}. 2026.
+
+\bibitem[W3C21]{W3C21} World Wide Web Consortium. \emph{Web Audio API}. W3C Recommendation,
+  \url{https://www.w3.org/TR/webaudio/}. 2021.
+
+\end{thebibliography}
+
+\end{document}
