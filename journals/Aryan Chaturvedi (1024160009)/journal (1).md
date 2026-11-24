@@ -8,7 +8,7 @@
 ## Week 1 (Aug 3 - Aug 9): ML Options \& Team Ideation
 
 * Evaluated classical ML options (Logistic Regression, Random Forest, SVM) suited to a tabular, syllabus-scope pipeline, ruling out satellite imagery/deep learning approaches as out of scope.
-* Participated in team brainstorming sessions and helped narrow the topic down to district-level poverty classification for UCS50*
+* Participated in team brainstorming sessions and helped narrow the topic down to district-level poverty classification for UCS503.
 * Drafted early notes on the pain points: outdated snapshots, fragmented indicators, no ground-truth check, and "no explanation, only a label."
 
 ## Week 2 (Aug 10 - Aug 16): Primary Metric \& Fusion Layer Design
@@ -20,7 +20,7 @@
 ## Week 3 (Aug 17 - Aug 23): Proposal Feedback \& Cluster Validation
 
 * Reviewed and gave technical feedback on the Evaluation Criterion and Risks \& Mitigations sections of Kushal's proposal draft.
-* Designed and built the "Poverty \& Development Zones in India" pitch presentation, translating the proposal's data-fusion pipeline into a clean, presentable slide flow.
+ Designed and built the "Poverty \& Development Zones in India" pitch presentation, translating the proposal's data-fusion pipeline into a clean, presentable slide flow.
 
 ## Week 4 (Aug 24 - Aug 30): NITI Aayog ADP List \& Feature Importance
 
