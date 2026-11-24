@@ -7,7 +7,7 @@ W4: Integrate with the backend. Store each hint in the hint history and add mist
 W5: Evaluate answer correctness and syllabus relevance on a test set. Handle fallbacks when the AI is down or slow, and document the RAG pipeline.
 
 FINAL WORK RECORD (project completed, November 2026)
-Role: Gwen tutor, curriculum and question content.
+Role: Gwen tutor, curriculum, question content and project documentation.
 
 - Curriculum: the six villains and their topics, the unlock order, and the key
   idea for each topic that Gwen's hints are built around.
@@ -23,6 +23,8 @@ Role: Gwen tutor, curriculum and question content.
 - Connected the "Ask Gwen for a hint" panel to the hint endpoint and recorded
   hint use on each attempt.
 - Tests for hints and their fallbacks, and the story-question checks.
+- Course documentation: wrote the project proposal, the Software Requirements
+  Specification (SRS), the team journals and the end-semester project report.
 
 Changes from the plan: RAG over a curated syllabus corpus was replaced by
 hints computed from each question, because no curated corpus existed and a

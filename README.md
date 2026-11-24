@@ -446,9 +446,9 @@ project-proposal/, project-report-prototype-stage/, srs/   earlier coursework
 
 | Member | Area |
 |---|---|
-| Parth Arora | Technical lead: backend, database, security, server gameplay, camera privacy pipeline, testing, CI and documentation |
+| Parth Arora | Technical lead: backend, database, security, server gameplay, camera privacy pipeline, testing and CI |
 | Harshit Negi | Frontend: screens, dashboards and charts, consent flow, visual character effects, UI tests |
-| Raghu Raja | Gwen tutor: curriculum, hints, AI wording with fallback, story-question content |
+| Raghu Raja | Gwen tutor: curriculum, hints, AI wording with fallback, story-question content; proposal, SRS, journals and the end-semester report |
 | Ramneek Kaur | Mastery model, adaptive difficulty and its evaluation |
 
 Details are in `journals/`. The original plan used Node.js, PostgreSQL, RAG and

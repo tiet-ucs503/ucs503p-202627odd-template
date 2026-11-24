@@ -32,8 +32,6 @@ Role: technical lead; backend, database, security, testing and integration.
   director that turns server results into game events.
 - Testing and CI: the backend test suite, the T1-T12 requirement map, the
   real-browser camera check (Playwright) and the GitHub Actions pipeline.
-- Documentation: README, ARCHITECTURE, PRIVACY, WEBCAM_TEST_PLAN, and editing
-  and integration of the final report.
 
 Changes from the plan: the backend is Python and FastAPI instead of Node.js
 and Express, and SQLite with SQLAlchemy instead of PostgreSQL with Prisma (see
