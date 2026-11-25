@@ -1,3 +1,13 @@
+---
+title: BharatAssist
+emoji: 🇮🇳
+colorFrom: yellow
+colorTo: green
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 🇮🇳 BharatAssist — AI-Powered Civic & Public Services Navigator
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
