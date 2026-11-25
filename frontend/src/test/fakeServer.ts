@@ -43,7 +43,14 @@ export function installFakeServer(extraRoutes: Record<string, () => unknown> = {
     const json = typeof rawBody === 'string' ? JSON.parse(rawBody) : null;
     requests.push({ url, method, rawBody, json });
 
-    if (extraRoutes[path]) return jsonResponse(200, extraRoutes[path]());
+    if (extraRoutes[path]) {
+      const result = extraRoutes[path]() as { __status?: number; body?: unknown } | null;
+      // A route may answer with an error: { __status: 403, body: { detail: '...' } }.
+      if (result && typeof result === 'object' && typeof result.__status === 'number') {
+        return jsonResponse(result.__status, result.body ?? {});
+      }
+      return jsonResponse(200, result);
+    }
     if (path === '/sessions') {
       correct = 0;
       return jsonResponse(201, { session: session(), question: question() });

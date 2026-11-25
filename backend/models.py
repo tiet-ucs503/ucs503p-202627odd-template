@@ -37,6 +37,14 @@ class User(Base):
     is_demo = Column(Boolean, nullable=False, default=False)
     # Set once the account has signed in with Google: Google's permanent account id.
     google_sub = Column(String, unique=True, index=True, nullable=True)
+    # False only for a password sign-up whose email has not been confirmed yet.
+    # Google and demo accounts, and accounts made before verification existed, are True.
+    email_verified = Column(Boolean, nullable=False, default=True)
+    # The pending 6-digit code, stored only as a keyed hash (services/verification.py).
+    verify_code_hash = Column(String, nullable=True)
+    verify_expires_at = Column(DateTime, nullable=True)
+    verify_sent_at = Column(DateTime, nullable=True)
+    verify_attempts = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
 

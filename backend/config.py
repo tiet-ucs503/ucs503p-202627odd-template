@@ -46,5 +46,15 @@ class Settings:
         self.google_client_id: str = os.getenv("GOOGLE_CLIENT_ID", "").strip()
         self.groq_model: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
+        # Optional. Email for sign-up verification codes (services/mailer.py).
+        # Without SMTP_HOST the code is printed in the backend terminal instead.
+        # For Gmail: SMTP_HOST=smtp.gmail.com, SMTP_PORT=587, SMTP_USER=the address,
+        # SMTP_PASSWORD=a Google "app password" (never the normal password).
+        self.smtp_host: str = os.getenv("SMTP_HOST", "").strip()
+        self.smtp_port: int = int(os.getenv("SMTP_PORT", "587"))
+        self.smtp_user: str = os.getenv("SMTP_USER", "").strip()
+        self.smtp_password: str = os.getenv("SMTP_PASSWORD", "").strip()
+        self.mail_from: str = os.getenv("MAIL_FROM", "").strip() or self.smtp_user
+
 
 settings = Settings()

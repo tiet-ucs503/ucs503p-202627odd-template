@@ -8,7 +8,7 @@ import models
 from config import settings
 from routers import auth as auth_router
 from seed import create_demo_accounts
-from tests.conftest import PASSWORD
+from tests.conftest import PASSWORD, latest_code
 
 ALICE = {"sub": "google-111", "email": "alice@gmail.com", "name": "Alice Example"}
 
@@ -80,9 +80,12 @@ def test_signing_in_again_returns_the_same_account_and_ignores_a_new_role(client
     assert again["id"] == first["id"] and again["role"] == "student"  # a role cannot be changed this way
 
 
-def test_an_existing_password_account_is_linked_and_its_password_still_works(client, google, register, db_factory):
-    existing = client.post("/auth/register", json={
+def test_an_existing_password_account_is_linked_and_its_password_still_works(client, google, outbox, db_factory):
+    client.post("/auth/register", json={
         "name": "Alice", "email": "Alice@Gmail.com", "password": PASSWORD, "role": "parent",
+    })
+    existing = client.post("/auth/verify-email", json={
+        "email": "alice@gmail.com", "code": latest_code(outbox, "alice@gmail.com"),
     }).json()["user"]
     google["token-alice-xxxxxxxxxxxx"] = ALICE
 
@@ -107,6 +110,21 @@ def test_an_email_linked_to_another_google_account_is_not_taken_over(client, goo
     sign_in(client, role="student")
     google["token-mallory-xxxxxxxxxx"] = {"sub": "google-999", "email": "alice@gmail.com", "name": "Mallory"}
     assert sign_in(client, "token-mallory-xxxxxxxxxx", role="student").status_code == 409
+
+
+def test_an_unconfirmed_sign_up_cannot_be_used_to_take_over_the_google_owner(client, google, db_factory):
+    # Someone signs up with Alice's address and their own password, but cannot confirm it.
+    client.post("/auth/register", json={
+        "name": "Mallory", "email": "alice@gmail.com", "password": PASSWORD, "role": "parent",
+    })
+    google["token-alice-xxxxxxxxxxxx"] = ALICE
+    res = sign_in(client)  # the real Alice signs in with Google
+    assert res.status_code == 200
+    with db_factory() as db:
+        user = db.query(models.User).filter_by(email="alice@gmail.com").one()
+        assert user.email_verified and user.google_sub == "google-111"
+    # Mallory's password no longer opens the account.
+    assert client.post("/auth/login", json={"email": "alice@gmail.com", "password": PASSWORD}).status_code == 401
 
 
 def test_a_google_account_has_no_usable_password(client, google):

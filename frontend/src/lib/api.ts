@@ -78,6 +78,19 @@ export interface TokenResponse {
   user: User;
 }
 
+/** Sign-up reply: the account waits until the emailed 6-digit code is entered. */
+export interface VerificationPending {
+  verification_required: true;
+  email: string;
+  email_sent: boolean;
+  resend_after_seconds: number;
+}
+
+export interface MessageOut {
+  message: string;
+  resend_after_seconds: number;
+}
+
 export interface Progress {
   points: number;
   level: number;

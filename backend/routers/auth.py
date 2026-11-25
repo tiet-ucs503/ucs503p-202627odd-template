@@ -9,6 +9,7 @@ from config import settings
 from database import get_db
 from deps import current_user
 from security import create_access_token, hash_password, verify_password
+from services import verification
 from services.google_auth import verify_google_credential
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -31,32 +32,91 @@ def _token_response(user: models.User) -> schemas.TokenResponse:
     )
 
 
-@router.post("/register", response_model=schemas.TokenResponse, status_code=201)
+@router.post("/register", response_model=schemas.VerificationPending, status_code=201)
 def register(payload: schemas.RegisterRequest, db: Session = Depends(get_db)):
-    email = payload.email.lower().strip()
-    if db.query(models.User).filter_by(email=email).first():
+    """
+    Creates the account unverified and emails a 6-digit code. No token is given
+    until the code is entered (POST /auth/verify-email).
+    """
+    email = payload.email  # already trimmed and lower-cased by the schema
+    user = db.query(models.User).filter_by(email=email).first()
+    if user is not None and (user.email_verified or user.is_demo or user.google_sub):
         raise HTTPException(status_code=409, detail="An account with this email already exists.")
 
-    user = models.User(
-        name=payload.name.strip(),
-        email=email,
-        password_hash=hash_password(payload.password),
-        role=payload.role,
-        link_code=new_link_code(db) if payload.role == "student" else None,
+    link_code = None
+    if payload.role == "student":
+        link_code = user.link_code if user is not None and user.link_code else new_link_code(db)
+    if user is None:
+        user = models.User(email=email, email_verified=False, name=payload.name, role=payload.role,
+                           password_hash=hash_password(payload.password), link_code=link_code)
+        db.add(user)
+    else:
+        # An unconfirmed sign-up holds no data yet, so signing up again with the same
+        # email simply replaces it (for example after a typo in the name or a lost code).
+        user.name = payload.name
+        user.password_hash = hash_password(payload.password)
+        user.role = payload.role
+        user.link_code = link_code
+
+    sent = True
+    if verification.seconds_until_resend(user) == 0:
+        sent = verification.issue_code(user)
+    db.commit()
+    return schemas.VerificationPending(
+        email=email, email_sent=sent, resend_after_seconds=verification.seconds_until_resend(user)
     )
-    db.add(user)
+
+
+@router.post("/verify-email", response_model=schemas.TokenResponse)
+def verify_email(payload: schemas.VerifyEmailRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter_by(email=payload.email).first()
+    if user is None:
+        raise HTTPException(status_code=400, detail="No code is waiting for this email. Ask for a new one.")
+    if user.email_verified:
+        raise HTTPException(status_code=400, detail="This email is already verified. Please log in.")
+    problem = verification.check_code(user, payload.code)
+    if problem:
+        db.commit()  # keep the count of wrong tries
+        raise HTTPException(status_code=400, detail=problem)
+    verification.mark_verified(user)
     db.commit()
     db.refresh(user)
     return _token_response(user)
 
 
+@router.post("/resend-code", response_model=schemas.MessageOut)
+def resend_code(payload: schemas.ResendCodeRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter_by(email=payload.email).first()
+    if user is not None and not user.email_verified:
+        wait = verification.seconds_until_resend(user)
+        if wait:
+            raise HTTPException(status_code=429, detail=f"Please wait {wait} seconds before asking for another code.")
+        if not verification.issue_code(user):
+            db.commit()
+            raise HTTPException(status_code=503, detail="The email could not be sent right now. Please try again soon.")
+        db.commit()
+        wait = verification.seconds_until_resend(user)
+    else:
+        wait = int(verification.RESEND_COOLDOWN.total_seconds())
+    # The same reply whether or not the address is waiting, so this cannot be
+    # used to find out which emails have accounts.
+    return schemas.MessageOut(
+        message="If this email is waiting to be verified, a new code is on its way.", resend_after_seconds=wait
+    )
+
+
 @router.post("/login", response_model=schemas.TokenResponse)
 def login(payload: schemas.LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter_by(email=payload.email.lower().strip()).first()
+    user = db.query(models.User).filter_by(email=payload.email).first()
     # Same message for "no such account" and "wrong password", so the form
     # cannot be used to discover which emails are registered.
     if user is None or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Incorrect email or password.")
+    if not user.email_verified:
+        # Only said after the right password, so it reveals nothing to a stranger.
+        raise HTTPException(
+            status_code=403, detail="Please verify your email first. Enter the code we sent, or ask for a new one."
+        )
     return _token_response(user)
 
 
@@ -87,6 +147,12 @@ def google_login(payload: schemas.GoogleLoginRequest, db: Session = Depends(get_
                 raise HTTPException(status_code=403, detail="Demo accounts cannot be used with Google sign-in.")
             if user.google_sub is not None:  # the email belongs to an account linked to a different Google account
                 raise HTTPException(status_code=409, detail="This email is already linked to another Google account.")
+            if not user.email_verified:
+                # An unconfirmed sign-up could have been made by anyone who typed this
+                # address. Google has now proved who owns it, so whatever password that
+                # sign-up set is discarded before the account is handed to the owner.
+                user.password_hash = hash_password(secrets.token_urlsafe(32))
+                verification.mark_verified(user)
             user.google_sub = identity["sub"]
             db.commit()
             db.refresh(user)

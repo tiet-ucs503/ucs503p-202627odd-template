@@ -2,7 +2,7 @@
 from datetime import date, datetime
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 Role = Literal["student", "parent", "teacher"]
 
@@ -12,16 +12,74 @@ class _Request(BaseModel):
 
 
 # ── Auth ─────────────────────────────────────────────────────────────────────
+def _clean_email(value: str) -> str:
+    # EmailStr has already checked the format (one @, a real-looking domain).
+    # Addresses are compared in lower case and without surrounding spaces.
+    value = value.strip().lower()
+    if len(value) > 254:
+        raise ValueError("email address is too long")
+    return value
+
+
 class RegisterRequest(_Request):
     name: str = Field(min_length=1, max_length=80)
-    email: EmailStr
+    email: EmailStr = Field(max_length=254)
     password: str = Field(min_length=8, max_length=72)  # bcrypt reads at most 72 bytes
     role: Role
 
+    @field_validator("email")
+    @classmethod
+    def _email(cls, v: str) -> str:
+        return _clean_email(v)
+
+    @field_validator("name")
+    @classmethod
+    def _name(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("name cannot be blank")
+        return v.strip()
+
 
 class LoginRequest(_Request):
-    email: EmailStr
+    email: EmailStr = Field(max_length=254)
     password: str = Field(min_length=1, max_length=72)
+
+    @field_validator("email")
+    @classmethod
+    def _email(cls, v: str) -> str:
+        return _clean_email(v)
+
+
+class VerifyEmailRequest(_Request):
+    email: EmailStr = Field(max_length=254)
+    code: str = Field(pattern=r"^\d{6}$")
+
+    @field_validator("email")
+    @classmethod
+    def _email(cls, v: str) -> str:
+        return _clean_email(v)
+
+
+class ResendCodeRequest(_Request):
+    email: EmailStr = Field(max_length=254)
+
+    @field_validator("email")
+    @classmethod
+    def _email(cls, v: str) -> str:
+        return _clean_email(v)
+
+
+class VerificationPending(BaseModel):
+    """Returned by sign-up: the account exists but the email must be confirmed first."""
+    verification_required: bool = True
+    email: str
+    email_sent: bool
+    resend_after_seconds: int
+
+
+class MessageOut(BaseModel):
+    message: str
+    resend_after_seconds: int = 0
 
 
 class GoogleLoginRequest(_Request):

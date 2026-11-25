@@ -64,17 +64,37 @@ class Account:
         self.headers = {"Authorization": f"Bearer {token}"}
 
 
+@pytest.fixture(autouse=True)
+def outbox(monkeypatch):
+    """Verification emails are captured here instead of being sent: [(to, code), ...]."""
+    sent: list[tuple[str, str]] = []
+
+    def capture(to: str, name: str, code: str) -> bool:
+        sent.append((to, code))
+        return True
+
+    monkeypatch.setattr("services.verification.send_verification_code", capture)
+    return sent
+
+
+def latest_code(outbox, email: str) -> str:
+    return [code for to, code in outbox if to == email][-1]
+
+
 @pytest.fixture()
-def register(client):
+def register(client, outbox):
+    """Signs up and confirms the email with the code that was 'sent', like a real user."""
     counter = {"n": 0}
 
     def _register(role: str = "student", name: str = "Test User") -> Account:
         counter["n"] += 1
+        email = f"user{counter['n']}@example.com"
         res = client.post("/auth/register", json={
-            "name": name, "email": f"user{counter['n']}@example.com",
-            "password": PASSWORD, "role": role,
+            "name": name, "email": email, "password": PASSWORD, "role": role,
         })
         assert res.status_code == 201, res.text
+        res = client.post("/auth/verify-email", json={"email": email, "code": latest_code(outbox, email)})
+        assert res.status_code == 200, res.text
         body = res.json()
         return Account(body["access_token"], body["user"])
 

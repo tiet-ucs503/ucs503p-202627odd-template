@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
-import { api, setAuthToken, setUnauthorizedHandler, Role, TokenResponse, User } from '@/lib/api';
+import {
+  api, setAuthToken, setUnauthorizedHandler, MessageOut, Role, TokenResponse, User, VerificationPending,
+} from '@/lib/api';
 
 export type { User } from '@/lib/api';
 
@@ -13,7 +15,10 @@ interface AuthContextType {
   /** The server's Google client ID, or null when Google sign-in is not set up. */
   googleClientId: string | null;
   login: (email: string, password: string) => Promise<User>;
-  register: (name: string, email: string, password: string, role: Role) => Promise<User>;
+  /** Creates the account and emails a 6-digit code. No sign-in until verifyEmail succeeds. */
+  register: (name: string, email: string, password: string, role: Role) => Promise<VerificationPending>;
+  verifyEmail: (email: string, code: string) => Promise<User>;
+  resendCode: (email: string) => Promise<MessageOut>;
   demoLogin: (role: Role) => Promise<User>;
   /** role is needed only to create a new account. */
   googleLogin: (credential: string, role?: Role) => Promise<User>;
@@ -71,17 +76,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => setUnauthorizedHandler(null);
   }, [logout]);
 
-  // On page load: restore a saved login, and ask whether demo mode is on.
-  useEffect(() => {
+  // Asks the server whether demo mode and Google sign-in are on. If the server is
+  // not answering yet (still starting, or restarting after a code change), it is
+  // asked again a few times, so the Google button does not stay hidden until reload.
+  const loadServerInfo = useCallback((triesLeft = 0) => {
     api<{ demo_mode: boolean; google_client_id?: string | null }>('/health')
       .then((h) => {
         setDemoEnabled(h.demo_mode);
         setGoogleClientId(h.google_client_id || null);
       })
       .catch(() => {
-        setDemoEnabled(false);
-        setGoogleClientId(null);
+        if (triesLeft > 0) setTimeout(() => loadServerInfo(triesLeft - 1), 2000);
       });
+  }, []);
+
+  // On page load: restore a saved login, and ask whether demo mode is on.
+  useEffect(() => {
+    loadServerInfo(5);
 
     const saved = readSavedToken();
     if (!saved) return;
@@ -90,13 +101,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(setUser)
       .catch(() => logout())
       .finally(() => setLoading(false));
-  }, [logout]);
+  }, [logout, loadServerInfo]);
+
+  const openAuthModal = () => {
+    // Ask again each time the dialog opens, in case the server was down at page load.
+    loadServerInfo(0);
+    setIsAuthModalOpen(true);
+  };
 
   const login = async (email: string, password: string) =>
     signIn(await api<TokenResponse>('/auth/login', { body: { email, password } }));
 
-  const register = async (name: string, email: string, password: string, role: Role) =>
-    signIn(await api<TokenResponse>('/auth/register', { body: { name, email, password, role } }));
+  const register = (name: string, email: string, password: string, role: Role) =>
+    api<VerificationPending>('/auth/register', { body: { name, email, password, role } });
+
+  const verifyEmail = async (email: string, code: string) =>
+    signIn(await api<TokenResponse>('/auth/verify-email', { body: { email, code } }));
+
+  const resendCode = (email: string) => api<MessageOut>('/auth/resend-code', { body: { email } });
 
   const demoLogin = async (role: Role) =>
     signIn(await api<TokenResponse>(`/auth/demo/${role}`, { method: 'POST' }));
@@ -114,11 +136,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         googleClientId,
         login,
         register,
+        verifyEmail,
+        resendCode,
         demoLogin,
         googleLogin,
         logout,
         isAuthModalOpen,
-        openAuthModal: () => setIsAuthModalOpen(true),
+        openAuthModal,
         closeAuthModal: () => setIsAuthModalOpen(false),
       }}
     >
