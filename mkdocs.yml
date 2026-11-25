@@ -1,5 +1,7 @@
-site_name: "UCS503 : Software Engineering : Project Template"
-site_url: https://tiet-ucs503.github.io/ucs503p-202627odd-template
+site_name: "ClassPulse — UCS503P"
+site_url: https://priyamgoel.github.io/ucs503p-202627-classpulse/
+repo_url: https://github.com/priyamgoel/ucs503p-202627-classpulse
+repo_name: ucs503p-202627-classpulse
 
 plugins:
 - search

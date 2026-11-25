@@ -1,0 +1,25 @@
+{
+  "name": "classpulse-backend",
+  "version": "0.1.0",
+  "description": "ClassPulse Node.js + Express Backend API",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test test/auth.test.js test/attendance.test.js test/classrooms.test.js test/doubts.test.js test/emailService.test.js test/exportService.test.js test/liveActivities.test.js test/profanityFilter.test.js test/pulsemeters.test.js test/qrTokenService.test.js test/quizzes.test.js test/security.test.js test/sessions.test.js test/socket.test.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.19.2",
+    "ioredis": "^6.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^9.0.5",
+    "pg": "^8.23.0",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3"
+  }
+}

@@ -1,0 +1,509 @@
+\documentclass[twoside,12pt,openright]{report}
+
+%% ===================================================
+%% Geometry: Page margins matching TIET specifications
+%% ===================================================
+\usepackage[
+  inner=1.5in,
+  outer=1in,
+  top=1.8in,
+  bottom=0.85in
+]{geometry}
+
+%% ===================================================
+%% Required Packages
+%% ===================================================
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+
+%% ===================================================
+%% TIET Report Customizations (Self-Contained in TeX)
+%% ===================================================
+\makeatletter
+\newcommand{\@tpHeader}{UCS503P - Software Engineering Project}
+\newcommand{\@tpTitle}{ClassPulse}
+\newcommand{\@tpSubTitle}{A Real-Time Classroom Engagement Platform: Attendance Subsystem}
+\newcommand{\@tpAuthors}{%
+  \texttt{1024030691} Priyam Goel \\
+  \texttt{1024030768} Rahil Yadav \\
+  \texttt{1024030660} Aksh Kaushik \\
+  \texttt{1024030664} Chinmay Dahiya%
+}
+\newcommand{\@tpSubText}{Group: \texttt{--} , BE Third Year, CSE}
+\newcommand{\@tpAdvisor}{Ms. Nisha Thakur}
+\newcommand{\@tpFooter}{%
+  \large Prototype Stage Evaluation \\[0.2cm]
+  \bfseries Computer Science and Engineering Department \\[0.15cm]
+  Thapar Institute of Engineering and Technology, Patiala%
+}
+
+% Configuration commands
+\newcommand{\TitlePageHeader}[1]{\renewcommand{\@tpHeader}{#1}}
+\newcommand{\ProjectTitle}[1]{\renewcommand{\@tpTitle}{#1}}
+\newcommand{\ProjectSubTitle}[1]{\renewcommand{\@tpSubTitle}{#1}}
+\renewcommand{\author}[1]{\renewcommand{\@tpAuthors}{#1}}
+\newcommand{\TitlePageSubText}[1]{\renewcommand{\@tpSubText}{#1}}
+\newcommand{\AdvisorName}[1]{\renewcommand{\@tpAdvisor}{#1}}
+\newcommand{\TitlePageFooterText}[1]{\renewcommand{\@tpFooter}{#1}}
+
+% Fancyhdr headers and footers (page numbers removed from all pages)
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\@tpHeader}
+\fancyhead[RO]{\@tpTitle}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Ensure plain style (used on chapter start pages and TOC) has no page numbers
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \renewcommand{\footrulewidth}{0pt}%
+}
+
+% Titlesec custom chapter heading format
+\titleformat{\chapter}[display]
+  {\raggedleft\bfseries\large}
+  {Chapter \thechapter}
+  {0.3em}
+  {\huge}
+  [\vspace{0.1em}\hrule]
+\titlespacing*{\chapter}{0pt}{-50pt}{40pt}
+\assignpagestyle{\chapter}{empty}
+
+% Maketitle definition
+\renewcommand{\maketitle}{%
+  \begin{titlepage}
+    \thispagestyle{empty}
+    \centering
+    \vspace*{0.5cm}
+
+    {\large \textbf{\@tpHeader}}
+
+    \vspace{2cm}
+    {\LARGE \textbf{\@tpTitle}}
+
+    \vspace{0.2cm}
+    {\@tpSubTitle}
+
+    \vspace{3.5cm}
+    {\large \textbf{Submitted by:}}
+
+    \vspace{0.2cm}
+    {\large \@tpAuthors}
+
+    \vspace{0.5cm}
+    {\normalsize \@tpSubText}
+
+    \vfill
+
+    {\large \textbf{Submitted to:}}
+
+    \vspace{0.2cm}
+    {\normalsize \@tpAdvisor}
+
+    \vspace{2cm}
+    {\normalsize \@tpFooter}
+  \end{titlepage}
+
+  \newpage
+  \thispagestyle{empty}%
+}
+\makeatother
+
+%% ==================================================
+%% PROJECT METADATA & CONFIGURATION
+%% ==================================================
+
+\TitlePageHeader{%
+  UCS503P - Software Engineering Project%
+}
+
+\ProjectTitle{%
+  ClassPulse%
+}
+
+\ProjectSubTitle{%
+  A Real-Time Classroom Engagement Platform: Attendance Subsystem%
+}
+
+\author{%
+  \texttt{1024030691} Priyam Goel \\
+  \texttt{1024030768} Rahil Yadav \\
+  \texttt{1024030660} Aksh Kaushik \\
+  \texttt{1024030664} Chinmay Dahiya%
+}
+
+\TitlePageSubText{%
+  Group: \texttt{--} , BE Third Year, CSE%
+}
+
+\AdvisorName{%
+  Ms. Nisha Thakur%
+}
+
+\TitlePageFooterText{{%
+    \large Prototype Stage Evaluation \\[0.2cm]
+    \bfseries Computer Science and Engineering Department%
+  } \\[0.15cm]
+  Thapar Institute of Engineering and Technology, Patiala%
+}
+
+%% ==================================================
+
+\begin{document}
+
+% Generate title page
+\maketitle
+
+% Table of contents (auto-generated from chapters)
+\tableofcontents
+
+% ===== CHAPTER 1: INTRODUCTION =====
+
+\chapter{Introduction}
+
+\section{Background and Context}
+
+Higher education institutions in modern universities routinely conduct courses in large-format lecture halls and hybrid instructional environments. In such settings, administrative routines---most notably the verification and recording of student attendance---impose significant friction on instructional time and classroom management. Conventional attendance approaches encompass manual verbal roll calls, paper sign-in sheets, and static QR codes. Each of these methods involves substantial trade-offs between administrative overhead and verification integrity.
+
+Manual roll calls in classes containing 60 to 100+ students consume between 10\% to 15\% of total lecture duration, reducing valuable contact hours. Circulating paper attendance sheets disrupts lecture delivery and is prone to physical manipulation. Meanwhile, contemporary digital approaches utilizing static QR codes or broadcast join links are trivially vulnerable to proxy attendance, wherein attending students capture screen photographs or copy URLs and broadcast them to absent peers across instant messaging groups.
+
+ClassPulse addresses this core integrity and efficiency bottleneck. Designed as a real-time classroom engagement platform, the prototype phase of ClassPulse presented in this mid-semester evaluation focuses specifically on the foundational \textbf{Attendance Module}. The system couples an authenticated instructor web dashboard with a high-speed native student mobile application, implementing dynamic, cryptographically signed rotating QR codes to eliminate proxy attendance while maintaining sub-second Attendance Capture Latency (ACL). Secondary interactive modules (such as live pacing feedback, interactive quizzes, and asynchronous doubt forums) form part of the broader system roadmap and will be delivered in the final end-semester evaluation.
+
+\subsection{Problem Statement}
+
+Attendance capture in physical and hybrid classrooms suffers from critical integrity, operational, and analytical shortcomings:
+
+\begin{itemize}
+  \item \textbf{Vulnerability to Proxy Submissions:} Static QR codes and shared web links lack temporal validity and device binding. Absent students can scan forwarded photos from outside the lecture hall, defeating the purpose of attendance verification.
+  \item \textbf{Instructional Time Loss:} Verbal roll calls and paper roster tracking consume excessive class time, detracting from instructional focus and delaying the start of lectures.
+  \item \textbf{Lack of Real-Time Roster Visibility:} Instructors typically do not know who has entered the classroom until roll calls are complete or paper sheets are manually tabulated.
+  \item \textbf{Fragmented Attendance Records and Analytics:} Manually maintained attendance records require tedious post-class data entry, hindering the immediate identification of chronically absent students or trends in classroom punctuality.
+\end{itemize}
+
+The ClassPulse Attendance Subsystem resolves these deficiencies through an automated, dual-interface architecture: the instructor's web dashboard generates and rotates cryptographically signed HMAC-SHA256 QR codes at 5-second intervals, while the student's mobile application leverages Google ML Kit hardware camera integration to scan, decode, and validate attendance instantly against an in-memory Redis cache.
+
+\section{Project Objectives}
+
+The primary objectives for the prototype stage of the ClassPulse Attendance Module are as follows:
+
+\begin{enumerate}
+  \item \textbf{Objective 1:} Develop a secure, role-based multi-platform architecture (Instructor Web Dashboard and Student Mobile Client) featuring centralized JWT authentication, password encryption, and Role-Based Access Control (RBAC).
+  \item \textbf{Objective 2:} Implement a classroom and enrollment management engine enabling instructors to create course sections tied to institutional course catalogs, generate join codes, and maintain synchronized student rosters.
+  \item \textbf{Objective 3:} Engineer an anti-proxy dynamic QR attendance generator on the web dashboard that produces time-synchronized, HMAC-SHA256 signed tokens rotating every 5 seconds.
+  \item \textbf{Objective 4:} Build a native mobile camera scanner within the Flutter student application using Google ML Kit to achieve sub-second barcode recognition and capture device scan initiation timestamps.
+  \item \textbf{Objective 5:} Implement an in-memory Redis token validation and persistence pipeline that enforces single-use constraints, rejects expired tokens, persists attendance records in PostgreSQL, and measures Attendance Capture Latency (ACL).
+  \item \textbf{Objective 6:} Provide real-time roster synchronization and attendance analytics for instructors, visualizing live check-ins during sessions, per-student attendance percentages, and exportable records.
+\end{enumerate}
+
+% ===== CHAPTER 2: METHODOLOGY & DESIGN =====
+
+\chapter{Methodology and Design}
+
+\section{System Architecture}
+
+The ClassPulse Attendance Subsystem follows a modular, client-server multi-tier architecture designed for secure communication, rapid camera-to-cloud validation, and real-time state synchronization across devices.
+
+The architecture comprises three principal layers:
+\begin{itemize}
+  \item \textbf{User Interaction Layer:} A web dashboard developed with Next.js 14 and Material Design 3 (MUI v5) for instructors (session initiation, QR stream display, live roster monitoring, and attendance analytics), alongside a cross-platform mobile client developed with Flutter (Dart) for students (classroom joining, hardware camera scanning, and personal attendance records).
+  \item \textbf{Application and Real-Time Service Layer:} A Node.js and Express backend providing RESTful endpoints for CRUD operations and a Socket.io WebSocket server that broadcasts dynamic QR token updates and live "marked present" notifications to the web client.
+  \item \textbf{Data Persistence and Caching Layer:} A serverless PostgreSQL database (Neon) serving as the authoritative persistent data store, integrated with a serverless Redis instance (Upstash) for sub-millisecond dynamic token caching, TTL expiration enforcement, and rate limiting.
+\end{itemize}
+
+\subsection{High-Level Design}
+
+In the high-level design of the attendance subsystem, the instructor launches an active lecture session from the web portal. Upon session initialization, the backend begins streaming short-lived, cryptographically signed QR tokens to the dashboard over WebSockets, rotating every 5 seconds. Each token contains the session identifier, sequence index, and an HMAC-SHA256 signature generated using a server-side secret key. Concurrently, the token is recorded in Redis with an 8-second time-to-live (TTL) window.
+
+Students present in the lecture hall point their smartphone camera at the projected display using the ClassPulse mobile application. The on-device Google ML Kit barcode recognition engine decodes the rotating QR code in real time, capturing the exact device timestamp (\texttt{scan\_started\_at}). The mobile app immediately dispatches an authenticated HTTP POST payload to the backend. The backend validates the token against Redis, confirms single-use validity, logs the verified record into PostgreSQL, and computes the Attendance Capture Latency ($ACL = \texttt{validated\_at} - \texttt{scan\_started\_at}$). A WebSocket event immediately updates the instructor's live dashboard roster.
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/gantt_chart.png}
+  \fbox{\begin{minipage}[c][8.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.1: Three-Month Project Gantt Chart Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Project Gantt Chart diagram)}}
+  \end{minipage}}
+  \caption{Three-Month Project Gantt Chart}
+  \label{fig:gantt_chart}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/use_case_diagram.png}
+  \fbox{\begin{minipage}[c][8.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.2: Use Case Diagram of ClassPulse Attendance System Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Use Case Diagram)}}
+  \end{minipage}}
+  \caption{Use Case Diagram of ClassPulse Attendance System}
+  \label{fig:use_case_diagram}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/activity_diagram.png}
+  \fbox{\begin{minipage}[c][8.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.3: Activity Diagram of Attendance Workflow Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Activity Diagram)}}
+  \end{minipage}}
+  \caption{Activity Diagram of Attendance Workflow}
+  \label{fig:activity_diagram}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/uc01_auth.png}
+  \fbox{\begin{minipage}[c][7.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.4: Use Case Template: User Authentication \& Role Management Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Use Case Template UC-01)}}
+  \end{minipage}}
+  \caption{Use Case Template: User Authentication \& Role Management}
+  \label{fig:uc01}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/uc02_classroom.png}
+  \fbox{\begin{minipage}[c][7.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.5: Use Case Template: Classroom Creation \& Join Flow Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Use Case Template UC-02)}}
+  \end{minipage}}
+  \caption{Use Case Template: Classroom Creation \& Join Flow}
+  \label{fig:uc02}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/uc03_session.png}
+  \fbox{\begin{minipage}[c][7.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.6: Use Case Template: Attendance Session Initiation Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Use Case Template UC-03)}}
+  \end{minipage}}
+  \caption{Use Case Template: Attendance Session Initiation}
+  \label{fig:uc03}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/uc04_qr_gen.png}
+  \fbox{\begin{minipage}[c][7.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.7: Use Case Template: Dynamic QR Generation \& Rotation Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Use Case Template UC-04)}}
+  \end{minipage}}
+  \caption{Use Case Template: Dynamic QR Generation \& Rotation}
+  \label{fig:uc04}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/uc05_scanning.png}
+  \fbox{\begin{minipage}[c][7.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.8: Use Case Template: Mobile Camera QR Scanning Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Use Case Template UC-05)}}
+  \end{minipage}}
+  \caption{Use Case Template: Mobile Camera QR Scanning}
+  \label{fig:uc05}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/uc06_validation.png}
+  \fbox{\begin{minipage}[c][7.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.9: Use Case Template: Anti-Proxy Validation \& Token Verification Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Use Case Template UC-06)}}
+  \end{minipage}}
+  \caption{Use Case Template: Anti-Proxy Validation \& Token Verification}
+  \label{fig:uc06}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/uc07_roster_sync.png}
+  \fbox{\begin{minipage}[c][7.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.10: Use Case Template: Real-Time Roster Synchronization Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Use Case Template UC-07)}}
+  \end{minipage}}
+  \caption{Use Case Template: Real-Time Roster Synchronization}
+  \label{fig:uc07}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/uc08_analytics.png}
+  \fbox{\begin{minipage}[c][7.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.11: Use Case Template: Attendance History \& Analytics Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Use Case Template UC-08)}}
+  \end{minipage}}
+  \caption{Use Case Template: Attendance History \& Analytics}
+  \label{fig:uc08}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/collaboration_diagram.png}
+  \fbox{\begin{minipage}[c][8.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.12: Collaboration Diagram of ClassPulse Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Collaboration Diagram)}}
+  \end{minipage}}
+  \caption{Collaboration Diagram of ClassPulse}
+  \label{fig:collaboration_diagram}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/sequence_diagram.png}
+  \fbox{\begin{minipage}[c][8.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.13: Sequence Diagram of Attendance Verification Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Sequence Diagram)}}
+  \end{minipage}}
+  \caption{Sequence Diagram of Attendance Verification}
+  \label{fig:sequence_diagram}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/dfd_level0.png}
+  \fbox{\begin{minipage}[c][7.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.14: Level 0 Data Flow Diagram Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Level 0 Data Flow Diagram)}}
+  \end{minipage}}
+  \caption{Level 0 Data Flow Diagram}
+  \label{fig:dfd_level0}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/dfd_level1.png}
+  \fbox{\begin{minipage}[c][7.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.15: Level 1 Data Flow Diagram Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Level 1 Data Flow Diagram)}}
+  \end{minipage}}
+  \caption{Level 1 Data Flow Diagram}
+  \label{fig:dfd_level1}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/dfd_level2.png}
+  \fbox{\begin{minipage}[c][7.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.16: Level 2 Data Flow Diagram (Attendance Processing) Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Level 2 Data Flow Diagram)}}
+  \end{minipage}}
+  \caption{Level 2 Data Flow Diagram (Attendance Processing)}
+  \label{fig:dfd_level2}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/class_diagram.png}
+  \fbox{\begin{minipage}[c][8.5cm][c]{0.92\textwidth}
+    \centering
+    \textcolor{gray}{\large\textbf{[ Insert Figure 2.17: Class Diagram of Attendance Platform Here ]}} \\[0.5em]
+    \textcolor{gray}{\small \textit{(Leave empty space for Class Diagram)}}
+  \end{minipage}}
+  \caption{Class Diagram}
+  \label{fig:class_diagram}
+\end{figure}
+
+\subsection{Technical Stack}
+
+\begin{itemize}
+  \item \textbf{Framework/Language:} Node.js (v20 LTS) and Express.js for the core backend RESTful API and Socket.io WebSocket service; Next.js 14 with React and TypeScript for the instructor web portal; Dart with Flutter SDK for the cross-platform student mobile application targeting Android.
+  \item \textbf{Database:} PostgreSQL (Neon serverless) for durable, ACID-compliant storage of users, course catalogs, classrooms, student enrollments, attendance sessions, and attendance verification logs.
+  \item \textbf{Real-Time \& In-Memory Caching:} Redis (Upstash serverless) for high-frequency dynamic QR token caching, TTL-based expiration, anti-replay nonce tracking, and Socket.io pub/sub horizontal scaling.
+  \item \textbf{Mobile Technologies:} Google ML Kit Barcode Scanning for native hardware camera QR decoding, Flutter Camera plugin for low-latency frame streaming, and Dio/HTTP client for network communication.
+  \item \textbf{Tools \& Infrastructure:} Git and GitHub for collaborative version control; GitHub Actions for automated CI build and test pipelines; Render for backend container hosting; Vercel for web dashboard deployment; Firebase App Distribution for Android mobile APK distribution.
+  \item \textbf{Libraries \& Design System:} Google Material Design 3 (Material You) tokens unified across web (MUI v5) and mobile (Flutter native M3); Recharts (web) and \texttt{fl\_chart} (mobile) for attendance metric visualization.
+\end{itemize}
+
+\section{Implementation Details}
+
+The implementation of the prototype system centers entirely on the end-to-end attendance pipeline, backed by core identity and classroom management services. The modules are decoupled so that the web dashboard, mobile scanner client, and backend validation layer interact strictly through well-defined RESTful contracts and WebSocket event definitions.
+
+\subsection{Prototype Modules Implemented}
+
+\subsubsection*{Authentication and Role-Based Access Control (RBAC)}
+
+The Authentication and RBAC module manages secure user onboarding, session establishment, and access enforcement. Passwords are encrypted using bcrypt hashing before persistence. On login, the backend generates signed JSON Web Tokens (JWT) specifying user identity and role (\texttt{teacher} or \texttt{student}). Middleware guards validate tokens on protected routes, restricting instructor capabilities (classroom creation, starting attendance sessions, viewing all student records) while granting students access to join classrooms, scan QR codes, and view personal attendance summaries.
+
+\subsubsection*{Classroom and Enrollment Management}
+
+The Classroom Management module enables instructors to establish virtual classrooms linked to standard institutional course identifiers (e.g., \texttt{UCS503P}). The system generates a distinct, collision-free alphanumeric join code for each classroom. Students enter this code via the mobile application or web portal to enroll. The backend maintains synchronized enrollment lists, ensuring that only enrolled students can have their attendance recorded during live sessions.
+
+\subsubsection*{Dynamic Anti-Proxy QR Attendance Generator (Web Dashboard)}
+
+The Attendance Generator module operates on the teacher web dashboard during live lecture sessions. Upon starting an attendance session, the backend continuously produces time-synchronized, HMAC-SHA256 signed QR payloads. Every 5 seconds, the token rotates, pushing the new payload to the teacher's screen via Socket.io and caching it in Redis with an 8-second expiration window. This dynamic rotation ensures that static photos captured and forwarded via messaging applications expire before remote peers can scan them.
+
+\subsubsection*{Mobile Camera Scanner \& Validation Client (Flutter Mobile)}
+
+The Mobile Scanner module is built into the Flutter student client using the device's physical camera and the Google ML Kit Barcode Scanning library. ML Kit runs on-device machine learning models to detect and decode QR codes within sub-second latency directly from camera preview frames. Upon detection, the application captures the device timestamp (\texttt{scan\_started\_at}) and immediately submits the payload to the backend attendance verification endpoint.
+
+\subsubsection*{Live Attendance Roster \& Analytics Dashboard}
+
+The Attendance Analytics module provides immediate visual feedback to the instructor. As each student scan is validated, the backend triggers an \texttt{attendance:marked} WebSocket event, rendering the student's name, roll number, and capture latency on the live web roster in real time. Following the session, instructors can review attendance percentage trends, identify irregular attendees, and export attendance records. Students can independently view their cumulative attendance percentage across enrolled courses.
+
+\subsection{Initial Data and Schema Preparation}
+
+The data foundation for the attendance subsystem is implemented in PostgreSQL and supplemented by Redis. The relational schema defines the following core entities:
+
+\begin{itemize}
+  \item \textbf{\texttt{Users}:} Holds core user profiles, including unique identifier (UUID), university email, bcrypt password hash, full name, system role (\texttt{teacher} or \texttt{student}), and creation timestamp.
+  \item \textbf{\texttt{Courses}:} Stores standardized academic course entries, including course code (e.g., \texttt{UCS503P}) and full course title.
+  \item \textbf{\texttt{Classrooms}:} Represents specific instructor sections, mapping \texttt{course\_id} and \texttt{teacher\_id} with section name, unique alphanumeric join code, and creation timestamp.
+  \item \textbf{\texttt{Enrollments}:} Enforces many-to-many associations between students and classrooms with composite unique constraints on (\texttt{classroom\_id}, \texttt{student\_id}).
+  \item \textbf{\texttt{Sessions}:} Records live attendance sessions initiated by instructors, tracking \texttt{classroom\_id}, start timestamp, and conclusion timestamp.
+  \item \textbf{\texttt{AttendanceRecords}:} Represents validated presence events, storing references to \texttt{session\_id} and \texttt{student\_id}, device-reported \texttt{scan\_started\_at}, backend-confirmed \texttt{validated\_at}, and attendance status (\texttt{PRESENT}). Unique constraints ensure a student can be marked present only once per session.
+  \item \textbf{Redis Ephemeral Key Schema:} Redis keys are structured as \texttt{qr:session:\{sessionId\}:token}, storing the active HMAC token with an 8-second TTL, alongside student submission lock keys to prevent concurrent double-scans.
+\end{itemize}
+
+Secondary data tables intended for classroom engagement (such as live polls, interactive quizzes, and doubt discussions) are reserved for subsequent schema migrations and will be deployed alongside their corresponding modules in the final evaluation.
+
+\subsection{Prototype Development Status}
+
+At this mid-semester prototype evaluation stage, the ClassPulse project has focused on delivering an end-to-end validated attendance platform:
+
+\begin{itemize}
+  \item \textbf{Completed Deliverables:}
+    \begin{enumerate}
+      \item Full-stack client-server architecture deployed and running across local and staging cloud environments (Vercel, Render, Neon, Upstash).
+      \item Complete JWT authentication and Role-Based Access Control on both web and mobile interfaces.
+      \item Classroom management, join-code enrollment, and roster persistence.
+      \item Dynamic rotating QR code generator on the web dashboard with HMAC-SHA256 signatures and 5-second WebSocket rotation.
+      \item Native camera barcode scanner implemented on Flutter Android using Google ML Kit with sub-second decoding performance.
+      \item Backend token validation against Redis, single-use enforcement, Attendance Capture Latency (ACL) calculation, and live roster synchronization.
+      \item Basic attendance history views and session analytics for teachers and students.
+    \end{enumerate}
+  \item \textbf{Roadmap for End-Semester Submission:}
+    \begin{enumerate}
+      \item Implementation of the Real-Time PulseMeter feedback module (Word Cloud, MCQ, and Rating Scale pacing polls).
+      \item Development of the Live Interactive Quizzing engine with time-weighted scoring algorithms and real-time leaderboards.
+      \item Creation of the audience-scoped asynchronous Doubt Forum featuring PostgreSQL full-text search (\texttt{tsvector}/\texttt{tsquery}) and peer upvoting.
+      \item Campus-wide pilot testing in physical TIET lecture halls with undergraduate cohorts and automated LMS attendance export.
+    \end{enumerate}
+\end{itemize}
+
+\end{document}

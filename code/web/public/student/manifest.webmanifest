@@ -1,0 +1,33 @@
+{
+  "id": "/student",
+  "name": "ClassPulse Student",
+  "short_name": "ClassPulse",
+  "description": "QR attendance, live classes, quizzes, and the doubt forum for ClassPulse students.",
+  "start_url": "/student",
+  "scope": "/student",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FEF7FF",
+  "theme_color": "#6750A4",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/student-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/student-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/student-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
