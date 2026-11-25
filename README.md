@@ -26,7 +26,7 @@ As of now, the `docs` is just an organised collection
 of markdown (`md`) files.  But the build procedure is
 using [`mkdocs`](https://google.com/search?q=mkdocs)
 backend.  As a result, any commit into the `master`
-branch of github repository would result in CI/CD based
+branch of github repository would result in CI/CD based,
 build and deployment of the documentation including the
 journals.
 
