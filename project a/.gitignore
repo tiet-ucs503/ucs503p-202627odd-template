@@ -29,3 +29,7 @@ htmlcov/
 *.DS_Store
 Thumbs.db
 tmp_repos/
+reports/
+gitleaks.exe
+threatlens/
+test-repo/

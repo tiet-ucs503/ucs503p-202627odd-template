@@ -1,0 +1,4 @@
+{
+  "threatlens.cliPath": "${workspaceFolder}/project a/threatlens.py",
+  "threatlens.pythonPath": "${workspaceFolder}/project a/.venv/bin/python"
+}

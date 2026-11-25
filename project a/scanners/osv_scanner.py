@@ -1,4 +1,3 @@
-
 # scanners/osv_scanner.py
 # Phase 6 – OSV-Scanner integration
 #
@@ -103,7 +102,7 @@ class OsvScanner:
     """
 
     # OSV-Scanner may be in PATH or in the project directory as a .exe
-    DEFAULT_COMMANDS = ["osv-scanner", "osv-scanner.exe"]
+    DEFAULT_COMMANDS = ["osv-scanner", "osv-scanner.exe"] if os.name == "nt" else ["osv-scanner"]
 
     def __init__(self, osv_cmd: str = None):
         """
@@ -124,15 +123,16 @@ class OsvScanner:
                 )
                 if result.returncode == 0:
                     return cmd
-            except FileNotFoundError:
+            except (FileNotFoundError, PermissionError):
                 continue
 
         # 2. Check same directory as the project root
         #    scanners/osv_scanner.py -> .parent = scanners/ -> .parent = project root
         project_root = Path(__file__).resolve().parent.parent
-        for name in ["osv-scanner.exe", "osv-scanner"]:
+        names = ["osv-scanner.exe", "osv-scanner"] if os.name == "nt" else ["osv-scanner"]
+        for name in names:
             candidate = project_root / name
-            if candidate.exists():
+            if candidate.exists() and (os.name == "nt" or os.access(candidate, os.X_OK)):
                 logger.info("OSV-Scanner found at: %s", candidate)
                 return str(candidate)
 
@@ -162,6 +162,7 @@ class OsvScanner:
             self.osv_cmd,
             "scan",
             "--format", "json",
+            "--recursive",      # also look in sub-folders (e.g. "project a/requirements.txt")
             str(repo_path),
         ]
         logger.info("Running OSV-Scanner: %s", " ".join(cmd))
@@ -174,7 +175,14 @@ class OsvScanner:
             timeout=120,
         )
 
-        # OSV-Scanner exits with 1 when vulnerabilities are found (not a real error).
+        # OSV-Scanner exit codes:
+        #   0   = scanned, no vulnerabilities
+        #   1   = scanned, vulnerabilities found   (not an error)
+        #   128 = no dependency files found at all (not an error - nothing to check)
+        if result.returncode == 128:
+            logger.info("OSV-Scanner found no dependency files (requirements.txt, package.json, ...).")
+            return {}
+
         if result.returncode not in (0, 1):
             raise RuntimeError(
                 f"OSV-Scanner exited with unexpected code {result.returncode}.\n"

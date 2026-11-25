@@ -32,7 +32,9 @@
 import json
 import logging
 import os
+import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -137,6 +139,16 @@ class SemgrepScanner:
             config:      Semgrep ruleset. 'auto' selects rules automatically.
                          Can also be a path to a custom .yaml rule file.
         """
+        if semgrep_cmd == "semgrep":
+            # Auto-detect semgrep in the current Python environment (e.g. virtualenv)
+            py_bin_dir = Path(sys.executable).parent
+            bin_name = "semgrep.exe" if os.name == "nt" else "semgrep"
+            candidate = py_bin_dir / bin_name
+            if candidate.exists():
+                semgrep_cmd = str(candidate)
+            elif shutil.which("semgrep"):
+                semgrep_cmd = shutil.which("semgrep")
+
         self.semgrep_cmd = semgrep_cmd
         self.config = config
 

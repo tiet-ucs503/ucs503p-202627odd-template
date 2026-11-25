@@ -1,0 +1,116 @@
+name: ThreatLens Security Scan & PR Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - master
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      fail_on:
+        description: "Severity threshold that fails the build"
+        required: false
+        default: "HIGH"
+        type: choice
+        options:
+          - CRITICAL
+          - HIGH
+          - MEDIUM
+          - LOW
+          - NONE
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  security-scan:
+    name: Run ThreatLens Multi-Scanner
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: "project a/requirements.txt"
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r "project a/requirements.txt"
+
+      - name: Install Gitleaks
+        run: |
+          GITLEAKS_VERSION="8.18.4"
+          echo "Installing Gitleaks v${GITLEAKS_VERSION}..."
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | sudo tar -xz -C /usr/local/bin gitleaks
+          sudo chmod +x /usr/local/bin/gitleaks
+
+      - name: Install OSV-Scanner
+        run: |
+          OSV_VERSION="v2.7.0"
+          echo "Installing OSV-Scanner ${OSV_VERSION}..."
+          sudo curl -sSL -o /usr/local/bin/osv-scanner "https://github.com/google/osv-scanner/releases/download/${OSV_VERSION}/osv-scanner_linux_amd64"
+          sudo chmod +x /usr/local/bin/osv-scanner
+
+      - name: Verify Security Scanners
+        run: |
+          echo "=== Scanner Diagnostics ==="
+          gitleaks version
+          osv-scanner --version
+          semgrep --version
+
+      - name: Execute ThreatLens Security Engine
+        env:
+          SEMGREP_ENABLE_VERSION_CHECK: "0"
+        run: |
+          mkdir -p "project a/reports"
+          echo "[ThreatLens CI] Running unified engine scan..."
+          # Run CLI; catch exit code so downstream reporting & commenting steps always run
+          python "project a/threatlens.py" . --json --no-open > threatlens_report.json || true
+          echo "[ThreatLens CI] Engine execution completed."
+
+      - name: Upload Security Reports as Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: threatlens-scan-reports
+          path: |
+            threatlens_report.json
+            project a/reports/*.html
+          retention-days: 14
+
+      - name: Post PR Comment & Enforce Quality Gate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONPATH: ${{ github.workspace }}/project a
+        run: |
+          FAIL_ON="${{ github.event.inputs.fail_on || 'HIGH' }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+
+          echo "Evaluating quality gate with threshold: ${FAIL_ON}"
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Target pull request: #${PR_NUMBER}"
+            python -m github_integration.pr_commenter threatlens_report.json \
+              --repo "${{ github.repository }}" \
+              --pr "$PR_NUMBER" \
+              --fail-on "$FAIL_ON"
+          else
+            echo "Direct push / manual workflow run (no PR number)."
+            python -m github_integration.pr_commenter threatlens_report.json \
+              --repo "${{ github.repository }}" \
+              --fail-on "$FAIL_ON"
+          fi

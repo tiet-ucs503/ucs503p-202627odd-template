@@ -1,0 +1,123 @@
+{
+  "name": "threatlens-vscode",
+  "displayName": "ThreatLens - AI Code Security",
+  "description": "Unified AI-code security scanner: secrets detection, vulnerable dependencies, and insecure code patterns.",
+  "version": "0.1.0",
+  "publisher": "threatlens",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tiet-ucs503/ucs503p-202627odd-template"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Security",
+    "Linters"
+  ],
+  "keywords": [
+    "security",
+    "gitleaks",
+    "semgrep",
+    "osv-scanner",
+    "vulnerabilities",
+    "secrets",
+    "sast",
+    "ai code"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "threatlens.scanWorkspace",
+        "title": "ThreatLens: Scan Workspace",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "threatlens.scanGitHubRepo",
+        "title": "ThreatLens: Scan Remote GitHub Repository",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "threatlens.clearFindings",
+        "title": "ThreatLens: Clear Findings",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "threatlens.showOutput",
+        "title": "ThreatLens: Show Output Logs",
+        "icon": "$(output)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "threatlens-container",
+          "title": "ThreatLens",
+          "icon": "resources/shield.svg"
+        }
+      ]
+    },
+    "views": {
+      "threatlens-container": [
+        {
+          "id": "threatlens-findings-view",
+          "name": "Security Findings"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "threatlens.scanWorkspace",
+          "when": "view == threatlens-findings-view",
+          "group": "navigation@1"
+        },
+        {
+          "command": "threatlens.scanGitHubRepo",
+          "when": "view == threatlens-findings-view",
+          "group": "navigation@2"
+        },
+        {
+          "command": "threatlens.clearFindings",
+          "when": "view == threatlens-findings-view",
+          "group": "navigation@3"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ThreatLens",
+      "properties": {
+        "threatlens.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "Custom path to the Python executable (leave blank to use the active environment or 'python3')."
+        },
+        "threatlens.cliPath": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to threatlens.py (leave blank to auto-detect inside the workspace)."
+        },
+        "threatlens.autoScanOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically scan the workspace on file save."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "build": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.3"
+  }
+}

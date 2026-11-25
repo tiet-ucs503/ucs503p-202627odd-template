@@ -139,38 +139,109 @@ class SecurityEngine:
             )
 
     def _deduplicate(self, findings: list[Finding]) -> list[Finding]:
-        """Remove duplicate findings based on their fingerprint.
+        """Deduplicate and consolidate findings.
 
-        Two findings with the same fingerprint represent the exact
-        same issue detected by different scanners (or the same
-        scanner run twice). We keep the first occurrence.
-
-        Findings with no fingerprint are always kept (we cannot
-        tell if they are duplicates without an identifier).
+        Two-tier deduplication:
+          1. Exact fingerprint deduplication: identical issues from multiple passes
+             or redundant scans are discarded.
+          2. Same-line semantic consolidation: multiple rules (e.g. several Semgrep
+             rules or Semgrep + Gitleaks) firing on the exact same (file, start_line)
+             for the same category are consolidated into a single primary finding.
+             - The highest severity is retained.
+             - Secondary rules are noted in the rule label and description so no context is lost.
+             - Dependency advisories (start_line <= 0) remain distinct per CVE/GHSA.
         """
+        # Tier 1: remove exact identical fingerprints
         seen_fingerprints: set[str] = set()
-        unique: list[Finding] = []
+        tier1_unique: list[Finding] = []
 
-        for finding in findings:
-            if not finding.fingerprint:
-                # No fingerprint – keep it, cannot deduplicate
-                unique.append(finding)
+        for f in findings:
+            if not f.fingerprint:
+                tier1_unique.append(f)
+                continue
+            if f.fingerprint not in seen_fingerprints:
+                seen_fingerprints.add(f.fingerprint)
+                tier1_unique.append(f)
+            else:
+                logger.debug("Identical fingerprint removed: %s (%s)", f.rule, f.fingerprint)
+
+        # Tier 2: consolidate overlapping findings on the same line & category
+        line_groups: dict[tuple[str, int, str], list[Finding]] = {}
+        pass_through: list[Finding] = []
+
+        for f in tier1_unique:
+            # Only line-level findings (start_line > 0) are consolidated.
+            # Dependency/package-level findings (start_line <= 0) remain individual.
+            if f.start_line > 0 and f.file:
+                key = (f.file.replace("\\", "/"), f.start_line, f.category)
+                line_groups.setdefault(key, []).append(f)
+            else:
+                pass_through.append(f)
+
+        consolidated: list[Finding] = list(pass_through)
+
+        for key, group in line_groups.items():
+            if len(group) == 1:
+                consolidated.append(group[0])
                 continue
 
-            if finding.fingerprint not in seen_fingerprints:
-                seen_fingerprints.add(finding.fingerprint)
-                unique.append(finding)
-            else:
-                logger.debug(
-                    "Duplicate finding removed: %s (fingerprint: %s)",
-                    finding.rule, finding.fingerprint,
+            # Sort group so the most severe finding is first
+            group.sort(
+                key=lambda item: (
+                    SEVERITY_ORDER.get(item.severity, 99),
+                    0 if item.tool == "Gitleaks" else 1,
                 )
+            )
+            primary = group[0]
+            secondaries = group[1:]
 
-        removed = len(findings) - len(unique)
+            sec_rules = [s.rule for s in secondaries if s.rule != primary.rule]
+            merged_rule = primary.rule
+            if sec_rules:
+                if len(sec_rules) == 1:
+                    merged_rule = f"{primary.rule} (+1 related rule: {sec_rules[0]})"
+                else:
+                    merged_rule = f"{primary.rule} (+{len(sec_rules)} related rules)"
+
+            # Build enriched description
+            extra_lines = []
+            for s in secondaries:
+                extra_lines.append(f"  • [{s.severity}] {s.rule} ({s.tool}): {s.description.strip()}")
+
+            merged_desc = primary.description
+            if extra_lines:
+                merged_desc += "\n\nAdditional related findings on this line:\n" + "\n".join(extra_lines)
+
+            # References
+            all_refs = [primary.reference] if primary.reference else []
+            for s in secondaries:
+                if s.reference and s.reference not in all_refs:
+                    all_refs.append(s.reference)
+            merged_ref = " | ".join(all_refs)
+
+            consolidated_finding = Finding(
+                tool=primary.tool,
+                rule=merged_rule,
+                category=primary.category,
+                severity=primary.severity,
+                file=primary.file,
+                start_line=primary.start_line,
+                end_line=primary.end_line or max((s.end_line for s in group), default=primary.start_line),
+                start_column=primary.start_column,
+                end_column=primary.end_column,
+                description=merged_desc,
+                risk=primary.risk,
+                recommendation=primary.recommendation,
+                reference=merged_ref,
+                fingerprint=f"consolidated:{primary.tool.lower()}:{key[0]}:{key[1]}:{key[2].lower()}",
+            )
+            consolidated.append(consolidated_finding)
+
+        removed = len(findings) - len(consolidated)
         if removed:
-            logger.info("Deduplication removed %d duplicate finding(s).", removed)
+            logger.info("Deduplication and consolidation removed %d redundant finding(s).", removed)
 
-        return unique
+        return consolidated
 
     def _sort_by_severity(self, findings: list[Finding]) -> list[Finding]:
         """Sort findings so the most severe appear first."""
