@@ -1,0 +1,33 @@
+ORIGINAL PLAN (October 2026)
+Ramneek Kaur: Memory, Adaptive Difficulty and LSTM (FR-3, FR-5)
+W1: Define the short-term and long-term memory structures and the mastery update formula. Write the spec for adaptive rules (when to promote, when to remediate).
+W2: Implement mastery updates after each attempt and the memory read/write logic with Parth’s tables. Generate a simulated interaction dataset (response time, correctness, hints).
+W3: Build the rule-based adaptive difficulty engine (increase after strong performance, remediate after repeated errors) and connect it to question selection.
+W4: Train the LSTM on the Question → Response Time → Correctness → Hint Usage sequences. Run it asynchronously through the queue.
+W5: Evaluate accuracy and reduction in repeated mistakes. Tune the thresholds, and write the testing report and the evaluation section of the project documentation.
+
+FINAL WORK RECORD (project completed, November 2026)
+Role: mastery model, adaptive difficulty and evaluation.
+
+- Mastery model: Bayesian Knowledge Tracing per student per topic with
+  textbook parameters (prior 0.30, guess 0.25, slip 0.10, learn 0.15), clamped
+  to 0.01-0.99, with the learning step applied only after correct answers so a
+  wrong answer always lowers mastery.
+- Adaptive difficulty: the easy (below 0.40), medium and hard (above 0.75)
+  thresholds that choose the next question's tier.
+- Mastery display: the band first (Needs practice, Developing, Strong) and a
+  percentage limited to 5-95% for reports, without changing stored values.
+- Evaluation on simulated students: 5,000 students x 20 answers per scenario,
+  BKT against three baselines (running accuracy, last answer, constant rate)
+  using AUC, accuracy, Brier score and log loss, including a robustness
+  scenario (tools/evaluate_mastery.py).
+- Real-data evaluation design: the comparison on stored answers, the exclusion
+  of demo and test accounts, the 200-answer / 10-student threshold and the
+  bootstrap confidence interval (tools/evaluate_real_data.py).
+- Tests for the mastery model, the display rules and the evaluation, and the
+  evaluation section of the final report.
+
+Changes from the plan: the LSTM was replaced by BKT, because an LSTM needs a
+large real interaction dataset that did not exist, while BKT works from the
+first answer and every number can be explained. Evaluation used simulated
+students until enough real answers are collected.

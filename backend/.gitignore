@@ -1,0 +1,7 @@
+# Local database files hold real account data and must never be committed
+*.db
+*.db-journal
+venv/
+__pycache__/
+.pytest_cache/
+.env

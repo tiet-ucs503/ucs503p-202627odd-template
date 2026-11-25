@@ -1,0 +1,13 @@
+fastapi[standard]==0.162.5
+SQLAlchemy==2.1.8
+python-jose[cryptography]==3.5.0
+bcrypt==5.0.0
+python-dotenv==1.2.4
+groq==1.7.0
+# "Sign in with Google": checks Google's signed ID tokens
+google-auth==2.62.2
+requests==2.34.2
+
+# tests
+pytest==9.2.0
+httpx==0.28.1
