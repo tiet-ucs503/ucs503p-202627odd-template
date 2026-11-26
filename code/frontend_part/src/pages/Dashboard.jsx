@@ -21,7 +21,8 @@ function Dashboard() {
             try {
                 const response = await api.get("/dashboard/due-today");
 
-                const fetchedQuestions = response.data.questions || [];
+                const dailyTarget =Number(localStorage.getItem("algoRecallDailyTarget")) || 3;
+                const fetchedQuestions =(response.data.questions || []).slice(0, dailyTarget);
 
                 setQuestions(fetchedQuestions);
 
