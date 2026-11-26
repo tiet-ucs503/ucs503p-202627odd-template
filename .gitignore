@@ -20,6 +20,8 @@ downloads/
 eggs/
 .eggs/
 lib/
+!code/city-serve-fixed (1)/city-serve-main/frontend/src/lib/
+!code/city-serve-fixed (1)/city-serve-main/frontend/src/lib/**
 lib64/
 parts/
 sdist/
