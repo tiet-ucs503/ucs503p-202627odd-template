@@ -6,7 +6,7 @@
   "publisher": "threatlens",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tiet-ucs503/ucs503p-202627odd-template"
+    "url": "https://github.com/QuantumWizardz/UCS503P_202627_ThreatLens"
   },
   "engines": {
     "vscode": "^1.85.0"

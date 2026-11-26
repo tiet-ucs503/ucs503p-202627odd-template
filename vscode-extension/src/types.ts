@@ -38,6 +38,7 @@ export interface ScanResultSuccess {
   summary: Record<SeverityLevel | string, number>;
   total: number;
   scanners: ScannerStatus[];
+  complete?: boolean;      // false when any scanner failed (older CLIs omit it)
   findings: Finding[];
 }
 

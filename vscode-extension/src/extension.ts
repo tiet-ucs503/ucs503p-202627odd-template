@@ -12,6 +12,12 @@ let treeDataProvider: ThreatLensTreeDataProvider;
 let quickFixProvider: ThreatLensQuickFixProvider;
 let engineRunner: EngineRunner;
 
+// Only one scan at a time. A save during a scan queues ONE follow-up scan.
+let scanInProgress = false;
+let rescanQueued = false;
+let saveTimer: NodeJS.Timeout | undefined;
+const SAVE_DEBOUNCE_MS = 1500;
+
 export function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel('ThreatLens');
   context.subscriptions.push(outputChannel);
@@ -63,10 +69,23 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument(() => {
       const config = vscode.workspace.getConfiguration('threatlens');
-      if (config.get<boolean>('autoScanOnSave', false)) {
-        scanWorkspaceCommand(true);
+      if (!config.get<boolean>('autoScanOnSave', false)) {
+        return;
       }
-    })
+      // Wait until saving has calmed down ("Save All" fires many events).
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+      }
+      saveTimer = setTimeout(() => {
+        saveTimer = undefined;
+        if (scanInProgress) {
+          rescanQueued = true;     // scan again once the current one finishes
+        } else {
+          scanWorkspaceCommand(true);
+        }
+      }, SAVE_DEBOUNCE_MS);
+    }),
+    { dispose: () => saveTimer && clearTimeout(saveTimer) }
   );
 
   outputChannel.appendLine('ThreatLens Extension activated successfully.');
@@ -80,6 +99,14 @@ async function scanWorkspaceCommand(silent: boolean = false) {
   }
 
   const workspaceRoot = folders[0].uri.fsPath;
+
+  if (scanInProgress) {
+    if (!silent) {
+      vscode.window.showInformationMessage('ThreatLens: A scan is already running.');
+    }
+    return;
+  }
+  scanInProgress = true;
 
   statusBarItem.text = '$(sync~spin) ThreatLens: Scanning...';
   statusBarItem.tooltip = 'ThreatLens scan in progress...';
@@ -109,6 +136,12 @@ async function scanWorkspaceCommand(silent: boolean = false) {
         outputChannel.show();
       }
     });
+  } finally {
+    scanInProgress = false;
+    if (rescanQueued) {
+      rescanQueued = false;
+      scanWorkspaceCommand(true);
+    }
   }
 }
 
@@ -185,6 +218,15 @@ function handleSuccessfulScan(result: ScanResultSuccess, rootPath: string, silen
   const total = result.total;
   const critical = result.summary['CRITICAL'] || 0;
   const high = result.summary['HIGH'] || 0;
+  const failedScanners = (result.scanners || []).filter((s) => !s.ok);
+  const incomplete = result.complete === false || failedScanners.length > 0;
+  const failedNames = failedScanners.map((s) => s.name).join(', ') || 'a scanner';
+
+  if (incomplete) {
+    for (const s of failedScanners) {
+      outputChannel.appendLine(`[ThreatLens] ${s.name} failed: ${s.error ?? 'unknown error'}`);
+    }
+  }
 
   if (critical > 0 || high > 0) {
     statusBarItem.text = `$(alert) ThreatLens: ${total} Issues (${critical} Crit, ${high} High)`;
@@ -192,15 +234,36 @@ function handleSuccessfulScan(result: ScanResultSuccess, rootPath: string, silen
   } else if (total > 0) {
     statusBarItem.text = `$(warning) ThreatLens: ${total} Issues`;
     statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+  } else if (incomplete) {
+    // Nothing found, but a scanner didn't run - this is NOT "clean".
+    statusBarItem.text = `$(warning) ThreatLens: Incomplete`;
+    statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
   } else {
     statusBarItem.text = `$(check) ThreatLens: Clean`;
     statusBarItem.backgroundColor = undefined;
   }
-  statusBarItem.tooltip = `Scan complete. Total: ${total} issues. Click to rescan.`;
+  statusBarItem.tooltip = incomplete
+    ? `Scan INCOMPLETE (${failedNames} failed). Total found: ${total}. Click to rescan.`
+    : `Scan complete. Total: ${total} issues. Click to rescan.`;
   statusBarItem.command = 'threatlens.scanWorkspace';
 
+  if (incomplete && !silent) {
+    vscode.window
+      .showWarningMessage(
+        `ThreatLens: Scan incomplete - ${failedNames} failed, so some issues may be missing.`,
+        'View Logs'
+      )
+      .then((sel) => {
+        if (sel === 'View Logs') {
+          outputChannel.show();
+        }
+      });
+  }
+
   if (!silent) {
-    if (total === 0) {
+    if (total === 0 && incomplete) {
+      // warning above already explains it
+    } else if (total === 0) {
       vscode.window.showInformationMessage('ThreatLens: No security issues detected. Repository is clean!');
     } else {
       const msg = `ThreatLens: Found ${total} security issues (${critical} Critical, ${high} High). Check Problems panel.`;

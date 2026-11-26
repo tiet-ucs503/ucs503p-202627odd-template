@@ -14,6 +14,12 @@ AI-powered unified security scanner for code editors. Detects hardcoded secrets,
 
 This extension contributes the following settings:
 
-* `threatlens.pythonPath`: Custom path to Python executable (defaults to system `python3` / `python`).
+* `threatlens.pythonPath`: Custom path to Python executable. If blank, the extension uses a virtualenv
+  next to `threatlens.py` (any folder with a `pyvenv.cfg`, e.g. `.venv/` or `threatlens/`), then falls back
+  to system `python3` / `python`.
 * `threatlens.cliPath`: Custom path to `threatlens.py` (automatically discovered if left blank).
-* `threatlens.autoScanOnSave`: Run a quick security check automatically whenever a file is saved.
+* `threatlens.autoScanOnSave`: Scan the workspace after files are saved. Saves are batched (1.5 s), and only
+  one scan runs at a time; saving during a scan queues a single follow-up scan.
+
+If a scanner (Gitleaks, OSV-Scanner or Semgrep) fails, the status bar shows **Incomplete** instead of
+**Clean**, and the Output panel ("ThreatLens") explains which scanner failed and why.

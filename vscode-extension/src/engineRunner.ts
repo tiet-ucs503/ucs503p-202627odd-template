@@ -26,29 +26,19 @@ export class EngineRunner {
       }
     }
 
-    const pyBinName = process.platform === 'win32' ? path.join('Scripts', 'python.exe') : path.join('bin', 'python');
-
-    // 1. Auto-detect .venv alongside threatlens.py
+    // 1. A virtualenv next to threatlens.py (any name: .venv, venv, threatlens, ...),
+    //    then one folder up (repo root).
     if (cliPath) {
-      const venvCandidates = [
-        path.join(path.dirname(cliPath), '.venv', pyBinName),
-        path.join(path.dirname(cliPath), 'venv', pyBinName),
-        path.join(path.dirname(cliPath), '..', '.venv', pyBinName),
-      ];
-      for (const cand of venvCandidates) {
-        if (fs.existsSync(cand)) {
-          return cand;
+      const cliDir = path.dirname(cliPath);
+      for (const dir of [cliDir, path.dirname(cliDir)]) {
+        const found = this.findVenvPython(dir);
+        if (found) {
+          return found;
         }
       }
     }
 
-    // 2. Check well-known workspace project virtualenv
-    const knownVenv = '/Users/matrix/Desktop/Sem 5/software eng/Project final repo/UCS503P_202627_ThreatLens/project a/.venv/' + pyBinName;
-    if (fs.existsSync(knownVenv)) {
-      return knownVenv;
-    }
-
-    // 3. Auto-detect .venv by walking up from workspace folders or active editor
+    // 2. Walk up from workspace folders / active editor looking for "project a" or a venv
     const startDirs: string[] = [];
     if (vscode.workspace.workspaceFolders) {
       for (const folder of vscode.workspace.workspaceFolders) {
@@ -62,14 +52,10 @@ export class EngineRunner {
     for (const start of startDirs) {
       let curr = start;
       for (let i = 0; i < 6; i++) {
-        const candidates = [
-          path.join(curr, 'project a', '.venv', pyBinName),
-          path.join(curr, 'UCS503P_202627_ThreatLens', 'project a', '.venv', pyBinName),
-          path.join(curr, '.venv', pyBinName),
-        ];
-        for (const cand of candidates) {
-          if (fs.existsSync(cand)) {
-            return cand;
+        for (const dir of [path.join(curr, 'project a'), curr]) {
+          const found = this.findVenvPython(dir);
+          if (found) {
+            return found;
           }
         }
         const parent = path.dirname(curr);
@@ -79,6 +65,38 @@ export class EngineRunner {
     }
 
     return process.platform === 'win32' ? 'python' : 'python3';
+  }
+
+  /**
+   * Find a virtualenv directly inside `dir` and return its Python executable.
+   * Common names are tried first; then any sub-folder with a pyvenv.cfg
+   * (that is how every venv marks itself, whatever it is called).
+   */
+  private findVenvPython(dir: string): string | null {
+    const pyBinName = process.platform === 'win32' ? path.join('Scripts', 'python.exe') : path.join('bin', 'python');
+    const check = (venvDir: string): string | null => {
+      const py = path.join(venvDir, pyBinName);
+      return fs.existsSync(path.join(venvDir, 'pyvenv.cfg')) && fs.existsSync(py) ? py : null;
+    };
+    for (const name of ['.venv', 'venv', 'env', 'threatlens']) {
+      const found = check(path.join(dir, name));
+      if (found) {
+        return found;
+      }
+    }
+    try {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isDirectory()) {
+          const found = check(path.join(dir, entry.name));
+          if (found) {
+            return found;
+          }
+        }
+      }
+    } catch {
+      // unreadable folder - ignore
+    }
+    return null;
   }
 
   /**
@@ -102,9 +120,15 @@ export class EngineRunner {
 
     // 2. Use VS Code's workspace search index
     try {
-      const foundUris = await vscode.workspace.findFiles('**/threatlens.py', '{**/node_modules/**,**/.git/**,**/tmp_repos/**}', 5);
-      if (foundUris && foundUris.length > 0) {
-        const found = foundUris[0].fsPath;
+      const foundUris = await vscode.workspace.findFiles(
+        '**/threatlens.py',
+        '{**/node_modules/**,**/.git/**,**/tmp_repos/**,**/site-packages/**}',
+        5
+      );
+      // Prefer the real CLI (project a/threatlens.py) over any copy elsewhere.
+      const preferred = foundUris.find((u) => path.basename(path.dirname(u.fsPath)) === 'project a') ?? foundUris[0];
+      if (preferred) {
+        const found = preferred.fsPath;
         this.outputChannel.appendLine(`[ThreatLens] Discovered threatlens.py via VS Code workspace search: ${found}`);
         return found;
       }
@@ -158,17 +182,6 @@ export class EngineRunner {
       }
     }
 
-    // 5. Well-known fallback paths
-    const hardcodedCandidates = [
-      '/Users/matrix/Desktop/Sem 5/software eng/Project final repo/UCS503P_202627_ThreatLens/project a/threatlens.py',
-    ];
-    for (const h of hardcodedCandidates) {
-      if (fs.existsSync(h)) {
-        this.outputChannel.appendLine(`[ThreatLens] Found threatlens.py at well-known path: ${h}`);
-        return h;
-      }
-    }
-
     this.outputChannel.appendLine('[ThreatLens] Could not locate threatlens.py in workspace.');
     return null;
   }
@@ -193,7 +206,8 @@ export class EngineRunner {
         if (!entry.isDirectory() && entry.name === targetName) {
           return full;
         }
-        if (entry.isDirectory()) {
+        // Never descend into a virtualenv (e.g. project a/threatlens/), whatever its name.
+        if (entry.isDirectory() && !fs.existsSync(path.join(full, 'pyvenv.cfg'))) {
           const res = this.searchFile(full, targetName, maxDepth - 1);
           if (res) {
             return res;
