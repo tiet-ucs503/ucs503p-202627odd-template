@@ -8,7 +8,7 @@ FROM node:24-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
 COPY package*.json ./
-RUN npm ci
+RUN npm ci || npm install
 COPY . .
 RUN npm run prisma:generate && npm run build
 
@@ -23,13 +23,9 @@ ENV NODE_ENV=production
 ENV PORT=5001
 
 COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
-
-# Copy compiled JavaScript dist & Prisma client artifacts
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
 # Non-root user for container security
 USER node

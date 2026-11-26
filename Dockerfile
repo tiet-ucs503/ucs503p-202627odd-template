@@ -1,6 +1,6 @@
 # ==========================================
-# AgriConnect Backend - Root Dockerfile for Cloud PaaS
-# (Enables 1-click Render/Railway builds from repo root)
+# AgriConnect Backend - Root Dockerfile for Cloud PaaS (Render / Railway)
+# Builds backend from repository root context (.)
 # ==========================================
 
 # Stage 1: Builder
@@ -10,13 +10,13 @@ RUN apk add --no-cache libc6-compat
 
 # Copy backend package manifests and install dependencies
 COPY code/AgriConnect/backend/package*.json ./
-RUN npm ci
+RUN npm ci || npm install
 
-# Copy backend source code and generate Prisma Client + build TypeScript
+# Copy backend source code, generate Prisma Client, and build TypeScript
 COPY code/AgriConnect/backend/ ./
 RUN npm run prisma:generate && npm run build
 
-# Stage 2: Production Runner
+# Stage 2: Production Runner (Fast & Lightweight)
 FROM node:24-alpine AS runner
 WORKDIR /app
 
@@ -26,13 +26,10 @@ ENV NODE_ENV=production
 ENV PORT=5001
 
 COPY code/AgriConnect/backend/package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
-
-# Copy compiled JavaScript dist & Prisma client artifacts
+# Copy pre-installed node_modules and Prisma artifacts from builder
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
 # Non-root user for container security
 USER node
