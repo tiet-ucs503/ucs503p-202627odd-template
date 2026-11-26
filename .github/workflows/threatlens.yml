@@ -78,6 +78,10 @@ jobs:
           SEMGREP_ENABLE_VERSION_CHECK: "0"
         run: |
           mkdir -p "project a/reports"
+          # test-repo/ is a DELIBERATELY vulnerable fixture (fake secrets, old
+          # packages) used for demos and run_phase*.py. Scanning it would fail
+          # the gate on every push, so drop it from this CI checkout only.
+          rm -rf "project a/test-repo"
           echo "[ThreatLens CI] Running unified engine scan..."
           # Run CLI; catch exit code so downstream reporting & commenting steps always run
           python "project a/threatlens.py" . --json --no-open > threatlens_report.json || true

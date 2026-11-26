@@ -32,4 +32,4 @@ tmp_repos/
 reports/
 gitleaks.exe
 threatlens/
-test-repo/
+# test-repo/ is committed on purpose: it's the deliberately vulnerable demo fixture.
