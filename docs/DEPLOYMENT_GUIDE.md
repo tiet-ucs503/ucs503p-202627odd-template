@@ -49,8 +49,9 @@ This architecture provides zero-maintenance deployment:
    - **Name:** `agriconnect-api`
    - **Region:** Singapore (`ap-southeast-1`) or Frankfurt (closest to your Supabase region).
    - **Runtime:** `Docker`
-   - **Dockerfile Path:** `code/AgriConnect/backend/Dockerfile`
-   - **Docker Context:** `code/AgriConnect/backend`
+   - **Dockerfile Path:** `Dockerfile`
+   - **Docker Context:** `.`
+   *(Note: Both root `Dockerfile` with context `.` OR `code/AgriConnect/backend/Dockerfile` with context `code/AgriConnect/backend` are supported. Setting `Dockerfile Path: Dockerfile` with `Context: .` is recommended.)*
    - **Instance Type:** Standard / Free / Starter
 4. Under **Environment Variables**, add the following required keys:
 
