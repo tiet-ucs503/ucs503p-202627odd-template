@@ -133,6 +133,13 @@ Endpoints:
 - `GET /health`: Health check status.
 - `POST /webhook`: GitHub webhook endpoint with HMAC-SHA256 signature verification.
 
+Notes:
+- `GITHUB_WEBHOOK_SECRET` is required. Requests without a valid signature get `401`.
+  For local testing only, set `THREATLENS_ALLOW_UNSIGNED=1` to accept unsigned requests.
+- The server replies `202 Accepted` immediately and runs the scan in the background
+  (GitHub only waits ~10 seconds). The PR comment appears when the scan finishes.
+- For PRs from forks, the fork's branch is scanned and the comment goes on the original PR.
+
 ---
 
 ## 🧪 Test Suite

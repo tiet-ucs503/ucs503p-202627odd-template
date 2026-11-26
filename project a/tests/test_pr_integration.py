@@ -141,6 +141,37 @@ def test_post_or_update_pr_comment_updates_existing():
     mock_pull.create_issue_comment.assert_not_called()
 
 
+def _signed_post(client, event, payload, secret="test-secret"):
+    body = json.dumps(payload).encode()
+    sig = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+    return client.post("/webhook", data=body, content_type="application/json",
+                       headers={"X-GitHub-Event": event, "X-Hub-Signature-256": sig})
+
+
+@pytest.fixture
+def webhook_env(monkeypatch):
+    """Secret set, and background work runs inline so tests can assert on it."""
+    import github_integration.webhook_server as ws
+    monkeypatch.setenv("GITHUB_WEBHOOK_SECRET", "test-secret")
+    monkeypatch.delenv("THREATLENS_ALLOW_UNSIGNED", raising=False)
+    monkeypatch.setattr(ws, "start_background", lambda func, *args: func(*args))
+    return ws
+
+
+def _fake_scan_result(full_name="org/test-repo", branch="feature-branch"):
+    from engine.security_engine import ScanReport
+    from github_integration.pipeline import GitHubScanResult
+    from github_integration.repos import RepoInfo
+    return GitHubScanResult(
+        repo=RepoInfo(full_name=full_name, private=False, default_branch="main", size_kb=100,
+                      language="Python", clone_url=f"https://github.com/{full_name}.git"),
+        branch=branch,
+        commit_sha="a" * 40,
+        report=ScanReport(repo_path=".", scanner_results=[], findings=[]),
+        skipped_dirs=[],
+    )
+
+
 def test_webhook_verify_signature():
     secret = "my_super_secret"
     payload = b'{"action": "ping"}'
@@ -149,6 +180,7 @@ def test_webhook_verify_signature():
     assert verify_signature(payload, valid_sig, secret) is True
     assert verify_signature(payload, "sha256=invalidhash", secret) is False
     assert verify_signature(payload, "invalid_format", secret) is False
+    assert verify_signature(payload, valid_sig, "") is False
 
 
 def test_webhook_health():
@@ -158,55 +190,99 @@ def test_webhook_health():
     assert resp.json["status"] == "ok"
 
 
-def test_webhook_ping():
-    client = app.test_client()
-    resp = client.post("/webhook", headers={"X-GitHub-Event": "ping"}, json={"zen": "Keep it logically awesome."})
+def test_webhook_ping(webhook_env):
+    resp = _signed_post(app.test_client(), "ping", {"zen": "Keep it logically awesome."})
     assert resp.status_code == 200
     assert "Pong" in resp.json["message"]
 
 
+def test_webhook_rejects_bad_signature(webhook_env):
+    resp = _signed_post(app.test_client(), "ping", {"zen": "x"}, secret="wrong-secret")
+    assert resp.status_code == 401
+
+
+def test_webhook_rejects_unsigned_when_no_secret(monkeypatch):
+    monkeypatch.delenv("GITHUB_WEBHOOK_SECRET", raising=False)
+    monkeypatch.delenv("THREATLENS_ALLOW_UNSIGNED", raising=False)
+    resp = app.test_client().post("/webhook", headers={"X-GitHub-Event": "ping"}, json={})
+    assert resp.status_code == 401
+
+
+def test_webhook_allows_unsigned_with_dev_flag(monkeypatch):
+    monkeypatch.delenv("GITHUB_WEBHOOK_SECRET", raising=False)
+    monkeypatch.setenv("THREATLENS_ALLOW_UNSIGNED", "1")
+    resp = app.test_client().post("/webhook", headers={"X-GitHub-Event": "ping"}, json={})
+    assert resp.status_code == 200
+
+
 @patch("github_integration.webhook_server.post_or_update_pr_comment")
 @patch("github_integration.webhook_server.scan_github_repo")
-def test_webhook_pull_request_flow(mock_scan, mock_comment):
-    from engine.security_engine import ScanReport
-    from github_integration.pipeline import GitHubScanResult
-    from github_integration.repos import RepoInfo
-
-    mock_scan.return_value = GitHubScanResult(
-        repo=RepoInfo(
-            full_name="org/test-repo",
-            private=False,
-            default_branch="main",
-            size_kb=100,
-            language="Python",
-            clone_url="https://github.com/org/test-repo.git",
-        ),
-        branch="feature-branch",
-        commit_sha="a" * 40,
-        report=ScanReport(repo_path=".", scanner_results=[], findings=[]),
-        skipped_dirs=[],
-    )
-
-    client = app.test_client()
+def test_webhook_pull_request_flow(mock_scan, mock_comment, webhook_env):
+    mock_scan.return_value = _fake_scan_result()
     payload = {
         "action": "opened",
         "pull_request": {
             "number": 42,
-            "head": {"ref": "feature-branch"},
+            "head": {"ref": "feature-branch", "sha": "a" * 40,
+                     "repo": {"full_name": "org/test-repo"}},
         },
-        "repository": {
-            "full_name": "org/test-repo",
-        },
+        "repository": {"full_name": "org/test-repo"},
     }
 
-    resp = client.post(
-        "/webhook",
-        headers={"X-GitHub-Event": "pull_request"},
-        json=payload,
-    )
+    resp = _signed_post(app.test_client(), "pull_request", payload)
 
-    assert resp.status_code == 200
-    assert resp.json["status"] == "ok"
+    assert resp.status_code == 202
+    assert resp.json["status"] == "accepted"
     assert resp.json["pr"] == 42
     mock_scan.assert_called_once_with("org/test-repo", branch="feature-branch")
     mock_comment.assert_called_once()
+    assert mock_comment.call_args[0][:2] == ("org/test-repo", 42)
+
+
+@patch("github_integration.webhook_server.post_or_update_pr_comment")
+@patch("github_integration.webhook_server.scan_github_repo")
+def test_webhook_fork_pr_scans_fork_and_comments_on_base(mock_scan, mock_comment, webhook_env):
+    mock_scan.return_value = _fake_scan_result("contributor/test-repo", "main")
+    payload = {
+        "action": "synchronize",
+        "pull_request": {
+            "number": 7,
+            "head": {"ref": "main", "sha": "a" * 40,
+                     "repo": {"full_name": "contributor/test-repo"}},
+        },
+        "repository": {"full_name": "org/test-repo"},
+    }
+
+    resp = _signed_post(app.test_client(), "pull_request", payload)
+
+    assert resp.status_code == 202
+    mock_scan.assert_called_once_with("contributor/test-repo", branch="main")
+    assert mock_comment.call_args[0][:2] == ("org/test-repo", 7)
+
+
+@patch("github_integration.webhook_server.post_or_update_pr_comment")
+@patch("github_integration.webhook_server.scan_github_repo")
+def test_webhook_scan_error_still_comments(mock_scan, mock_comment, webhook_env):
+    mock_scan.side_effect = RuntimeError("clone failed")
+    payload = {
+        "action": "opened",
+        "pull_request": {"number": 3, "head": {"ref": "x", "repo": {"full_name": "org/r"}}},
+        "repository": {"full_name": "org/r"},
+    }
+
+    resp = _signed_post(app.test_client(), "pull_request", payload)
+
+    assert resp.status_code == 202
+    body = mock_comment.call_args[0][2]
+    assert "FAILED (scan incomplete)" in body
+    assert "clone failed" in body
+
+
+def test_webhook_deleted_fork_is_rejected(webhook_env):
+    payload = {
+        "action": "opened",
+        "pull_request": {"number": 9, "head": {"ref": "main", "repo": None}},
+        "repository": {"full_name": "org/r"},
+    }
+    resp = _signed_post(app.test_client(), "pull_request", payload)
+    assert resp.status_code == 400
