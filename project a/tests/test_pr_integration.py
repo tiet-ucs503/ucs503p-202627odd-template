@@ -286,3 +286,53 @@ def test_webhook_deleted_fork_is_rejected(webhook_env):
     }
     resp = _signed_post(app.test_client(), "pull_request", payload)
     assert resp.status_code == 400
+
+
+def _finding(i, message="m", severity="LOW"):
+    return {"severity": severity, "tool": "Semgrep", "file": f"src/file_{i}.py", "line": i,
+            "rule": "some.rule", "message": message, "fix": "f" * 50}
+
+
+def _ok_report(findings):
+    summary = {}
+    for f in findings:
+        summary[f["severity"]] = summary.get(f["severity"], 0) + 1
+    return {"status": "ok", "complete": True, "summary": summary, "total": len(findings),
+            "scanners": [{"name": "Semgrep", "ok": True, "error": None}], "findings": findings}
+
+
+def test_pr_comment_escapes_pipes_in_cells():
+    body = format_pr_comment(_ok_report([_finding(1, message="a | b | c")]))
+    row = next(line for line in body.splitlines() if "src/file_1.py" in line)
+    # 5 columns -> 6 unescaped pipes
+    unescaped = row.replace("\\|", "")
+    assert unescaped.count("|") == 6
+
+
+def test_pr_comment_caps_rows_and_size():
+    from github_integration.pr_commenter import MAX_COMMENT_CHARS, MAX_FINDING_ROWS
+    findings = [_finding(i, message="x" * 200) for i in range(3000)]
+    body = format_pr_comment(_ok_report(findings))
+    assert len(body) <= MAX_COMMENT_CHARS
+    assert f"{3000 - MAX_FINDING_ROWS} more" in body
+    assert body.startswith(COMMENT_MARKER)
+
+
+def test_quality_gate_fails_closed():
+    assert evaluate_quality_gate({"status": "error", "message": "boom"}) is False
+    failed = _ok_report([])
+    failed["scanners"] = [{"name": "Semgrep", "ok": False, "error": "not installed"}]
+    failed["complete"] = False
+    assert evaluate_quality_gate(failed) is False
+    assert evaluate_quality_gate(failed, fail_on="NONE") is True
+    assert evaluate_quality_gate(_ok_report([])) is True
+
+
+@patch("github_integration.pr_commenter.Github")
+def test_post_comment_uses_explicit_token(mock_github_cls):
+    mock_pull = MagicMock()
+    mock_pull.get_issue_comments.return_value = []
+    mock_github_cls.return_value.get_repo.return_value.get_pull.return_value = mock_pull
+    post_or_update_pr_comment("org/repo", 1, "body", token="explicit-token")
+    auth = mock_github_cls.call_args.kwargs["auth"]
+    assert auth.token == "explicit-token"

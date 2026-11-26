@@ -217,7 +217,11 @@ class SecurityEngine:
             for s in secondaries:
                 if s.reference and s.reference not in all_refs:
                     all_refs.append(s.reference)
-            merged_ref = " | ".join(all_refs)
+            # Keep ONE clickable URL in `reference` (the HTML report and the VS Code
+            # extension use it as a link). Extra URLs go into the description.
+            merged_ref = all_refs[0] if all_refs else ""
+            if len(all_refs) > 1:
+                merged_desc += "\n\nMore references:\n" + "\n".join(f"  • {r}" for r in all_refs[1:])
 
             consolidated_finding = Finding(
                 tool=primary.tool,

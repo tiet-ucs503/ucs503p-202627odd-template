@@ -208,3 +208,24 @@ class TestSecurityEngineDeduplication(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_consolidated_finding_keeps_single_reference_url():
+    from engine.security_engine import SecurityEngine
+
+    class _S:
+        def __init__(self, findings):
+            self.findings = findings
+
+        def scan(self, path):
+            return self.findings
+
+    a = Finding(tool="Gitleaks", rule="aws", category="Secret", severity="HIGH", file="cfg.py",
+                start_line=3, fingerprint="g1", reference="https://a.example/1")
+    b = Finding(tool="Semgrep", rule="aws2", category="Secret", severity="HIGH", file="cfg.py",
+                start_line=3, fingerprint="s1", reference="https://b.example/2")
+    report = SecurityEngine(".").add_scanner("A", _S([a])).add_scanner("B", _S([b])).scan()
+    assert len(report.findings) == 1
+    merged = report.findings[0]
+    assert merged.reference == "https://a.example/1"
+    assert "https://b.example/2" in merged.description

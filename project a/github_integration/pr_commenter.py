@@ -11,8 +11,8 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from github import Github
-from github_integration.client import get_github_client, get_token
+from github import Auth, Github
+from github_integration.client import get_github_client
 
 def _md_cell(text: Any) -> str:
     """Make text safe inside a Markdown table cell / one-line quote."""
@@ -20,6 +20,11 @@ def _md_cell(text: Any) -> str:
 
 
 COMMENT_MARKER = "<!-- threatlens-security-report -->"
+
+# GitHub rejects comments longer than 65,536 characters. Stay well below it.
+MAX_COMMENT_CHARS = 60_000
+# Rows shown in the findings table; the rest are summarised in one line.
+MAX_FINDING_ROWS = 50
 
 SEVERITY_ORDER = {
     "CRITICAL": 5,
@@ -148,32 +153,39 @@ def format_pr_comment(scan_data: Dict[str, Any], fail_on: str = "HIGH") -> str:
             reverse=True,
         )
 
-        for f in sorted_findings:
+        shown = sorted_findings[:MAX_FINDING_ROWS]
+        for f in shown:
             sev = str(f.get("severity", "INFO")).upper()
             icon = SEVERITY_ICONS.get(sev, sev)
             tool = f.get("tool", "Unknown")
             file_path = f.get("file", "unknown")
             line_no = f.get("line")
-            loc = f"`{file_path}:{line_no}`" if line_no else f"`{file_path}`"
+            loc_text = f"{file_path}:{line_no}" if line_no else f"{file_path}"
+            loc = f"`{_md_cell(loc_text).replace('`', "'")}`"
 
-            msg = f.get("message", "").replace("\n", " ")
+            msg = _md_cell(f.get("message", ""))
             if len(msg) > 120:
                 msg = msg[:117] + "..."
 
-            rule = f.get("rule", "")
+            rule = _md_cell(f.get("rule", ""))
             rule_disp = f"**{rule}**<br>{msg}" if rule else msg
 
             fix = f.get("fix", "")
             if fix:
-                fix_snippet = fix.replace("\n", " ")
+                fix_snippet = _md_cell(fix)
                 if len(fix_snippet) > 100:
                     fix_snippet = fix_snippet[:97] + "..."
                 rem = f"<details><summary>Fix Suggestion</summary>{fix_snippet}</details>"
             else:
                 rem = "—"
 
-            lines.append(f"| {icon} | `{tool}` | {loc} | {rule_disp} | {rem} |")
+            lines.append(f"| {icon} | `{_md_cell(tool)}` | {loc} | {rule_disp} | {rem} |")
 
+        hidden = len(sorted_findings) - len(shown)
+        if hidden > 0:
+            lines.append("")
+            lines.append(f"*…and **{hidden} more** finding(s) not shown here. "
+                         "Download the full report from the workflow run's artifacts.*")
         lines.append("")
 
     # Scanner status table
@@ -189,13 +201,24 @@ def format_pr_comment(scan_data: Dict[str, Any], fail_on: str = "HIGH") -> str:
             ok = s.get("ok", False)
             status_str = "✅ Passed" if ok else "❌ Failed"
             err = s.get("error") or "Completed successfully"
-            lines.append(f"| **{name}** | {status_str} | {err} |")
+            lines.append(f"| **{_md_cell(name)}** | {status_str} | {_md_cell(err)[:300]} |")
         lines.append("</details>")
         lines.append("")
 
     lines.append("---")
     lines.append("*Automated security gate powered by **ThreatLens** AI-Code Security Platform.*")
-    return "\n".join(lines)
+    return _fit_comment("\n".join(lines))
+
+
+def _fit_comment(body: str) -> str:
+    """Last-resort guard so GitHub never rejects the comment for being too long."""
+    if len(body) <= MAX_COMMENT_CHARS:
+        return body
+    note = ("\n\n*…report truncated to fit GitHub's comment size limit. "
+            "See the workflow artifacts for the full report.*")
+    cut = body[: MAX_COMMENT_CHARS - len(note)]
+    cut = cut[: cut.rfind("\n")] if "\n" in cut else cut   # don't cut mid-row
+    return cut + note
 
 
 def post_or_update_pr_comment(
@@ -218,9 +241,7 @@ def post_or_update_pr_comment(
         True if comment was created or updated successfully.
     """
     if gh is None:
-        if token is None:
-            token = get_token()
-        gh = get_github_client()
+        gh = Github(auth=Auth.Token(token), timeout=30) if token else get_github_client()
 
     repo = gh.get_repo(repo_name)
     pull = repo.get_pull(pr_number)
