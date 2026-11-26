@@ -3,38 +3,47 @@
 **UCS503: Software Engineering (Project)**  
 **TIET Patiala**
 
-# The Sum Function in C++
+# ThreatLens: AI-Code Security Platform
 
-**Author(s)**:
+**Team:** Vidhi Saxena (1024030700) · Yashti Mittal (1024030701) · Rajat Verma (1024030696)
 
-`(RGB)` Raghav B. Venkataramaiyer `<bv.raghav -at-
-thapar -dot- edu>`
+AI coding assistants make it easy to ship code with leaked keys, outdated packages and injection bugs.
+ThreatLens catches all three in one scan by running three security tools and merging what they find:
 
-This project creates a sum function in c++ as a sample
-to illustrate how to compile a shared library and
-distribute it for use along with the binary.
+| Tool | Finds |
+|---|---|
+| **Gitleaks** | Hardcoded secrets (API keys, tokens, passwords) |
+| **OSV-Scanner** | Dependencies with known vulnerabilities |
+| **Semgrep** | Insecure code patterns (SQL injection, command injection, unsafe deserialization, …) |
 
-## Installation
+## How it works
 
-``` shell
-make -C code
-```
+1. **Scan.** The three scanners run on a local folder, or on a GitHub repository and branch that ThreatLens clones
+   into a temporary folder (and always deletes afterwards).
+2. **Merge.** Every result becomes a common `Finding` with a normalised severity (CRITICAL → INFO).
+   Exact duplicates are removed, and findings from different tools on the same line are merged into one.
+3. **Report.** Results come out as a terminal summary, an HTML report, or JSON.
+   If a scanner fails, the report says the scan is **incomplete**. It never claims "clean".
 
-This will create create a folder `dist` in `code`
-folder, with following contents
+## Where you can use it
 
-```
-dist
- +-lib
- |  \-libbvr_math.so
- +-bin
-    \-run
-```
+- **Command line:** `python threatlens.py <folder>` or `python threatlens.py --github owner/repo [--branch name]`
+- **VS Code extension:** findings appear in the Problems panel and a ThreatLens sidebar, with quick fixes
+- **Pull requests:** a GitHub Actions workflow scans each PR, posts or updates one summary comment,
+  and fails the check when HIGH or CRITICAL issues are found
+- **Webhook server:** an optional Flask endpoint that scans PRs on GitHub webhook events
 
-## Usage
+## Project stages
 
-``` shell
-cd code
-export LD_LIBRARY_PATH=dist/lib
-./dist/bin/run
-```
+| Stage | What was built |
+|---|---|
+| 1 | Scanner wrappers for Gitleaks, OSV-Scanner and Semgrep |
+| 2 | Unified engine: common finding format, severity normalisation, deduplication |
+| 3 | Reports: terminal, HTML and JSON |
+| 4 | GitHub integration: token auth, repo/branch selection, secure temporary clones, cleanup |
+| 5 | VS Code extension, PR quality gate and webhook server |
+
+## Links
+
+- Source code and setup: [GitHub repository](https://github.com/QuantumWizardz/UCS503P_202627_ThreatLens)
+- Weekly journals: see **Journals** in the navigation

@@ -1,19 +1,21 @@
-﻿
+
 [build-system]
 requires = ["hatchling","hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "tiet-ucs503.github.io/ucs503p-202627odd-template"
+name = "threatlens"
 version = "0.0.1"
 authors = [
-  { name="Raghav B. Venkataramaiyer", email="bv.raghav@thapar.edu" },
+  { name="Vidhi Saxena" },
+  { name="Yashti Mittal" },
+  { name="Rajat Verma" },
 ]
 # maintainers = [
 #   { name="Raghav B. Venkataramaiyer",
 #     email="bvraghav@gmail.com" },
 # ]
-description = "UCS503 : Software Engineering : Project Sample"
+description = "ThreatLens: unified security scanner (Gitleaks + OSV-Scanner + Semgrep)"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
@@ -30,12 +32,15 @@ classifiers = [
 dependencies = ["click"]
 
 [project.urls]
-Homepage = "https://github.com/tiet-ucs503/ucs503p-202627odd-template"
-Issues = "https://github.com/tiet-unc512/ucs503p-202627odd-template/issues"
+Homepage = "https://github.com/QuantumWizardz/UCS503P_202627_ThreatLens"
+Issues = "https://github.com/QuantumWizardz/UCS503P_202627_ThreatLens/issues"
 
 # Adapted from https://stackoverflow.com/a/50156706
 [tool.pytest.ini_options]
 pythonpath = [
-  "code"
+  "project a"
+]
+testpaths = [
+  "project a/tests"
 ]
 # THE END -------------------------------------------

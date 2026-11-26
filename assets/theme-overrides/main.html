@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 
 {% block htmltitle %}
-  <title>UCS503: Software Engineering; Raghav
-    B. Venkataramaiyer @TIET</title>
+  <title>{% if page and page.title and not page.is_homepage %}{{ page.title | striptags }} · {% endif %}ThreatLens · UCS503P @TIET</title>
 {% endblock %}

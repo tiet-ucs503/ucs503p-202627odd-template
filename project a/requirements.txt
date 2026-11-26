@@ -1,0 +1,19 @@
+# ThreatLens – Module 1 Dependencies
+# Install with: pip install -r requirements.txt
+
+# GitHub API integration (Stage 4+)
+PyGithub==2.3.0
+
+# Web server for webhook receiver (Stage 5)
+flask==3.0.3
+
+# HTTP request verification for webhooks
+requests==2.32.3
+
+# Semgrep (installed separately via pip)
+semgrep
+
+# Testing
+pytest==8.3.2
+pytest-mock==3.14.0
+python-dotenv==1.2.4

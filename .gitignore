@@ -465,4 +465,18 @@ TSWLatexianTemp*
 # option is specified. Footnotes are the stored in a file with suffix Notes.bib.
 # Uncomment the next line to have this generated file ignored.
 #*Notes.bib
- 
+
+# Project / ThreatLens ignores
+node_modules/
+*.vsix
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.env
+.DS_Store
+tmp_repos/
+reports/*.html
+reports/*.json
