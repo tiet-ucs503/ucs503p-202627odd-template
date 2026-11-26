@@ -295,6 +295,13 @@ npm run dev
 
 UI: http://localhost:3000 — register a farmer/buyer, or use the seeded admin.
 
+### 3. Production Deployment & Docker
+
+Deploying to production? Full multi-stage Dockerfiles, Docker Compose orchestration, and 1-click cloud blueprints (Render + Vercel) are provided:
+- 📖 **Full Production Deployment Manual:** [`docs/DEPLOYMENT_GUIDE.md`](docs/DEPLOYMENT_GUIDE.md)
+- 🚀 **1-Click Render Blueprint:** [`render.yaml`](render.yaml)
+- 🐳 **Docker Compose (Local/VPS):** `cd code/AgriConnect && docker compose up -d --build`
+
 <details>
 <summary><strong>Optional integrations</strong></summary>
 
