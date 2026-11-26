@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&family=Noto+Sans+Bengali:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Gujarati:wght@400;600;700&family=Noto+Sans+Gurmukhi:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&family=Noto+Sans+Malayalam:wght@400;600;700&family=Noto+Sans+Oriya:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Telugu:wght@400;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -9,6 +10,16 @@
   --soil: #475569;
   --ink: #0f172a;
   --clay: #dc2626;
+  --font-noto-deva: 'Noto Sans Devanagari';
+  --font-noto-gur: 'Noto Sans Gurmukhi';
+  --font-noto-beng: 'Noto Sans Bengali';
+  --font-noto-taml: 'Noto Sans Tamil';
+  --font-noto-telu: 'Noto Sans Telugu';
+  --font-noto-gujr: 'Noto Sans Gujarati';
+  --font-noto-knda: 'Noto Sans Kannada';
+  --font-noto-mlym: 'Noto Sans Malayalam';
+  --font-noto-orya: 'Noto Sans Oriya';
+  --font-noto-urdu: 'Noto Nastaliq Urdu';
 }
 
 @theme inline {
