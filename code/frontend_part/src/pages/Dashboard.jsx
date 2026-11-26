@@ -19,9 +19,9 @@ function Dashboard() {
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
-                const response = await api.get("/questions");
+                const response = await api.get("/dashboard/due-today");
 
-                const fetchedQuestions = response.data.questions;
+                const fetchedQuestions = response.data.questions || [];
 
                 setQuestions(fetchedQuestions);
 
@@ -77,7 +77,7 @@ function Dashboard() {
     };
 
     return (
-        <div className="dashboard-page">
+        <div className="p-6 bg-gray-100 min-h-screen">
             <DashboardSummary />
 
             {questions.map((question) => (
