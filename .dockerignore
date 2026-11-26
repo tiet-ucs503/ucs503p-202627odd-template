@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+.git
+.env
+.env.local
+**/.env
+**/.env.local
+npm-debug.log
+*.log
+docs
+journals
+project-proposal
+reports
+assets
