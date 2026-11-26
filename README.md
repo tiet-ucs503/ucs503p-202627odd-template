@@ -6,13 +6,14 @@
 
 <p align="center">
   <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Kabirmanchanda20/ucs503p-AgriConnect/ci.yml?branch=master&label=CI&logo=githubactions&logoColor=white" />
+  <a href="https://ucs503p-agri-connect-dusky.vercel.app/"><img alt="Vercel Live" src="https://img.shields.io/badge/Vercel-Live_Frontend-black?logo=vercel&logoColor=white" /></a>
+  <a href="https://ucs503p-agriconnect.onrender.com/health"><img alt="Render Live" src="https://img.shields.io/badge/Render-Live_API-46E3B7?logo=render&logoColor=black" /></a>
   <img alt="Node 24+" src="https://img.shields.io/badge/Node-24+-339933?logo=nodedotjs&logoColor=white" />
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-App_Router-black?logo=nextdotjs" />
   <img alt="Express 5" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white" />
   <img alt="Prisma" src="https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma&logoColor=white" />
   <img alt="Supabase" src="https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E?logo=supabase&logoColor=white" />
 </p>
-
 
 <p align="center"><strong>Smart farm-to-market marketplace + crop advisory</strong> · UCS503P (TIET)</p>
 
@@ -21,12 +22,22 @@
 </p>
 
 <p align="center">
+  <a href="https://ucs503p-agri-connect-dusky.vercel.app/"><strong>🌐 Live Web App</strong></a> ·
+  <a href="https://ucs503p-agriconnect.onrender.com/health"><strong>⚡ Live API</strong></a> ·
   <a href="#key-features">Key features</a> ·
   <a href="#quick-start">Quick start</a>
 </p>
 
-> **Open the app:** UI → http://localhost:3000 · API health → http://localhost:5001/health  
-> (Port **5001** is the API only — `GET /` returning NOT_FOUND is expected.)
+> 🚀 **Live Production Deployment:**  
+> - **Web App (Vercel Edge):** [https://ucs503p-agri-connect-dusky.vercel.app](https://ucs503p-agri-connect-dusky.vercel.app/)  
+> - **REST API (Render Docker):** [https://ucs503p-agriconnect.onrender.com](https://ucs503p-agriconnect.onrender.com) · [API Status](https://ucs503p-agriconnect.onrender.com/) · [Database Health](https://ucs503p-agriconnect.onrender.com/ready)  
+> - **Database & Storage (Supabase):** PostgreSQL 17 + S3 Listings Bucket  
+>  
+> 🔑 **Instant Demo Credentials:**  
+> - **Farmer (Kabir):** `kabir.manchanda@demo.agriconnect.local` / `Demo@AgriConnect1`  
+> - **Buyer (Aman):** `aman.singh@demo.agriconnect.local` / `Demo@AgriConnect1`  
+> - **Admin:** `admin@agriconnect.local`  
+> *(Local dev: UI → http://localhost:3000 · API → http://localhost:5001/health)*
 
 | | |
 |---|---|
@@ -295,9 +306,16 @@ npm run dev
 
 UI: http://localhost:3000 — register a farmer/buyer, or use the seeded admin.
 
-### 3. Production Deployment & Docker
+### 3. Production Deployment & Live URLs
 
-Deploying to production? Full multi-stage Dockerfiles, Docker Compose orchestration, and 1-click cloud blueprints (Render + Vercel) are provided:
+AgriConnect is fully dockerized and live in production across high-availability cloud infrastructure:
+
+- 🌐 **Live Web Application (Vercel):** [https://ucs503p-agri-connect-dusky.vercel.app](https://ucs503p-agri-connect-dusky.vercel.app/)
+- ⚡ **Live Backend Web Service (Render):** [https://ucs503p-agriconnect.onrender.com](https://ucs503p-agriconnect.onrender.com)
+  - Root Health Probe: [`GET /`](https://ucs503p-agriconnect.onrender.com/)
+  - Container Liveness: [`GET /health`](https://ucs503p-agriconnect.onrender.com/health)
+  - Supabase Database Readiness: [`GET /ready`](https://ucs503p-agriconnect.onrender.com/ready)
+- 🗄️ **Managed Database & Object Storage (Supabase):** PostgreSQL 17 cluster with connection pooling + S3 `listings` bucket
 - 📖 **Full Production Deployment Manual:** [`docs/DEPLOYMENT_GUIDE.md`](docs/DEPLOYMENT_GUIDE.md)
 - 🚀 **1-Click Render Blueprint:** [`render.yaml`](render.yaml)
 - 🐳 **Docker Compose (Local/VPS):** `cd code/AgriConnect && docker compose up -d --build`
