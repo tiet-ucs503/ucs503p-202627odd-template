@@ -4,7 +4,7 @@
   "private": true,
   "description": "AgriConnect V1 Next.js frontend",
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "next dev --webpack --port 3000",
     "build": "next build",
     "start": "next start --port 3000",
     "lint": "eslint .",
