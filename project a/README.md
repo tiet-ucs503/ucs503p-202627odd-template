@@ -123,7 +123,7 @@ The repository includes a ready-to-run GitHub Actions workflow located at:
 
 ### Workflow Highlights
 - Provisions all 3 scanners on Ubuntu runners.
-- Executes `threatlens.py` against the repository diff.
+- Executes `threatlens.py` against the whole repository (skipping the deliberately vulnerable `test-repo/` fixture).
 - Runs `github_integration.pr_commenter` to update the PR comment with an interactive security breakdown.
 - Fails the job if findings match or exceed the configured `--fail-on` threshold (default: `HIGH`).
 - Publishes HTML and JSON scan artifacts for download.
@@ -153,9 +153,11 @@ Run all unit and integration tests:
 pytest tests/ -v
 ```
 
-All 19 test cases validate:
+The test suite (36 tests) validates:
 - Cross-scanner secret consolidation.
 - Multi-rule Semgrep same-line consolidation.
 - Fingerprint stability and JSON schema contract adherence.
-- PR commenter Markdown formatting and quality gate evaluation.
+- PR commenter Markdown formatting and quality gate evaluation (including failing closed on incomplete scans).
+- Webhook signature policy, fork-PR handling and background scanning.
+- Stale-clone cleanup, Gitleaks exit-code handling and OSV per-file findings.
 - Webhook signature verification and pull request event workflows.

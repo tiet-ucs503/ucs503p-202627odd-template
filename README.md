@@ -1,45 +1,63 @@
-# UCS503P Project Template
+# ThreatLens: AI-Code Security Platform
 
-This is a project template for UCS503P Project (2026-27
-ODD). 
+**UCS503P Software Engineering Project, TIET Patiala (2026–27 ODD)**
+Team: Vidhi Saxena (1024030700) · Yashti Mittal (1024030701) · Rajat Verma (1024030696)
 
-There are 3 reports in LaTeX format, namely *a*)
-Project Proposal, *b*) Project Report Prototype Stage,
-and *c*) Project Report Final -- each in their
-respective folders.
+ThreatLens scans a codebase with three security tools at once and merges their results into a single report:
 
-Journals are stacked under the folder `journals`, one
-folder for each team member.  A sample entry has been
-made for example.
+| Tool | What it finds |
+|---|---|
+| **Gitleaks** | Hardcoded secrets: API keys, tokens, passwords |
+| **OSV-Scanner** | Dependencies with known vulnerabilities (`requirements.txt`, `package-lock.json`, …) |
+| **Semgrep** | Insecure code patterns: SQL injection, command injection, unsafe deserialization, … |
 
-The source code is contained within the folder `code`.
+The engine normalises severities, merges duplicate findings, and outputs a terminal summary, an HTML report, or JSON.
+On top of the engine you can:
 
-The documentation is under folder `docs`.
+- **Scan any GitHub repo or branch** without cloning it yourself (`--github owner/repo`)
+- **Use it in VS Code**: findings show up in the Problems panel, a sidebar tree, and quick fixes
+- **Gate pull requests**: a GitHub Actions workflow scans each PR, posts a summary comment, and fails on HIGH/CRITICAL issues
 
-All other aspects of code organisation are left to the
-discretion of the user(s).
+## Quick start
 
+```bash
+cd "project a"
+python -m venv .venv
+.venv\Scripts\activate            # Windows  (macOS/Linux: source .venv/bin/activate)
+pip install -r requirements.txt   # includes Semgrep
+# Install Gitleaks and OSV-Scanner from their GitHub releases (or put the .exe next to threatlens.py)
 
-## Docs
-
-As of now, the `docs` is just an organised collection
-of markdown (`md`) files.  But the build procedure is
-using [`mkdocs`](https://google.com/search?q=mkdocs)
-backend.  As a result, any commit into the `master`
-branch of github repository would result in CI/CD based
-build and deployment of the documentation including the
-journals.
-
-For a local DEV-version of the docs for viewing and
-testing, install the local env and issue the following
-command:
-
-``` shell
-make docs
+python threatlens.py ./some-project               # scan a folder, opens the HTML report
+python threatlens.py --github owner/repo          # scan a GitHub repo (needs GITHUB_TOKEN in .env)
+python threatlens.py ./some-project --json        # JSON for tools/CI
 ```
 
-### Local `env` for `docs`
+Exit codes: `0` clean, `1` HIGH/CRITICAL found, `2` couldn't complete (including "a scanner failed").
 
-``` shell
+Full CLI, CI and webhook documentation: [`project a/README.md`](project%20a/README.md).
 
+## Repository layout
+
+| Path | Contents |
+|---|---|
+| `project a/` | The ThreatLens engine, CLI, scanners, reports, GitHub integration and tests |
+| `project a/test-repo/` | A **deliberately vulnerable** demo project (fake secrets, old packages) to scan |
+| `vscode-extension/` | The VS Code extension (TypeScript source in `src/`, compiled in `out/`) |
+| `.github/workflows/threatlens.yml` | PR security gate |
+| `journals/` | Weekly journals, one folder per team member |
+| `project-proposal/`, `project-report-prototype-stage/`, `project-report-final/` | Course reports (LaTeX) |
+| `docs/` | Documentation site (built with MkDocs on every push to `master`) |
+
+## Tests
+
+```bash
+cd "project a"
+python -m pytest -q
 ```
+
+## Docs site
+
+Every push to `master` builds `docs/` (including the journals) with MkDocs and publishes it to GitHub Pages.
+To preview locally: `pip install mkdocs-material mkdocs-literate-nav mkdocs-section-index mkdocs-git-authors-plugin mkdocs-git-revision-date-localized-plugin mkdocstrings-python` then `mkdocs serve`.
+
+*Built on the UCS503P project template by Raghav B. Venkataramaiyer.*
