@@ -13,6 +13,7 @@
 
 import logging
 import os
+import re
 import shutil
 import stat
 import sys
@@ -83,6 +84,30 @@ def remove_tree(path: Path, allowed_root: Path) -> bool:
     return False
 
 
+# What clone_repo() names its folders: tempfile.mkdtemp(prefix="owner__repo__")
+# adds exactly 8 characters from [a-z0-9_]. GitHub owners are letters, digits
+# and '-'; repo names are letters, digits, '.', '_' and '-'.
+_CLONE_NAME = re.compile(r"^[A-Za-z0-9-]+__[A-Za-z0-9._-]+__[a-z0-9_]{8}$")
+
+
+def _looks_like_our_clone(path: Path) -> bool:
+    """True only for folders clone_repo() could have created.
+
+    The clone dir is configurable (THREATLENS_CLONE_DIR) and might be a
+    folder with other things in it, so "has __ in the name" is NOT enough.
+    We need the exact name pattern AND either a .git folder (finished
+    clone) or an empty folder (clone that died before git wrote anything).
+    """
+    if path.is_symlink() or not path.is_dir() or not _CLONE_NAME.match(path.name):
+        return False
+    if (path / ".git").is_dir():
+        return True
+    try:
+        return not any(path.iterdir())
+    except OSError:
+        return False
+
+
 def cleanup_stale_clones(max_age_hours: float = STALE_AFTER_HOURS) -> int:
     """Delete clone folders older than `max_age_hours`.
 
@@ -96,8 +121,8 @@ def cleanup_stale_clones(max_age_hours: float = STALE_AFTER_HOURS) -> int:
     cutoff = time.time() - max_age_hours * 3600
     removed = 0
     for child in clone_dir.iterdir():
-        # Our clones are always named owner__repo__xxxxxx - leave anything else alone.
-        if child.is_dir() and "__" in child.name and child.stat().st_mtime < cutoff:
+        # Our clones are always named owner__repo__xxxxxxxx - leave anything else alone.
+        if _looks_like_our_clone(child) and child.stat().st_mtime < cutoff:
             if remove_tree(child, allowed_root=clone_dir):
                 removed += 1
     return removed

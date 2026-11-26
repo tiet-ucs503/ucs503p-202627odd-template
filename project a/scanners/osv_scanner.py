@@ -24,7 +24,6 @@ import json
 import logging
 import os
 import subprocess
-import tempfile
 from pathlib import Path
 
 from engine.finding import Finding, Severity
@@ -207,11 +206,24 @@ class OsvScanner:
         cve      = _extract_cve(all_ids)
         return primary, cve, max_sev
 
+    @staticmethod
+    def _relative_source(source: str, repo_path: Path | None) -> str:
+        """'/abs/repo/app/requirements.txt' -> 'app/requirements.txt' (posix style)."""
+        if not source:
+            return ""
+        path = Path(source)
+        if repo_path is not None and path.is_absolute():
+            try:
+                path = path.resolve().relative_to(Path(repo_path).resolve())
+            except (ValueError, OSError):
+                pass                    # outside the repo - keep as given
+        return path.as_posix()
+
     def _parse_results(self, data: dict, repo_path: Path) -> list[Finding]:
         findings: list[Finding] = []
 
         for result_block in data.get("results", []):
-            source_path = result_block.get("source", {}).get("path", "")
+            source_path = self._relative_source(result_block.get("source", {}).get("path", ""), repo_path)
 
             for pkg_block in result_block.get("packages", []):
                 pkg      = pkg_block.get("package", {})
@@ -232,10 +244,11 @@ class OsvScanner:
                     severity   = _cvss_to_severity(max_sev)
                     summary    = vuln_summaries.get(primary_id, "")
                     vuln_label = cve or primary_id
-                    fingerprint = f"osv:{pkg_name}:{pkg_ver}:{primary_id}"
+                    # Include the manifest file: the same vulnerable package in two
+                    # different requirements.txt files is two things to fix.
+                    fingerprint = f"osv:{source_path}:{pkg_name}:{pkg_ver}:{primary_id}"
 
-                    # Reference URL: prefer CVE on osv.dev
-                    ref_id  = cve if cve else primary_id
+                    # Reference URL: the advisory page on osv.dev
                     reference = f"https://osv.dev/vulnerability/{primary_id}"
 
                     finding = Finding(

@@ -3,10 +3,10 @@
 import json
 import logging
 import os
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 from engine.finding import Finding, Severity
 
@@ -182,13 +182,40 @@ class GitleaksScanner:
             print(f)
     """
 
-    def __init__(self, gitleaks_cmd: str = "gitleaks"):
+    # Gitleaks normally exits 1 for BOTH "leaks found" and "crashed".
+    # We ask it to use 3 for leaks, so 1 always means a real error.
+    LEAKS_EXIT_CODE = 3
+
+    def __init__(self, gitleaks_cmd: str = "gitleaks", no_git: bool = False):
         """
         Args:
             gitleaks_cmd: The command used to invoke Gitleaks.
-                          Defaults to 'gitleaks' (must be on PATH).
+                          Defaults to 'gitleaks': looked up on PATH, then
+                          next to threatlens.py (like osv-scanner.exe).
+            no_git:       Scan the files on disk instead of git commits.
+                          Used for our shallow GitHub clones: the git history
+                          is only one commit anyway, and scanning files means
+                          the junk folders we deleted (venvs, node_modules)
+                          are really skipped.
         """
-        self.gitleaks_cmd = gitleaks_cmd
+        self.gitleaks_cmd = self._resolve_cmd(gitleaks_cmd)
+        self.no_git = no_git
+
+    @staticmethod
+    def _resolve_cmd(cmd: str) -> str:
+        """Find gitleaks on PATH, else in the project folder (gitleaks.exe on Windows)."""
+        if cmd != "gitleaks":
+            return cmd                      # the caller gave an explicit command/path
+        if shutil.which("gitleaks"):
+            return "gitleaks"
+        project_root = Path(__file__).resolve().parent.parent
+        names = ["gitleaks.exe", "gitleaks"] if os.name == "nt" else ["gitleaks"]
+        for name in names:
+            candidate = project_root / name
+            if candidate.is_file() and (os.name == "nt" or os.access(candidate, os.X_OK)):
+                logger.info("Gitleaks found at: %s", candidate)
+                return str(candidate)
+        return cmd                          # _check_installed() will report it missing
 
  
 
@@ -235,7 +262,7 @@ class GitleaksScanner:
                 timeout=10,
             )
             return result.returncode == 0
-        except FileNotFoundError:
+        except (FileNotFoundError, PermissionError, subprocess.TimeoutExpired):
             return False
 
     # ── Core scan logic ───────────────────────────────────────
@@ -243,10 +270,10 @@ class GitleaksScanner:
     def _run_gitleaks(self, repo_path: Path, report_path: str) -> subprocess.CompletedProcess:
         """Execute the Gitleaks CLI and write JSON to report_path.
 
-        Gitleaks exit codes:
+        Gitleaks exit codes (with --exit-code 3):
             0  – no leaks found
-            1  – leaks found  (NOT a true error)
-            126/127 – tool not found / permission denied
+            3  – leaks found  (NOT a true error)
+            anything else (usually 1) – Gitleaks itself failed
 
         Returns:
             The CompletedProcess result.
@@ -259,8 +286,9 @@ class GitleaksScanner:
             "--source", str(repo_path),
             "--report-format", "json",
             "--report-path", report_path,
+            "--exit-code", str(self.LEAKS_EXIT_CODE),
         ]
-        if not has_git:
+        if self.no_git or not has_git:
             cmd.append("--no-git")
 
         logger.info("Running Gitleaks: %s", " ".join(cmd))
@@ -274,7 +302,7 @@ class GitleaksScanner:
         )
 
 
-        if result.returncode not in (0, 1):
+        if result.returncode not in (0, self.LEAKS_EXIT_CODE):
             raise RuntimeError(
                 f"Gitleaks exited with unexpected code {result.returncode}.\n"
                 f"stderr: {result.stderr.strip()}"
@@ -349,10 +377,14 @@ class GitleaksScanner:
         try:
        
             logger.info("Scanning repository: %s", path)
-            self._run_gitleaks(path, report_path)
+            result = self._run_gitleaks(path, report_path)
 
-           
             raw_findings = self._read_report(report_path)
+            if result.returncode == self.LEAKS_EXIT_CODE and not raw_findings:
+                raise RuntimeError(
+                    "Gitleaks reported leaks but its JSON report was empty - "
+                    "refusing to report this as 'no secrets found'."
+                )
             logger.info("Gitleaks found %d raw finding(s).", len(raw_findings))
 
             findings: list[Finding] = []

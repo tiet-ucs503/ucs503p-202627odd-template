@@ -88,7 +88,7 @@ def build_engine(path: Path) -> SecurityEngine:
     """The standard ThreatLens scanner set - same as threatlens.py uses."""
     return (
         SecurityEngine(repo_path=str(path))
-        .add_scanner("Gitleaks", GitleaksScanner())
+        .add_scanner("Gitleaks", GitleaksScanner(no_git=True))   # files on disk, junk already removed
         .add_scanner("OSV-Scanner", OsvScanner())
         .add_scanner("Semgrep", SemgrepScanner())
     )
