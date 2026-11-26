@@ -15,11 +15,34 @@ const [progress, setProgress] = useState(0);
 
                 const dashboardData = response.data;
 
-                setQuestions(dashboardData.questions || []);
+                const dailyTarget =
+    Number(localStorage.getItem("algoRecallDailyTarget")) || 3;
 
-                setCompleted(dashboardData.completed || 0);
-                setAllocated(dashboardData.allocated || 0);
-                setProgress(dashboardData.progress || 0);
+const allocated = Math.min(
+    dashboardData.allocated || 0,
+    dailyTarget
+);
+
+const completed = Math.min(
+    dashboardData.completed || 0,
+    dailyTarget
+);
+
+const progress =
+    allocated === 0
+        ? 0
+        : Math.min(
+              100,
+              Number(((completed / allocated) * 100).toFixed(1))
+          );
+
+setQuestions(
+    (dashboardData.questions || []).slice(0, dailyTarget)
+);
+
+setAllocated(allocated);
+setCompleted(completed);
+setProgress(progress);
             } catch (error) {
                 console.error("Error loading dashboard:", error);
             }
