@@ -50,12 +50,17 @@ class ReportGenerator:
             lines.append("⚠️  SCANNER FAILURES")
             lines.append(self.sub_sep)
             for r in report.failed_scanners:
-                lines.append(f"- {r.scanner_name} failed: {r.error[:100]}...")
+                err = r.error or "unknown error"
+                lines.append(f"- {r.scanner_name} failed: {err[:100]}{'...' if len(err) > 100 else ''}")
 
         # ── Findings ─────────────────────────────────────────
         if report.total == 0:
             lines.append("")
-            lines.append("✅ No security issues found! Great job.")
+            if report.failed_scanners:
+                lines.append("⚠️  No issues found by the scanners that ran, but the scan is INCOMPLETE.")
+                lines.append("    Fix the failed scanner(s) above and scan again.")
+            else:
+                lines.append("✅ No security issues found! Great job.")
             lines.append(self.sep)
             return "\n".join(lines)
 

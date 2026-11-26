@@ -79,6 +79,8 @@ def build_json(report: ScanReport, details: dict | None = None) -> dict:
         {"name": r.scanner_name, "ok": r.success, "error": r.error or None}
         for r in report.scanner_results
     ]
+    # False when any scanner failed: an empty findings list is then NOT "clean".
+    data["complete"] = not report.failed_scanners
     data["findings"] = [finding_to_dict(f, root) for f in report.findings]
     return data
 

@@ -18,9 +18,10 @@
 #   --no-open   write the HTML report but don't open the browser
 #
 # Exit codes (so scripts / CI / the extension can react):
-#   0 = scan OK, no HIGH or CRITICAL issues
-#   1 = scan OK, HIGH or CRITICAL issues found
+#   0 = every scanner ran, no HIGH or CRITICAL issues
+#   1 = HIGH or CRITICAL issues found (even if a scanner failed)
 #   2 = could not run (bad token, repo not found, clone failed, bad arguments)
+#       OR at least one scanner failed, so "no issues" can't be trusted
 #
 # Token: read from the GITHUB_TOKEN environment variable, or from .env.
 # The VS Code extension passes the user's VS Code GitHub login this way.
@@ -81,9 +82,19 @@ class Output:
 
 
 def exit_code_for(report: ScanReport) -> int:
-    """1 if anything HIGH or CRITICAL was found, else 0."""
+    """1 if anything HIGH or CRITICAL was found, 2 if a scanner failed, else 0.
+
+    Real HIGH/CRITICAL findings win over a scanner failure: they are
+    definitely there. But if nothing serious was found AND a scanner
+    failed, we must not say "clean" - that scanner might have found
+    something.
+    """
     serious = report.has_severity(Severity.CRITICAL) or report.has_severity(Severity.HIGH)
-    return EXIT_ISSUES_FOUND if serious else EXIT_OK
+    if serious:
+        return EXIT_ISSUES_FOUND
+    if report.failed_scanners:
+        return EXIT_ERROR
+    return EXIT_OK
 
 
 def print_short_summary(report: ScanReport, html_path: Path) -> None:

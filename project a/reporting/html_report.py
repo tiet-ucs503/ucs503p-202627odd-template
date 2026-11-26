@@ -129,7 +129,11 @@ def build_html(report: ScanReport, details: dict | None = None) -> str:
         parts.append("</ul></div>")
 
     if report.total == 0:
-        parts.append("<p>No security issues found.</p></body></html>")
+        if report.failed_scanners:
+            parts.append("<p><b>Scan incomplete:</b> the scanners that ran found nothing, "
+                         "but the failed scanner(s) above did not check this code.</p></body></html>")
+        else:
+            parts.append("<p>No security issues found.</p></body></html>")
         return "".join(parts)
 
     # ── Overview table (one line per finding) ──────────────

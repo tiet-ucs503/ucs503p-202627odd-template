@@ -14,6 +14,11 @@ from typing import Any, Dict, List, Optional
 from github import Github
 from github_integration.client import get_github_client, get_token
 
+def _md_cell(text: Any) -> str:
+    """Make text safe inside a Markdown table cell / one-line quote."""
+    return str(text).replace("\r", " ").replace("\n", " ").replace("|", "\\|")
+
+
 COMMENT_MARKER = "<!-- threatlens-security-report -->"
 
 SEVERITY_ORDER = {
@@ -33,6 +38,15 @@ SEVERITY_ICONS = {
 }
 
 
+def scan_completed(scan_data: Dict[str, Any]) -> bool:
+    """True only if the CLI ran AND every scanner succeeded."""
+    if scan_data.get("status") != "ok":
+        return False
+    if scan_data.get("complete") is False:
+        return False
+    return all(s.get("ok", False) for s in scan_data.get("scanners", []))
+
+
 def evaluate_quality_gate(scan_data: Dict[str, Any], fail_on: str = "HIGH") -> bool:
     """Check if the scan passes the required security quality gate.
 
@@ -46,6 +60,10 @@ def evaluate_quality_gate(scan_data: Dict[str, Any], fail_on: str = "HIGH") -> b
     fail_on = fail_on.upper().strip()
     if fail_on == "NONE":
         return True
+
+    # A scan that crashed or where a scanner failed proves nothing - fail closed.
+    if not scan_completed(scan_data):
+        return False
 
     threshold_level = SEVERITY_ORDER.get(fail_on, SEVERITY_ORDER["HIGH"])
     summary = scan_data.get("summary", {})
@@ -84,7 +102,16 @@ def format_pr_comment(scan_data: Dict[str, Any], fail_on: str = "HIGH") -> str:
     ]
 
     # Gate status banner
-    if passed:
+    completed = scan_completed(scan_data)
+    if not completed and fail_on.upper() != "NONE":
+        lines.append("> ### ⚠️ **Security Quality Gate: FAILED (scan incomplete)**")
+        if scan_data.get("status") != "ok":
+            reason = str(scan_data.get("message") or "ThreatLens could not run.")
+        else:
+            failed = [s.get("name", "?") for s in scan_data.get("scanners", []) if not s.get("ok", False)]
+            reason = "Scanner(s) failed: " + ", ".join(failed)
+        lines.append(f"> {_md_cell(reason.rstrip('.'))}. Results below may be missing issues.")
+    elif passed:
         lines.append("> ### ✅ **Security Quality Gate: PASSED**")
         lines.append(f"> No blocking vulnerabilities found above `{fail_on}` threshold.")
     else:
