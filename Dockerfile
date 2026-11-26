@@ -20,7 +20,7 @@ RUN npm run prisma:generate && npm run build
 FROM node:24-alpine AS runner
 WORKDIR /app
 
-RUN apk add --no-cache dumb-init
+RUN apk add --no-cache dumb-init libc6-compat openssl
 
 ENV NODE_ENV=production
 ENV PORT=5001

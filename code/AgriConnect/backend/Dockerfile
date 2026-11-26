@@ -17,7 +17,7 @@ FROM node:24-alpine AS runner
 WORKDIR /app
 
 # dumb-init handles process signals (SIGINT, SIGTERM) gracefully
-RUN apk add --no-cache dumb-init
+RUN apk add --no-cache dumb-init libc6-compat openssl
 
 ENV NODE_ENV=production
 ENV PORT=5001

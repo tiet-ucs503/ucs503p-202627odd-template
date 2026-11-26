@@ -4,8 +4,8 @@ services:
   - type: web
     name: agriconnect-api
     runtime: docker
-    dockerfilePath: code/AgriConnect/backend/Dockerfile
-    dockerContext: code/AgriConnect/backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     plan: standard
     region: singapore
     healthCheckPath: /health
