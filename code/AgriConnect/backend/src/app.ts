@@ -25,6 +25,14 @@ export function createApp(): express.Express {
 
   app.use(helmet());
 
+  app.get('/', (_request, response) => {
+    sendSuccess(response, {
+      service: 'agriconnect-backend',
+      status: 'ok',
+      version: '1.0.0',
+    });
+  });
+
   app.get('/health', (_request, response) => {
     sendSuccess(response, { status: 'ok' });
   });
