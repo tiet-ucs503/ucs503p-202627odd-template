@@ -3,7 +3,7 @@
 
 import unittest
 from engine.finding import Finding, Severity
-from engine.security_engine import SecurityEngine, ScannerResult
+from engine.security_engine import SecurityEngine
 from reporting import json_report
 
 

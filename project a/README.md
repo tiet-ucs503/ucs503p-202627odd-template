@@ -106,9 +106,13 @@ python threatlens.py branches owner/repo
 ```
 
 ### Exit Codes
-- `0`: Scan completed cleanly with no CRITICAL or HIGH findings.
-- `1`: Scan completed and found CRITICAL or HIGH security issues.
-- `2`: Fatal error (invalid credentials, repository not found, git error).
+- `0`: Every scanner ran and nothing CRITICAL or HIGH was found.
+- `1`: CRITICAL or HIGH security issues were found (even if a scanner failed).
+- `2`: Could not complete: fatal error (invalid credentials, repository not found, git error),
+  **or** a scanner failed and nothing CRITICAL/HIGH was found, so "clean" can't be trusted.
+
+The JSON output also has `"complete": false` when any scanner failed, and the PR quality
+gate fails in that case.
 
 ---
 

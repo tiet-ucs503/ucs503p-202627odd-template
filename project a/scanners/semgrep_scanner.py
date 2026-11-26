@@ -35,7 +35,6 @@ import os
 import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 from engine.finding import Finding, Severity
@@ -68,7 +67,6 @@ def _extract_cwe(cwe_list: list[str]) -> str:
 def _categorize(check_id: str, metadata: dict) -> str:
     """Infer a broad category from the rule ID and metadata."""
     rule_lower = check_id.lower()
-    category_meta = metadata.get("category", "").lower()
 
     if "secret" in rule_lower or "credential" in rule_lower or "api-key" in rule_lower:
         return "Secret"
