@@ -16,10 +16,7 @@ function relaxSslMode(connectionString: string): string {
 
 export function createPrismaAdapter(connectionString: string): PrismaPg {
   const local = isLocalPostgres(connectionString);
-  const url =
-    local || process.env.NODE_ENV === 'production'
-      ? connectionString
-      : relaxSslMode(connectionString);
+  const url = local ? connectionString : relaxSslMode(connectionString);
 
   const pool = new Pool({
     connectionString: url,
