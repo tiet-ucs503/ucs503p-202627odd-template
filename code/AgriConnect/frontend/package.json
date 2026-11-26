@@ -5,7 +5,7 @@
   "description": "AgriConnect V1 Next.js frontend",
   "scripts": {
     "dev": "next dev --webpack --port 3000",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start --port 3000",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
