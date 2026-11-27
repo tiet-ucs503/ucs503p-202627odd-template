@@ -42,7 +42,7 @@ SyncDrive is a signal-aware GPS prototype that tells a driver *when to leave* an
 
 **Course:** UCS503P — Software Engineering Project, 2026-27 Odd Semester  
 **Institute:** Thapar Institute of Engineering and Technology  
-**Instructor:** Dr. Paramveer Sidhu
+**Instructor:** Ms Paramveer Sidhu
 
 ---
 
