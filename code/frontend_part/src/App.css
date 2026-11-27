@@ -1,0 +1,119 @@
+/* HOME / DASHBOARD */
+
+.summary-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 32px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
+}
+
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.summary-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #242424;
+}
+
+.summary-date {
+    font-size: 14px;
+    color: #777;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.stat-box {
+    background: #f5f2ed;
+    border-radius: 16px;
+    padding: 22px;
+}
+
+.stat-label {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    color: #777;
+}
+
+.stat-value {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 700;
+    color: #242424;
+}
+
+.progress-container {
+    width: 100%;
+    height: 8px;
+    margin-top: 28px;
+    background: #e5e5e5;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: #5f7f58;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+.recommendations-title {
+    margin: 0 0 16px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #242424;
+}
+
+.recommendations-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 55px 30px;
+    text-align: center;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+}
+
+.recommendations-card h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.recommendations-card p {
+    margin: 10px 0 0;
+    color: #888;
+}
+
+@media (max-width: 768px) {
+    .summary-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+}
+
+/* Keep browser autofill boxes in the sage theme instead of blue */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #fbfcf9 inset;
+    -webkit-text-fill-color: #24352b;
+    caret-color: #24352b;
+}

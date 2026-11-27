@@ -38,24 +38,26 @@
 
 % -----------------------------------------------------
 
-\title{Grievance-Resolution System for a Tier-2/3 City}
+\title{AlgoRecall}
 
-\BvrSetLabInstructor{Dr. Raghav B. Venkataramaiyer}
+\BvrSetLabInstructor{Ms. Paramveer Kaur}
 
 \BvrSubtitle{%
+  Adaptive DSA Revision and Analytics Platform \\
   Project Proposal for UCS503P  \\
   Submitted to: \BvrLabInstructorValue \\ \bfseries
-  Thapar Institute of Engineering and Technology% 
+  Thapar Institute of Engineering and Technology%
 }
 
 \author{
-  Vidya Vaidyanathan, CSED%
-  \thanks{Roll No: \texttt{1024030xxx}, %
-    Email: \texttt{vvaidhanathan\_be24\@thapar.edu}}
-  \and 
-  Bhanurekha Ganesan, CSED%
-  \thanks{Roll No: \texttt{1024030xxx}, %
-    Email: \texttt{bganesan\_be24\@thapar.edu}}
+  Pihu Tanoch, CSED%
+  \thanks{Roll No: \texttt{1024170373}}
+  \and
+  Ekmanjot Kaur, CSED%
+  \thanks{Roll No: \texttt{1024170377}}
+  \and
+  Mannatpreet Singh, CSED%
+  \thanks{Roll No: \texttt{1024170382}}
 }
 
 \date{\today}
@@ -63,180 +65,254 @@
 \begin{document}
 \maketitle
 
-\section{Higher-order goal%
-  \BvrHint{\ldots secondary framing}}
-This project aims to improve sustainable urban
-governance by reducing the time and effort required to
-resolve citizen issues. While the topic is broader than
-any single municipality, the immediate engineering
-objective is to translate \emph{efficient public
-  service delivery} into a measurable, deployable
-software solution.
+\section{Abstract}
 
-\section{Time-to-value %
-\BvrHint{\ldots primary heuristic}}
-\begin{itemize}[leftmargin=0.7cm]
-    \item We will deliver meaningful increments quickly by prototyping the core user workflow and validating it with users within a short iteration window.
-    \item We will prioritize fast feedback over perfection by using weekly iterations (and targeting CI-backed automation early) to reduce release friction.
-    \item Success is defined by what can be delivered and measured in the first iteration, then improved based on user feedback.
-\end{itemize}
+AlgoRecall will be a web-based platform designed to help users manage and
+organize the revision of previously solved DSA questions. The system will
+allow users to store solved questions along with details such as topic,
+difficulty level, confidence level, and revision status.
+
+The platform will maintain a complete revision history and schedule future
+revisions based on user-defined and system-generated revision parameters.
+It will provide a dedicated dashboard for viewing due questions and
+tracking revision activities. Users will be able to search, filter, and
+categorize questions to efficiently manage their revision workflow.
+
+In addition, the system will offer analytical reports and visualizations
+that will summarize revision progress, topic-wise performance, confidence
+distribution, and revision consistency.
+
+\section{Introduction}
+
+Data Structures and Algorithms (DSA) play a crucial role in technical
+interviews and competitive programming. As part of their preparation,
+students and job aspirants solve a large number of problems across various
+topics such as Arrays, Linked Lists, Trees, Graphs, Dynamic Programming,
+and Greedy Algorithms. Continuous practice helps learners develop
+problem-solving skills and understand different algorithmic patterns.
+
+As the number of solved questions grows, managing and revisiting
+previously learned concepts becomes increasingly important. Learners often
+maintain records of solved problems using spreadsheets, notes, or online
+coding platforms. However, these methods primarily focus on problem-solving
+activities and provide limited support for organizing and tracking
+revisions.
+
+To address this need, AlgoRecall is proposed as a web-based platform that
+will enable users to maintain a structured record of solved questions,
+track revision activities, and monitor their overall learning progress
+through various management and analytical features.
 
 \section{Problem Statement}
-Citizens in a tier-2/3 Indian city face delays and uncertainty when reporting local issues (e.g., streetlight outages, water leakage, garbage accumulation, road potholes). Common pain points include:
+
+Existing coding platforms and online judges primarily focus on helping
+users solve programming problems and evaluate their coding skills. While
+these platforms provide features such as problem categorization, progress
+tracking, and submission history, they offer limited support for systematic
+revision and long-term knowledge retention.
+
+As learners solve an increasing number of DSA questions, it becomes
+difficult to remember previously learned concepts, problem-solving
+patterns, and algorithmic approaches. Revisions are often performed
+irregularly and without a structured plan, making it challenging for
+learners to determine which questions require more attention.
+Additionally, identifying weak topics and monitoring revision progress
+becomes increasingly difficult as the volume of solved questions grows.
+
+Therefore, there is a need for a dedicated revision management system that
+can organize solved questions, schedule revisions effectively, maintain
+revision records, and provide meaningful insights into a learner's
+strengths and weaknesses. Such a system can support a more disciplined and
+structured approach to DSA revision and learning.
+
+\section{Objectives}
+
+The primary objective of AlgoRecall is to provide a structured platform
+for managing and revising previously solved DSA questions. The system will
+aim to support users in maintaining consistent revision habits and
+tracking their learning progress effectively.
+
+The objectives of the project are:
+
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Fragmentation:} complaints are often made via multiple channels (calls, social media, paper forms), causing lost context.
-    \item \textbf{Low transparency:} citizens cannot easily see the status of their complaint (e.g., ``received'', ``assigned'', ``in progress'', ``resolved'').
-    \item \textbf{Slow coordination:} departments/field teams lack a unified, trackable workflow with clear ownership.
-    \item \textbf{Poor data quality:} duplicate or incomplete reports force rework and extend resolution time.
+    \item To store and manage records of solved DSA questions.
+    \item To allow users to assign and update confidence levels for each question.
+    \item To schedule and organize future revisions based on revision-related parameters.
+    \item To maintain a complete history of revision activities.
+    \item To identify weak topics and areas that require additional practice.
+    \item To support a structured and disciplined revision workflow.
+    \item To improve long-term retention of DSA concepts and problem-solving patterns.
 \end{itemize}
 
-\textbf{Why this matters now (contextual relevance):} In an urban setting with limited staff bandwidth, even small process improvements can noticeably reduce resolution delays and repeated submissions.
+\section{Scope of the Project}
 
-\section{Proposed Solution %
-\BvrHint{\ldots Software Proposition}}
-\subsection{Overview}
-Build a \textbf{web-based} ``Grievance-to-Resolution'' system with the following components:
-\begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Citizen submission portal:} users submit an issue with photo (optional), category, and locality/ward.
-    \item \textbf{Automated triage:} basic duplicate detection and completeness checks.
-    \item \textbf{Department workflow:} assign issues to relevant department/team and update statuses.
-    \item \textbf{Status transparency:} citizens track status and receive notifications when resolved.
-    \item \textbf{Admin/ops dashboard:} performance summaries (resolution time, backlog).
-\end{itemize}
-
-\subsection{Core workflow}
-\begin{enumerate}[leftmargin=0.7cm]
-    \item Citizen creates a complaint and receives a complaint ID immediately.
-    \item System validates completeness and suggests possible duplicates (lightweight similarity on text/category and approximate location).
-    \item Department staff update status (Received $\rightarrow$ Assigned $\rightarrow$ In Progress $\rightarrow$ Resolved).
-    \item Citizen views status updates and resolution notes.
-\end{enumerate}
-
-\subsection{Operational constraints for an educational, tier-2/3 setting}
-\begin{itemize}[leftmargin=0.7cm]
-    \item Keep the solution usable on low-to-mid range devices via responsive web design.
-    \item Avoid dependence on advanced research algorithms; focus on workflow, automation, and system correctness.
-    \item Design for deployability using common web hosting and managed databases.
-\end{itemize}
-
-\section{Solution Approach %
-\BvrHint{\ldots Engineering focus}}
-This is an engineering course project, so we focus on scalable administrative and workflow aspects rather than novel algorithm research.
-
-\subsection{Duplicate/quality assistance %
-\BvrHint{\ldots non-research}}
-Duplicate detection will be heuristic-based:
-\begin{itemize}[leftmargin=0.7cm]
-    \item Normalize text (category + short description keywords).
-    \item Use a simple similarity measure (e.g., token overlap / TF-IDF cosine with threshold) without claiming state-of-the-art.
-    \item Show top candidate duplicates to staff for decision; never fully auto-delete or auto-reject.
-\end{itemize}
-
-\subsection{Web architecture %
-\BvrHint{\ldots web-based solution}}
-A typical 3-tier web architecture:
-\begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Frontend:} responsive UI for citizens and staff (status pages, submission form, dashboard).
-    \item \textbf{Backend API:} authentication, complaint submission, status transitions, assignment logic.
-    \item \textbf{Database:} store users, complaints, status history, attachments metadata.
-\end{itemize}
-
-\subsection{CI/CD and fast delivery enabler}
-CI/CD will be used to:
-\begin{itemize}[leftmargin=0.7cm]
-    \item Automatically build and run tests on every change.
-    \item Produce repeatable deployment artifacts to staging.
-    \item Enable safe and frequent releases of incremental features.
-\end{itemize}
-
-\section{Evaluation Criterion %
-\BvrHint{\ldots measurable and attributable}}
-We define success using measurable metrics tied to the core workflow.
-
-\subsection{Primary evaluation metric}
-\textbf{Time-to-acknowledgement (TTA):} time between complaint submission and ``Received/Assigned'' status creation in the system.
-\begin{itemize}[leftmargin=0.7cm]
-    \item Target: median TTA $\le$ 2 hours during pilot window.
-    \item Attribution: measured from database timestamps (submission vs. first status update by staff).
-\end{itemize}
-
-\subsection{Secondary evaluation metrics}
-\begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Resolution time reduction:} reduce time-to-resolved compared to baseline process (even if baseline is collected via survey).
-    \item \textbf{Duplicate rate:} percentage of complaints flagged as duplicates and resolved without rework.
-    \item \textbf{User clarity:} citizen-reported clarity of status using a simple 1--5 feedback question.
-    \item \textbf{Reliability:} availability of staging/production for login and submission during business hours (e.g., $\ge$ 99\% uptime in pilot).
-\end{itemize}
-
-\subsection{Pilot validation plan %
-\BvrHint{\ldots high-level}}
-\begin{itemize}[leftmargin=0.7cm]
-    \item Recruit 10--20 pilot users (citizens) and 3--5 staff roles (department simulation if real staff unavailable).
-    \item Compare metrics before/after within the iteration window by logging baseline estimates via short interviews or existing process observations.
-\end{itemize}
-
-\section{Scalability %
-\BvrHint{\ldots with foresight}}
-The proposition should scale in both theoretical and practical senses.
+\subsection{In Scope}
 
 \begin{enumerate}[leftmargin=0.7cm]
-    \item \textbf{Scalable (theoretically):} The system should support growth in number of complaints and concurrent dashboard usage by:
-    \begin{itemize}[leftmargin=0.7cm]
-        \item decoupling components (frontend/backend),
-        \item enabling pagination and indexing for common queries,
-        \item using stateless API design.
-    \end{itemize}
-    
-    \item \textbf{Operationally deployable (practically):} The system should run on common web hosting:
-    \begin{itemize}[leftmargin=0.7cm]
-        \item managed database,
-        \item containerized or platform-hosted deployment,
-        \item CI/CD pipeline for staging/production.
-    \end{itemize}
+    \item User Registration and Authentication
+    \item Question Management (Add, Edit, Delete, View)
+    \item Confidence Level Tracking
+    \item Revision Scheduling
+    \item Revision History
+    \item Analytics and Reports
+    \item Search and Filter Functionality
 \end{enumerate}
 
-\section{Engine availability heuristic}
-A mature set of ``engines'' (tooling/services) is available to implement this as a web-based project:
-\begin{itemize}[leftmargin=0.7cm]
-    \item Web framework for REST APIs and templated/reactive pages.
-    \item Managed relational or document database.
-    \item Authentication approach (token-based or session-based).
-    \item Object storage for optional attachments (or local storage for pilot).
-    \item Test framework for unit/integration tests.
-    \item CI runner and staging deployment target.
-\end{itemize}
-We will use these mature components to focus on workflow design, correctness, and measurement rather than inventing new infrastructure.
+\subsection{Out of Scope}
 
-\section{Project scope and deliverables %
-\BvrHint{\ldots iteration-friendly}}
-\subsection{Initial deliverable %
-\BvrHint{\ldots first iteration}}
-\begin{itemize}[leftmargin=0.7cm]
-    \item Citizen submission form + complaint ID generation
-    \item Staff workflow: update status and assignment
-    \item Citizen status page: view timeline/history
-    \item Basic logging and timestamps for TTA measurement
-    \item CI: build + backend unit tests + linting
-    \item CD to staging with a single command or pipeline job
-\end{itemize}
+\begin{enumerate}[leftmargin=0.7cm]
+    \item Online Judge Functionality
+    \item Code Compilation and Execution
+    \item Contest Management
+    \item AI-based Solution Generation
+    \item Automatic LeetCode Synchronization
+    \item Real-time Collaboration Features
+\end{enumerate}
 
-\subsection{Subsequent deliverables}
-\begin{itemize}[leftmargin=0.7cm]
-    \item Lightweight duplicate suggestions with staff review
-    \item Notification layer (email/SMS optional in later iteration; can start with in-app notifications)
-    \item Admin dashboard for metrics and backlog
-    \item Improved search/filtering and indexed queries for scale readiness
-\end{itemize}
+The project will be focused on revision management and learning analytics
+rather than problem solving or code execution.
 
-\section{Risks and mitigations}
+\section{Target Users}
+
+The primary stakeholders of AlgoRecall shall be DSA learners, students
+preparing for technical interviews, and competitive programmers.
+
+\section{Functional Requirements}
+
+The system will provide the following functionalities:
+
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Data privacy / consent:} minimize collected data; keep attachments optional; store only what is needed.
-    \item \textbf{Staff adoption:} provide an easy UI for status updates; keep workflow steps minimal; include shortcuts.
-    \item \textbf{Evaluation measurement ambiguity:} instrument timestamps and define clear status transitions before development begins.
-    \item \textbf{Operational issues in pilot:} use staging early; ensure CI/CD produces repeatable deployments.
+    \item User Registration and Login
+    \item Add, Edit, and Delete Questions
+    \item Revise Questions and Record Revision Activity
+    \item Update Confidence Levels
+    \item View Due Questions for Revision
+    \item View Analytics and Progress Reports
+    \item Search and Filter Questions
 \end{itemize}
 
-\section{Summary}
-This project proposes a deployable web platform to reduce grievance handling delays in a tier-2/3 city context. It meets the course criteria by emphasizing time-to-value through rapid iterations, implementing CI/CD to support frequent safe releases, and using measurable evaluation criteria (especially time-to-acknowledgement). It remains focused on engineering workflow and scalability readiness rather than research-driven novelty.
+\section{Non-Functional Requirements}
+
+The system will satisfy the following quality requirements:
+
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Performance:} Quick response time for user operations.
+    \item \textbf{Security:} Secure authentication and protection of user data.
+    \item \textbf{Usability:} Simple and user-friendly interface.
+    \item \textbf{Scalability:} Ability to handle increasing amounts of data and users.
+    \item \textbf{Maintainability:} Easy to update and extend in the future.
+    \item \textbf{Availability:} Reliable access to the system whenever required.
+\end{itemize}
+
+\section{System Features}
+
+The system will consist of the following major modules:
+
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Authentication:} User registration, login, and secure access management.
+    \item \textbf{Question Management:} Add, edit, delete, and organize solved DSA questions.
+    \item \textbf{Revision Engine:} Schedule and manage future revisions.
+    \item \textbf{Due Today Dashboard:} Display questions that are due for revision.
+    \item \textbf{Revision History:} Maintain records of past revision activities.
+    \item \textbf{Analytics:} Provide insights into revision progress and performance.
+    \item \textbf{Search \& Filter:} Enable quick retrieval of questions based on different criteria.
+\end{itemize}
+
+\section{Database Design}
+
+The system will use a MongoDB database consisting of three primary
+collections:
+
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Users:} User information such as name, email, password hash,
+    and account-related details required for authentication and authorization.
+
+    \item \textbf{UserQuestions:} All questions added by a user along with
+    attributes such as title, platform, topic, difficulty level, confidence
+    level, date solved, last revision date, next revision date, revision
+    count, and current revision status.
+
+    \item \textbf{RevisionHistory:} Records of individual revision sessions,
+    including the associated question, revision date, confidence updates,
+    and other revision-related information.
+\end{itemize}
+
+\section{Revision Engine}
+
+The Revision Engine will be responsible for scheduling and managing
+question revisions. It will utilize factors such as Confidence Level,
+Question Difficulty, and Last Revision Date to determine when a question
+should be revised next.
+
+Based on these parameters, the system shall calculate the next revision
+date and assign a priority to each question. Questions with lower
+confidence levels, higher difficulty, or longer gaps since the last
+revision shall be given higher priority.
+
+\section{User Workflow}
+
+The typical workflow of the system will be as follows:
+
+\begin{enumerate}[leftmargin=0.7cm]
+    \item The user registers or logs into the platform.
+    \item The user adds solved DSA questions with details such as topic,
+    difficulty, and confidence level.
+    \item The system schedules future revisions for the added questions.
+    \item The user views questions that are due for revision through the dashboard.
+    \item The user revises a question and updates their confidence level.
+    \item The system records the revision activity and reschedules the next revision.
+    \item The user can monitor progress and performance through analytics and reports.
+\end{enumerate}
+
+\section{Technical Stack to be Used}
+
+\subsection{Frontend Layer}
+
+\begin{itemize}[leftmargin=0.7cm]
+    \item React.js
+    \item Tailwind CSS
+    \item JavaScript (ES6+)
+\end{itemize}
+
+\subsection{Backend Layer}
+
+\begin{itemize}[leftmargin=0.7cm]
+    \item Node.js
+    \item Express.js
+    \item RESTful APIs
+\end{itemize}
+
+\subsection{Database Layer}
+
+\begin{itemize}[leftmargin=0.7cm]
+    \item MongoDB Atlas
+    \item Mongoose ODM
+\end{itemize}
+
+\subsection{Authentication \& Security}
+
+\begin{itemize}[leftmargin=0.7cm]
+    \item JSON Web Tokens (JWT)
+    \item Password Hashing (bcrypt)
+\end{itemize}
+
+\subsection{Data Visualization}
+
+\begin{itemize}[leftmargin=0.7cm]
+    \item Chart.js
+\end{itemize}
+
+\subsection{Version Control \& Development Tools}
+
+\begin{itemize}[leftmargin=0.7cm]
+    \item Git
+    \item GitHub
+    \item Visual Studio Code
+\end{itemize}
+
+\section{Expected Outcomes}
+
+The project is expected to improve revision consistency, retention of DSA
+concepts, identification of weak topics, and overall interview preparation.
 
 \end{document}
