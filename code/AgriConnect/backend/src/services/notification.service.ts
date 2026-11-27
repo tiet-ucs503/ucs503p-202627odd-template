@@ -1,6 +1,7 @@
 import { Prisma } from '../generated/prisma/client.js';
 import type { NotificationType, PrismaClient } from '../generated/prisma/client.js';
 import { getPrismaClient } from '../config/db.js';
+import { emitToUser } from '../config/socket.js';
 
 type DatabaseClient = PrismaClient | Prisma.TransactionClient;
 
@@ -21,11 +22,11 @@ export interface CreateNotificationInput {
   relatedEntityId?: string;
 }
 
-export function createNotification(
+export async function createNotification(
   input: CreateNotificationInput,
   database: DatabaseClient = getPrismaClient(),
 ) {
-  return database.notification.create({
+  const row = await database.notification.create({
     data: {
       userId: input.userId,
       type: input.type,
@@ -36,13 +37,28 @@ export function createNotification(
       relatedEntityId: input.relatedEntityId ?? null,
     },
   });
+  try {
+    emitToUser(input.userId, 'notification:new', {
+      id: row.id,
+      type: row.type,
+      title: row.title,
+      body: row.body,
+      params: input.params ?? null,
+      relatedEntityType: row.relatedEntityType,
+      relatedEntityId: row.relatedEntityId,
+      createdAt: row.createdAt.toISOString(),
+    });
+  } catch {
+    // socket emit fallback
+  }
+  return row;
 }
 
-export function createNotifications(
+export async function createNotifications(
   inputs: readonly CreateNotificationInput[],
   database: DatabaseClient = getPrismaClient(),
 ) {
-  return database.notification.createMany({
+  const result = await database.notification.createMany({
     data: inputs.map((input) => ({
       userId: input.userId,
       type: input.type,
@@ -53,4 +69,19 @@ export function createNotifications(
       relatedEntityId: input.relatedEntityId ?? null,
     })),
   });
+  try {
+    for (const input of inputs) {
+      emitToUser(input.userId, 'notification:new', {
+        type: input.type,
+        title: input.title,
+        body: input.body,
+        params: input.params ?? null,
+        relatedEntityType: input.relatedEntityType ?? null,
+        relatedEntityId: input.relatedEntityId ?? null,
+      });
+    }
+  } catch {
+    // socket emit fallback
+  }
+  return result;
 }

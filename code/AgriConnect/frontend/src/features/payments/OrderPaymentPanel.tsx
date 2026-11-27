@@ -14,6 +14,7 @@ import { formatMoney } from '@/lib/format';
 import type { MessageKey } from '@/lib/i18n';
 import type { Order, PaymentMethod, PaymentMethodOption } from '@/lib/api/types';
 import { openRazorpayCheckout, type CheckoutErrorCode } from './razorpay';
+import { CodConfirmationModal } from '@/components/cod-confirmation-modal';
 
 /** Statuses where the buyer has nothing left to pay. */
 const SETTLED = new Set(['held', 'released', 'refunded']);
@@ -68,6 +69,8 @@ export function OrderPaymentPanel({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [showCodModal, setShowCodModal] = useState(false);
+  const [changingMethod, setChangingMethod] = useState(false);
 
   const payment = order.payment;
   const cancelled = order.status === 'cancelled';
@@ -92,6 +95,8 @@ export function OrderPaymentPanel({
 
   async function handleGatewayResult(result: InitPaymentResult) {
     if (result.mode === 'cod') {
+      setShowCodModal(true);
+      setChangingMethod(false);
       // The API message is English-only, so the localized copy wins here.
       await afterSettled(t('order.payment.codSelected'));
       return;
@@ -160,7 +165,39 @@ export function OrderPaymentPanel({
       {notice ? <p className="text-sm font-semibold text-forest">{notice}</p> : null}
       <p className="text-sm text-ink/70">{status.text}</p>
 
-      {canPay ? (
+      {payment?.method === 'cod' && !changingMethod ? (
+        <div className="rounded-xl border border-leaf/30 bg-leaf/10 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-forest">
+              {t('order.payment.method.cod')}
+            </span>
+            <Badge tone="good">
+              {t('order.payment.payOnDelivery')}
+            </Badge>
+          </div>
+          <p className="text-sm text-forest/90">
+            {t('order.payment.codNote')}
+          </p>
+          <div className="pt-1 flex flex-wrap gap-2 justify-between items-center">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setChangingMethod(true)}
+              className="text-xs"
+            >
+              {t('common.edit')}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setShowCodModal(true)}
+              className="text-xs gap-1"
+            >
+              <span aria-hidden="true">🎉</span>
+              <span>{t('order.actions.confirm')}</span>
+            </Button>
+          </div>
+        </div>
+      ) : canPay ? (
         <div className="space-y-3">
           <fieldset className="space-y-2">
             <legend className="text-sm font-semibold text-forest">
@@ -205,6 +242,12 @@ export function OrderPaymentPanel({
           <p className="text-xs text-ink/60">{t('order.payment.warning')}</p>
         </div>
       ) : null}
+
+      <CodConfirmationModal
+        isOpen={showCodModal}
+        onClose={() => setShowCodModal(false)}
+        order={order}
+      />
     </Card>
   );
 }

@@ -111,6 +111,7 @@ export function initSocketIO(server: HttpServer): Server {
     });
 
     if (user) {
+      void appSocket.join(`user:${user.id}`);
       registerCallHandlers(appSocket, user);
     }
   });
@@ -132,4 +133,8 @@ export function emitMarketplaceListingUpdate(
   data: unknown,
 ): void {
   io?.emit('marketplace:listing:change', { action, data });
+}
+
+export function emitToUser(userId: string, event: string, data: unknown): void {
+  io?.to(`user:${userId}`).emit(event, data);
 }

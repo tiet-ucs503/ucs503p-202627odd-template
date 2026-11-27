@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { listNotifications } from '@/lib/api/notifications';
 import { onNotificationsUpdated } from '@/lib/notifications-events';
+import { connectSocket } from '@/lib/socket';
 import { dashboardPath, useAuth } from '@/features/auth/auth-context';
 import { useLocale } from '@/features/i18n/locale-context';
 import { LanguageSwitcher } from '@/features/i18n/language-switcher';
@@ -136,6 +137,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, ready, logout } = useAuth();
   const { t } = useLocale();
   const [unread, setUnread] = useState(0);
+  const [liveToast, setLiveToast] = useState<{ title: string; body: string } | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -148,9 +150,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     load();
     const unsubscribe = onNotificationsUpdated(load);
     const timer = window.setInterval(load, 60_000);
+
+    let socketClient: ReturnType<typeof connectSocket> | null = null;
+    let onNotificationNew: ((payload: unknown) => void) | null = null;
+
+    try {
+      socketClient = connectSocket();
+      onNotificationNew = (payload: unknown) => {
+        load();
+        const notification = payload as { title?: string; body?: string };
+        if (notification?.title) {
+          setLiveToast({ title: notification.title, body: notification.body ?? '' });
+          window.setTimeout(() => setLiveToast(null), 8000);
+        }
+      };
+      socketClient.on('notification:new', onNotificationNew);
+    } catch {
+      // socket fallback
+    }
+
     return () => {
       unsubscribe();
       window.clearInterval(timer);
+      if (socketClient && onNotificationNew) {
+        socketClient.off('notification:new', onNotificationNew);
+      }
     };
   }, [user, pathname]);
 
@@ -245,6 +269,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </p>
           <FarmerChatWidget role={user.role} name={user.name} />
         </>
+      ) : null}
+      {liveToast ? (
+        <div className="fixed bottom-6 end-6 z-50 max-w-sm rounded-2xl border border-harvest/30 bg-forest p-4 text-paper shadow-2xl transition-all">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <span className="text-xl" aria-hidden="true">🔔</span>
+              <div>
+                <p className="text-sm font-bold text-harvest">{liveToast.title}</p>
+                <p className="mt-1 text-xs text-paper/85">{liveToast.body}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setLiveToast(null)}
+              className="text-paper/60 hover:text-paper"
+              aria-label={t('weather.closeDetails')}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
       ) : null}
     </div>
   );

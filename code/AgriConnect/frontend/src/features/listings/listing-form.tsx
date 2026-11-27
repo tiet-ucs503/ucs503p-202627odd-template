@@ -7,6 +7,7 @@ import { useLocale } from '@/features/i18n/locale-context';
 import { createListing, updateListing, uploadListingPhotos } from '@/lib/api/listings';
 import { getErrorMessage } from '@/lib/api/errors';
 import { CROP_CATEGORIES, INDIAN_STATES, UNITS } from '@/lib/constants';
+import { matchCropCategory } from '@/lib/crop-categories';
 import type { Listing } from '@/lib/api/types';
 
 export function ListingForm({ listing }: { listing?: Listing }) {
@@ -14,6 +15,16 @@ export function ListingForm({ listing }: { listing?: Listing }) {
   const { t } = useLocale();
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  const [crop, setCrop] = useState(listing?.crop ?? '');
+  const [category, setCategory] = useState(listing?.category ?? 'grains');
+
+  const onCropChange = (value: string) => {
+    setCrop(value);
+    const guessed = matchCropCategory(value);
+    if (guessed) {
+      setCategory(guessed);
+    }
+  };
 
   async function onSubmit(form: FormData) {
     setError('');
@@ -85,13 +96,22 @@ export function ListingForm({ listing }: { listing?: Listing }) {
           </div>
         ) : null}
         <Field label={t('listing.form.crop')}>
-          <Input name="crop" required defaultValue={listing?.crop} />
+          <Input
+            name="crop"
+            required
+            value={crop}
+            onChange={(e) => onCropChange(e.target.value)}
+          />
         </Field>
         <Field label={t('listing.form.category')}>
-          <Select name="category" defaultValue={listing?.category ?? 'grains'}>
-            {CROP_CATEGORIES.map((category) => (
-              <option key={category} value={category}>
-                {t(`listing.category.${category}`)}
+          <Select
+            name="category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            {CROP_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {t(`listing.category.${cat}`)}
               </option>
             ))}
           </Select>

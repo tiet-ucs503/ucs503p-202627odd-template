@@ -11,6 +11,7 @@ import { compareListingPrices, type MandiCompareResult } from '@/lib/api/market'
 import { CROP_CATEGORIES, INDIAN_STATES } from '@/lib/constants';
 import { useLocale } from '@/features/i18n/locale-context';
 import { connectSocket } from '@/lib/socket';
+import { matchCropCategory } from '@/lib/crop-categories';
 
 function mandiCompareMap(results: MandiCompareResult[]): Record<string, MandiCompareResult> {
   return Object.fromEntries(results.map((row) => [row.id, row]));
@@ -28,6 +29,16 @@ export default function MarketplacePage() {
     page: 1,
     limit: 12,
   });
+  const [cropQuery, setCropQuery] = useState(filters.crop ?? '');
+  const [selectedCategory, setSelectedCategory] = useState(filters.category ?? '');
+
+  const handleCropChange = (value: string) => {
+    setCropQuery(value);
+    const guessed = matchCropCategory(value);
+    if (guessed) {
+      setSelectedCategory(guessed);
+    }
+  };
 
   const fetchListings = useCallback(
     async (currentFilters: ListingFilters, silent = false) => {
@@ -123,9 +134,11 @@ export default function MarketplacePage() {
 
   function apply(form: FormData) {
     setMandiCompare({});
+    const newCrop = String(form.get('crop') ?? cropQuery).trim() || undefined;
+    const newCategory = String(form.get('category') ?? selectedCategory).trim() || undefined;
     setFilters({
-      crop: String(form.get('crop') || '') || undefined,
-      category: String(form.get('category') || '') || undefined,
+      crop: newCrop,
+      category: newCategory,
       state: String(form.get('state') || '') || undefined,
       minPrice: String(form.get('minPrice') || '') || undefined,
       maxPrice: String(form.get('maxPrice') || '') || undefined,
@@ -184,10 +197,19 @@ export default function MarketplacePage() {
         <Card className="p-4 sm:p-5 shadow-md border-forest/15 bg-paper/95 backdrop-blur-md">
           <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" action={apply}>
             <Field label={t('marketplace.crop')}>
-              <Input name="crop" placeholder={t('common.cropExample')} defaultValue={filters.crop} />
+              <Input
+                name="crop"
+                placeholder={t('common.cropExample')}
+                value={cropQuery}
+                onChange={(e) => handleCropChange(e.target.value)}
+              />
             </Field>
             <Field label={t('marketplace.category')}>
-              <Select name="category" defaultValue={filters.category ?? ''}>
+              <Select
+                name="category"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+              >
                 <option value="">{t('common.select')}</option>
                 {CROP_CATEGORIES.map((category) => (
                   <option key={category} value={category}>
