@@ -128,7 +128,7 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
       activeCalls.set(orderId, call);
       void socket.join(room(orderId));
 
-      socket.to(room(orderId)).emit('call:incoming', {
+      socket.to([room(orderId), `user:${permission.calleeId}`]).emit('call:incoming', {
         orderId,
         callId: call.callId,
         from: { id: permission.callerId, name: permission.callerName },
@@ -156,7 +156,7 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
         authorized.call.ringTimer = undefined;
       }
       void socket.join(room(authorized.orderId));
-      socket.to(room(authorized.orderId)).emit('call:accepted', {
+      socket.to([room(authorized.orderId), `user:${authorized.call.callerId}`]).emit('call:accepted', {
         orderId: authorized.orderId,
         callId: authorized.call.callId,
       });
@@ -170,7 +170,8 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
     const authorized = authorizedCall(payload, user.id);
     if (!authorized) return;
     clearCall(authorized.orderId, authorized.call);
-    socket.to(room(authorized.orderId)).emit('call:declined', {
+    const otherUserId = user.id === authorized.call.callerId ? authorized.call.calleeId : authorized.call.callerId;
+    socket.to([room(authorized.orderId), `user:${otherUserId}`]).emit('call:declined', {
       orderId: authorized.orderId,
       callId: authorized.call.callId,
       byUserId: user.id,
@@ -181,7 +182,8 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
     const authorized = authorizedCall(payload, user.id);
     if (!authorized) return;
     clearCall(authorized.orderId, authorized.call);
-    socket.to(room(authorized.orderId)).emit('call:ended', {
+    const otherUserId = user.id === authorized.call.callerId ? authorized.call.calleeId : authorized.call.callerId;
+    socket.to([room(authorized.orderId), `user:${otherUserId}`]).emit('call:ended', {
       orderId: authorized.orderId,
       callId: authorized.call.callId,
       byUserId: user.id,
@@ -195,7 +197,8 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
   socket.on('call:signal', (payload: SignalEnvelope) => {
     const authorized = authorizedCall(payload, user.id);
     if (!authorized) return;
-    socket.to(room(authorized.orderId)).emit('call:signal', {
+    const targetUserId = user.id === authorized.call.callerId ? authorized.call.calleeId : authorized.call.callerId;
+    socket.to([room(authorized.orderId), `user:${targetUserId}`]).emit('call:signal', {
       orderId: authorized.orderId,
       callId: authorized.call.callId,
       fromUserId: user.id,
@@ -208,7 +211,8 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
     for (const [orderId, call] of activeCalls) {
       if (call.callerId !== user.id && call.calleeId !== user.id) continue;
       clearCall(orderId, call);
-      socket.to(room(orderId)).emit('call:ended', {
+      const otherUserId = call.callerId === user.id ? call.calleeId : call.callerId;
+      socket.to([room(orderId), `user:${otherUserId}`]).emit('call:ended', {
         orderId,
         callId: call.callId,
         byUserId: user.id,

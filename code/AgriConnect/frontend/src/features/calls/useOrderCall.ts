@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import {
   acceptCall,
   declineCall,
@@ -13,13 +13,21 @@ import {
   type IceServerConfig,
   type IncomingCall,
 } from '@/lib/call-signaling';
+import { connectSocket } from '@/lib/socket';
 import { useLocale } from '@/features/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n';
 
 export type CallStatus = 'idle' | 'calling' | 'ringing' | 'connecting' | 'active' | 'ended';
 
 const DEFAULT_ICE: IceServerConfig[] = [
-  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
+  {
+    urls: [
+      'stun:stun.l.google.com:19302',
+      'stun:stun1.l.google.com:19302',
+      'stun:stun2.l.google.com:19302',
+      'stun:global.stun.twilio.com:3478',
+    ],
+  },
 ];
 
 /** Gateway ack codes → localized copy. The ack's own `error` text is English-only. */
@@ -37,7 +45,15 @@ const ACK_ERROR_KEYS: Record<string, MessageKey> = {
  * Audio is peer-to-peer WebRTC; the server only relays offers, answers, and ICE
  * candidates over the order's Socket.io room.
  */
-export function useOrderCall({ orderId, disabled }: { orderId: string; disabled?: boolean }) {
+export function useOrderCall({
+  orderId,
+  disabled,
+  audioElementRef,
+}: {
+  orderId: string;
+  disabled?: boolean;
+  audioElementRef?: RefObject<HTMLAudioElement | null>;
+}) {
   const { t } = useLocale();
   const [status, setStatus] = useState<CallStatus>('idle');
   const [incoming, setIncoming] = useState<IncomingCall | null>(null);
@@ -45,15 +61,24 @@ export function useOrderCall({ orderId, disabled }: { orderId: string; disabled?
   const [muted, setMuted] = useState(false);
   const [seconds, setSeconds] = useState(0);
 
-  // The remote audio sink lives here rather than in the DOM: the element is only ever
-  // touched from event handlers, and returning a ref would leak it into render.
-  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  // The remote audio sink: prefers active DOM audio element, falls back to in-memory Audio
+  const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const callIdRef = useRef<string | null>(null);
   const iceServersRef = useRef<IceServerConfig[]>(DEFAULT_ICE);
   // Candidates can arrive before the remote description is set; hold them until then.
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+
+  // Explicitly join the order room to receive order-level signaling
+  useEffect(() => {
+    if (disabled) return;
+    const client = connectSocket();
+    client.emit('join:order', orderId);
+    return () => {
+      client.emit('leave:order', orderId);
+    };
+  }, [disabled, orderId]);
 
   const ackError = useCallback(
     (ack: CallAck, fallback: MessageKey) => {
@@ -64,10 +89,13 @@ export function useOrderCall({ orderId, disabled }: { orderId: string; disabled?
   );
 
   const remoteAudio = useCallback(() => {
-    remoteAudioRef.current ??= new Audio();
-    remoteAudioRef.current.autoplay = true;
-    return remoteAudioRef.current;
-  }, []);
+    if (audioElementRef?.current) {
+      return audioElementRef.current;
+    }
+    fallbackAudioRef.current ??= new Audio();
+    fallbackAudioRef.current.autoplay = true;
+    return fallbackAudioRef.current;
+  }, [audioElementRef]);
 
   const teardown = useCallback((next: CallStatus) => {
     peerRef.current?.close();
@@ -76,14 +104,17 @@ export function useOrderCall({ orderId, disabled }: { orderId: string; disabled?
     localStreamRef.current = null;
     pendingCandidatesRef.current = [];
     callIdRef.current = null;
-    if (remoteAudioRef.current) {
-      remoteAudioRef.current.srcObject = null;
+    if (audioElementRef?.current) {
+      audioElementRef.current.srcObject = null;
+    }
+    if (fallbackAudioRef.current) {
+      fallbackAudioRef.current.srcObject = null;
     }
     setIncoming(null);
     setMuted(false);
     setSeconds(0);
     setStatus(next);
-  }, []);
+  }, [audioElementRef]);
 
   const createPeer = useCallback(async (callId: string) => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
@@ -94,12 +125,10 @@ export function useOrderCall({ orderId, disabled }: { orderId: string; disabled?
     stream.getTracks().forEach((track) => peer.addTrack(track, stream));
 
     peer.ontrack = (event) => {
-      const [remote] = event.streams;
-      if (remote) {
-        const audio = remoteAudio();
-        audio.srcObject = remote;
-        void audio.play().catch(() => undefined);
-      }
+      const stream = event.streams[0] ?? new MediaStream([event.track]);
+      const audio = remoteAudio();
+      audio.srcObject = stream;
+      void audio.play().catch(() => undefined);
     };
 
     peer.onicecandidate = (event) => {
@@ -211,7 +240,7 @@ export function useOrderCall({ orderId, disabled }: { orderId: string; disabled?
         try {
           const peer = await createPeer(payload.callId);
           setStatus('connecting');
-          const offer = await peer.createOffer();
+          const offer = await peer.createOffer({ offerToReceiveAudio: true });
           await peer.setLocalDescription(offer);
           sendCallSignal(orderId, payload.callId, { description: offer });
         } catch (cause) {
@@ -241,12 +270,12 @@ export function useOrderCall({ orderId, disabled }: { orderId: string; disabled?
             await peer.setRemoteDescription(new RTCSessionDescription(payload.description));
 
             for (const candidate of pendingCandidatesRef.current) {
-              await peer.addIceCandidate(new RTCIceCandidate(candidate));
+              await peer.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => undefined);
             }
             pendingCandidatesRef.current = [];
 
             if (payload.description.type === 'offer') {
-              const answer = await peer.createAnswer();
+              const answer = await peer.createAnswer({ offerToReceiveAudio: true });
               await peer.setLocalDescription(answer);
               sendCallSignal(orderId, payload.callId, { description: answer });
             }
@@ -255,7 +284,7 @@ export function useOrderCall({ orderId, disabled }: { orderId: string; disabled?
 
           if (payload.candidate) {
             if (peer.remoteDescription) {
-              await peer.addIceCandidate(new RTCIceCandidate(payload.candidate));
+              await peer.addIceCandidate(new RTCIceCandidate(payload.candidate)).catch(() => undefined);
             } else {
               pendingCandidatesRef.current.push(payload.candidate);
             }

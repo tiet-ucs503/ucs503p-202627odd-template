@@ -23,7 +23,12 @@ export function getIceServers(): { urls: string[] }[] {
         .split(',')
         .map((url) => url.trim())
         .filter(Boolean)
-    : ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'];
+    : [
+        'stun:stun.l.google.com:19302',
+        'stun:stun1.l.google.com:19302',
+        'stun:stun2.l.google.com:19302',
+        'stun:global.stun.twilio.com:3478',
+      ];
   return [{ urls }];
 }
 

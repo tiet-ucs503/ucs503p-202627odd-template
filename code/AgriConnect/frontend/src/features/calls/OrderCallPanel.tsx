@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { Alert, Badge, Button, Card } from '@/components/ui';
 import { useLocale } from '@/features/i18n/locale-context';
 import { useOrderCall } from './useOrderCall';
@@ -24,10 +25,12 @@ export function OrderCallPanel({
   disabled?: boolean;
 }) {
   const { t } = useLocale();
-  const call = useOrderCall({ orderId, disabled });
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const call = useOrderCall({ orderId, disabled, audioElementRef: audioRef });
 
   return (
     <Card className="space-y-3">
+      <audio ref={audioRef} autoPlay playsInline className="hidden" aria-hidden="true" />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-display text-2xl text-forest">{t('order.call.title')}</h2>
