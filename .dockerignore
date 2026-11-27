@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-server
+.data
+.env
+.env.*
+!.env.example
+.git
+*.log
+*.xlsx
+docs
+tests

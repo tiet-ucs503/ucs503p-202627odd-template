@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-sans: 'DM Sans', 'IBM Plex Sans', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-serif: 'Playfair Display', 'Source Serif 4', Georgia, Cambria, 'Times New Roman', Times, serif;
+    --font-mono: 'DM Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --thapar-crimson: #8C1B2E;
+    --thapar-paper: #F7F6F2;
+  }
+
+  /* Default Light Theme styles */
+  html.light, html:not(.dark) {
+    color-scheme: light;
+  }
+
+  html.light body, html:not(.dark) body {
+    background-color: #F7F6F2;
+    color: #1c1917;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Dark Theme styles */
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html.dark body {
+    background-color: #0c0c0e;
+    color: #f4f4f5;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Study studio visual language: warm paper, ink, and TIET crimson. */
+.study-workspace {
+  background: #f2efe7;
+  background-image: radial-gradient(ellipse at 82% -8%, rgba(225, 203, 168, .3), transparent 42%);
+}
+.study-topbar {
+  height: 60px;
+  background: rgba(250, 249, 245, .92);
+  border-color: #ded8cc;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 rgba(38, 28, 28, .035);
+}
+.study-topbar > div:first-child > span { letter-spacing: .035em; }
+.study-sidebar {
+  width: 250px;
+  background: #211a1c;
+  color: #e7dfd9;
+  border-color: #3a3032;
+  padding: 10px 9px 12px;
+}
+.study-sidebar > div:first-child {
+  border-color: #3a3032;
+  padding: 14px 10px 18px;
+}
+.study-sidebar h2 { color: #fff9f3; font-size: 13px; letter-spacing: -.025em; }
+.study-sidebar p { color: #b9a9a4; letter-spacing: .07em; text-transform: uppercase; font-size: 9px; }
+.study-sidebar button { transition: transform .2s ease, background-color .2s ease, color .2s ease; }
+.study-sidebar button:hover { transform: translateX(2px); }
+.study-content {
+  background-color: #f2efe7;
+  background-image: radial-gradient(ellipse at 85% 0%, rgba(234, 212, 178, .28), transparent 38%);
+  padding: clamp(18px, 3vw, 42px);
+}
+.study-content > * { animation: study-arrive .45s cubic-bezier(.2,.75,.25,1) both; }
+.study-content [class*="rounded"][class*="border"] { transition: box-shadow .22s ease, border-color .22s ease, transform .22s ease; }
+.study-content [class*="bg-white"][class*="border"] { box-shadow: 0 2px 3px rgba(45, 32, 25, .035), 0 12px 32px rgba(45, 32, 25, .035); }
+.study-content [class*="bg-white"][class*="border"]:hover { border-color: #d6c7b4; }
+.study-content input, .study-content select, .study-content textarea { border-radius: 11px; }
+.study-content button:not(:disabled) { transition: transform .16s ease, box-shadow .2s ease, filter .2s ease; }
+.study-content button:not(:disabled):active { transform: scale(.98); }
+.study-login {
+  flex-direction: row;
+  justify-content: center;
+  gap: clamp(30px, 7vw, 100px);
+  padding: clamp(20px, 5vw, 72px);
+  background-color: #f2efe7;
+  background-image: radial-gradient(ellipse at 16% 5%, rgba(214, 175, 123, .28), transparent 36%), radial-gradient(ellipse at 82% 92%, rgba(140, 27, 46, .1), transparent 35%);
+}
+.study-login-story { width: min(48vw, 570px); position: relative; z-index: 1; padding: 10px 0 0; }
+.study-story-kicker, .study-story-foot { font: 500 10px/1.2 var(--font-mono); letter-spacing: .1em; color: #705e58; }
+.study-story-kicker { display: flex; align-items: center; gap: 10px; }
+.study-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #b53643; box-shadow: 0 0 0 5px rgba(181,54,67,.12); }
+.study-login-story h1 { margin: 24px 0 12px; font: 700 clamp(42px, 6vw, 76px)/.98 var(--font-serif); letter-spacing: -.055em; color: #211a1c; }
+.study-login-story h1 em { color: #8c1b2e; font-weight: 600; }
+.study-story-copy { max-width: 330px; font-size: 15px; line-height: 1.6; color: #786b64; }
+.study-course-stack { position: relative; height: 250px; max-width: 475px; margin: 28px 0 22px; perspective: 900px; }
+.study-course-card { position: absolute; width: min(76%, 340px); min-height: 132px; padding: 18px 20px; border: 1px solid rgba(255,255,255,.72); border-radius: 17px; color: #fffdf6; display: flex; flex-direction: column; gap: 7px; box-shadow: 0 22px 48px rgba(52,31,32,.19); animation: study-float 7s ease-in-out infinite; }
+.study-course-card span, .study-course-card small { font: 500 9px/1.2 var(--font-mono); letter-spacing: .1em; opacity: .8; }
+.study-course-card strong { font: 600 20px/1.2 var(--font-serif); }
+.study-course-one { left: 2%; top: 8px; z-index: 3; background: #8c1b2e; transform: rotate(-5deg); }
+.study-course-two { left: 20%; top: 64px; z-index: 2; background: #47685c; transform: rotate(5deg); animation-delay: -2s; }
+.study-course-three { left: 7%; top: 126px; z-index: 1; background: #c07c3d; transform: rotate(-2deg); animation-delay: -4s; }
+.study-story-foot { max-width: 420px; display: flex; justify-content: space-between; border-top: 1px solid #d8cec0; padding-top: 14px; font-size: 9px; }
+.study-login-card { border-radius: 24px; border-color: rgba(255,255,255,.84); background: rgba(250,249,245,.94); box-shadow: 0 28px 80px rgba(55,39,32,.13), 0 4px 12px rgba(55,39,32,.05); padding: clamp(24px, 3vw, 38px); }
+@keyframes study-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes study-float { 0%,100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+@media (max-width: 900px) {
+  .study-login { flex-direction: column; align-items: center; gap: 14px; padding: 22px; }
+  .study-login-story { width: min(100%, 520px); padding: 0; }
+  .study-login-story h1 { font-size: clamp(34px, 6vw, 48px); margin: 12px 0 0; }
+  .study-story-copy, .study-course-stack, .study-story-foot { display: none; }
+  .study-login-card { max-width: 520px; }
+}
+@media (max-width: 700px) {
+  .study-login { min-height: 100svh; flex-direction: column; align-items: stretch; gap: 12px; padding: 18px 14px; }
+  .study-login-story { width: 100%; padding: 4px 4px 0; }
+  .study-login-story h1 { font-size: clamp(32px, 10vw, 48px); margin: 14px 0 7px; }
+  .study-story-copy { display: none; }
+  .study-course-stack { display: none; }
+  .study-story-foot { display: none; }
+  .study-login-card { max-width: 520px; max-height: none; margin: 0 auto; padding: 20px; }
+  .study-sidebar { width: 280px; }
+  .study-content { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .study-content > *, .study-course-card { animation: none !important; }
+  .study-sidebar button:hover { transform: none; }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  @page { size: landscape; margin: 12mm; }
+  body * { visibility: hidden !important; }
+  .timetable-print-view, .timetable-print-view * { visibility: visible !important; }
+  .timetable-print-view { position: absolute; inset: 0 auto auto 0; width: 100%; max-width: none !important; padding: 0 !important; background: white !important; color: black !important; }
+  .timetable-print-view button, .timetable-print-view select { display: none !important; }
+}
+
+/* Refined custom scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #27272a;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+
+/* Complete Enterprise Dark Mode Overrides (fixes unlayered .study-* light overrides) */
+html.dark .study-workspace {
+  background: #0c0c0f !important;
+  background-image: radial-gradient(ellipse at 82% -8%, rgba(140, 27, 46, .16), transparent 45%) !important;
+  color: #f4f4f5;
+}
+html.dark .study-topbar {
+  background: rgba(18, 18, 22, .94) !important;
+  border-color: #27272a !important;
+  color: #f4f4f5 !important;
+}
+html.dark .study-content {
+  background-color: #0c0c0f !important;
+  background-image: none !important;
+  color: #f4f4f5;
+}
+html.dark .study-sidebar {
+  background: #141418 !important;
+  border-color: #27272a !important;
+  color: #e4e4e7 !important;
+}
+html.dark .study-content [class*="bg-white"],
+html.dark .study-content [class*="bg-[#FAF9F5]"],
+html.dark .study-content [class*="bg-[#F7F6F2]"] {
+  background-color: #18181b !important;
+  border-color: #27272a !important;
+  color: #f4f4f5;
+}
+html.dark .study-content input,
+html.dark .study-content select,
+html.dark .study-content textarea {
+  background-color: #111114 !important;
+  border-color: #3f3f46 !important;
+  color: #f4f4f5 !important;
+}
+html.dark .study-content table th {
+  background-color: #1f1f23 !important;
+  color: #e4e4e7 !important;
+}
+html.dark .study-content table td {
+  border-color: #27272a !important;
+}
+/* Ensure sidebar inactive links are always legible on the dark .study-sidebar rail */
+.study-sidebar button:not([class*="bg-[#8C1B2E]"]) {
+  color: #e7dfd9;
+}
+.study-sidebar button:not([class*="bg-[#8C1B2E]"]):hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}

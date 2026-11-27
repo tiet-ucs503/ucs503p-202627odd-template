@@ -1,0 +1,6 @@
+{
+  "name": "TimeTable Maker",
+  "description": "Professional Academic Scheduling Platform",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
