@@ -61,7 +61,7 @@
 }
 
 % ── Bibliography ─────────────────────────────────────────────
-\usepackage[backend=biber,style=alphabetic,citestyle=alphabetic]{biblatex}
+\usepackage[backend=bibtex,style=alphabetic,citestyle=alphabetic]{biblatex}
 \addbibresource{references.bib}
 
 % ═════════════════════════════════════════════════════════════
@@ -350,6 +350,47 @@ The OpenFreeMap style is fetched by the application and recoloured dark to match
 the 2D map. A layers panel turns signals, timers and place labels on or off
 (all at once or individually).
 
+\section{Project Planning and Tracking}
+
+Work was planned and tracked in a Jira project named SyncDrive (issue keys
+\texttt{KAN-n}), alongside the weekly journals in the repository.
+Figure~\ref{fig:jira} shows the project dashboard.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig-09-jira-dashboard.png}
+\caption{Jira dashboard for the SyncDrive project: status overview, recent
+activity, priority breakdown, types of work and team workload.}
+\label{fig:jira}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Dashboard item} & \textbf{Value} \\
+\midrule
+Total work items                  & 9 \\
+Status                            & 8 Done (89\%), 1 In Review (11\%) \\
+Types of work                     & 5 Tasks, 2 Epics, 1 Bug, 1 Feature, 0 Stories \\
+Priority                          & 1 Highest, 2 High, 4 Medium, 1 Low, 1 Lowest \\
+Activity, last 7 days             & 8 completed, 9 updated, 9 created \\
+Work due in the next 7 days       & 0 \\
+\bottomrule
+\end{tabular}
+\caption{Jira dashboard summary at the time of the final report.}
+\end{table}
+
+Items visible in the recent activity include \texttt{KAN-3} (implement the
+route selection module), \texttt{KAN-5} (implement the optimal speed
+recommendation) and \texttt{KAN-11} (fix live updating), all marked Done after
+their priorities were adjusted. Two observations from the dashboard: all work
+items were still unassigned (the team workload panel shows 100\% unassigned),
+and the epics were not yet linked to child items, so the epic progress panel is
+empty. The dashboard captures a snapshot of seven days only; the detailed
+history of each problem and its fix is in the weekly journals (W1--W8) in the
+repository.
+
 % ─────────────────────────────────────────────────────────────
 %  CHAPTER 3 — RESULTS AND EVALUATION
 % ─────────────────────────────────────────────────────────────
@@ -434,10 +475,70 @@ Runs without server or API key            & Yes                & Yes \\
 
 \textbf{Emergency mode.} On Chandigarh Airport to PGI Hospital (12.4\,km, 10
 signals) the ambulance completed the run in about 10.6 minutes with the green
-corridor, against about 11.8 minutes on normal signals. Depending on the start
-time the corridor saved between 68 and 106 seconds, with zero ambulance stops
-and 6 of the 10 red lights overridden. In one full run, 9 vehicles yielded to
-the ambulance.
+corridor, against 11.4 to 12.4 minutes on normal signals depending on the start
+time. Across the runs we made the corridor saved between 44 and 106 seconds,
+with zero ambulance stops and between 2 and 6 of the 10 red lights overridden.
+In one full run, 9 vehicles yielded to the ambulance (Figure~\ref{fig:sos}).
+
+\section{Application Screenshots}
+
+The figures below were captured from the deployed application running in a browser (map data from the Esri and OpenStreetMap-based tile services). Figure~\ref{fig:directions} shows the main result for a route, and the following figures show the comparison, the live signal board, the drive simulator, the emergency mode and the 3D and street views.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig-01-directions.png}
+\caption{Directions view for Sector 17 Plaza to Elante Mall: leave-at time, recommended speed, signals hit green and the live signal markers with countdowns on the map.}
+\label{fig:directions}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig-02-comparison.png}
+\caption{Comparison section: total time, time breakdown (driving against waiting at reds) and the speed, red-light and waiting-time rows for Normal GPS against SyncDrive.}
+\label{fig:comparison}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig-03-live-signals.png}
+\caption{Live Signals board: all 25 junctions with their current colour, seconds until the next change and the cycle strip.}
+\label{fig:signals}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig-04-drive.png}
+\caption{Live drive simulator (paused mid-route): the speed advisor, the next signal, a race bar for SyncDrive against Normal GPS, and the simulation controls.}
+\label{fig:drive}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig-05-sos.png}
+\caption{Separate emergency (SOS) mode: the ambulance has a green corridor (signals marked EV) while the other vehicles yield; the panel shows the corridor time against normal signals.}
+\label{fig:sos}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig-06-3d.png}
+\caption{3D view: tilted dark map with extruded buildings, the route, the live signals and place labels.}
+\label{fig:threed}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig-07-street.png}
+\caption{Street view: a street-level camera riding along the route during a drive, with the drive console.}
+\label{fig:street}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig-08-layers-off.png}
+\caption{The layers panel with All layers switched off: signals, timers and place labels are hidden, leaving only the route.}
+\label{fig:layers}
+\end{figure}
 
 \section{Analysis}
 
@@ -515,7 +616,7 @@ views. It needs no backend, build step or API key, and it is deployed at
         what a signal-blind application would actually advise.
   \item \textbf{Finding 4---A green corridor helps the ambulance without
         stopping everyone:} Forcing green only 500\,m ahead and having nearby
-        vehicles yield saved 68--106 seconds on a 12.4\,km run.
+        vehicles yield saved 44--106 seconds on a 12.4\,km run.
 \end{itemize}
 
 \section{Limitations}
