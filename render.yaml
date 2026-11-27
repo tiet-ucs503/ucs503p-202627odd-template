@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: intellischedule-api
+    runtime: python
+    rootDir: apps/api
+    plan: 0.5c-512mb
+    region: singapore
+    buildCommand: pip install -r requirements.lock && pip install --no-deps .
+    preDeployCommand: alembic upgrade head
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWKS_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+  - type: worker
+    name: intellischedule-worker
+    runtime: python
+    rootDir: apps/api
+    plan: 0.5c-512mb
+    region: singapore
+    buildCommand: pip install -r requirements.lock && pip install --no-deps .
+    startCommand: python -m app.worker
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWKS_URL
+        sync: false
+

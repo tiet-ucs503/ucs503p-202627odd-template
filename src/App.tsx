@@ -1,71 +1,94 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import React, { Suspense, useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+const DashboardLayout = React.lazy(() => import('./components/DashboardLayout').then((module) => ({ default: module.DashboardLayout })));
+const TimetableProvider = React.lazy(() => import('./context/TimetableContext').then((module) => ({ default: module.TimetableProvider })));
+import { LoginPageView } from './components/views/LoginPageView';
+import { VerifyEmailView } from './components/views/VerifyEmailView';
+import { WorkspaceSelectionView } from './components/views/WorkspaceSelectionView';
+import { WorkspaceType } from './types';
 
-import { useState, useEffect } from "react";
-import CoordinatorView from "./components/CoordinatorView";
-import FacultyView from "./components/FacultyView";
-import StudentView from "./components/StudentView";
-import LoginView from "./components/LoginView";
-import { LogOut, User } from "lucide-react";
+function MainLayout() {
+  const { authStatus, authorizedWorkspaces, switchWorkspace, logout } = useAuth();
+  const [showLoginPage, setShowLoginPage] = useState(true);
+  const [showWorkspacePicker, setShowWorkspacePicker] = useState(false);
+  const [showEmailVerification, setShowEmailVerification] = useState(() => window.location.pathname === '/verify-email');
 
-export default function App() {
-  const [currentUser, setCurrentUser] = useState<any>(null);
-
-  // Simple local storage persistence for demo purposes
   useEffect(() => {
-    const saved = localStorage.getItem('intelli_user');
-    if (saved) {
-      setCurrentUser(JSON.parse(saved));
+    if (authStatus === 'AUTHENTICATED') {
+      setShowLoginPage(false);
     }
-  }, []);
+  }, [authStatus]);
 
-  const handleLogin = (user: any) => {
-    setCurrentUser(user);
-    localStorage.setItem('intelli_user', JSON.stringify(user));
+  const handleLoginSuccess = (incomingWorkspaces?: WorkspaceType[]) => {
+    setShowLoginPage(false);
+    const ws = incomingWorkspaces || authorizedWorkspaces;
+    if (ws && ws.length > 1) {
+      setShowWorkspacePicker(true);
+    } else {
+      setShowWorkspacePicker(false);
+    }
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('intelli_user');
+  const handleSelectWorkspace = (ws: WorkspaceType) => {
+    switchWorkspace(ws);
+    setShowWorkspacePicker(false);
   };
 
-  if (!currentUser) {
-    return <LoginView onLogin={handleLogin} />;
+  const handleSignOut = async () => {
+    const revocation = logout();
+    setShowWorkspacePicker(false);
+    setShowLoginPage(true);
+    window.history.replaceState(null, '', '/');
+    await revocation;
+  };
+
+  const returnToLogin = () => {
+    window.history.replaceState(null, '', '/');
+    setShowEmailVerification(false);
+    setShowLoginPage(true);
+  };
+
+  if (showEmailVerification) {
+    return <VerifyEmailView onBackToLogin={returnToLogin} />;
+  }
+
+  if (showLoginPage) {
+    return (
+      <LoginPageView
+        onSuccessLogin={handleLoginSuccess}
+      />
+    );
+  }
+
+  if (showWorkspacePicker && authorizedWorkspaces.length > 1) {
+    return (
+      <WorkspaceSelectionView
+        workspaces={authorizedWorkspaces}
+        onSelectWorkspace={handleSelectWorkspace}
+        onSignOut={handleSignOut}
+      />
+    );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      <header className="bg-slate-950 text-white px-6 py-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-lg bg-indigo-500 flex items-center justify-center font-bold text-lg">
-            IS
-          </div>
-          <div className="font-bold text-xl tracking-tight">TimeTable Maker</div>
-        </div>
-        
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2 text-sm text-slate-300 bg-slate-900 px-3 py-1.5 rounded-full border border-slate-800">
-            <User className="h-4 w-4" />
-            <span className="font-medium text-slate-100">{currentUser.name}</span>
-            <span className="opacity-50">({currentUser.role})</span>
-          </div>
-          <button 
-            onClick={handleLogout}
-            className="text-sm font-medium text-slate-400 hover:text-white transition-colors flex items-center space-x-1"
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Sign out</span>
-          </button>
-        </div>
-      </header>
+    <Suspense fallback={<div role="status" className="flex min-h-screen items-center justify-center text-sm text-stone-500">Loading your workspace…</div>}>
+      <TimetableProvider>
+        <DashboardLayout
+          onSignOutToLogin={handleSignOut}
+          onOpenWorkspacePicker={() => setShowWorkspacePicker(true)}
+        />
+      </TimetableProvider>
+    </Suspense>
+  );
+}
 
-      <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full">
-        {currentUser.role === "coordinator" && <CoordinatorView />}
-        {currentUser.role === "faculty" && <FacultyView facultyId={currentUser.refId || currentUser.id} />}
-        {currentUser.role === "student" && <StudentView sectionId={currentUser.refId || currentUser.id} />}
-      </main>
-    </div>
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <MainLayout />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

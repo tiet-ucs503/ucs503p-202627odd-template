@@ -1,39 +1,21 @@
-# Dependencies
-node_modules/
-.pnp
-.pnp.js
-
-# Production build outputs
-dist/
-build/
-coverage/
-
-# Environment files and secrets
+node_modules
+.venv/
+.ruff_cache/
+.pytest_cache/
+__pycache__/
+*.egg-info/
+*.tsbuildinfo
+.next/
+dist
+dist-server
+.data
 .env
+.env.*
+!.env.example
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+data/
 *.pem
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+*.key
 *.log
+*.sqlite
 
-# OS & Editor cache
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Temporary / test files
-.cache/
-tmp/
-temp/
