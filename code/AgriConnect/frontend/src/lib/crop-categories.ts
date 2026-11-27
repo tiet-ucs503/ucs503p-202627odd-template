@@ -7,12 +7,14 @@ const CROP_CATEGORY_MAP: Record<CropCategory, string[]> = {
     'wheat', 'gehu', 'kanak', 'rice', 'chawal', 'paddy', 'dhan', 'basmati',
     'maize', 'makka', 'corn', 'bajra', 'millet', 'pearl millet', 'jowar',
     'sorghum', 'ragi', 'finger millet', 'barley', 'jau', 'oats', 'rye',
+    'grain', 'grains', 'anaaj',
   ],
   pulses: [
     'chana', 'gram', 'chickpea', 'bengal gram', 'moong', 'mung', 'green gram',
     'urad', 'black gram', 'toor', 'tur', 'arhar', 'pigeon pea', 'masoor',
     'red lentil', 'lentil', 'rajma', 'kidney bean', 'soybean', 'soya',
-    'moth', 'lobia', 'cowpea', 'peas', 'matar', 'dal',
+    'moth', 'lobia', 'cowpea', 'peas', 'matar', 'dal', 'daal',
+    'pulse', 'pulses',
   ],
   vegetables: [
     'potato', 'aloo', 'alu', 'tomato', 'tamatar', 'onion', 'pyaz', 'pyaaz',
@@ -21,6 +23,7 @@ const CROP_CATEGORY_MAP: Record<CropCategory, string[]> = {
     'palak', 'capsicum', 'shimla mirch', 'okra', 'bhindi', 'ladyfinger',
     'pumpkin', 'kaddu', 'bottle gourd', 'lauki', 'bitter gourd', 'karela',
     'cucumber', 'kheera', 'beetroot', 'chukandar',
+    'vegetable', 'vegetables', 'sabzi', 'sabji',
   ],
   fruits: [
     'apple', 'seb', 'mango', 'aam', 'banana', 'kela', 'orange', 'santra',
@@ -28,6 +31,7 @@ const CROP_CATEGORY_MAP: Record<CropCategory, string[]> = {
     'anar', 'watermelon', 'tarbooj', 'muskmelon', 'kharbhuja', 'pineapple',
     'ananas', 'strawberry', 'lemon', 'nimbu', 'lime', 'sweet lime', 'mosambi',
     'litchi', 'lychee', 'coconut', 'nariyal', 'custard apple', 'sharifa',
+    'fruit', 'fruits', 'phal',
   ],
   spices: [
     'turmeric', 'haldi', 'cumin', 'jeera', 'coriander', 'dhaniya', 'cardamom',
@@ -35,12 +39,12 @@ const CROP_CATEGORY_MAP: Record<CropCategory, string[]> = {
     'red chilli', 'chilli', 'mirch', 'cinnamon', 'dalchini', 'fenugreek',
     'methi', 'fennel', 'saunf', 'saffron', 'kesar', 'nutmeg', 'jaiphal',
     'star anise', 'asafoetida', 'hing', 'ginger', 'adrak', 'garlic', 'lahsun',
-    'curry leaves',
+    'curry leaves', 'spice', 'spices', 'masala', 'masale',
   ],
   oilseeds: [
     'mustard', 'sarson', 'groundnut', 'moongfali', 'peanut', 'sunflower',
     'surajmukhi', 'sesame', 'til', 'castor', 'arandi', 'flaxseed', 'alsi',
-    'canola', 'cottonseed',
+    'canola', 'cottonseed', 'oilseed', 'oilseeds', 'tel',
   ],
   other: ['cotton', 'sugarcane', 'jute', 'tobacco', 'tea', 'coffee'],
 };
