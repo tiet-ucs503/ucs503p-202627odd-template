@@ -1,15 +1,17 @@
-# W8 : Revision Data Handling and Validation
+# Week 8 — Revision Data Handling and Validation
 
-**Dates:** 22 Sep 2026 – 28 Sep 2026
+## Work undertaken
+- Reviewed how revision records, confidence ratings, and notes were handled in the application.
+- Worked on the integration and presentation of revision-related data.
+- Checked that the revision workflow remained consistent with the question-management and dashboard features.
 
-## Work Completed
+## My contribution
+- Contributed to frontend refinement and database-related work.
+- Reviewed how revision data was displayed and how the interface responded during the workflow.
+- Helped identify integration details that needed to be checked during testing.
 
-- Refined revision data handling in the backend.
-- Verified that revision requests update the relevant question information.
-- Handled confidence and notes submitted during revisions.
-- Verified that the calculated next revision date is returned as part of the updated question data.
-- Tested validation and error responses for invalid API requests.
+## Collaboration
+- Worked with teammates to coordinate frontend, backend, and data-related functionality.
 
 ## Outcome
-
-Stabilized revision data processing and API validation.
+- Revision data handling and its user-facing presentation were reviewed as part of the integrated application.
