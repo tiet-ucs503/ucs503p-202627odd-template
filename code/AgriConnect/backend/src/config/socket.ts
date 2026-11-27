@@ -14,7 +14,7 @@ interface SocketUser {
 }
 
 interface SocketData {
-  user: SocketUser;
+  user?: SocketUser;
 }
 
 type AppSocket = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
@@ -45,13 +45,14 @@ export function initSocketIO(server: HttpServer): Server {
 
   io.use((socket, next) => {
     const raw =
-      typeof socket.handshake.auth.token === 'string'
+      typeof socket.handshake.auth?.token === 'string'
         ? socket.handshake.auth.token
         : typeof socket.handshake.headers.authorization === 'string'
           ? socket.handshake.headers.authorization.replace(/^Bearer\s+/i, '')
           : null;
     if (!raw) {
-      next(new Error('Unauthorized'));
+      // Allow unauthenticated connection for public broadcasts (e.g. marketplace)
+      next();
       return;
     }
     try {
@@ -59,7 +60,8 @@ export function initSocketIO(server: HttpServer): Server {
       (socket as AppSocket).data.user = { id: payload.sub, role: payload.role };
       next();
     } catch {
-      next(new Error('Unauthorized'));
+      // If token expired or invalid, still allow connection as guest
+      next();
     }
   });
 
@@ -73,6 +75,10 @@ export function initSocketIO(server: HttpServer): Server {
         orderId: string,
         ack?: (result: { ok: boolean; error?: string }) => void,
       ) => {
+        if (!user) {
+          ack?.({ ok: false, error: 'Unauthorized' });
+          return;
+        }
         if (typeof orderId !== 'string' || !orderId) {
           ack?.({ ok: false, error: 'Invalid order id' });
           return;
@@ -99,12 +105,14 @@ export function initSocketIO(server: HttpServer): Server {
     });
 
     appSocket.on('typing:start', (orderId: string) => {
-      if (typeof orderId === 'string') {
+      if (user && typeof orderId === 'string') {
         appSocket.to(`order:${orderId}`).emit('typing', { orderId, userId: user.id });
       }
     });
 
-    registerCallHandlers(appSocket, user);
+    if (user) {
+      registerCallHandlers(appSocket, user);
+    }
   });
 
   logger.info('Socket.io initialized');
@@ -117,4 +125,11 @@ export function getSocketIO(): Server | null {
 
 export function emitOrderMessage(orderId: string, message: unknown): void {
   io?.to(`order:${orderId}`).emit('message:new', message);
+}
+
+export function emitMarketplaceListingUpdate(
+  action: 'created' | 'updated' | 'deleted',
+  data: unknown,
+): void {
+  io?.emit('marketplace:listing:change', { action, data });
 }

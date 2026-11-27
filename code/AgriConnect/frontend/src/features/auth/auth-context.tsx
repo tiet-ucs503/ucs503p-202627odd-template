@@ -30,10 +30,25 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 async function loadSession(): Promise<AuthUser | null> {
-  const token = tokenStore.get() ?? (await refreshAccessToken());
+  let token = tokenStore.get();
+  if (!token) {
+    token = await refreshAccessToken();
+  }
   if (!token) return null;
-  const { data } = await getMe();
-  return data;
+  try {
+    const { data } = await getMe();
+    return data;
+  } catch {
+    // If the stored token was expired and getMe failed, attempt one fresh refresh
+    const nextToken = await refreshAccessToken();
+    if (!nextToken) return null;
+    try {
+      const { data } = await getMe();
+      return data;
+    } catch {
+      return null;
+    }
+  }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {

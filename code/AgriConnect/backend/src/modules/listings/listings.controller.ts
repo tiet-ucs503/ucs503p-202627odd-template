@@ -3,6 +3,7 @@ import multer, { MulterError } from 'multer';
 import { asyncHandler } from '../../common/async-handler.js';
 import { AppError } from '../../common/app-error.js';
 import { sendPaginated, sendSuccess } from '../../common/response.js';
+import { emitMarketplaceListingUpdate } from '../../config/socket.js';
 import {
   addListingPhotos,
   createListing,
@@ -74,11 +75,9 @@ function stringParam(request: Request, name: string): string {
 }
 
 export const createListingController = asyncHandler(async (request, response) => {
-  sendSuccess(
-    response,
-    await createListing(authenticatedUser(request).id, request.body as CreateListingInput),
-    201,
-  );
+  const listing = await createListing(authenticatedUser(request).id, request.body as CreateListingInput);
+  emitMarketplaceListingUpdate('created', listing);
+  sendSuccess(response, listing, 201);
 });
 
 export const listListingsController = asyncHandler(async (request, response) => {
@@ -98,43 +97,38 @@ export const getListingController = asyncHandler(async (request, response) => {
 });
 
 export const updateListingController = asyncHandler(async (request, response) => {
-  sendSuccess(
-    response,
-    await updateListing(
-      authenticatedUser(request).id,
-      stringParam(request, 'id'),
-      request.body as UpdateListingInput,
-    ),
+  const listing = await updateListing(
+    authenticatedUser(request).id,
+    stringParam(request, 'id'),
+    request.body as UpdateListingInput,
   );
+  emitMarketplaceListingUpdate('updated', listing);
+  sendSuccess(response, listing);
 });
 
 export const deleteListingController = asyncHandler(async (request, response) => {
-  sendSuccess(
-    response,
-    await deleteListing(authenticatedUser(request).id, stringParam(request, 'id')),
-  );
+  const result = await deleteListing(authenticatedUser(request).id, stringParam(request, 'id'));
+  emitMarketplaceListingUpdate('deleted', { id: stringParam(request, 'id') });
+  sendSuccess(response, result);
 });
 
 export const uploadListingPhotosController = asyncHandler(async (request, response) => {
   const files = (request.files ?? []) as Express.Multer.File[];
-  sendSuccess(
-    response,
-    await addListingPhotos(
-      authenticatedUser(request).id,
-      stringParam(request, 'id'),
-      files,
-    ),
-    201,
+  const result = await addListingPhotos(
+    authenticatedUser(request).id,
+    stringParam(request, 'id'),
+    files,
   );
+  emitMarketplaceListingUpdate('updated', { id: stringParam(request, 'id'), photos: result });
+  sendSuccess(response, result, 201);
 });
 
 export const deleteListingPhotoController = asyncHandler(async (request, response) => {
-  sendSuccess(
-    response,
-    await deleteListingPhoto(
-      authenticatedUser(request),
-      stringParam(request, 'id'),
-      stringParam(request, 'photoId'),
-    ),
+  const result = await deleteListingPhoto(
+    authenticatedUser(request),
+    stringParam(request, 'id'),
+    stringParam(request, 'photoId'),
   );
+  emitMarketplaceListingUpdate('updated', { id: stringParam(request, 'id'), deletedPhotoId: stringParam(request, 'photoId') });
+  sendSuccess(response, result);
 });
