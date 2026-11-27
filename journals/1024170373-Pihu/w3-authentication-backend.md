@@ -1,16 +1,16 @@
-# W3 : Authentication Backend
+# Week 3 — Authentication and Application Interface
 
-**Dates:** 18 Aug 2026 – 24 Aug 2026
+## Work undertaken
+- Followed the implementation of the authentication flow and worked on the user-facing experience around account access.
+- Reviewed the login and registration interface for consistency with the application's overall design.
+- Considered how authentication would affect access to the different pages of Algo Recall.
 
-## Work Completed
+## My contribution
+- Worked on the cosmetic/frontend aspects of the application, including interface styling and presentation.
+- Checked the authentication screens and their integration with the overall application layout.
 
-- Implemented the user authentication backend using email and password.
-- Added registration and login controller logic.
-- Implemented password hashing with bcrypt before storing user credentials.
-- Implemented JWT generation for authenticated sessions.
-- Added authentication middleware to read and verify JWT tokens and identify the authenticated user.
-- Added the authenticated user endpoint for retrieving the current user's information.
+## Collaboration
+- Coordinated with the backend work on authentication and with the frontend routing work to ensure the flow could be integrated.
 
 ## Outcome
-
-Completed the core authentication API.
+- Authentication-related screens and application navigation were brought closer to the overall interface design.

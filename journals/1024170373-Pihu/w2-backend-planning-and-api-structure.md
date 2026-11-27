@@ -1,14 +1,16 @@
-# W2 : Backend Planning and API Structure
+# Week 2 — Backend Planning and API Structure
 
-**Dates:** 11 Aug 2026 – 17 Aug 2026
+## Work undertaken
+- Worked with the team to understand the planned API structure and how the frontend would communicate with backend services.
+- Reviewed the data and feature requirements for question management, revision tracking, and dashboard-related functionality.
+- Considered how the user interface would present the features being planned.
 
-## Work Completed
+## My contribution
+- Participated in discussions around application structure and the frontend pages that would consume the APIs.
+- Helped clarify the UI requirements for the question collection and related functionality.
 
-- Defined the backend scope of AlgoRecall as the core API layer for authentication, question management, revisions, dashboard data, and deterministic recommendation logic.
-- Planned the Express backend structure using routes, controllers, models, middleware, configuration, and the server entry point.
-- Defined the API responsibilities for registering users, logging in users, adding questions, retrieving questions, recording revisions, and retrieving dashboard information.
-- Established the backend as a REST API that can be consumed by the provided frontend.
+## Collaboration
+- Coordinated responsibilities with Mannat, who focused on frontend routing and structure, and Ekman, who primarily handled backend development.
 
 ## Outcome
-
-Completed the initial backend architecture and API plan.
+- The team established a clearer division of responsibilities and a plan for implementing and integrating the application's components.
