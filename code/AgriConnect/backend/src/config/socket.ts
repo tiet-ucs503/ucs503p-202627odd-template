@@ -45,7 +45,7 @@ export function initSocketIO(server: HttpServer): Server {
 
   io.use((socket, next) => {
     const raw =
-      typeof socket.handshake.auth?.token === 'string'
+      typeof socket.handshake.auth.token === 'string'
         ? socket.handshake.auth.token
         : typeof socket.handshake.headers.authorization === 'string'
           ? socket.handshake.headers.authorization.replace(/^Bearer\s+/i, '')

@@ -323,6 +323,12 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     });
   }
 
+  function getProfileId(farmerId: string): string {
+    const id = farmerProfiles[farmerId];
+    if (!id) throw new Error(`Missing profile ID for farmer ${farmerId}`);
+    return id;
+  }
+
   // -------------------------------------------------------------
   // 3. SEED 18 HIGH-QUALITY PRODUCE LISTINGS ACROSS ALL CATEGORIES
   // -------------------------------------------------------------
@@ -332,7 +338,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     // --- GRAINS ---
     {
       id: DEMO_IDS.listingWheat,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerKabir],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerKabir),
       crop: 'Wheat',
       category: 'grains',
       variety: 'Sharbati PBW-343',
@@ -354,7 +360,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     },
     {
       id: DEMO_IDS.listingRice,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerKabir],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerKabir),
       crop: 'Rice',
       category: 'grains',
       variety: '1121 Pusa Basmati',
@@ -376,7 +382,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     },
     {
       id: DEMO_IDS.listingBajra,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerManbhav],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerManbhav),
       crop: 'Bajra',
       category: 'grains',
       variety: 'Hybrid Pearl Millet MPMH-17',
@@ -400,7 +406,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     // --- SPICES ---
     {
       id: DEMO_IDS.listingRedChilli,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerRamesh],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerRamesh),
       crop: 'Red Chilli',
       category: 'spices',
       variety: 'Guntur Teja S17',
@@ -422,7 +428,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     },
     {
       id: DEMO_IDS.listingTurmeric,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerRamesh],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerRamesh),
       crop: 'Turmeric',
       category: 'spices',
       variety: 'Salem Curcumin-Rich Finger',
@@ -444,7 +450,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     },
     {
       id: DEMO_IDS.listingCumin,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerManbhav],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerManbhav),
       crop: 'Cumin',
       category: 'spices',
       variety: 'Unjha Machine Cleaned Jeera',
@@ -466,7 +472,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     },
     {
       id: DEMO_IDS.listingCardamom,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerLakshmi],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerLakshmi),
       crop: 'Cardamom',
       category: 'spices',
       variety: 'Malabar Extra Bold 8mm',
@@ -490,7 +496,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     // --- VEGETABLES ---
     {
       id: DEMO_IDS.listingTomato,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerRavi],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerRavi),
       crop: 'Tomato',
       category: 'vegetables',
       variety: 'Abhinav Red Hybrid',
@@ -512,7 +518,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     },
     {
       id: DEMO_IDS.listingOnion,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerSuresh],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerSuresh),
       crop: 'Onion',
       category: 'vegetables',
       variety: 'Nashik Garwa Red',
@@ -534,7 +540,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     },
     {
       id: DEMO_IDS.listingPotato,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerRavi],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerRavi),
       crop: 'Potato',
       category: 'vegetables',
       variety: 'Kufri Pukhraj',
@@ -556,7 +562,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     },
     {
       id: DEMO_IDS.listingGreenPeas,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerRavi],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerRavi),
       crop: 'Green Peas',
       category: 'vegetables',
       variety: 'Arkel Sweet',
@@ -580,7 +586,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     // --- FRUITS ---
     {
       id: DEMO_IDS.listingAlphonso,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerSuresh],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerSuresh),
       crop: 'Mango',
       category: 'fruits',
       variety: 'Devgad GI Alphonso (Hapus)',
@@ -602,7 +608,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     },
     {
       id: DEMO_IDS.listingApple,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerKabir],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerKabir),
       crop: 'Apple',
       category: 'fruits',
       variety: 'Royal Delicious Shimla',
@@ -624,7 +630,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     },
     {
       id: DEMO_IDS.listingKinnow,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerKabir],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerKabir),
       crop: 'Kinnow',
       category: 'fruits',
       variety: 'Abohar Sweet Mandarin',
@@ -648,7 +654,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     // --- PULSES ---
     {
       id: DEMO_IDS.listingChana,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerManbhav],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerManbhav),
       crop: 'Chana',
       category: 'pulses',
       variety: 'Desi JG-11 Brown Gram',
@@ -670,7 +676,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     },
     {
       id: DEMO_IDS.listingMoong,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerManbhav],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerManbhav),
       crop: 'Moong',
       category: 'pulses',
       variety: 'Shiny Green Gram IPM-205',
@@ -694,7 +700,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     // --- OILSEEDS ---
     {
       id: DEMO_IDS.listingMustard,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerManbhav],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerManbhav),
       crop: 'Mustard',
       category: 'oilseeds',
       variety: 'Pusa Bold Black Sarson',
@@ -716,7 +722,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     },
     {
       id: DEMO_IDS.listingGroundnut,
-      farmerProfileId: farmerProfiles[DEMO_IDS.farmerSuresh],
+      farmerProfileId: getProfileId(DEMO_IDS.farmerSuresh),
       crop: 'Groundnut',
       category: 'oilseeds',
       variety: 'Saurashtra Bold Pods G-20',

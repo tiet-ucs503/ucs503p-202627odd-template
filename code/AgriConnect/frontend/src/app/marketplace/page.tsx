@@ -83,6 +83,7 @@ export default function MarketplacePage() {
 
   // Initial and filter-change fetch
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchListings(filters);
   }, [filters, fetchListings]);
 
