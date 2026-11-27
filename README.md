@@ -91,6 +91,8 @@ SyncDrive/
 │   └── main.pdf
 │
 ├── project-report-final/
+│   ├── main.tex
+│   ├── references.bib
 │   └── TODO
 │
 └── assets/
@@ -193,6 +195,7 @@ Weekly development journals for each team member (W1–W8):
 |---|---|---|
 | Project Proposal | [main.tex](./project-proposal/main.tex) | [main.pdf](./project-proposal/main.pdf) |
 | Prototype Stage Report | [main.tex](./project-report-prototype-stage/main.tex) | [main.pdf](./project-report-prototype-stage/main.pdf) |
+| Final Report | [main.tex](./project-report-final/main.tex) | compile `main.tex` (e.g. on Overleaf) to produce `main.pdf` |
 
 ---
 

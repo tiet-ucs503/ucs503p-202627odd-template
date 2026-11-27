@@ -1,0 +1,565 @@
+\documentclass[12pt,a4paper]{report}
+
+% ── Packages ─────────────────────────────────────────────────
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{emptypage}   % suppresses header/footer on empty pages
+
+% ── Page numbering: cover = no number, TOC onwards = arabic ──
+\pagenumbering{gobble}   % off by default; turned on after cover
+
+% ── Header / Footer ──────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{UCS503 -- Software Engineering}}
+\fancyhead[R]{\small\textit{SyncDrive}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\setlength{\headheight}{14pt}
+
+% Plain style (used by \chapter) — keep header/footer consistent
+\fancypagestyle{plain}{%
+  \fancyhf{}
+  \fancyhead[L]{\small\textit{UCS503 -- Software Engineering}}
+  \fancyhead[R]{\small\textit{SyncDrive}}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+}
+
+% ── Chapter title style: "Chapter N" small right, big title right ─
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries}
+  {\hfill\normalsize\mdseries Chapter \thechapter}
+  {-4pt}
+  {\Huge\raggedleft}
+  [\vspace{2pt}\rule{\textwidth}{0.4pt}]
+\titlespacing*{\chapter}{0pt}{0pt}{24pt}
+
+% ── Section / subsection spacing ────────────────────────────
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+% ── Listings ─────────────────────────────────────────────────
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!7},
+  rulecolor=\color{gray!35},
+  xleftmargin=4pt, xrightmargin=4pt,
+  aboveskip=6pt, belowskip=4pt
+}
+
+% ── Bibliography ─────────────────────────────────────────────
+\usepackage[backend=biber,style=alphabetic,citestyle=alphabetic]{biblatex}
+\addbibresource{references.bib}
+
+% ═════════════════════════════════════════════════════════════
+\begin{document}
+
+% ─────────────────────────────────────────────────────────────
+%  COVER PAGE  (no header, no page number)
+% ─────────────────────────────────────────────────────────────
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+\vspace*{2.2cm}
+
+{\large\textbf{UCS503 -- Software Engineering}}
+
+\vspace{1.6cm}
+
+{\Huge\textbf{SyncDrive}}\\[0.45cm]
+{\large Signal-Aware Navigation and Speed Optimization System}
+
+\vspace{3.2cm}
+
+\textbf{Submitted by:}\\[0.35cm]
+{\normalsize
+1024030177\quad Tarun Mahindra\\[2pt]
+1024030178\quad Parth Puri\\[2pt]
+1024031077\quad Adhiraj Kapur\\[8pt]
+}
+Group: \texttt{BE Third Year, CSE}
+
+\vspace{2.8cm}
+
+\textbf{Submitted to:}\\[0.35cm]
+Dr.\ Paramveer Sidhu
+
+\vspace{2.8cm}
+
+Final Project Evaluation\\[4pt]
+{\large\textbf{Computer Science and Engineering Department}}\\[4pt]
+Thapar Institute of Engineering and Technology, Patiala
+
+\end{titlepage}
+
+% ─────────────────────────────────────────────────────────────
+%  TABLE OF CONTENTS  (arabic page numbers start here at 1)
+% ─────────────────────────────────────────────────────────────
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\tableofcontents
+\newpage
+
+% ─────────────────────────────────────────────────────────────
+%  CHAPTER 1 — INTRODUCTION
+% ─────────────────────────────────────────────────────────────
+\chapter{Introduction}
+
+\section{Background and Context}
+
+Urban commuters in Indian cities spend a significant portion of their travel
+time waiting at traffic signals. In a city like Chandigarh, whose grid-sector
+layout concentrates traffic through a small number of major intersections, the
+stop-and-go pattern is both predictable and avoidable. Standard navigation
+applications---Google Maps, Apple Maps, and their equivalents---select routes
+based on distance and estimated travel time, but they do not account for how a
+driver's chosen speed and departure time interact with the timing of upcoming
+traffic signals.
+
+The concept of a \textit{green wave}---coordinating signal timings along a
+corridor so that a vehicle travelling at a fixed speed passes every light on
+green---is well established in traffic engineering~\cite{GreenWave10}.
+SyncDrive inverts this concept for the individual driver: rather than the city
+adjusting signals to match a speed, the driver adjusts their speed and
+departure time to match the existing signal pattern. The same signal knowledge
+also supports a second use case, emergency response: if signals ahead of an
+ambulance are cleared and other traffic yields, the ambulance loses no time at
+red lights.
+
+The mid-semester prototype demonstrated the core idea on 7 locations and 42
+routes. This final report covers the complete system: live signals, a drive
+simulator, an extended road network, variable-speed plans, an emergency (SOS)
+mode, and 3D and street-level views.
+
+\subsection{Problem Statement}
+
+Existing navigation systems are \textit{signal-blind}: they select a road but
+not the speed or departure time that would allow the driver to traverse it
+without unnecessary stops. This results in four inefficiencies:
+
+\begin{itemize}
+  \item \textbf{Avoidable red-light stops:} a driver who arrives at a signal
+        thirty seconds after it turned red waits up to a full cycle (60--90
+        seconds) for no mechanical reason.
+  \item \textbf{Stop-and-go fuel waste:} repeated acceleration from rest
+        consumes more fuel per kilometre than steady driving.
+  \item \textbf{No departure-time or speed guidance:} apps tell a driver
+        \textit{which road} to take, not \textit{when to leave} or
+        \textit{how fast to drive} on it.
+  \item \textbf{No signal-level support for emergency vehicles:} nothing
+        coordinates signals and surrounding traffic around an ambulance.
+\end{itemize}
+
+\section{Project Objectives}
+
+\begin{enumerate}
+  \item \textbf{Objective 1---Green wave optimization:} Given a source,
+        destination, and desired arrival time (or ``leave now''), compute the
+        departure time and driving speed plan that minimises total journey
+        time (drive time plus signal wait time).
+
+  \item \textbf{Objective 2---Fair, quantified comparison:} Simulate a Normal
+        GPS journey on the same route, which knows nothing about signals, and
+        present the time, stops and waiting saved by SyncDrive side by side.
+
+  \item \textbf{Objective 3---Working browser prototype at city scale:}
+        A single-file web application---no install, no backend server, no
+        API key---covering a 14-place, 25-signal Chandigarh network where
+        every one of the 182 directed place pairs can be routed.
+
+  \item \textbf{Objective 4---Live simulation:} Show signals changing in real
+        time and let the user ride a simulated drive in which SyncDrive and
+        Normal GPS vehicles compete, with a live speed advisor.
+
+  \item \textbf{Objective 5---Emergency mode:} Provide a separate mode in
+        which an ambulance receives a green corridor and all other vehicles
+        slow down and yield, so that only the ambulance is given priority.
+
+  \item \textbf{Objective 6---3D and street view:} Offer a tilted 3D map with
+        buildings and a street-level camera that rides along the route.
+\end{enumerate}
+
+Each objective is specific and verifiable: the optimizer produces numeric
+results; the simulator and emergency mode produce measurable times and stop
+counts; the views either load and follow the vehicle or they do not.
+
+% ─────────────────────────────────────────────────────────────
+%  CHAPTER 2 — METHODOLOGY AND DESIGN
+% ─────────────────────────────────────────────────────────────
+\chapter{Methodology and Design}
+
+\section{System Architecture}
+
+The system is a single HTML file with embedded CSS and JavaScript. There is no
+backend, no build step, and no API key. Map libraries and tiles load from CDNs.
+
+\subsection{High-Level Design}
+
+The system has five logical layers:
+
+\begin{enumerate}
+  \item \textbf{Data Layer}---Static JavaScript objects: \texttt{PLACES}
+        (14 locations), \texttt{SIGNALS} (25 traffic signals), \texttt{ROUTES}
+        (42 hand-written routes) and \texttt{EDGES} (a road graph used to
+        generate every other route).
+  \item \textbf{Algorithm Layer}---\texttt{evaluate()}, \texttt{refine()},
+        \texttt{optimise()} and \texttt{optimiseLeave()} (green wave
+        optimizer), the Normal GPS baseline, and \texttt{getRoute()}
+        (Dijkstra over the road graph).
+  \item \textbf{Simulation Layer}---a vehicle model and a drive simulator with
+        a live speed advisor and the emergency (SOS) logic.
+  \item \textbf{Map Layer}---Leaflet for the 2D map; MapLibre GL for the 3D
+        and street views; live signal markers, route lines, vehicles.
+  \item \textbf{UI Layer}---a three-pane Apple Maps-inspired layout: navigation
+        rail, directions panel (Directions, Search, Live Signals views) and
+        map with a drive console.
+\end{enumerate}
+
+\subsection{Technical Stack}
+
+\begin{itemize}
+  \item \textbf{Language:} Vanilla JavaScript (ES6+), HTML5, CSS3.
+  \item \textbf{2D map:} Leaflet.js\,1.9.4~\cite{Leaflet26} with the Esri
+        World Dark Gray Canvas tiles~\cite{Esri26}.
+  \item \textbf{3D map:} MapLibre GL JS\,4.7.1~\cite{MapLibre26} with free
+        OpenFreeMap vector tiles~\cite{OpenFreeMap26} built on
+        OpenStreetMap data~\cite{OSM26}.
+  \item \textbf{Voice:} the browser Web Speech API~\cite{WebSpeech26}.
+  \item \textbf{Build tools:} None---single \texttt{index.html} file.
+  \item \textbf{Deployment:} GitHub Pages,
+        \url{https://parthpuri.github.io/SyncDrive/}.
+  \item \textbf{Version control:} Git\,/\,GitHub,
+        \url{https://github.com/ParthPuri/SyncDrive}.
+\end{itemize}
+
+\section{Implementation Details}
+
+\subsection{Module 1: Green Wave Optimizer}
+
+The optimizer searches over candidate (speed, departure) pairs and returns the
+combination that minimises total journey time. Compared with the prototype it
+uses finer speed sets (car: 20--48\,km/h in 2\,km/h steps; cycling and walking
+have their own sets), a 10\,s departure step, and a per-stretch refinement.
+
+\begin{lstlisting}
+for each speed s in the mode's speed set:
+  for each departure offset d (0..1500 s, step 10 s):      [arrive-by]
+    dep = arrivalTime - (distKm / s) * 3600 - d
+    candidate A = constant speed s
+    candidate B = refine(): for each stretch between signals,
+                  pick the speed that reaches the next signal
+                  on green soonest
+    evaluate each candidate:
+      for each signal on route:
+        phase = (dep + timeToSignal + elapsed) % cycle
+        if green: greens++
+        else:     wait = nextGreen(phase); elapsed += wait
+      score = (drive + wait) - 0.5 * greens
+    keep B if it costs at most 2 s more than A (smoother wins)
+keep the best-scoring candidate
+\end{lstlisting}
+
+The \texttt{elapsed} accumulation remains the critical correctness
+requirement: each red-light stop pushes the arrival at every downstream signal
+later. In \emph{leave now} mode the same search runs over speeds and a waiting
+time of 0--10 minutes before departure.
+
+\textbf{Signal phase mathematics:}
+\begin{itemize}
+  \item \texttt{phase\;=\;t\;\%\;cycle}
+  \item \texttt{isGreen\;=\;phase >= greenStart \&\& phase < (greenStart + greenDuration)}
+  \item \texttt{waitIfRed\;=\;(phase < greenStart) ? (greenStart - phase) : (cycle - phase + greenStart)}
+\end{itemize}
+
+\subsection{Module 2: Normal GPS Baseline}
+
+In the prototype, Normal GPS used the same departure time as SyncDrive. That
+choice turned out to be too generous to the baseline: at the same departure,
+50\,km/h was often as fast as SyncDrive's best speed, so SyncDrive was never
+faster. In the final system Normal GPS leaves at the \textit{naive} time:
+arrival time minus the drive time at its flat 50\,km/h. This is exactly what a
+signal-blind application would advise, and any difference is attributable to
+SyncDrive's use of signal timing.
+
+\subsection{Module 3: Extended Network and Routing}
+
+The network grew from 7 to 14 places (Sector 8 Market, Panjab University, Rock
+Garden, Sukhna Lake, Sector 26 Grain Market, Railway Station and the Airport
+were added) and from 16 to 25 signals. Rather than hand-writing the 140 extra
+routes, any pair without a hand-written route is resolved on a road graph with
+Dijkstra's shortest-path algorithm; the route length is the path length times
+1.2 to account for road curvature. All $14\times13=182$ directed pairs were
+verified to resolve.
+
+\subsection{Module 4: Live Signals and Drive Simulator}
+
+Every signal is a live marker showing green or red and the seconds until it
+changes, driven by one clock: the real time of day when idle, the simulation
+clock during a drive. The drive simulator runs two vehicles on the same signals
+and clock: the SyncDrive vehicle, which follows a live speed advisor or a
+manual speed, and the Normal GPS vehicle, which drives at a flat speed and
+stops at every red. The advisor checks the next signal each tick and suggests
+the speed that reaches it on green with a 1.5\,s safety margin. The simulation
+can run at 1--16 times real speed, with pause, a follow camera, optional voice
+guidance (a female English voice chosen from those installed on the device) and
+a finish card.
+
+The optimizer places signal $i$ at fraction $(i+1)/(n+1)$ of the trip, which
+differs from the signal's true position on the polyline. To keep the optimizer
+numbers unchanged but make vehicles stop visibly at the marker, each model
+fraction is mapped to the signal's projected position on the polyline.
+
+\subsection{Module 5: Emergency (SOS) Mode}
+
+Emergency is a separate mode with its own panel. An ambulance drives at
+70\,km/h, starting 20\,s after the other vehicles:
+
+\begin{itemize}
+  \item \textbf{Green corridor:} signals within 500\,m ahead of the ambulance
+        are forced green; the ambulance never stops.
+  \item \textbf{Yielding:} any vehicle within 350\,m ahead of the ambulance
+        slows to 12\,km/h (6\,km/h within 120\,m) and pulls over.
+  \item \textbf{Holding:} other vehicles treat a corridor signal as red until
+        the ambulance has passed. Only the ambulance receives priority.
+\end{itemize}
+
+The other vehicles are the two vehicles from the normal race and seven
+background vehicles whose speed varies gently around a base speed.
+
+\subsection{Module 6: 3D Map and Street View}
+
+A \textit{2D / 3D / Street} switch swaps the Leaflet map for a MapLibre GL map
+with extruded buildings. In 3D a chase camera follows the lead vehicle; in
+Street view the camera sits at street level and rides along the route with the
+user's own vehicle hidden. A keyless link opens the current position in Google
+Street View in a new tab, because embedding Street View requires an API key.
+The OpenFreeMap style is fetched by the application and recoloured dark to match
+the 2D map. A layers panel turns signals, timers and place labels on or off
+(all at once or individually).
+
+% ─────────────────────────────────────────────────────────────
+%  CHAPTER 3 — RESULTS AND EVALUATION
+% ─────────────────────────────────────────────────────────────
+\chapter{Results and Evaluation}
+
+\section{Testing Methodology}
+
+Testing used the simulator built into the application and the browser console.
+Optimizer evaluations used a 09:00 arrival target.
+
+\begin{itemize}
+  \item \textbf{Routing:} all 182 directed place pairs were resolved to a route.
+  \item \textbf{Optimizer comparison:} for every pair, the SyncDrive total time
+        was compared with the Normal GPS total (naive departure) in Drive,
+        Cycle and Walk modes.
+  \item \textbf{Simulation consistency:} full simulated drives were run and
+        their totals compared with the analytic prediction (for example, a
+        Normal GPS drive of 525.8\,s against a predicted 525.2\,s).
+  \item \textbf{Emergency runs:} full ambulance runs were executed and the
+        ambulance time compared with the same run on normal signals.
+  \item \textbf{Browser testing:} the page was exercised in the browser,
+        including the 2D, 3D and Street views, and checked for console errors.
+\end{itemize}
+
+\section{Performance Metrics}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{llrrrr}
+\toprule
+\textbf{From} & \textbf{To} & \textbf{km} & \textbf{Normal GPS} & \textbf{SyncDrive} & \textbf{Saved} \\
+\midrule
+Sector 17 Plaza    & Sector 22 Chowk     & 1.4  & 2.4\,min  & 1.8\,min  & 0.7\,min \\
+Sector 22 Chowk    & Sector 35 Bus Stand & 2.2  & 3.2\,min  & 2.8\,min  & 0.4\,min \\
+Sector 17 Plaza    & PGI Hospital        & 3.2  & 3.8\,min  & 4.0\,min  & $-$0.2\,min \\
+Sector 43 ISBT     & Elante Mall         & 2.0  & 2.4\,min  & 2.5\,min  & $-$0.1\,min \\
+Sector 17 Plaza    & Tribune Chowk       & 5.1  & 7.5\,min  & 6.4\,min  & 1.1\,min \\
+Sector 22 Chowk    & PGI Hospital        & 4.1  & 5.9\,min  & 5.1\,min  & 0.8\,min \\
+Sector 35 Bus Stand& Sector 43 ISBT      & 2.8  & 4.3\,min  & 3.5\,min  & 0.8\,min \\
+Rock Garden        & Sector 35 Bus Stand & 7.0  & 10.6\,min & 9.0\,min  & 1.6\,min \\
+Chandigarh Airport & PGI Hospital        & 12.4 & 16.8\,min & 16.2\,min & 0.6\,min \\
+Panjab University  & Railway Station     & 13.3 & 18.9\,min & 17.1\,min & 1.8\,min \\
+\bottomrule
+\end{tabular}
+\caption{Journey time (drive plus waiting) for Normal GPS and SyncDrive, car
+mode, 09:00 arrival target. Signal timings are simulated.}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Mode} & \textbf{Routes} & \textbf{SyncDrive faster} & \textbf{SyncDrive slower} & \textbf{Mean saving} \\
+\midrule
+Drive  & 182 & 149 & 28 & 38\,s \\
+Cycle  & 182 & 165 & 1  & 57\,s \\
+Walk   & 182 & 166 & 0  & 52\,s \\
+\bottomrule
+\end{tabular}
+\caption{All 182 directed routes compared in each mode (a difference of 1\,s
+or less counts as a tie).}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Metric} & \textbf{Target} & \textbf{Achieved} \\
+\midrule
+Places / signals modelled                 & $\geq$7 / $\geq$10 & 14 / 25 \\
+Directed place pairs routable             & all                & 182 of 182 \\
+Live signal countdowns on the map         & Yes                & Yes \\
+Live drive simulation with speed advisor  & Yes                & Yes \\
+Separate emergency mode                   & Yes                & Yes \\
+3D and street-level views                 & Yes                & Yes \\
+Runs without server or API key            & Yes                & Yes \\
+\bottomrule
+\end{tabular}
+\caption{Objective achievement summary.}
+\end{table}
+
+\textbf{Emergency mode.} On Chandigarh Airport to PGI Hospital (12.4\,km, 10
+signals) the ambulance completed the run in about 10.6 minutes with the green
+corridor, against about 11.8 minutes on normal signals. Depending on the start
+time the corridor saved between 68 and 106 seconds, with zero ambulance stops
+and 6 of the 10 red lights overridden. In one full run, 9 vehicles yielded to
+the ambulance.
+
+\section{Analysis}
+
+\textbf{Did we meet our objectives?}\ Yes. All six objectives are met within
+the simulated environment. The optimizer returns a numeric plan for each of the
+182 routes, the comparison is fair, signals update live, the simulator and the
+emergency mode run end to end, and the application offers 2D, 3D and street
+views with no server or API key.
+
+\textbf{What the results show.} SyncDrive was faster than the signal-blind
+baseline on 149 of 182 car routes (mean 38\,s) and on almost every cycling and
+walking route. A caveat that the prototype report did not make: in the final
+data the chosen speed is usually near the top of the allowed range (the optimizer
+picked 47--48\,km/h on the routes in the first table), so the saving comes
+mainly from \textit{when} the driver leaves and from avoiding red lights, not
+from driving slowly. The claim ``slower is faster'' holds only in cases where a
+lower speed turns a red into a green. On 28 car routes SyncDrive was slower than
+the baseline; we did not analyse these cases, and they include short routes
+with few signals where there is little to gain.
+
+\textbf{Challenges encountered and resolved:}
+
+\begin{itemize}
+  \item \textbf{Tile provider API keys:} Carto and Stadia began requiring
+        keys; the project moved to the Esri World Dark Gray Canvas, and to free
+        OpenFreeMap tiles for 3D.
+  \item \textbf{Wrong optimization objective and missing elapsed propagation:}
+        found and fixed during the prototype stage.
+  \item \textbf{Unfair baseline (twice):} first the baseline used the arrival
+        time as its departure; later, sharing SyncDrive's departure made the
+        baseline too strong. It now leaves at the naive time.
+  \item \textbf{Render-loop crash:} a strip element without a signal id raised
+        an exception inside the animation loop and froze the interface; fixed
+        by selecting only elements that carry the id.
+  \item \textbf{Emergency start time:} opening a saved link applied the
+        ``arrive by'' setting after the emergency mode and shifted the other
+        vehicles' departure; fixed by applying the timing first.
+  \item \textbf{Voice and 3D loading:} the voice list loads asynchronously, so
+        the first announcement used the default (male) voice; the 3D map's own
+        style fetch never completed, so the style is now fetched by the
+        application and passed in.
+  \item \textbf{Unusable controls on small screens:} the layer toggles lived in
+        a legend that is hidden on narrow screens; they moved to an
+        always-visible layers panel.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────
+%  CHAPTER 4 — CONCLUSION
+% ─────────────────────────────────────────────────────────────
+\chapter{Conclusion}
+
+\section{Summary of Work}
+
+SyncDrive started as a calculator that proved a single idea on 7 locations. It
+is now a complete browser-based navigation prototype: 14 places, 25 signals and
+182 routable pairs; live signals; a green wave optimizer with variable speed
+plans for driving, cycling and walking; a fair signal-blind baseline; a drive
+simulator with a live speed advisor and voice guidance; a separate emergency
+mode with a green corridor and yielding traffic; and 2D, 3D and street-level
+views. It needs no backend, build step or API key, and it is deployed at
+\url{https://parthpuri.github.io/SyncDrive/}.
+
+\section{Key Findings}
+
+\begin{itemize}
+  \item \textbf{Finding 1---Timing matters more than slowness:} Against a
+        signal-blind baseline, SyncDrive was faster on 149 of 182 car routes
+        (mean 38\,s), mostly through the departure time and red-light
+        avoidance, with near-maximum speeds.
+  \item \textbf{Finding 2---Elapsed propagation is non-negotiable:} Each red
+        stop shifts all later arrivals; omitting it gives optimistic results.
+  \item \textbf{Finding 3---The baseline defines the result:} How the
+        comparison vehicle departs changes the conclusion from ``never
+        faster'' to ``faster on most routes''. A fair baseline must reflect
+        what a signal-blind application would actually advise.
+  \item \textbf{Finding 4---A green corridor helps the ambulance without
+        stopping everyone:} Forcing green only 500\,m ahead and having nearby
+        vehicles yield saved 68--106 seconds on a 12.4\,km run.
+\end{itemize}
+
+\section{Limitations}
+
+\begin{itemize}
+  \item All signal timings, route polylines and distances are simulated; no
+        real municipal signal data is used.
+  \item The speed advisor looks only at the next signal (a greedy rule).
+  \item Vehicles do not overtake or collide; they only slow down.
+  \item On 28 of 182 car routes SyncDrive was not faster; this was not analysed.
+  \item The ambulance and corridor are a simulation and are not connected to
+        real traffic infrastructure.
+\end{itemize}
+
+\section{Future Work and Recommendations}
+
+\begin{enumerate}
+  \item \textbf{Real signal data:} source cycle lengths from OpenStreetMap
+        \texttt{highway=traffic\_signals} tags and city data where
+        available~\cite{OSM26}.
+  \item \textbf{Live position tracking:} use the browser Geolocation API to
+        recommend speed from the driver's real position.
+  \item \textbf{Road-following routes:} replace hand-written polylines with
+        routes from a routing engine such as OSRM.
+  \item \textbf{Peak-hour profiles:} model different cycle lengths for morning
+        and evening rush hours.
+  \item \textbf{Look-ahead advisor:} plan speeds across several signals instead
+        of one.
+  \item \textbf{Several ambulances and priority levels} in the emergency mode.
+  \item \textbf{Installable mobile app} (PWA) for use in a vehicle.
+\end{enumerate}
+
+\section{Final Remarks}
+
+The final system validates the central hypothesis of SyncDrive within a
+controlled, simulated environment, and extends it to emergency response and
+immersive views. The most important lessons were methodological: a fair
+baseline and correct signal-phase propagation matter more than the
+presentation. The project's weekly journals document each problem and fix, and
+the code, diagrams and reports are available in the GitHub repository.
+
+% ─────────────────────────────────────────────────────────────
+%  BIBLIOGRAPHY
+% ─────────────────────────────────────────────────────────────
+\printbibliography[heading=bibintoc]
+
+\end{document}
