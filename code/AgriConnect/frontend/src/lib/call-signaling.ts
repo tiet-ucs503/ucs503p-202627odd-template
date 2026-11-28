@@ -48,21 +48,21 @@ export interface CallHandlers {
 }
 
 /** Subscribes to call events for the shared socket. Returns an unsubscribe. */
-export function subscribeToCalls(handlers: CallHandlers): () => void {
+export function subscribeToCalls(handlers: Partial<CallHandlers>): () => void {
   const client = connectSocket();
 
-  client.on('call:incoming', handlers.onIncoming);
-  client.on('call:accepted', handlers.onAccepted);
-  client.on('call:declined', handlers.onDeclined);
-  client.on('call:ended', handlers.onEnded);
-  client.on('call:signal', handlers.onSignal);
+  if (handlers.onIncoming) client.on('call:incoming', handlers.onIncoming);
+  if (handlers.onAccepted) client.on('call:accepted', handlers.onAccepted);
+  if (handlers.onDeclined) client.on('call:declined', handlers.onDeclined);
+  if (handlers.onEnded) client.on('call:ended', handlers.onEnded);
+  if (handlers.onSignal) client.on('call:signal', handlers.onSignal);
 
   return () => {
-    client.off('call:incoming', handlers.onIncoming);
-    client.off('call:accepted', handlers.onAccepted);
-    client.off('call:declined', handlers.onDeclined);
-    client.off('call:ended', handlers.onEnded);
-    client.off('call:signal', handlers.onSignal);
+    if (handlers.onIncoming) client.off('call:incoming', handlers.onIncoming);
+    if (handlers.onAccepted) client.off('call:accepted', handlers.onAccepted);
+    if (handlers.onDeclined) client.off('call:declined', handlers.onDeclined);
+    if (handlers.onEnded) client.off('call:ended', handlers.onEnded);
+    if (handlers.onSignal) client.off('call:signal', handlers.onSignal);
   };
 }
 

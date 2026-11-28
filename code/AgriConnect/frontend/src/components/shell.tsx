@@ -10,6 +10,7 @@ import { dashboardPath, useAuth } from '@/features/auth/auth-context';
 import { useLocale } from '@/features/i18n/locale-context';
 import { LanguageSwitcher } from '@/features/i18n/language-switcher';
 import { FarmerChatWidget } from '@/features/assistant/FarmerChatWidget';
+import { GlobalIncomingCall } from '@/features/calls/GlobalIncomingCall';
 import { HeaderWeather } from '@/features/weather/HeaderWeather';
 import { Logo } from '@/components/logo';
 import { cx } from '@/components/ui';
@@ -137,7 +138,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, ready, logout } = useAuth();
   const { t } = useLocale();
   const [unread, setUnread] = useState(0);
-  const [liveToast, setLiveToast] = useState<{ title: string; body: string } | null>(null);
+  const [liveToast, setLiveToast] = useState<{
+    title: string;
+    body: string;
+    relatedEntityType?: string;
+    relatedEntityId?: string;
+  } | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -158,9 +164,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       socketClient = connectSocket();
       onNotificationNew = (payload: unknown) => {
         load();
-        const notification = payload as { title?: string; body?: string };
+        const notification = payload as {
+          title?: string;
+          body?: string;
+          relatedEntityType?: string;
+          relatedEntityId?: string;
+        };
         if (notification?.title) {
-          setLiveToast({ title: notification.title, body: notification.body ?? '' });
+          setLiveToast({
+            title: notification.title,
+            body: notification.body ?? '',
+            relatedEntityType: notification.relatedEntityType,
+            relatedEntityId: notification.relatedEntityId,
+          });
           window.setTimeout(() => setLiveToast(null), 8000);
         }
       };
@@ -273,18 +289,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {t('shell.signedIn', { email: user.email, path: dashboardPath(user.role) })}
           </p>
           <FarmerChatWidget role={user.role} name={user.name} />
+          <GlobalIncomingCall />
         </>
       ) : null}
       {liveToast ? (
-        <div className="fixed bottom-6 end-6 z-50 max-w-sm rounded-2xl border border-harvest/30 bg-forest p-4 text-paper shadow-2xl transition-all">
+        <aside
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 end-6 z-50 max-w-sm rounded-2xl border border-harvest/30 bg-forest p-4 text-paper shadow-2xl transition-all"
+        >
           <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-2.5">
-              <span className="text-xl" aria-hidden="true">🔔</span>
-              <div>
-                <p className="text-sm font-bold text-harvest">{liveToast.title}</p>
-                <p className="mt-1 text-xs text-paper/85">{liveToast.body}</p>
+            {liveToast.relatedEntityType === 'order' && liveToast.relatedEntityId ? (
+              <Link
+                href={`/orders/${liveToast.relatedEntityId}`}
+                onClick={() => setLiveToast(null)}
+                className="flex items-start gap-2.5 hover:opacity-90"
+              >
+                <span className="text-xl" aria-hidden="true">🔔</span>
+                <div>
+                  <p className="text-sm font-bold text-harvest">{liveToast.title}</p>
+                  <p className="mt-1 text-xs text-paper/85">{liveToast.body}</p>
+                </div>
+              </Link>
+            ) : (
+              <div className="flex items-start gap-2.5">
+                <span className="text-xl" aria-hidden="true">🔔</span>
+                <div>
+                  <p className="text-sm font-bold text-harvest">{liveToast.title}</p>
+                  <p className="mt-1 text-xs text-paper/85">{liveToast.body}</p>
+                </div>
               </div>
-            </div>
+            )}
             <button
               type="button"
               onClick={() => setLiveToast(null)}
@@ -294,7 +329,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               ✕
             </button>
           </div>
-        </div>
+        </aside>
       ) : null}
     </div>
   );

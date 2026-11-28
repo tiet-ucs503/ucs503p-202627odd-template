@@ -24,6 +24,10 @@ export function getSocket(): Socket {
 
     socket.on('connect', () => {
       retriedAfterRefresh = false;
+      const token = tokenStore.get();
+      if (token) {
+        socket?.emit('authenticate', token);
+      }
     });
 
     // The handshake is rejected with "Unauthorized" once the access token expires.
@@ -43,8 +47,28 @@ export function connectSocket(): Socket {
   const client = getSocket();
   if (!client.connected) {
     client.connect();
+  } else {
+    const token = tokenStore.get();
+    if (token) {
+      client.emit('authenticate', token);
+    }
   }
   return client;
+}
+
+export function syncSocketAuth(): void {
+  if (typeof window === 'undefined') return;
+  const client = getSocket();
+  const token = tokenStore.get();
+  if (token) {
+    if (client.connected) {
+      client.emit('authenticate', token);
+    } else {
+      client.connect();
+    }
+  } else if (client.connected) {
+    client.disconnect();
+  }
 }
 
 export function disconnectSocket(): void {

@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 import type { Socket } from 'socket.io';
 import { AppError } from '../../common/app-error.js';
 import { logger } from '../../config/logger.js';
+import { getSocketIO } from '../../config/socket.js';
+import { createNotification } from '../../services/notification.service.js';
 import { getIceServers, resolveCallPermission, type CallActor } from './calls.service.js';
 
 interface ActiveCall {
@@ -81,6 +83,11 @@ function authorizedCall(
 }
 
 export function registerCallHandlers(socket: Socket, user: CallActor): void {
+  if ((socket as unknown as { __callRegistered?: boolean }).__callRegistered) {
+    return;
+  }
+  (socket as unknown as { __callRegistered?: boolean }).__callRegistered = true;
+
   socket.on('call:invite', async (payload: CallEnvelope, ack?: Ack) => {
     if (typeof payload.orderId !== 'string' || !payload.orderId) {
       ack?.({ ok: false, error: 'Invalid order id', code: 'VALIDATION_ERROR' });
@@ -120,6 +127,24 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
         };
         socket.to(room(orderId)).emit('call:ended', ended);
         socket.emit('call:ended', ended);
+        const io = getSocketIO();
+        if (io) {
+          io.to(`user:${current.calleeId}`).emit('call:ended', ended);
+        }
+
+        // Push missed call alert
+        void createNotification({
+          userId: current.calleeId,
+          type: 'MESSAGE_RECEIVED',
+          title: 'Missed Voice Call',
+          body: `Missed call from ${permission.callerName} regarding Order #${orderId.slice(-6).toUpperCase()}`,
+          params: {
+            preview: `Missed call from ${permission.callerName} regarding Order #${orderId.slice(-6).toUpperCase()}`,
+          },
+          relatedEntityType: 'order',
+          relatedEntityId: orderId,
+        }).catch(() => undefined);
+
         logger.info({ orderId, callId: current.callId }, 'Call timed out unanswered');
       }, RING_TIMEOUT_MS);
       // Housekeeping only: never hold the process open on shutdown.
@@ -128,11 +153,34 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
       activeCalls.set(orderId, call);
       void socket.join(room(orderId));
 
-      socket.to([room(orderId), `user:${permission.calleeId}`]).emit('call:incoming', {
+      const incomingPayload = {
         orderId,
         callId: call.callId,
         from: { id: permission.callerId, name: permission.callerName },
+      };
+
+      // Push in-app alert notification
+      void createNotification({
+        userId: permission.calleeId,
+        type: 'MESSAGE_RECEIVED',
+        title: 'Incoming Voice Call',
+        body: `${permission.callerName} is calling you regarding Order #${orderId.slice(-6).toUpperCase()}`,
+        params: {
+          preview: `${permission.callerName} is calling you regarding Order #${orderId.slice(-6).toUpperCase()}`,
+        },
+        relatedEntityType: 'order',
+        relatedEntityId: orderId,
+      }).catch((err) => {
+        logger.warn({ err }, 'Failed to create incoming call notification');
       });
+
+      socket.to(room(orderId)).emit('call:incoming', incomingPayload);
+      const io = getSocketIO();
+      if (io) {
+        io.to(`user:${permission.calleeId}`).emit('call:incoming', incomingPayload);
+      } else {
+        socket.to(`user:${permission.calleeId}`).emit('call:incoming', incomingPayload);
+      }
 
       ack?.({ ok: true, callId: call.callId, iceServers: getIceServers() });
     } catch (error) {
@@ -171,26 +219,55 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
     if (!authorized) return;
     clearCall(authorized.orderId, authorized.call);
     const otherUserId = user.id === authorized.call.callerId ? authorized.call.calleeId : authorized.call.callerId;
-    socket.to([room(authorized.orderId), `user:${otherUserId}`]).emit('call:declined', {
+    const declinedPayload = {
       orderId: authorized.orderId,
       callId: authorized.call.callId,
       byUserId: user.id,
-    });
+    };
+    socket.to(room(authorized.orderId)).emit('call:declined', declinedPayload);
+    const io = getSocketIO();
+    if (io) {
+      io.to(`user:${otherUserId}`).emit('call:declined', declinedPayload);
+    } else {
+      socket.to(`user:${otherUserId}`).emit('call:declined', declinedPayload);
+    }
   });
 
   socket.on('call:end', (payload: CallEnvelope) => {
     const authorized = authorizedCall(payload, user.id);
     if (!authorized) return;
+    const wasAnswered = authorized.call.answered;
     clearCall(authorized.orderId, authorized.call);
     const otherUserId = user.id === authorized.call.callerId ? authorized.call.calleeId : authorized.call.callerId;
-    socket.to([room(authorized.orderId), `user:${otherUserId}`]).emit('call:ended', {
+    const endedPayload = {
       orderId: authorized.orderId,
       callId: authorized.call.callId,
       byUserId: user.id,
-      durationSeconds: authorized.call.answered
+      durationSeconds: wasAnswered
         ? Math.round((Date.now() - authorized.call.startedAt) / 1000)
         : 0,
-    });
+    };
+    socket.to(room(authorized.orderId)).emit('call:ended', endedPayload);
+    const io = getSocketIO();
+    if (io) {
+      io.to(`user:${otherUserId}`).emit('call:ended', endedPayload);
+    } else {
+      socket.to(`user:${otherUserId}`).emit('call:ended', endedPayload);
+    }
+
+    if (!wasAnswered && user.id === authorized.call.callerId) {
+      void createNotification({
+        userId: authorized.call.calleeId,
+        type: 'MESSAGE_RECEIVED',
+        title: 'Missed Voice Call',
+        body: `Missed call regarding Order #${authorized.orderId.slice(-6).toUpperCase()}`,
+        params: {
+          preview: `Missed call regarding Order #${authorized.orderId.slice(-6).toUpperCase()}`,
+        },
+        relatedEntityType: 'order',
+        relatedEntityId: authorized.orderId,
+      }).catch(() => undefined);
+    }
   });
 
   // Relays SDP offers/answers and ICE candidates untouched; audio never reaches the server.

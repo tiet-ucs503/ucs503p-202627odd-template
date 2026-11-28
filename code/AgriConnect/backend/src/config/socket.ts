@@ -67,7 +67,35 @@ export function initSocketIO(server: HttpServer): Server {
 
   io.on('connection', (socket) => {
     const appSocket = socket as AppSocket;
-    const user = appSocket.data.user;
+
+    const attachUser = (authUser: SocketUser) => {
+      appSocket.data.user = authUser;
+      void appSocket.join(`user:${authUser.id}`);
+      registerCallHandlers(appSocket, authUser);
+      logger.info({ userId: authUser.id, role: authUser.role }, 'Socket authenticated');
+    };
+
+    appSocket.on(
+      'authenticate',
+      (token: string, ack?: (result: { ok: boolean; error?: string }) => void) => {
+        if (typeof token !== 'string' || !token) {
+          ack?.({ ok: false, error: 'Token missing' });
+          return;
+        }
+        try {
+          const payload = verifyAccessToken(token);
+          const authUser: SocketUser = { id: payload.sub, role: payload.role };
+          attachUser(authUser);
+          ack?.({ ok: true });
+        } catch {
+          ack?.({ ok: false, error: 'Invalid token' });
+        }
+      },
+    );
+
+    if (appSocket.data.user) {
+      attachUser(appSocket.data.user);
+    }
 
     appSocket.on(
       'join:order',
@@ -75,7 +103,8 @@ export function initSocketIO(server: HttpServer): Server {
         orderId: string,
         ack?: (result: { ok: boolean; error?: string }) => void,
       ) => {
-        if (!user) {
+        const currentUser = appSocket.data.user;
+        if (!currentUser) {
           ack?.({ ok: false, error: 'Unauthorized' });
           return;
         }
@@ -84,7 +113,7 @@ export function initSocketIO(server: HttpServer): Server {
           return;
         }
         try {
-          const allowed = await canAccessOrder(user, orderId);
+          const allowed = await canAccessOrder(currentUser, orderId);
           if (!allowed) {
             ack?.({ ok: false, error: 'Forbidden' });
             return;
@@ -92,7 +121,7 @@ export function initSocketIO(server: HttpServer): Server {
           void appSocket.join(`order:${orderId}`);
           ack?.({ ok: true });
         } catch (error) {
-          logger.warn({ err: error, orderId, userId: user.id }, 'Socket join:order failed');
+          logger.warn({ err: error, orderId, userId: currentUser.id }, 'Socket join:order failed');
           ack?.({ ok: false, error: 'Failed to join order room' });
         }
       },
@@ -105,15 +134,11 @@ export function initSocketIO(server: HttpServer): Server {
     });
 
     appSocket.on('typing:start', (orderId: string) => {
-      if (user && typeof orderId === 'string') {
-        appSocket.to(`order:${orderId}`).emit('typing', { orderId, userId: user.id });
+      const currentUser = appSocket.data.user;
+      if (currentUser && typeof orderId === 'string') {
+        appSocket.to(`order:${orderId}`).emit('typing', { orderId, userId: currentUser.id });
       }
     });
-
-    if (user) {
-      void appSocket.join(`user:${user.id}`);
-      registerCallHandlers(appSocket, user);
-    }
   });
 
   logger.info('Socket.io initialized');

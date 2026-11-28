@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getMe, login as loginRequest, logout as logoutRequest, registerAccount } from '@/lib/api/auth';
 import { refreshAccessToken } from '@/lib/api/client';
 import { tokenStore, userStore } from '@/lib/api/token-store';
+import { syncSocketAuth } from '@/lib/socket';
 import type { AuthUser } from '@/lib/api/types';
 import type { Locale } from '@/lib/i18n/locales';
 
@@ -68,16 +69,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (sessionUser) {
           userStore.set(sessionUser);
           setUser(sessionUser);
+          syncSocketAuth();
         } else {
           tokenStore.clear();
           userStore.clear();
           setUser(null);
+          syncSocketAuth();
         }
       })
       .catch(() => {
         tokenStore.clear();
         userStore.clear();
         setUser(null);
+        syncSocketAuth();
       })
       .finally(() => setReady(true));
   }, []);
@@ -89,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async login(email, password) {
         const { data } = await loginRequest({ email, password });
         tokenStore.set(data.accessToken);
+        syncSocketAuth();
         const me = await getMe();
         userStore.set(me.data);
         setUser(me.data);
@@ -98,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async register(input) {
         const { data } = await registerAccount(input);
         tokenStore.set(data.accessToken);
+        syncSocketAuth();
         const me = await getMe();
         userStore.set(me.data);
         setUser(me.data);
@@ -111,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           tokenStore.clear();
           userStore.clear();
           setUser(null);
+          syncSocketAuth();
           router.push('/');
         }
       },

@@ -17,6 +17,10 @@ vi.mock('../src/modules/calls/calls.service.js', () => ({
     }),
 }));
 
+vi.mock('../src/services/notification.service.js', () => ({
+  createNotification: vi.fn(() => Promise.resolve({ id: 'mock-notif-id' })),
+}));
+
 const { registerCallHandlers, resetActiveCallsForTests } = await import(
   '../src/modules/calls/calls.gateway.js'
 );
