@@ -1,61 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/auth-context';
 import { useLocale } from '@/features/i18n/locale-context';
 import { declineCall, subscribeToCalls, type IncomingCall } from '@/lib/call-signaling';
+import { ringtoneManager } from '@/lib/ringtone';
 import { Button } from '@/components/ui';
-
-function playWebAudioRing(): () => void {
-  if (typeof window === 'undefined') return () => {};
-  try {
-    const AudioContextClass =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return () => {};
-    const ctx = new AudioContextClass();
-    let isPlaying = true;
-
-    const ring = () => {
-      if (!isPlaying || ctx.state === 'closed') return;
-      if (ctx.state === 'suspended') {
-        void ctx.resume();
-      }
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc1.type = 'sine';
-      osc2.type = 'sine';
-      osc1.frequency.setValueAtTime(440, ctx.currentTime);
-      osc2.frequency.setValueAtTime(480, ctx.currentTime);
-
-      gain.gain.setValueAtTime(0.12, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.8);
-
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc1.start(ctx.currentTime);
-      osc2.start(ctx.currentTime);
-      osc1.stop(ctx.currentTime + 1.8);
-      osc2.stop(ctx.currentTime + 1.8);
-    };
-
-    ring();
-    const interval = window.setInterval(ring, 3200);
-
-    return () => {
-      isPlaying = false;
-      window.clearInterval(interval);
-      void ctx.close().catch(() => undefined);
-    };
-  } catch {
-    return () => {};
-  }
-}
 
 export function GlobalIncomingCall() {
   const { user } = useAuth();
@@ -64,7 +15,6 @@ export function GlobalIncomingCall() {
   const pathname = usePathname();
 
   const [incoming, setIncoming] = useState<IncomingCall | null>(null);
-  const stopRingRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -72,59 +22,50 @@ export function GlobalIncomingCall() {
     const unsubscribe = subscribeToCalls({
       onIncoming: (call) => {
         setIncoming(call);
-        stopRingRef.current?.();
-        stopRingRef.current = playWebAudioRing();
+        // OrderCallPanel handles its own ringing when on the order page
+        if (pathname !== `/orders/${call.orderId}`) {
+          ringtoneManager.start();
+        }
       },
       onEnded: (payload) => {
-        setIncoming((current) => {
-          if (current?.orderId === payload.orderId) {
-            stopRingRef.current?.();
-            stopRingRef.current = null;
-            return null;
-          }
-          return current;
-        });
+        ringtoneManager.stop();
+        setIncoming((current) => (current?.orderId === payload.orderId ? null : current));
       },
       onDeclined: (payload) => {
-        setIncoming((current) => {
-          if (current?.orderId === payload.orderId) {
-            stopRingRef.current?.();
-            stopRingRef.current = null;
-            return null;
-          }
-          return current;
-        });
+        ringtoneManager.stop();
+        setIncoming((current) => (current?.orderId === payload.orderId ? null : current));
       },
       onAccepted: () => {
-        stopRingRef.current?.();
-        stopRingRef.current = null;
+        ringtoneManager.stop();
         setIncoming(null);
       },
     });
 
     return () => {
       unsubscribe();
-      stopRingRef.current?.();
-      stopRingRef.current = null;
+      ringtoneManager.stop();
     };
-  }, [user]);
+  }, [pathname, user]);
 
   const handleDecline = () => {
     if (incoming) {
       declineCall(incoming.orderId, incoming.callId);
     }
-    stopRingRef.current?.();
-    stopRingRef.current = null;
+    ringtoneManager.stop();
     setIncoming(null);
   };
 
   const handleAccept = () => {
     if (!incoming) return;
-    const orderId = incoming.orderId;
-    stopRingRef.current?.();
-    stopRingRef.current = null;
+    const targetCall = incoming;
+    ringtoneManager.stop();
+    try {
+      sessionStorage.setItem('agriconnect_pending_call_accept', JSON.stringify(targetCall));
+    } catch {
+      // Ignore sessionStorage storage quota or security errors
+    }
     setIncoming(null);
-    router.push(`/orders/${orderId}`);
+    router.push(`/orders/${targetCall.orderId}`);
   };
 
   // If user is already looking at that order's page, OrderCallPanel handles it in-place

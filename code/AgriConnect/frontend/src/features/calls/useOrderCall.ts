@@ -116,19 +116,53 @@ export function useOrderCall({
     setStatus(next);
   }, [audioElementRef]);
 
-  const createPeer = useCallback(async (callId: string) => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+  const acquireMedia = useCallback(async () => {
+    if (localStreamRef.current && localStreamRef.current.active) {
+      return localStreamRef.current;
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+      video: false,
+    });
     localStreamRef.current = stream;
+    return stream;
+  }, []);
+
+  const createPeer = useCallback(async (callId: string) => {
+    const stream = await acquireMedia();
 
     const peer = new RTCPeerConnection({ iceServers: iceServersRef.current });
     peerRef.current = peer;
     stream.getTracks().forEach((track) => peer.addTrack(track, stream));
 
+    // Enforce full-duplex bidirectional audio transceiver configuration
+    peer.getTransceivers().forEach((transceiver) => {
+      if (transceiver.receiver.track.kind === 'audio') {
+        transceiver.direction = 'sendrecv';
+      }
+    });
+
     peer.ontrack = (event) => {
       const stream = event.streams[0] ?? new MediaStream([event.track]);
       const audio = remoteAudio();
       audio.srcObject = stream;
-      void audio.play().catch(() => undefined);
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Fallback if browser autoplay policy blocks unmuted audio
+          const unlock = () => {
+            void audio.play().catch(() => undefined);
+            window.removeEventListener('click', unlock);
+            window.removeEventListener('keydown', unlock);
+          };
+          window.addEventListener('click', unlock);
+          window.addEventListener('keydown', unlock);
+        });
+      }
     };
 
     peer.onicecandidate = (event) => {
@@ -137,18 +171,24 @@ export function useOrderCall({
       }
     };
 
-    peer.onconnectionstatechange = () => {
-      if (peer.connectionState === 'connected') {
+    const updateActive = () => {
+      const conn = peer.connectionState;
+      const ice = peer.iceConnectionState;
+      if (conn === 'connected' || ice === 'connected' || ice === 'completed') {
         setStatus('active');
-      }
-      if (peer.connectionState === 'failed') {
+      } else if (conn === 'connecting' || ice === 'checking') {
+        setStatus((prev) => (prev === 'active' ? 'active' : 'connecting'));
+      } else if (conn === 'failed' || ice === 'failed') {
         setError(t('order.call.errors.connectionFailed'));
         teardown('ended');
       }
     };
 
+    peer.onconnectionstatechange = updateActive;
+    peer.oniceconnectionstatechange = updateActive;
+
     return peer;
-  }, [orderId, remoteAudio, t, teardown]);
+  }, [acquireMedia, orderId, remoteAudio, t, teardown]);
 
   const mediaError = useCallback(
     (cause: unknown) => {
@@ -167,20 +207,43 @@ export function useOrderCall({
   const start = useCallback(async () => {
     if (disabled || status !== 'idle') return;
     setError('');
+
+    try {
+      // Prime remote audio element & pre-warm mic hardware within user click gesture
+      const audio = remoteAudio();
+      void audio.play().catch(() => undefined);
+      await acquireMedia();
+    } catch (cause) {
+      setError(mediaError(cause));
+      return;
+    }
+
     const ack = await inviteToCall(orderId);
     if (!ack.ok || !ack.callId) {
       setError(ackError(ack, 'order.call.errors.startFailed'));
+      teardown('idle');
       return;
     }
     callIdRef.current = ack.callId;
     iceServersRef.current = ack.iceServers?.length ? ack.iceServers : DEFAULT_ICE;
     setStatus('calling');
-  }, [ackError, disabled, orderId, status]);
+  }, [ackError, acquireMedia, disabled, mediaError, orderId, remoteAudio, status, teardown]);
 
-  const accept = useCallback(async () => {
-    const pending = incoming;
+  const accept = useCallback(async (customIncoming?: IncomingCall) => {
+    const pending = customIncoming ?? incoming;
     if (!pending) return;
     setError('');
+
+    try {
+      // Prime audio element & pre-warm mic within click gesture
+      const audio = remoteAudio();
+      void audio.play().catch(() => undefined);
+      await acquireMedia();
+    } catch (cause) {
+      setError(mediaError(cause));
+      return;
+    }
+
     const ack = await acceptCall(pending.orderId, pending.callId);
     if (!ack.ok) {
       setError(ackError(ack, 'order.call.errors.joinFailed'));
@@ -198,7 +261,32 @@ export function useOrderCall({
       declineCall(pending.orderId, pending.callId);
       teardown('idle');
     }
-  }, [ackError, createPeer, incoming, mediaError, teardown]);
+  }, [ackError, acquireMedia, createPeer, incoming, mediaError, remoteAudio, teardown]);
+
+  // Handle pre-accepted incoming calls forwarded from global modal banner
+  useEffect(() => {
+    if (disabled) return;
+    let timer: number | null = null;
+    try {
+      const raw = sessionStorage.getItem('agriconnect_pending_call_accept');
+      if (raw) {
+        sessionStorage.removeItem('agriconnect_pending_call_accept');
+        const parsed = JSON.parse(raw) as IncomingCall;
+        if (parsed.orderId === orderId) {
+          timer = window.setTimeout(() => {
+            void accept(parsed);
+          }, 0);
+        }
+      }
+    } catch {
+      // Ignore sessionStorage parse errors
+    }
+    return () => {
+      if (timer !== null) {
+        window.clearTimeout(timer);
+      }
+    };
+  }, [accept, disabled, orderId]);
 
   const decline = useCallback(() => {
     if (incoming) {

@@ -127,11 +127,16 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
           durationSeconds: 0,
           reason: 'unanswered' as const,
         };
-        socket.to(room(orderId)).emit('call:ended', ended);
-        socket.emit('call:ended', ended);
         const io = getSocketIO();
         if (io) {
-          io.to(`user:${current.calleeId}`).emit('call:ended', ended);
+          io.to([
+            room(orderId),
+            `user:${current.callerId}`,
+            `user:${current.calleeId}`,
+          ]).emit('call:ended', ended);
+        } else {
+          socket.to([room(orderId), `user:${current.calleeId}`]).emit('call:ended', ended);
+          socket.emit('call:ended', ended);
         }
 
         // Push missed call alert
@@ -173,12 +178,11 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
         logger.warn({ err }, 'Failed to create incoming call notification');
       });
 
-      socket.to(room(orderId)).emit('call:incoming', incomingPayload);
       const io = getSocketIO();
       if (io) {
-        io.to(`user:${permission.calleeId}`).emit('call:incoming', incomingPayload);
+        io.to([room(orderId), `user:${permission.calleeId}`]).emit('call:incoming', incomingPayload);
       } else {
-        socket.to(`user:${permission.calleeId}`).emit('call:incoming', incomingPayload);
+        socket.to([room(orderId), `user:${permission.calleeId}`]).emit('call:incoming', incomingPayload);
       }
 
       ack?.({ ok: true, callId: call.callId, iceServers: getIceServers() });
@@ -203,10 +207,22 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
         authorized.call.ringTimer = undefined;
       }
       void socket.join(room(authorized.orderId));
-      socket.to([room(authorized.orderId), `user:${authorized.call.callerId}`]).emit('call:accepted', {
+      const acceptedPayload = {
         orderId: authorized.orderId,
         callId: authorized.call.callId,
-      });
+      };
+      const io = getSocketIO();
+      if (io) {
+        io.to([
+          room(authorized.orderId),
+          `user:${authorized.call.callerId}`,
+          `user:${authorized.call.calleeId}`,
+        ]).emit('call:accepted', acceptedPayload);
+      } else {
+        socket.to(room(authorized.orderId)).emit('call:accepted', acceptedPayload);
+        socket.to(`user:${authorized.call.callerId}`).emit('call:accepted', acceptedPayload);
+        socket.emit('call:accepted', acceptedPayload);
+      }
       ack?.({ ok: true, iceServers: getIceServers() });
     } catch (error) {
       ack?.(failure(error));
@@ -217,18 +233,24 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
     const authorized = authorizedCall(payload, user.id);
     if (!authorized) return;
     clearCall(authorized.orderId, authorized.call);
-    const otherUserId = user.id === authorized.call.callerId ? authorized.call.calleeId : authorized.call.callerId;
     const declinedPayload = {
       orderId: authorized.orderId,
       callId: authorized.call.callId,
       byUserId: user.id,
     };
-    socket.to(room(authorized.orderId)).emit('call:declined', declinedPayload);
     const io = getSocketIO();
     if (io) {
-      io.to(`user:${otherUserId}`).emit('call:declined', declinedPayload);
+      io.to([
+        room(authorized.orderId),
+        `user:${authorized.call.callerId}`,
+        `user:${authorized.call.calleeId}`,
+      ]).emit('call:declined', declinedPayload);
     } else {
-      socket.to(`user:${otherUserId}`).emit('call:declined', declinedPayload);
+      socket.to([room(authorized.orderId), `user:${authorized.call.callerId}`, `user:${authorized.call.calleeId}`]).emit(
+        'call:declined',
+        declinedPayload,
+      );
+      socket.emit('call:declined', declinedPayload);
     }
   });
 
@@ -237,7 +259,6 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
     if (!authorized) return;
     const wasAnswered = authorized.call.answered;
     clearCall(authorized.orderId, authorized.call);
-    const otherUserId = user.id === authorized.call.callerId ? authorized.call.calleeId : authorized.call.callerId;
     const endedPayload = {
       orderId: authorized.orderId,
       callId: authorized.call.callId,
@@ -246,12 +267,19 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
         ? Math.round((Date.now() - authorized.call.startedAt) / 1000)
         : 0,
     };
-    socket.to(room(authorized.orderId)).emit('call:ended', endedPayload);
     const io = getSocketIO();
     if (io) {
-      io.to(`user:${otherUserId}`).emit('call:ended', endedPayload);
+      io.to([
+        room(authorized.orderId),
+        `user:${authorized.call.callerId}`,
+        `user:${authorized.call.calleeId}`,
+      ]).emit('call:ended', endedPayload);
     } else {
-      socket.to(`user:${otherUserId}`).emit('call:ended', endedPayload);
+      socket.to([room(authorized.orderId), `user:${authorized.call.callerId}`, `user:${authorized.call.calleeId}`]).emit(
+        'call:ended',
+        endedPayload,
+      );
+      socket.emit('call:ended', endedPayload);
     }
 
     if (!wasAnswered && user.id === authorized.call.callerId) {
@@ -292,10 +320,15 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
         byUserId: user.id,
         durationSeconds: wasAnswered ? Math.round((Date.now() - call.startedAt) / 1000) : 0,
       };
-      socket.to(room(orderId)).emit('call:ended', endedPayload);
       const io = getSocketIO();
       if (io) {
-        io.to(`user:${otherUserId}`).emit('call:ended', endedPayload);
+        io.to([
+          room(orderId),
+          `user:${call.callerId}`,
+          `user:${call.calleeId}`,
+        ]).emit('call:ended', endedPayload);
+      } else {
+        socket.to([room(orderId), `user:${otherUserId}`]).emit('call:ended', endedPayload);
       }
 
       if (!wasAnswered && call.callerId === user.id) {

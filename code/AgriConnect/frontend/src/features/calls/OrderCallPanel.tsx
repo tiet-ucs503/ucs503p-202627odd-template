@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { Alert, Badge, Button, Card } from '@/components/ui';
 import { useLocale } from '@/features/i18n/locale-context';
+import { ringtoneManager } from '@/lib/ringtone';
 import { useOrderCall } from './useOrderCall';
 
 function formatDuration(totalSeconds: number): string {
@@ -30,55 +31,18 @@ export function OrderCallPanel({
 
   useEffect(() => {
     if (call.status === 'ringing' && call.incoming) {
-      let isPlaying = true;
-      try {
-        const AudioContextClass =
-          window.AudioContext ||
-          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        if (!AudioContextClass) return;
-        const ctx = new AudioContextClass();
-
-        const ring = () => {
-          if (!isPlaying || ctx.state === 'closed') return;
-          if (ctx.state === 'suspended') void ctx.resume();
-          const osc1 = ctx.createOscillator();
-          const osc2 = ctx.createOscillator();
-          const gain = ctx.createGain();
-
-          osc1.type = 'sine';
-          osc2.type = 'sine';
-          osc1.frequency.setValueAtTime(440, ctx.currentTime);
-          osc2.frequency.setValueAtTime(480, ctx.currentTime);
-
-          gain.gain.setValueAtTime(0.12, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.8);
-
-          osc1.connect(gain);
-          osc2.connect(gain);
-          gain.connect(ctx.destination);
-
-          osc1.start(ctx.currentTime);
-          osc2.start(ctx.currentTime);
-          osc1.stop(ctx.currentTime + 1.8);
-          osc2.stop(ctx.currentTime + 1.8);
-        };
-
-        ring();
-        const timer = window.setInterval(ring, 3200);
-        return () => {
-          isPlaying = false;
-          window.clearInterval(timer);
-          void ctx.close().catch(() => undefined);
-        };
-      } catch {
-        return;
-      }
+      ringtoneManager.start();
+    } else {
+      ringtoneManager.stop();
     }
+    return () => {
+      ringtoneManager.stop();
+    };
   }, [call.status, call.incoming]);
 
   return (
     <Card className="space-y-3">
-      <audio ref={audioRef} autoPlay playsInline className="hidden" aria-hidden="true" />
+      <audio ref={audioRef} autoPlay playsInline className="sr-only" aria-hidden="true" />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-display text-2xl text-forest">{t('order.call.title')}</h2>
