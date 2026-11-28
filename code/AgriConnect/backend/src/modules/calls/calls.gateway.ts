@@ -10,6 +10,7 @@ interface ActiveCall {
   callId: string;
   orderId: string;
   callerId: string;
+  callerName: string;
   calleeId: string;
   startedAt: number;
   answered: boolean;
@@ -108,6 +109,7 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
         callId: randomUUID(),
         orderId,
         callerId: permission.callerId,
+        callerName: permission.callerName,
         calleeId: permission.calleeId,
         startedAt: Date.now(),
         answered: false,
@@ -137,10 +139,7 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
           userId: current.calleeId,
           type: 'MESSAGE_RECEIVED',
           title: 'Missed Voice Call',
-          body: `Missed call from ${permission.callerName} regarding Order #${orderId.slice(-6).toUpperCase()}`,
-          params: {
-            preview: `Missed call from ${permission.callerName} regarding Order #${orderId.slice(-6).toUpperCase()}`,
-          },
+          body: `Missed call from ${current.callerName} regarding Order #${orderId.slice(-6).toUpperCase()}`,
           relatedEntityType: 'order',
           relatedEntityId: orderId,
         }).catch(() => undefined);
@@ -170,7 +169,7 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
         },
         relatedEntityType: 'order',
         relatedEntityId: orderId,
-      }).catch((err) => {
+      }).catch((err: unknown) => {
         logger.warn({ err }, 'Failed to create incoming call notification');
       });
 
@@ -260,10 +259,7 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
         userId: authorized.call.calleeId,
         type: 'MESSAGE_RECEIVED',
         title: 'Missed Voice Call',
-        body: `Missed call regarding Order #${authorized.orderId.slice(-6).toUpperCase()}`,
-        params: {
-          preview: `Missed call regarding Order #${authorized.orderId.slice(-6).toUpperCase()}`,
-        },
+        body: `Missed call from ${authorized.call.callerName} regarding Order #${authorized.orderId.slice(-6).toUpperCase()}`,
         relatedEntityType: 'order',
         relatedEntityId: authorized.orderId,
       }).catch(() => undefined);
@@ -287,14 +283,31 @@ export function registerCallHandlers(socket: Socket, user: CallActor): void {
   socket.on('disconnect', () => {
     for (const [orderId, call] of activeCalls) {
       if (call.callerId !== user.id && call.calleeId !== user.id) continue;
+      const wasAnswered = call.answered;
       clearCall(orderId, call);
       const otherUserId = call.callerId === user.id ? call.calleeId : call.callerId;
-      socket.to([room(orderId), `user:${otherUserId}`]).emit('call:ended', {
+      const endedPayload = {
         orderId,
         callId: call.callId,
         byUserId: user.id,
-        durationSeconds: call.answered ? Math.round((Date.now() - call.startedAt) / 1000) : 0,
-      });
+        durationSeconds: wasAnswered ? Math.round((Date.now() - call.startedAt) / 1000) : 0,
+      };
+      socket.to(room(orderId)).emit('call:ended', endedPayload);
+      const io = getSocketIO();
+      if (io) {
+        io.to(`user:${otherUserId}`).emit('call:ended', endedPayload);
+      }
+
+      if (!wasAnswered && call.callerId === user.id) {
+        void createNotification({
+          userId: call.calleeId,
+          type: 'MESSAGE_RECEIVED',
+          title: 'Missed Voice Call',
+          body: `Missed call from ${call.callerName} regarding Order #${orderId.slice(-6).toUpperCase()}`,
+          relatedEntityType: 'order',
+          relatedEntityId: orderId,
+        }).catch(() => undefined);
+      }
     }
   });
 }

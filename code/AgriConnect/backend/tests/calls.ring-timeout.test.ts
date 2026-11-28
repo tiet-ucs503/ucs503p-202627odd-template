@@ -21,6 +21,7 @@ vi.mock('../src/services/notification.service.js', () => ({
   createNotification: vi.fn(() => Promise.resolve({ id: 'mock-notif-id' })),
 }));
 
+const { createNotification } = await import('../src/services/notification.service.js');
 const { registerCallHandlers, resetActiveCallsForTests } = await import(
   '../src/modules/calls/calls.gateway.js'
 );
@@ -116,6 +117,13 @@ describe('unanswered call teardown', () => {
 
     // Slot released, so the buyer can try again without reconnecting.
     expect(await invite(socket, 'order-1')).toMatchObject({ ok: true });
+
+    // Verifies missed call notification was dispatched to callee
+    const calls = vi.mocked(createNotification).mock.calls;
+    const missedCall = calls.find((c) => c[0].title === 'Missed Voice Call');
+    expect(missedCall).toBeDefined();
+    expect(missedCall?.[0].userId).toBe('farmer-1');
+    expect(missedCall?.[0].body).toContain('Missed call from Test Buyer');
   });
 
   it('keeps an answered call alive past the ring timeout', async () => {
@@ -136,5 +144,12 @@ describe('unanswered call teardown', () => {
     await vi.advanceTimersByTimeAsync(45_000);
 
     expect(socket.seen('call:ended')).toHaveLength(afterHangUp);
+
+    // Verifies missed call notification was dispatched when caller hung up before answer
+    const calls = vi.mocked(createNotification).mock.calls;
+    const hangUpMissedCall = calls.filter((c) => c[0].title === 'Missed Voice Call').pop();
+    expect(hangUpMissedCall).toBeDefined();
+    expect(hangUpMissedCall?.[0].userId).toBe('farmer-1');
+    expect(hangUpMissedCall?.[0].body).toContain('Missed call from Test Buyer');
   });
 });

@@ -94,6 +94,9 @@ export function notificationCopy(item: NotificationItem, t: Translate): Notifica
 
   // A chat preview and an admin's suspension reason are human text, not template copy.
   if (kind === 'MESSAGE_RECEIVED') {
+    if (item.title === 'Missed Voice Call') {
+      return { title: item.title, body: String(params.preview ?? item.body) };
+    }
     return { title, body: String(params.preview ?? item.body) };
   }
   if (typeof params.reason === 'string' && params.reason.trim() !== '') {
