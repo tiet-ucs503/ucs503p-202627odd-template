@@ -49,34 +49,55 @@ const CROP_CATEGORY_MAP: Record<CropCategory, string[]> = {
   other: ['cotton', 'sugarcane', 'jute', 'tobacco', 'tea', 'coffee'],
 };
 
+function stem(word: string): string {
+  if (word.endsWith('oes') && word.length > 4) return word.slice(0, -2); // tomatoes -> tomato, potatoes -> potato, mangoes -> mango
+  if (word.endsWith('ies') && word.length > 4) return word.slice(0, -3) + 'i'; // chillies -> chilli
+  if (word.endsWith('s') && !word.endsWith('ss') && word.length > 3) return word.slice(0, -1); // apples -> apple, onions -> onion
+  return word;
+}
+
 /**
  * Returns a predicted CropCategory based on user-typed crop name in English or vernacular,
  * or null if no confident match was found.
+ * Uses exact word-boundary matching and plural stemming to prevent false positives while
+ * matching natural variations (e.g., "fresh tomatoes!", "organic wheat", "kashmiri chillies").
  */
 export function matchCropCategory(cropInput: string | undefined | null): CropCategory | null {
   if (!cropInput) return null;
   const normalized = cropInput.trim().toLowerCase();
   if (normalized.length === 0) return null;
 
-  // Direct match or word boundary match
+  // Extract alphanumeric tokens/words from input
+  const rawWords = normalized.split(/[^a-z0-9]+/i).filter(Boolean);
+  if (rawWords.length === 0) return null;
+  const words = rawWords.flatMap((w) => [w, stem(w)]);
+
+  // 1. Direct whole-input match against categories or keywords
   for (const [category, keywords] of Object.entries(CROP_CATEGORY_MAP) as [CropCategory, string[]][]) {
+    if (normalized === category || stem(normalized) === category) {
+      return category;
+    }
     for (const keyword of keywords) {
-      if (
-        normalized === keyword ||
-        normalized.startsWith(`${keyword} `) ||
-        normalized.endsWith(` ${keyword}`) ||
-        normalized.includes(` ${keyword} `)
-      ) {
+      if (normalized === keyword || stem(normalized) === keyword) {
         return category;
       }
     }
   }
 
-  // Substring match for compound words (e.g., "organic wheat", "kashmiri chilli")
+  // 2. Exact word token matching (e.g., "organic wheat" -> words: ["organic", "wheat"] -> matches "wheat")
   for (const [category, keywords] of Object.entries(CROP_CATEGORY_MAP) as [CropCategory, string[]][]) {
     for (const keyword of keywords) {
-      if (normalized.includes(keyword)) {
-        return category;
+      // Single-word keywords matched against isolated tokens (or stemmed tokens)
+      if (!keyword.includes(' ')) {
+        if (words.includes(keyword) || words.includes(stem(keyword))) {
+          return category;
+        }
+      } else {
+        // Multi-word keywords (e.g. "pearl millet", "red chilli", "black pepper") matched with word boundaries
+        const pattern = new RegExp(`(?:^|\\W)${keyword.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}(?:$|\\W)`, 'i');
+        if (pattern.test(normalized)) {
+          return category;
+        }
       }
     }
   }
