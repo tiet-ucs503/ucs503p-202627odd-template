@@ -16,8 +16,9 @@ import { getErrorMessage } from '@/lib/api/errors';
 import { formatMoney } from '@/lib/format';
 import { MANDI_CROPS, MANDI_LIVE_STATES } from '@/lib/constants';
 import { useLocale } from '@/features/i18n/locale-context';
-import { mandiCropKey, unitKey } from '@/lib/i18n';
+import { mandiCropKey } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
+import { PriceHistoryChart } from './PriceHistoryChart';
 
 function pickDefaultCrop(crops: string[]): string {
   const wheat = crops.find((crop) => crop.toLowerCase() === 'wheat');
@@ -157,11 +158,6 @@ export default function MarketPricesPage() {
     return key ? t(key) : name;
   };
 
-  const unitLabel = (unit: string) => {
-    const key = unitKey(unit);
-    return key ? t(key) : unit;
-  };
-
   const arrivalDateLabel =
     mandiRows.length > 0 ? formatArrivalLabel(mandiRows[0].arrivalDate, locale) : null;
 
@@ -169,12 +165,6 @@ export default function MarketPricesPage() {
   const historyForChart = mandiHistory
     .filter((point) => point.arrivalDate !== latestArrivalDate)
     .sort((a, b) => a.arrivalDate.localeCompare(b.arrivalDate));
-
-  const maxPrice = Math.max(
-    ...historyForChart.map((p) => Number(p.avgModalPricePerKg)),
-    ...points.map((p) => Number(p.pricePerUnit)),
-    1,
-  );
 
   const modalSummary = mandiRows.length
     ? mandiRows.reduce((best, row) => (row.modalPrice > best.modalPrice ? row : best), mandiRows[0])
@@ -367,42 +357,12 @@ export default function MarketPricesPage() {
             )}
           </Card>
 
-          <Card>
-            <h2 className="font-display text-2xl text-forest">{t('marketPrices.historyTitle')}</h2>
-            <p className="mt-1 text-sm text-ink/60">
+          <Card className="p-6">
+            <h2 className="font-display text-2xl font-bold text-forest">{t('marketPrices.historyTitle')}</h2>
+            <p className="mt-1 text-sm text-ink/65">
               {t('marketPrices.historyHint')}
             </p>
-            {historyForChart.length === 0 && points.length === 0 ? (
-              <p className="mt-3 text-ink/70">{t('marketPrices.noHistory')}</p>
-            ) : (
-              <div className="mt-4 flex items-end gap-1 h-48">
-                {historyForChart.map((point, index) => (
-                  <div
-                    key={`mandi-${point.arrivalDate}-${index}`}
-                    className="flex-1 min-w-[4px] rounded-t bg-soil/80"
-                    style={{
-                      height: `${Math.max(8, (Number(point.avgModalPricePerKg) / maxPrice) * 100)}%`,
-                    }}
-                    title={t('marketPrices.govtAvgTooltip', {
-                      price: formatMoney(point.avgModalPricePerKg, locale),
-                    })}
-                  />
-                ))}
-                {points.map((point) => (
-                  <div
-                    key={point.id}
-                    className="flex-1 min-w-[4px] rounded-t bg-leaf/70"
-                    style={{
-                      height: `${Math.max(8, (Number(point.pricePerUnit) / maxPrice) * 100)}%`,
-                    }}
-                    title={t('marketPrices.tradeTooltip', {
-                      price: formatMoney(point.pricePerUnit, locale),
-                      unit: unitLabel(point.unit),
-                    })}
-                  />
-                ))}
-              </div>
-            )}
+            <PriceHistoryChart history={mandiHistory.length > 0 ? mandiHistory : historyForChart} trades={points} />
           </Card>
         </>
       )}
