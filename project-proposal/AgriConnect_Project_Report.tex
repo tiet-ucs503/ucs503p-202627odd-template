@@ -1,0 +1,269 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+
+% -----------------------------------------------------
+% TIET UCS503P article helpers (adapted from course template)
+% -----------------------------------------------------
+
+\makeatletter
+\newcommand{\BvrSetLabInstructor}[1]{\gdef\Bvr@LabInstructor{#1}}
+\newcommand{\Bvr@LabInstructor}{Mr.\ Hardik}
+\newcommand{\BvrLabInstructorValue}{\Bvr@LabInstructor}
+\makeatother
+
+\usepackage{titling}
+\pretitle{\begin{center}\bfseries\fontsize{18bp}{18bp}\selectfont}
+\makeatletter
+\newcommand{\BvrSubtitle}[1]{%
+  \posttitle{%
+    \par\end{center}
+    \begin{center}\large#1\end{center}
+    \vskip 0.5em}%
+}
+\makeatother
+
+\newcommand{\BvrHint}[1]{%
+  {\normalfont\normalsize\itshape\hfill #1}}
+
+% -----------------------------------------------------
+
+\title{AgriConnect: Smart Farm-to-Market \& Crop Advisory Platform}
+
+\BvrSetLabInstructor{Mr.\ Hardik}
+
+\BvrSubtitle{%
+  Project Proposal for UCS503P  \\
+  Submitted to: \BvrLabInstructorValue \\ \bfseries
+  Thapar Institute of Engineering and Technology%
+}
+
+\author{
+  Kabir Manchanda, CSED%
+  \thanks{Roll No: \texttt{1024030415}}
+  \and
+  Manbhav Kumar Terry, CSED%
+  \thanks{Roll No: \texttt{1024030427}}
+}
+
+\date{10 August 2026}
+
+\begin{document}
+\maketitle
+
+\section{Higher-order goal%
+  \BvrHint{\ldots secondary framing}}
+This project aims to improve farmer livelihoods by reducing information asymmetry in farm-gate sales and by shortening the path from a crop problem to trustworthy guidance. While the broader objective is fairer rural markets and better yield decisions across South Asian agriculture, the immediate engineering objective is to deliver a measurable, deployable web platform that folds three fragmented needs---finding a buyer, judging a fair price, and getting crop advice---into one accountable workflow.
+
+\section{Time-to-value %
+  \BvrHint{\ldots primary heuristic}}
+\begin{itemize}[leftmargin=0.7cm]
+    \item We will deliver meaningful increments quickly by shipping the marketplace core (listings, live price dashboard, bidding) first, then layering advisory and CV assist once the primary metric can already be measured.
+    \item We will prioritize fast feedback over perfection by using weekly iterations and CI-backed automation early to reduce release friction.
+    \item Success in the first iteration is defined by a usable farmer$\rightarrow$listing$\rightarrow$price-benchmark$\rightarrow$bid workflow, with subsequent iterations improving advisory coverage, trust safeguards, and feature depth based on pilot feedback.
+\end{itemize}
+
+\section{Problem Statement}
+Small and mid-size farmers lose an estimated 20--30\% of potential income to middlemen, lack real-time market price information, and have no easy access to expert crop advice---leading to crop loss, price exploitation, and poor yield decisions. This shows up in three concrete failure modes:
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Price opacity:} a farmer selling at the farm gate has no independent benchmark, so the buyer effectively sets the price.
+    \item \textbf{Advisory scarcity:} the ratio of trained agronomists to farmers is low enough that a sick crop is often diagnosed too late, by neighbours or guesswork, rather than by an expert.
+    \item \textbf{Fragmented trust:} farmers sell repeatedly to the same local middleman not because the price is good but because it is the only channel they know and trust---there is no accessible alternative marketplace.
+\end{itemize}
+
+\textbf{Why this matters now (contextual relevance):} Agriculture employs a large share of the workforce in South Asia yet contributes a disproportionately small share of GDP---a symptom of inefficient markets and poor information access. Policy programmes such as India's Digital Agriculture Mission and e-NAM already fund digitization of wholesale markets, yet most of that price data never reaches the individual farmer at the point of sale. AgriConnect targets that last, unserved mile---turning publicly funded infrastructure into something a farmer can act on \emph{before}, not after, a sale.
+
+\subsection*{Target users}
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Farmers (primary):} list produce, get advisory, check prices.
+    \item \textbf{Buyers / traders / retailers:} browse and bid on produce.
+    \item \textbf{Agronomists / experts:} answer queries and review CV disease flags.
+    \item \textbf{Admin:} platform moderation, verified listings, analytics, audit oversight.
+    \item \textbf{Logistics / delivery staff (V2+):} manage pickup and delivery.
+\end{itemize}
+Farmers are the platform's centre of gravity; every other role exists to serve them faster or more fairly.
+
+\section{Proposed Solution %
+  \BvrHint{\ldots Software Proposition}}
+\subsection{Overview}
+Build a \textbf{web-based} marketplace and crop-advisory platform with the following components:
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Produce listing \& bidding:} farmers list crops with quantity, price expectation, and location; buyers browse and bid.
+    \item \textbf{Live market price feed:} aggregated mandi / e-NAM price data so farmers can benchmark offers before selling.
+    \item \textbf{Crop advisory:} farmers submit queries (text or photo) and receive guidance from agronomists or an automated disease-detection assist.
+    \item \textbf{CV-assisted disease flagging:} farmers upload a crop-leaf photo; a lightweight image classifier flags likely disease categories for expert review (assistive, not a final diagnosis).
+    \item \textbf{Verified listings \& moderation:} admin tools to verify sellers and manage disputes.
+\end{itemize}
+Together these turn three separate, low-trust interactions---finding a buyer, judging a fair price, and getting crop advice---into one accountable, logged workflow that both farmer and buyer can refer back to.
+
+\subsection{Core workflow}
+\begin{enumerate}[leftmargin=0.7cm]
+    \item Farmer creates a produce listing (crop, quantity, expected price, location) or submits an advisory query, optionally with a photo.
+    \item System shows live comparable market prices for that crop/region alongside the listing.
+    \item Buyers browse listings and place bids; farmer accepts, rejects, or counters.
+    \item Advisory queries route to an agronomist, pre-triaged by the CV disease-flag when a photo is attached.
+    \item Farmer and buyer coordinate pickup/delivery once a bid is accepted (manual in V1; logistics module in V2+).
+\end{enumerate}
+
+\subsection{Operational constraints}
+\begin{itemize}[leftmargin=0.7cm]
+    \item Usable on low-to-mid range Android devices and slow connections---responsive, lightweight web UI.
+    \item Support regional languages for farmer-facing screens (at least Hindi + English in V1).
+    \item Design for offline-tolerant listing capture where connectivity is patchy (queue-and-sync).
+    \item Avoid dependence on bespoke research algorithms for the marketplace/workflow layer; focus on correctness, price-data integration, and usability.
+\end{itemize}
+
+\subsection{Trust, fraud safeguards, and dispute resolution}
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Verified Farmer badge:} phone/OTP-based identity verification before a listing goes live.
+    \item \textbf{Rule-based anomaly flags:} listings priced suspiciously below the live market benchmark, or accounts with repeated cancelled/disputed orders, are auto-flagged for admin review.
+    \item \textbf{Admin audit log:} every approval, rejection, verification, or dispute decision is timestamped and attributed to an admin account.
+    \item \textbf{Disputes:} either party in an accepted order can raise a dispute; resolution is logged and feeds the anomaly-flag system.
+\end{itemize}
+
+\section{Solution Approach %
+  \BvrHint{\ldots Engineering focus}}
+This is an engineering capstone, so the emphasis is on a reliable marketplace workflow and clean integration of external price/advisory data, rather than novel ML research. The CV disease-flag component uses an existing pre-trained plant-disease classification model (transfer learning on a public leaf-disease dataset) as an assistive signal---it never replaces the agronomist's judgment.
+
+\subsection{Price data integration %
+  \BvrHint{\ldots non-research}}
+\begin{itemize}[leftmargin=0.7cm]
+    \item Pull mandi/wholesale price data from public sources such as e-NAM / Agmarknet where available.
+    \item Normalize by crop, market (mandi), and date; cache and refresh on a scheduled job.
+    \item Show farmers the nearest 2--3 comparable markets so they can gauge whether a bid is fair.
+\end{itemize}
+
+\subsection{Web architecture %
+  \BvrHint{\ldots web-based solution}}
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Frontend:} responsive UI for farmers, buyers, agronomists, and admin (listing forms, bid views, advisory chat, price dashboard).
+    \item \textbf{Backend API:} authentication, listings, bidding, advisory routing, price-data sync jobs, and the admin audit-log service.
+    \item \textbf{Database:} users, listings, bids, advisory queries, price snapshots, disease-flag results, dispute records, and audit-log entries.
+\end{itemize}
+
+\subsection{Payments strategy}
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{V1/V2:} orders are logged and tracked in-platform; settlement happens offline (cash-on-delivery or equivalent local arrangement).
+    \item \textbf{V3+:} an integrated payment gateway (e.g.\ Razorpay) with escrow-style release tied to delivery confirmation.
+\end{itemize}
+
+\subsection{CI/CD and fast delivery enabler}
+\begin{itemize}[leftmargin=0.7cm]
+    \item Automated build and test on every change.
+    \item Repeatable deployment artifacts to a staging environment.
+    \item Frequent, safe incremental releases---marketplace core first, advisory and CV assist layered afterward.
+\end{itemize}
+
+\section{Evaluation Criterion %
+  \BvrHint{\ldots measurable and attributable}}
+Success is defined using measurable metrics tied to the core farmer/buyer workflow.
+
+\subsection{Primary evaluation metric}
+\textbf{Price transparency uplift:} the gap between a farmer's listed price and the live comparable mandi price, tracked before vs.\ after the farmer sees the price dashboard.
+\begin{itemize}[leftmargin=0.7cm]
+    \item Target: median gap reduced by $\ge$ 15\% during the pilot window.
+    \item Attribution: measured from listing and price-snapshot timestamps in the database.
+\end{itemize}
+
+\subsection{Secondary evaluation metrics}
+\begin{center}
+\begin{tabular}{@{}p{0.28\textwidth}p{0.22\textwidth}p{0.42\textwidth}@{}}
+\toprule
+\textbf{Metric} & \textbf{Target} & \textbf{How measured} \\
+\midrule
+Time-to-first-bid & Median $\le$ 24 hours & Listing created $\rightarrow$ first bid \\
+Advisory response time & Median $\le$ 12 hours & Query submitted $\rightarrow$ agronomist reply \\
+Disease-flag usefulness & $\ge$ 70\% rated helpful & Post-review 1--5 feedback on CV-assist flags \\
+Listing completion rate & $\ge$ 85\% & Started vs.\ submitted listing forms \\
+Platform reliability & $\ge$ 99\% uptime in pilot & Staging/production availability in business hours \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Pilot validation plan %
+  \BvrHint{\ldots high-level}}
+\begin{itemize}[leftmargin=0.7cm]
+    \item Recruit 10--20 pilot farmers and 5--10 buyers/traders in one or two villages/mandis.
+    \item Recruit 2--3 agronomists (or domain-knowledgeable volunteers) to handle advisory queries.
+    \item Compare price-gap and time-to-bid metrics against a short baseline survey of the farmers' usual selling process.
+\end{itemize}
+A short baseline survey is used rather than a formal control group, since a randomized trial is out of scope for a single-semester pilot.
+
+\section{Scalability %
+  \BvrHint{\ldots with foresight}}
+\begin{enumerate}[leftmargin=0.7cm]
+    \item \textbf{Scalable (theoretically):} decouple frontend and backend; index and paginate listing/bid queries; use a stateless API design so backend instances can scale horizontally.
+    \item \textbf{Operationally deployable (practically):} run on common managed web hosting with a managed relational database; containerized or platform-hosted deployment with a CI/CD pipeline; scheduled background jobs for price-data refresh, decoupled from the request path.
+\end{enumerate}
+
+\section{Engine availability heuristic}
+A mature set of tooling/services is available to implement this as a web-based project, so effort goes into workflow design and data integration rather than infrastructure:
+\begin{itemize}[leftmargin=0.7cm]
+    \item Web framework for REST APIs and responsive pages.
+    \item Managed relational or document database.
+    \item Token- or session-based authentication.
+    \item Object storage for produce/leaf photos (or local storage for the pilot).
+    \item A pre-trained image-classification model (transfer learning) for the disease-flag assist.
+    \item Test framework for unit/integration tests, plus a CI runner and staging deployment target.
+\end{itemize}
+
+\section{Project scope and deliverables %
+  \BvrHint{\ldots iteration-friendly}}
+\subsection{Initial deliverable %
+  \BvrHint{\ldots first iteration}}
+\begin{itemize}[leftmargin=0.7cm]
+    \item Farmer listing form + buyer bidding flow.
+    \item Live market price dashboard (at least one integrated public price source).
+    \item Basic advisory query submission and agronomist response flow.
+    \item Logging and timestamps for the primary/secondary metrics.
+    \item CI: build + backend unit tests + linting; CD to staging.
+\end{itemize}
+
+\subsection{Subsequent deliverables}
+\begin{itemize}[leftmargin=0.7cm]
+    \item CV-assisted disease flagging on advisory photo queries.
+    \item Admin dashboard for listing verification, audit-log review, and platform analytics.
+    \item Notifications (in-app first; SMS/email optional later) for bid and advisory updates.
+    \item Logistics/delivery coordination module (V2+).
+    \item Payment gateway integration with escrow-style release.
+    \item Regional-language UI expansion beyond Hindi/English.
+\end{itemize}
+
+\section{Risks and mitigations}
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Sparse or inconsistent public price data:} start with one reliable source/region for the pilot; design the price-ingestion layer to add sources later.
+    \item \textbf{Low farmer digital literacy:} keep forms minimal, favor voice/photo input where possible, pilot with in-person onboarding support.
+    \item \textbf{CV disease-flag accuracy / over-trust:} present flags as assistive suggestions only, always paired with agronomist review, and disclose model limitations.
+    \item \textbf{Buyer/farmer trust in a new marketplace:} admin-verified listings, visible ratings, anomaly flags, and dispute handling.
+    \item \textbf{Connectivity gaps in rural areas:} offline-tolerant listing capture with sync-on-reconnect.
+    \item \textbf{Payment risk once gateway integration lands:} escrow-style release tied to delivery confirmation, staged in only after the marketplace core is proven.
+\end{itemize}
+
+\section{Monetization \& business model}
+AgriConnect is designed to be viable beyond the pilot, with a lightweight revenue model that can be tested against real transactions during the same pilot window used for evaluation:
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Transaction commission:} a small platform fee (approx.\ 2--3\%) on completed, confirmed orders.
+    \item \textbf{Featured / priority listing fee:} optional fee for time-sensitive perishable produce or standing buyer alerts.
+    \item \textbf{Freemium analytics tier:} basic listing, browsing, and bidding remain free; a paid tier offers advanced price-trend and regional demand analytics.
+\end{itemize}
+
+\section{Data privacy \& compliance}
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Data collected:} name, phone number, location, listing/bid history, and advisory query text or photos.
+    \item \textbf{Retention:} account and transaction data retained for active use plus a defined retention window; users may request deletion.
+    \item \textbf{Access control:} role-based visibility enforced at the API layer.
+    \item \textbf{Consent for model improvement:} advisory photos used to improve the disease-flag classifier only with explicit opt-in consent.
+\end{itemize}
+This section aligns with prevailing data-protection principles rather than claiming formal legal compliance; a full regulatory review sits outside a single-semester capstone, but the architecture is built so that review would not require redesigning the data model.
+
+\section{Summary}
+AgriConnect proposes a deployable web platform that gives small and mid-size farmers direct market access, live price transparency, and fast crop advisory support---addressing a real and currently policy-prioritized problem in South Asian agriculture. It emphasizes a rapid-iteration marketplace core, measurable evaluation criteria (price transparency uplift, time-to-bid, advisory response time), and CI/CD-backed incremental delivery, while treating the CV disease-flag component as a scoped, assistive addition rather than the project's core research bet.
+
+Beyond the technical scope, the proposal states an explicit position on monetization, payments staging, trust and fraud safeguards, dispute handling, and data privacy---so that the platform's viability as a real product, not just a working prototype, is part of the evaluation from day one.
+
+\end{document}

@@ -1,0 +1,10 @@
+{
+  "name": "ucs503p-agriconnect",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AgriConnect Root Workspace Delegator for Cloud Deployments",
+  "scripts": {
+    "build": "cd code/AgriConnect/backend && npm ci && npm run prisma:generate && npm run build",
+    "start": "cd code/AgriConnect/backend && npm run start"
+  }
+}

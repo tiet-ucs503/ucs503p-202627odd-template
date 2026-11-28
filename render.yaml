@@ -1,0 +1,38 @@
+# Render Infrastructure as Code (Blueprint)
+# Deploy AgriConnect Backend Web Service with WebSockets support
+services:
+  - type: web
+    name: agriconnect-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: standard
+    region: singapore
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5001
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false
+      - key: ADMIN_SEED_EMAIL
+        value: admin@agriconnect.local
+      - key: ADMIN_SEED_PASSWORD
+        generateValue: true

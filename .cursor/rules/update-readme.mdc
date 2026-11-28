@@ -1,0 +1,33 @@
+---
+description: Keep README.md aligned when shipping major product or infra changes
+alwaysApply: true
+---
+
+# Update README after major changes
+
+When this session adds or materially changes **user-facing capabilities**, **architecture**, **setup**, or **deployment**, update `README.md` in the **same change** — not only API docs.
+
+## Update README when
+
+1. New major features (V2 modules, integrations, roles, workflows)
+2. New env vars or secrets users must configure
+3. Docker / compose / CI / deploy path changes
+4. New external data sources (e.g. govt mandi feeds, payment gateways)
+5. Breaking changes to how devs run or test the project
+
+## README sections to touch
+
+- **What is already built** — capability table
+- **Environment** / setup steps if new keys or services
+- **Run locally** / Docker if commands or ports change
+- Short note on data sources or third-party deps when relevant
+
+## Skip
+
+- Bug fixes, typos, internal refactors with no user/setup impact
+- Doc-only edits outside README unless README already describes the old behavior
+
+## Pair with
+
+- `docs/API_CONTRACT.md`, `CHANGELOG.md` for API changes (see `update-api-docs.mdc`)
+- `docs/WEEKLY_PROGRESS.md` for faculty tracker when product work ships

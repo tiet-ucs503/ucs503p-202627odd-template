@@ -1,0 +1,281 @@
+{
+  "info": {
+    "name": "AgriConnect V1 API",
+    "description": "Canonical V1 requests. See docs/API_CONTRACT.md for complete schemas and error responses.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const json = pm.response.headers.get('Content-Type')?.includes('json') ? pm.response.json() : {};",
+          "if (json.data?.accessToken) pm.environment.set('accessToken', json.data.accessToken);",
+          "if (json.data?.id && pm.request.url.toString().includes('/listings')) pm.environment.set('listingId', json.data.id);",
+          "if (json.data?.id && pm.request.url.toString().includes('/orders')) pm.environment.set('orderId', json.data.id);"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        { "name": "Liveness", "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/health" } },
+        { "name": "Readiness", "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/ready" } }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"farmer@example.com\",\"password\":\"CorrectHorse9!\",\"name\":\"Ravi Kumar\",\"role\":\"FARMER\",\"phone\":\"+919876543210\",\"state\":\"Punjab\",\"district\":\"Ludhiana\",\"village\":\"Sahnewal\"}" },
+            "url": "{{baseUrl}}/api/v1/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"farmer@example.com\",\"password\":\"CorrectHorse9!\"}" },
+            "url": "{{baseUrl}}/api/v1/auth/login"
+          }
+        },
+        { "name": "Refresh", "request": { "auth": { "type": "noauth" }, "method": "POST", "url": "{{baseUrl}}/api/v1/auth/refresh" } },
+        { "name": "Me", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/auth/me" } },
+        { "name": "Logout", "request": { "method": "POST", "url": "{{baseUrl}}/api/v1/auth/logout" } },
+        {
+          "name": "Forgot password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"farmer@example.com\"}" },
+            "url": "{{baseUrl}}/api/v1/auth/forgot-password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        { "name": "Update me", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"name\":\"Ravi Kumar\",\"state\":\"Punjab\",\"district\":\"Ludhiana\"}" }, "url": "{{baseUrl}}/api/v1/users/me" } },
+        { "name": "Farmer profile", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/users/me/farmer-profile" } },
+        { "name": "Export me", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/users/me/export" } }
+      ]
+    },
+    {
+      "name": "Listings",
+      "item": [
+        {
+          "name": "Create draft",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"crop\":\"Wheat\",\"category\":\"grains\",\"variety\":\"HD-2967\",\"quantity\":\"500\",\"unit\":\"kg\",\"pricePerUnit\":\"25.00\",\"harvestDate\":\"2026-04-10\",\"state\":\"Punjab\",\"district\":\"Ludhiana\",\"minimumOrderQuantity\":\"50\",\"status\":\"draft\",\"perishable\":false}" },
+            "url": "{{baseUrl}}/api/v1/listings"
+          }
+        },
+        { "name": "Browse", "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/api/v1/listings?page=1&limit=20" } },
+        { "name": "Get one", "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/api/v1/listings/{{listingId}}" } },
+        { "name": "Activate", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"status\":\"active\"}" }, "url": "{{baseUrl}}/api/v1/listings/{{listingId}}" } },
+        { "name": "Delete", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/listings/{{listingId}}" } }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"listingId\":\"{{listingId}}\",\"quantity\":\"100\",\"deliveryMode\":\"pickup\",\"notes\":\"Collect Thursday\"}" },
+            "url": "{{baseUrl}}/api/v1/orders"
+          }
+        },
+        { "name": "List", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/orders?page=1&limit=20" } },
+        { "name": "Get one", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/orders/{{orderId}}" } },
+        { "name": "Accept", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"status\":\"accepted\"}" }, "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/status" } },
+        { "name": "Cancel (refunds payment)", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"status\":\"cancelled\",\"cancellationReason\":\"Buyer changed plans\"}" }, "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/status" } },
+        { "name": "Logistics", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"logisticsStatus\":\"dispatched\"}" }, "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/logistics" } }
+      ]
+    },
+    {
+      "name": "Order chat",
+      "item": [
+        { "name": "List messages", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/messages?page=1&limit=50" } },
+        {
+          "name": "Send message",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"body\":\"500 kg ready at 2400 per quintal, pickup tomorrow.\"}" },
+            "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/messages"
+          }
+        },
+        {
+          "name": "Send message — blocked (phone number)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"body\":\"call me on 9876543210\"}" },
+            "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/messages",
+            "description": "Expect 400 CONTACT_INFO_BLOCKED. Contact details are rejected so trades stay on-platform; use the in-app voice call instead."
+          }
+        },
+        { "name": "Mark read", "request": { "method": "POST", "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/messages/read" } }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        { "name": "Methods", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/payments/methods" } },
+        {
+          "name": "Init payment — UPI (escrow)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"method\":\"upi\"}" },
+            "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/payment",
+            "description": "BUYER only. Response mode is cod | mock | razorpay."
+          }
+        },
+        {
+          "name": "Init payment — cash on delivery",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"method\":\"cod\"}" },
+            "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/payment",
+            "description": "Skips the gateway entirely; never enters escrow."
+          }
+        },
+        {
+          "name": "Confirm held (escrow)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/payment/confirm",
+            "description": "Moves the payment into escrow. Empty body works only in mock mode (no Razorpay keys) — with keys configured, send {\"providerRef\":\"pay_xxx\"} from Checkout: the server reads that payment back from Razorpay and answers 402 PAYMENT_NOT_VERIFIED unless status, checkout id, amount, and currency all match. Idempotent when already held."
+          }
+        },
+        {
+          "name": "Razorpay webhook (signed)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-razorpay-signature", "value": "{{razorpaySignature}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"event\":\"payment.captured\",\"payload\":{\"payment\":{\"entity\":{\"id\":\"pay_xxx\",\"status\":\"captured\",\"order_id\":\"order_xxx\",\"amount\":250000,\"currency\":\"INR\",\"notes\":{\"orderId\":\"{{orderId}}\"}}}}}"
+            },
+            "url": "{{baseUrl}}/api/v1/payments/webhook",
+            "description": "Razorpay-only route: no JWT, authenticated by x-razorpay-signature = HMAC-SHA256(raw body, RAZORPAY_WEBHOOK_SECRET) in hex. To try it by hand, set the razorpaySignature variable to that digest for this exact body (any edit changes the digest). Bad signature is 401; missing secret is 503; benign no-ops answer 200 with handled: false."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications and reports",
+      "item": [
+        { "name": "Notifications", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/notifications?page=1&limit=20" } },
+        { "name": "Read all", "request": { "method": "POST", "url": "{{baseUrl}}/api/v1/notifications/read-all" } },
+        { "name": "My report", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/reports/me" } }
+      ]
+    },
+    {
+      "name": "Assistant",
+      "item": [
+        { "name": "Status", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/assistant/status" } },
+        {
+          "name": "Query (marketplace — legacy chat)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"message\":\"How do I list wheat?\",\"history\":[],\"language\":\"pa\"}" },
+            "url": "{{baseUrl}}/api/v1/assistant/query"
+          }
+        },
+        {
+          "name": "Query (grounded — PM-Kisan)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"message\":\"What is PM-Kisan and how do I register?\",\"history\":[],\"language\":\"en\"}" },
+            "url": "{{baseUrl}}/api/v1/assistant/query"
+          }
+        },
+        {
+          "name": "Query (escalate — pesticide dose)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"message\":\"How many ml chlorpyrifos per litre for cotton?\",\"history\":[],\"language\":\"en\"}" },
+            "url": "{{baseUrl}}/api/v1/assistant/query"
+          }
+        },
+        {
+          "name": "Speak",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"text\":\"Sat sri akal ji, kirpa karke list banao.\",\"language\":\"pa\"}" },
+            "url": "{{baseUrl}}/api/v1/assistant/speak"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Agronomist",
+      "item": [
+        {
+          "name": "List escalations",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/agronomist/escalations" }
+        },
+        {
+          "name": "Claim escalation",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"status\":\"claimed\"}" },
+            "url": "{{baseUrl}}/api/v1/agronomist/escalations/{{escalationId}}"
+          }
+        },
+        {
+          "name": "Resolve escalation",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"status\":\"resolved\",\"resolution\":\"Use label rate after KVK confirmation; do not spray before rain.\"}" },
+            "url": "{{baseUrl}}/api/v1/agronomist/escalations/{{escalationId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        { "name": "Users", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/admin/users?page=1&limit=20" } },
+        { "name": "Analytics", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/admin/analytics" } },
+        { "name": "Activity logs", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/admin/activity-logs?page=1&limit=20" } }
+      ]
+    }
+  ]
+}
