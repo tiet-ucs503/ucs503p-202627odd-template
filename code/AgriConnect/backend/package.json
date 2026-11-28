@@ -24,6 +24,7 @@
     "smoke:antibypass": "tsx scripts/smoke-antibypass-payments.ts",
     "smoke:calls": "tsx scripts/smoke-call-signaling.ts",
     "smoke:bids": "tsx scripts/smoke-bidding-edge-cases.ts",
+    "audit:platform": "tsx scripts/comprehensive-platform-audit.ts",
     "eval:grounded": "tsx scripts/eval-grounded-kisan.ts"
   },
   "dependencies": {
