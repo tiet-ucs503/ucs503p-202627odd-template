@@ -17,6 +17,21 @@ export function ListingForm({ listing }: { listing?: Listing }) {
   const [pending, setPending] = useState(false);
   const [crop, setCrop] = useState(listing?.crop ?? '');
   const [category, setCategory] = useState(listing?.category ?? 'grains');
+  const [variety, setVariety] = useState(listing?.variety ?? '');
+  const [harvestDate, setHarvestDate] = useState(listing?.harvestDate?.slice(0, 10) ?? '');
+  const [quantity, setQuantity] = useState(listing?.quantity ?? '');
+  const [unit, setUnit] = useState<'kg' | 'quintal' | 'ton'>(listing?.unit ?? 'kg');
+  const [pricePerUnit, setPricePerUnit] = useState(listing?.pricePerUnit ?? '');
+  const [minimumOrderQuantity, setMinimumOrderQuantity] = useState(
+    listing?.minimumOrderQuantity ?? '',
+  );
+  const [state, setState] = useState(listing?.state ?? 'Punjab');
+  const [district, setDistrict] = useState(listing?.district ?? '');
+  const [village, setVillage] = useState(listing?.village ?? '');
+  const [perishable, setPerishable] = useState(listing?.perishable ?? false);
+  const [description, setDescription] = useState(listing?.description ?? '');
+  const [publish, setPublish] = useState(listing?.status === 'active');
+  const [files, setFiles] = useState<File[]>([]);
 
   const onCropChange = (value: string) => {
     setCrop(value);
@@ -26,43 +41,42 @@ export function ListingForm({ listing }: { listing?: Listing }) {
     }
   };
 
-  async function onSubmit(form: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setError('');
     setPending(true);
     try {
       const basePayload = {
-        crop: String(form.get('crop') ?? ''),
-        category: String(form.get('category') ?? ''),
-        variety: String(form.get('variety') || '') || null,
-        quantity: String(form.get('quantity') ?? ''),
-        unit: String(form.get('unit') ?? 'kg') as 'kg' | 'quintal' | 'ton',
-        pricePerUnit: String(form.get('pricePerUnit') ?? ''),
-        harvestDate: String(form.get('harvestDate') ?? ''),
-        state: String(form.get('state') ?? ''),
-        district: String(form.get('district') ?? ''),
-        village: String(form.get('village') || '') || null,
-        description: String(form.get('description') || '') || null,
-        minimumOrderQuantity: String(form.get('minimumOrderQuantity') ?? ''),
-        perishable: form.get('perishable') === 'on',
+        crop: crop.trim(),
+        category: category.trim(),
+        variety: variety.trim() || null,
+        quantity: quantity.trim(),
+        unit,
+        pricePerUnit: pricePerUnit.trim(),
+        harvestDate: harvestDate.trim(),
+        state: state.trim(),
+        district: district.trim(),
+        village: village.trim() || null,
+        description: description.trim() || null,
+        minimumOrderQuantity: minimumOrderQuantity.trim(),
+        perishable,
       };
 
-      const publishNow = form.get('publish') === 'on';
-      const payload =
-        listing
-          ? {
-              ...basePayload,
-              status: publishNow ? ('active' as const) : listing.status,
-            }
-          : {
-              ...basePayload,
-              status: 'draft' as const,
-            };
+      const payload = listing
+        ? {
+            ...basePayload,
+            status: publish ? ('active' as const) : listing.status,
+          }
+        : {
+            ...basePayload,
+            status: 'draft' as const,
+          };
 
       const saved = listing
         ? await updateListing(listing.id, {
             ...payload,
             status:
-              publishNow
+              publish
                 ? 'active'
                 : listing.status === 'active' || listing.status === 'draft'
                   ? listing.status
@@ -70,12 +84,11 @@ export function ListingForm({ listing }: { listing?: Listing }) {
           })
         : await createListing({ ...payload, status: 'draft' });
 
-      const files = Array.from((form.getAll('files') as File[]).filter((file) => file.size > 0));
       if (files.length > 0) {
         await uploadListingPhotos(saved.data.id, files.slice(0, 5));
       }
 
-      if (!listing && publishNow) {
+      if (!listing && publish) {
         await updateListing(saved.data.id, { status: 'active' });
       }
 
@@ -89,7 +102,7 @@ export function ListingForm({ listing }: { listing?: Listing }) {
 
   return (
     <Card>
-      <form className="grid gap-4 md:grid-cols-2" action={onSubmit}>
+      <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
         {error ? (
           <div className="md:col-span-2">
             <Alert>{error}</Alert>
@@ -117,56 +130,115 @@ export function ListingForm({ listing }: { listing?: Listing }) {
           </Select>
         </Field>
         <Field label={t('listing.form.variety')}>
-          <Input name="variety" defaultValue={listing?.variety ?? ''} />
+          <Input
+            name="variety"
+            value={variety}
+            onChange={(e) => setVariety(e.target.value)}
+          />
         </Field>
         <Field label={t('listing.form.harvestDate')}>
-          <Input name="harvestDate" type="date" required defaultValue={listing?.harvestDate?.slice(0, 10)} />
+          <Input
+            name="harvestDate"
+            type="date"
+            required
+            value={harvestDate}
+            onChange={(e) => setHarvestDate(e.target.value)}
+          />
         </Field>
         <Field label={t('listing.form.quantity')}>
-          <Input name="quantity" required defaultValue={listing?.quantity} />
+          <Input
+            name="quantity"
+            required
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+          />
         </Field>
         <Field label={t('listing.form.unit')}>
-          <Select name="unit" defaultValue={listing?.unit ?? 'kg'}>
-            {UNITS.map((unit) => (
-              <option key={unit} value={unit}>
-                {t(`units.${unit}`)}
+          <Select
+            name="unit"
+            value={unit}
+            onChange={(e) => setUnit(e.target.value as 'kg' | 'quintal' | 'ton')}
+          >
+            {UNITS.map((u) => (
+              <option key={u} value={u}>
+                {t(`units.${u}`)}
               </option>
             ))}
           </Select>
         </Field>
         <Field label={t('listing.form.pricePerUnit')}>
-          <Input name="pricePerUnit" required defaultValue={listing?.pricePerUnit} />
+          <Input
+            name="pricePerUnit"
+            required
+            value={pricePerUnit}
+            onChange={(e) => setPricePerUnit(e.target.value)}
+          />
         </Field>
         <Field label={t('listing.form.minimumOrderQuantity')}>
-          <Input name="minimumOrderQuantity" required defaultValue={listing?.minimumOrderQuantity} />
+          <Input
+            name="minimumOrderQuantity"
+            required
+            value={minimumOrderQuantity}
+            onChange={(e) => setMinimumOrderQuantity(e.target.value)}
+          />
         </Field>
         <Field label={t('listing.form.state')}>
-          <Select name="state" required defaultValue={listing?.state ?? 'Punjab'}>
-            {INDIAN_STATES.map((state) => (
-              <option key={state} value={state}>
-                {state}
+          <Select
+            name="state"
+            required
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+          >
+            {INDIAN_STATES.map((s) => (
+              <option key={s} value={s}>
+                {s}
               </option>
             ))}
           </Select>
         </Field>
         <Field label={t('listing.form.district')}>
-          <Input name="district" required defaultValue={listing?.district} />
+          <Input
+            name="district"
+            required
+            value={district}
+            onChange={(e) => setDistrict(e.target.value)}
+          />
         </Field>
         <Field label={t('listing.form.village')}>
-          <Input name="village" defaultValue={listing?.village ?? ''} />
+          <Input
+            name="village"
+            value={village}
+            onChange={(e) => setVillage(e.target.value)}
+          />
         </Field>
         <label className="flex items-center gap-3 pt-8 text-base font-semibold text-forest">
-          <input type="checkbox" name="perishable" defaultChecked={listing?.perishable} className="h-5 w-5" />
+          <input
+            type="checkbox"
+            name="perishable"
+            checked={perishable}
+            onChange={(e) => setPerishable(e.target.checked)}
+            className="h-5 w-5"
+          />
           {t('listing.form.perishable')}
         </label>
         <div className="md:col-span-2">
           <Field label={t('listing.form.description')}>
-            <Textarea name="description" defaultValue={listing?.description ?? ''} />
+            <Textarea
+              name="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </Field>
         </div>
         <div className="md:col-span-2">
           <Field label={t('listing.form.photos')}>
-            <Input name="files" type="file" accept="image/jpeg,image/png,image/webp" multiple />
+            <Input
+              name="files"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+            />
           </Field>
         </div>
         <label className="flex items-center gap-3 text-base font-semibold text-forest md:col-span-2">
@@ -174,7 +246,8 @@ export function ListingForm({ listing }: { listing?: Listing }) {
             type="checkbox"
             name="publish"
             className="h-5 w-5"
-            defaultChecked={listing?.status === 'active'}
+            checked={publish}
+            onChange={(e) => setPublish(e.target.checked)}
           />
           {listing ? t('listing.form.keepPublished') : t('listing.form.publishNow')}
         </label>
