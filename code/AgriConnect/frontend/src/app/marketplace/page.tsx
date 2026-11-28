@@ -31,6 +31,10 @@ export default function MarketplacePage() {
   });
   const [cropQuery, setCropQuery] = useState(filters.crop ?? '');
   const [selectedCategory, setSelectedCategory] = useState(filters.category ?? '');
+  const [selectedState, setSelectedState] = useState(filters.state ?? '');
+  const [minPrice, setMinPrice] = useState(filters.minPrice ?? '');
+  const [maxPrice, setMaxPrice] = useState(filters.maxPrice ?? '');
+  const [sortBy, setSortBy] = useState<ListingFilters['sort']>(filters.sort ?? 'createdAt_desc');
 
   const handleCropChange = (value: string) => {
     setCropQuery(value);
@@ -133,17 +137,23 @@ export default function MarketplacePage() {
     return () => clearInterval(timer);
   }, [filters, fetchListings]);
 
-  function apply(form: FormData) {
+  function apply(e?: React.FormEvent<HTMLFormElement> | FormData) {
+    if (e && 'preventDefault' in e) {
+      e.preventDefault();
+    }
     setMandiCompare({});
-    const newCrop = String(form.get('crop') ?? cropQuery).trim() || undefined;
-    const newCategory = String(form.get('category') ?? selectedCategory).trim() || undefined;
+    const newCrop = cropQuery.trim() || undefined;
+    const newCategory = selectedCategory.trim() || undefined;
+    const newState = selectedState.trim() || undefined;
+    const newMin = minPrice.trim() || undefined;
+    const newMax = maxPrice.trim() || undefined;
     setFilters({
       crop: newCrop,
       category: newCategory,
-      state: String(form.get('state') || '') || undefined,
-      minPrice: String(form.get('minPrice') || '') || undefined,
-      maxPrice: String(form.get('maxPrice') || '') || undefined,
-      sort: (String(form.get('sort') || 'createdAt_desc') as ListingFilters['sort']),
+      state: newState,
+      minPrice: newMin,
+      maxPrice: newMax,
+      sort: sortBy,
       page: 1,
       limit: 12,
     });
@@ -196,7 +206,7 @@ export default function MarketplacePage() {
 
       <div className="sticky top-16 z-20">
         <Card className="p-4 sm:p-5 shadow-md border-forest/15 bg-paper/95 backdrop-blur-md">
-          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" action={apply}>
+          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" onSubmit={apply}>
             <Field label={t('marketplace.crop')}>
               <Input
                 name="crop"
@@ -220,7 +230,11 @@ export default function MarketplacePage() {
               </Select>
             </Field>
             <Field label={t('marketplace.state')}>
-              <Select name="state" defaultValue={filters.state ?? ''}>
+              <Select
+                name="state"
+                value={selectedState}
+                onChange={(e) => setSelectedState(e.target.value)}
+              >
                 <option value="">{t('common.select')}</option>
                 {INDIAN_STATES.map((state) => (
                   <option key={state} value={state}>
@@ -230,13 +244,25 @@ export default function MarketplacePage() {
               </Select>
             </Field>
             <Field label={t('marketplace.minPrice')}>
-              <Input name="minPrice" defaultValue={filters.minPrice} />
+              <Input
+                name="minPrice"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+              />
             </Field>
             <Field label={t('marketplace.maxPrice')}>
-              <Input name="maxPrice" defaultValue={filters.maxPrice} />
+              <Input
+                name="maxPrice"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+              />
             </Field>
             <Field label={t('marketplace.sort')}>
-              <Select name="sort" defaultValue={filters.sort}>
+              <Select
+                name="sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as ListingFilters['sort'])}
+              >
                 <option value="createdAt_desc">{t('marketplace.sortNewest')}</option>
                 <option value="price_asc">{t('marketplace.sortPriceAsc')}</option>
                 <option value="price_desc">{t('marketplace.sortPriceDesc')}</option>
