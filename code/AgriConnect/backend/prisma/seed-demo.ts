@@ -48,6 +48,7 @@ export const DEMO_IDS = {
   listingMustard: 'd0000001-0001-4001-8001-000000000001',
   listingGroundnut: 'd0000002-0002-4002-8002-000000000002',
   listingBajra: 'd0000003-0003-4003-8003-000000000003',
+  listingDragonFruit: 'd0000004-0004-4004-8004-000000000004',
 
   // Orders
   orderPending: 'e1111111-1111-4111-8111-111111111111',
@@ -79,7 +80,8 @@ const PLACEHOLDER_PHOTOS = {
   moong: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&auto=format&fit=crop&q=80',
   mustard: 'https://images.unsplash.com/photo-1508873696983-2df5703bc20d?w=1200&auto=format&fit=crop&q=80',
   groundnut: 'https://images.unsplash.com/photo-1567892328021-e855519808d2?w=1200&auto=format&fit=crop&q=80',
-  bajra: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=1200&auto=format&fit=crop&q=80',
+  bajra: 'https://images.unsplash.com/photo-1639086407827-0dadcd5718c9?w=1200&auto=format&fit=crop&q=80',
+  dragonFruit: 'https://images.unsplash.com/photo-1527325678964-54921661f888?w=1200&auto=format&fit=crop&q=80',
 } as const;
 
 function daysAgo(n: number): Date {
@@ -332,7 +334,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
   // -------------------------------------------------------------
   // 3. SEED 18 HIGH-QUALITY PRODUCE LISTINGS ACROSS ALL CATEGORIES
   // -------------------------------------------------------------
-  console.info('Seeding 18 realistic agricultural listings with verified photos...');
+  console.info('Seeding 19 realistic agricultural listings with verified photos...');
 
   const listings = [
     // --- GRAINS ---
@@ -650,6 +652,28 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
       expiresAt: daysFromNow(12),
       photo: { key: 'demo/kinnow.jpg', url: PLACEHOLDER_PHOTOS.kinnow },
     },
+    {
+      id: DEMO_IDS.listingDragonFruit,
+      farmerProfileId: getProfileId(DEMO_IDS.farmerKabir),
+      crop: 'Dragon fruit',
+      category: 'fruits',
+      variety: 'Red Pitaya (Hylocereus polyrhizus)',
+      quantity: '80.000',
+      unit: Unit.quintal,
+      pricePerUnit: '12500.00',
+      harvestDate: dateOnly(-3),
+      state: 'Punjab',
+      district: 'Ludhiana',
+      village: 'Pakhowal',
+      description: 'Exotic organically cultivated red dragon fruit (pitaya). Vibrant magenta flesh with crisp texture, high antioxidants, hand-harvested at peak brix sweetness.',
+      minimumOrderQuantity: '1.000',
+      status: ListingStatus.active,
+      perishable: true,
+      viewCount: 142,
+      interestCount: 11,
+      expiresAt: daysFromNow(14),
+      photo: { key: 'demo/dragon-fruit.jpg', url: PLACEHOLDER_PHOTOS.dragonFruit },
+    },
 
     // --- PULSES ---
     {
@@ -960,7 +984,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
   await seedNotifications(prisma);
 
   console.info('\n=============================================================');
-  console.info('DEMO DATA SUCCESSFULLY SEEDED WITH 18 RICH REALISTIC CROPS!');
+  console.info('DEMO DATA SUCCESSFULLY SEEDED WITH 19 RICH REALISTIC CROPS!');
   console.info('=============================================================');
   console.info('Log in with demo accounts (Password: ' + demoPassword + '):');
   console.info('  Farmers:');
