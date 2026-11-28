@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Checklist — {{ service.name }} — BharatAssist</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #1e293b;
+            background: #ffffff;
+            padding: 30px;
+        }
+        .print-header {
+            border-bottom: 2px solid #0b3b60;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        .tricolor-stripe {
+            height: 4px;
+            background: linear-gradient(90deg, #ff9933 33.3%, #ffffff 33.3%, #ffffff 66.6%, #138808 66.6%);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 15px;
+        }
+        .checklist-table th {
+            background: #f1f5f9;
+            color: #0b3b60;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .checklist-table td {
+            font-size: 0.88rem;
+            vertical-align: top;
+        }
+        .disclaimer-box {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.78rem;
+            color: #475569;
+            margin-top: 30px;
+        }
+        @media print {
+            body { padding: 0; }
+            .no-print { display: none !important; }
+            .print-header { border-bottom: 2px solid #000; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Readiness Checker
+        </a>
+        <button onclick="window.print()" class="btn btn-primary btn-sm rounded-pill px-4 fw-semibold shadow-sm">
+            <i class="fa-solid fa-print me-1"></i> Print / Save as PDF
+        </button>
+    </div>
+
+    <div class="tricolor-stripe"></div>
+
+    <div class="print-header d-flex justify-content-between align-items-start">
+        <div>
+            <h2 class="h4 fw-bold text-primary mb-1">
+                <i class="fa-solid fa-clipboard-check me-2"></i> BharatAssist Citizen Document Checklist
+            </h2>
+            <div class="text-muted" style="font-size: 0.88rem;">Official Pre-Application Preparation Guide</div>
+        </div>
+        <div class="text-end" style="font-size: 0.82rem;">
+            <div><strong>Date Generated:</strong> {{ now }}</div>
+            {% if current_user %}
+            <div><strong>Citizen:</strong> {{ current_user.name }} ({{ current_user.phone }})</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SERVICE DETAILS -->
+    <div class="card border mb-4 bg-light">
+        <div class="card-body py-3">
+            <div class="row g-2" style="font-size: 0.86rem;">
+                <div class="col-md-6">
+                    <strong>Service / Scheme:</strong> <span class="text-primary fw-semibold">{{ service.name }}</span>
+                </div>
+                <div class="col-md-6">
+                    <strong>Category:</strong> {{ service.category }}
+                </div>
+                <div class="col-md-6">
+                    <strong>Scope / Jurisdiction:</strong> {{ service.state or "All India" }}
+                </div>
+                <div class="col-md-6">
+                    <strong>Official Portal:</strong> {{ service.source_url or "Check official department" }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHECKLIST TABLE -->
+    <h5 class="fw-bold text-navy mb-3">Required Documents & Physical Checklist</h5>
+    <table class="table table-bordered checklist-table mb-4">
+        <thead>
+            <tr>
+                <th style="width: 8%;">Status</th>
+                <th style="width: 32%;">Required Document</th>
+                <th style="width: 40%;">Acceptable Types / Alternatives</th>
+                <th style="width: 20%;">Citizen Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc in documents %}
+            <tr>
+                <td class="text-center align-middle">
+                    <div style="width: 22px; height: 22px; border: 2px solid #64748b; border-radius: 4px; margin: auto;"></div>
+                </td>
+                <td>
+                    <div class="fw-semibold text-navy">{{ doc.name }}</div>
+                    <div class="text-muted" style="font-size: 0.76rem;">{{ doc.help }}</div>
+                </td>
+                <td>
+                    <ul class="mb-0 ps-3 text-secondary" style="font-size: 0.82rem;">
+                        {% for t in doc.acceptable_types %}
+                        <li>{{ t }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td>
+                    <div style="border-bottom: 1px dotted #94a3b8; height: 35px;"></div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- IMPORTANT CITIZEN INSTRUCTIONS -->
+    <div class="mb-4">
+        <h6 class="fw-bold text-navy mb-2">Instructions Before Submitting at the Portal / Office:</h6>
+        <ol class="text-muted ps-3 mb-0" style="font-size: 0.84rem; line-height: 1.6;">
+            <li>Carry both <strong>original documents</strong> and at least two sets of self-attested photocopies.</li>
+            <li>Ensure that your <strong>full name, date of birth, and father's/spouse's name</strong> match exactly across all submitted documents.</li>
+            <li>Verify that all photo ID documents, utility bills, and certificates are strictly <strong>within their validity period</strong>.</li>
+            <li>Attach recent color passport-sized photographs taken against a plain light/white background.</li>
+            <li>Keep payment receipts and acknowledgment application numbers safe for post-submission status tracking.</li>
+        </ol>
+    </div>
+
+    <!-- STATUTORY DISCLAIMER -->
+    <div class="disclaimer-box">
+        <strong>Statutory Notice:</strong> {{ disclaimer }}
+    </div>
+
+</body>
+</html>
+

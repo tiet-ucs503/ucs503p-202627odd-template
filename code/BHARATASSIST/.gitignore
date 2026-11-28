@@ -1,0 +1,12 @@
+# Local backup databases and caches
+bharatassist_backup.db
+bharatassist_pre215_backup.db
+chroma_store/
+chroma_store_backup/
+chroma_store_old/
+chroma_store_pre215_backup/
+__pycache__/
+*.pyc
+
+# Environment secrets
+.env

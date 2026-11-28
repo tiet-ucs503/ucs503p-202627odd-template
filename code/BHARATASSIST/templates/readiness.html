@@ -1,0 +1,642 @@
+{% extends "base.html" %}
+
+{% block title %}Document Readiness Checker — BharatAssist{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* =========================================================
+       DOCUMENT READINESS CHECKER STYLING
+       ========================================================= */
+    .readiness-shell {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.05), 0 2px 8px rgba(15, 23, 42, 0.02);
+    }
+
+    .readiness-header {
+        padding: 30px;
+        background: linear-gradient(135deg, rgba(19, 136, 8, 0.08), rgba(255, 255, 255, 0.98) 45%, rgba(255, 153, 51, 0.07));
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .header-badge-green {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fff;
+        border: 1px solid #bbf7d0;
+        color: #15803d;
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+    }
+
+    .readiness-gauge-card {
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px;
+        transition: all 0.25s ease;
+    }
+
+    .readiness-gauge-card.ready {
+        border-color: #86efac;
+        background: linear-gradient(145deg, #f0fdf4, #ffffff);
+    }
+
+    .readiness-gauge-card.partially-ready {
+        border-color: #fde68a;
+        background: linear-gradient(145deg, #fffbeb, #ffffff);
+    }
+
+    .readiness-gauge-card.not-ready {
+        border-color: #fca5a5;
+        background: linear-gradient(145deg, #fef2f2, #ffffff);
+    }
+
+    .doc-check-row {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 16px 18px;
+        background: #ffffff;
+        margin-bottom: 14px;
+        transition: all 0.2s ease;
+    }
+
+    .doc-check-row:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+    }
+
+    .doc-check-row.status-available {
+        border-left: 6px solid #16a34a;
+    }
+
+    .doc-check-row.status-missing {
+        border-left: 6px solid #dc2626;
+        background: #fffafa;
+    }
+
+    .doc-check-row.status-expired {
+        border-left: 6px solid #ea580c;
+        background: #fffaf5;
+    }
+
+    .status-toggle-group .btn {
+        font-size: 0.78rem;
+        padding: 5px 12px;
+        font-weight: 600;
+    }
+
+    .upload-dropzone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 10px;
+        padding: 12px;
+        text-align: center;
+        background: #f8fafc;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .upload-dropzone:hover {
+        border-color: #0b3b60;
+        background: #f1f5f9;
+    }
+
+    .statutory-notice-banner {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        color: #92400e;
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+
+    .diagnostic-alert {
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        margin-top: 10px;
+    }
+
+    .diagnostic-alert.warning { background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; }
+    .diagnostic-alert.danger { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+    .diagnostic-alert.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- BREADCRUMB -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb" style="font-size: 0.82rem;">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-decoration-none text-muted">Home</a></li>
+            <li class="breadcrumb-item active text-navy fw-semibold" aria-current="page">Document Readiness Checker</li>
+        </ol>
+    </nav>
+
+    <!-- MAIN SHELL -->
+    <div class="readiness-shell mb-4">
+
+        <!-- HEADER -->
+        <div class="readiness-header">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <span class="header-badge-green mb-2">
+                        <i class="fa-solid fa-clipboard-check"></i> Pre-Application Document Verification
+                    </span>
+                    <h2 class="h3 fw-bold text-navy mb-1">Document Readiness Checker</h2>
+                    <p class="text-muted mb-0" style="font-size: 0.95rem;">
+                        Prepare, inspect and verify all mandatory documents before applying for any Central or State service.
+                    </p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('eligibility_checker') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1 text-saffron"></i> Eligibility Checker
+                    </a>
+                    <button id="btnPrintTop" class="btn btn-tricolor btn-sm rounded-pill px-3" style="display: none;">
+                        <i class="fa-solid fa-print me-1"></i> Print Checklist
+                    </button>
+                </div>
+            </div>
+
+            <!-- MANDATORY STATUTORY DISCLAIMER -->
+            <div class="statutory-notice-banner mt-3 d-flex align-items-start gap-2">
+                <i class="fa-solid fa-shield-halved mt-1 text-warning-emphasis"></i>
+                <div>
+                    <strong>Statutory Non-Acceptance Notice:</strong> BharatAssist verification is a pre-application assistance tool. A document is <strong>never</strong> certified as officially valid, authentic, or accepted merely because OCR extracted its text. Final document scrutiny and legal acceptance rest exclusively with the designated government department.
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 p-md-5">
+
+            <!-- STEP 1: SERVICE & CITIZEN SELECTOR -->
+            <div class="card border p-3 p-md-4 bg-light rounded-3 shadow-none mb-4">
+                <div class="row g-3">
+                    <div class="col-md-7">
+                        <label class="form-label fw-semibold text-navy mb-1" for="selectService" style="font-size: 0.88rem;">
+                            <i class="fa-solid fa-building-columns text-saffron me-1"></i> Select Government Service or Scheme:
+                        </label>
+                        <select class="form-select" id="selectService">
+                            <option value="">-- Choose a service (226 available) --</option>
+                            {% for svc in all_services %}
+                            <option value="{{ svc.id }}" {% if selected_service and selected_service.id == svc.id %}selected{% endif %}>
+                                {{ svc.name }} ({{ svc.category }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold text-navy mb-1" for="inputApplicantName" style="font-size: 0.88rem;">
+                            <i class="fa-solid fa-user-check text-success me-1"></i> Applicant Full Name (for Inconsistency Check):
+                        </label>
+                        <input type="text" class="form-control" id="inputApplicantName" placeholder="e.g. Ramesh Kumar"
+                               value="{{ current_user.name if current_user and current_user.name else '' }}">
+                        <div class="form-text" style="font-size: 0.72rem;">Used to verify that uploaded documents match the applicant name.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: SERVICE INFO & SUMMARY GAUGE (Loaded upon selection) -->
+            <div id="serviceDetailsSection" style="display: none;" class="mb-4">
+                <div class="row g-3 align-items-stretch">
+                    <!-- SERVICE SUMMARY -->
+                    <div class="col-lg-7">
+                        <div class="card h-100 border p-3 rounded-3 bg-white">
+                            <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                                <div>
+                                    <span class="badge bg-light text-muted border mb-1" id="badgeServiceCategory">Category</span>
+                                    <h4 class="fw-bold text-navy mb-1" id="titleServiceName">Service Name</h4>
+                                </div>
+                                <div id="unverifiedServiceBadge" style="display: none;">
+                                    <span class="badge bg-warning text-dark border border-warning" title="General catalogue requirement; check portal for jurisdiction-specific forms">
+                                        <i class="fa-solid fa-circle-info me-1"></i> Unverified Catalogue Rule
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-muted mb-2" style="font-size: 0.82rem;">
+                                Scope: <strong id="lblServiceState">All India</strong> &bull;
+                                Last Verified: <span id="lblLastVerified">Periodic Verification Pending</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 mt-auto pt-2">
+                                <a href="#" target="_blank" id="btnOfficialPortal" class="btn btn-sm btn-outline-primary rounded-pill px-3" style="font-size: 0.78rem;">
+                                    <i class="fa-solid fa-external-link me-1"></i> Official Portal
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btnPrintChecklist" style="font-size: 0.78rem;">
+                                    <i class="fa-solid fa-print me-1"></i> Print / Download Checklist
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- READINESS GAUGE -->
+                    <div class="col-lg-5">
+                        <div class="readiness-gauge-card not-ready h-100 d-flex flex-column justify-content-between" id="readinessGaugeCard">
+                            <div>
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="text-muted fw-semibold" style="font-size: 0.8rem;">Overall Readiness</span>
+                                    <span class="badge bg-danger text-white rounded-pill px-3 py-1" id="readinessStatusBadge">Not Ready</span>
+                                </div>
+                                <div class="d-flex align-items-baseline gap-2 mb-2">
+                                    <h2 class="fw-bold text-navy mb-0" id="readinessScoreText">0%</h2>
+                                    <span class="text-muted" style="font-size: 0.8rem;">Ready for Submission</span>
+                                </div>
+                                <div class="progress mb-2" style="height: 10px; border-radius: 999px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 0%;" id="readinessProgressBar"></div>
+                                </div>
+                            </div>
+                            <div class="text-muted mt-2" style="font-size: 0.78rem; line-height: 1.4;" id="readinessSummaryText">
+                                Mark your documents below or upload files to inspect expiry, legibility, and name consistency.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3: INTERACTIVE CHECKLIST OF DOCUMENTS -->
+            <div id="checklistSection" style="display: none;">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom">
+                    <div>
+                        <h5 class="fw-bold text-navy mb-0">Required Document Checklist</h5>
+                        <p class="text-muted mb-0" style="font-size: 0.82rem;">
+                            Mark each document as available, missing or expired, or upload your file to automatically analyze.
+                        </p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-success rounded-pill" onclick="markAllDocuments('available')">
+                            <i class="fa-solid fa-check-double me-1"></i> Mark All Available
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="markAllDocuments('missing')">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DOCUMENTS CONTAINER -->
+                <div id="documentsListContainer">
+                    <!-- Populated by JavaScript -->
+                </div>
+
+                <!-- ACTIONABLE NEXT STEPS CONTAINER -->
+                <div id="nextStepsContainer" class="card border p-4 bg-light rounded-3 mt-4" style="display: none;">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <i class="fa-solid fa-list-check text-navy fs-5"></i>
+                        <h5 class="fw-bold text-navy mb-0">What You Should Do Next:</h5>
+                    </div>
+                    <ol class="mb-0 ps-3 text-secondary" id="nextStepsList" style="font-size: 0.88rem; line-height: 1.6;">
+                        <!-- Populated by JS -->
+                    </ol>
+                </div>
+            </div>
+
+            <!-- PLACEHOLDER WHEN NO SERVICE SELECTED -->
+            <div id="emptyPlaceholder" class="text-center py-5 text-muted">
+                <i class="fa-solid fa-file-circle-check fs-1 mb-3 text-secondary opacity-50"></i>
+                <h5 class="fw-semibold text-navy">Select a Government Service Above</h5>
+                <p class="text-muted mb-0" style="font-size: 0.88rem;">
+                    Choose any of the 226 services from the catalog to load its required document checklist and OCR verification engine.
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentServiceId = null;
+    let serviceDocuments = [];
+    let documentStates = {}; // { docId: { status: 'available'|'missing'|'expired', analysis: {...} } }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const selectSvc = document.getElementById("selectService");
+        const applicantNameInput = document.getElementById("inputApplicantName");
+
+        // Service change listener
+        selectSvc.addEventListener("change", () => {
+            const val = selectSvc.value;
+            if (val) {
+                loadServiceRequirements(parseInt(val));
+            } else {
+                hideServiceDetails();
+            }
+        });
+
+        // Name input change listener re-runs evaluation
+        applicantNameInput.addEventListener("blur", () => {
+            if (currentServiceId) evaluateOverallReadiness();
+        });
+
+        // Print buttons
+        document.getElementById("btnPrintTop").addEventListener("click", () => {
+            if (currentServiceId) window.location.href = `/document-readiness/print/${currentServiceId}`;
+        });
+        document.getElementById("btnPrintChecklist").addEventListener("click", () => {
+            if (currentServiceId) window.location.href = `/document-readiness/print/${currentServiceId}`;
+        });
+
+        // If pre-selected service exists in template
+        if (selectSvc.value) {
+            loadServiceRequirements(parseInt(selectSvc.value));
+        }
+    });
+
+    async function loadServiceRequirements(serviceId) {
+        currentServiceId = serviceId;
+        documentStates = {};
+
+        try {
+            const res = await fetch(`/api/readiness/requirements/${serviceId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                alert(data.error || "Failed to load service requirements.");
+                return;
+            }
+
+            // Populate Service Summary
+            document.getElementById("titleServiceName").textContent = data.service_name;
+            document.getElementById("badgeServiceCategory").textContent = data.category;
+            document.getElementById("lblServiceState").textContent = data.state || "All India";
+            document.getElementById("lblLastVerified").textContent = data.last_verified;
+            document.getElementById("btnOfficialPortal").href = data.source_url || "#";
+            if (!data.source_url) document.getElementById("btnOfficialPortal").style.display = "none";
+            else document.getElementById("btnOfficialPortal").style.display = "inline-flex";
+
+            // Unverified catalogue badge
+            const unverifiedBadge = document.getElementById("unverifiedServiceBadge");
+            if (data.is_unverified_fallback) unverifiedBadge.style.display = "block";
+            else unverifiedBadge.style.display = "none";
+
+            serviceDocuments = data.documents || [];
+            serviceDocuments.forEach(doc => {
+                documentStates[doc.id] = {
+                    id: doc.id,
+                    name: doc.name,
+                    status: "missing",
+                    acceptable_types: doc.acceptable_types,
+                    is_unverified_fallback: doc.is_unverified_fallback,
+                    analysis: null
+                };
+            });
+
+            // Show sections
+            document.getElementById("emptyPlaceholder").style.display = "none";
+            document.getElementById("serviceDetailsSection").style.display = "block";
+            document.getElementById("checklistSection").style.display = "block";
+            document.getElementById("btnPrintTop").style.display = "inline-flex";
+
+            renderDocumentCards();
+            evaluateOverallReadiness();
+
+        } catch (err) {
+            alert("Error loading service: " + err.message);
+        }
+    }
+
+    function hideServiceDetails() {
+        currentServiceId = null;
+        document.getElementById("emptyPlaceholder").style.display = "block";
+        document.getElementById("serviceDetailsSection").style.display = "none";
+        document.getElementById("checklistSection").style.display = "none";
+        document.getElementById("btnPrintTop").style.display = "none";
+    }
+
+    function renderDocumentCards() {
+        const container = document.getElementById("documentsListContainer");
+        container.innerHTML = "";
+
+        serviceDocuments.forEach((doc, idx) => {
+            const state = documentStates[doc.id] || { status: "missing", analysis: null };
+            const card = document.createElement("div");
+            card.className = `doc-check-row status-${state.status}`;
+            card.id = `doc_row_${doc.id}`;
+
+            const acceptablePills = (doc.acceptable_types || []).map(t =>
+                `<span class="badge bg-light text-secondary border me-1" style="font-size: 0.72rem;">${t}</span>`
+            ).join("");
+
+            let diagnosticsHtml = "";
+            if (state.analysis) {
+                const an = state.analysis;
+                if (an.is_unreadable) {
+                    diagnosticsHtml += `<div class="diagnostic-alert danger"><i class="fa-solid fa-triangle-exclamation me-1"></i><strong>Blurry / Unreadable Scan:</strong> ${an.blur_warning}</div>`;
+                }
+                if (an.is_expired) {
+                    diagnosticsHtml += `<div class="diagnostic-alert danger"><i class="fa-solid fa-calendar-xmark me-1"></i><strong>Expired Document:</strong> ${an.expiry_warning}</div>`;
+                }
+                if (an.name_inconsistency) {
+                    diagnosticsHtml += `<div class="diagnostic-alert warning"><i class="fa-solid fa-user-xmark me-1"></i><strong>Name Inconsistency:</strong> ${an.name_warning}</div>`;
+                }
+                if (an.missing_fields && an.missing_fields.length > 0) {
+                    diagnosticsHtml += `<div class="diagnostic-alert warning"><i class="fa-solid fa-circle-question me-1"></i><strong>Missing Mandatory Field:</strong> ${an.missing_fields.join(", ")}</div>`;
+                }
+                if (!an.is_unreadable && !an.is_expired && !an.name_inconsistency && (!an.missing_fields || an.missing_fields.length === 0)) {
+                    diagnosticsHtml += `<div class="diagnostic-alert success"><i class="fa-solid fa-circle-check me-1"></i><strong>Pre-Check Passed:</strong> Text verified. No expiry or name conflicts detected. (Subject to physical official scrutiny).</div>`;
+                }
+                if (an.redacted_preview) {
+                    diagnosticsHtml += `
+                        <div class="mt-2 p-2 rounded bg-light border text-muted" style="font-size: 0.72rem; font-family: monospace;">
+                            <div class="fw-bold mb-1 text-secondary"><i class="fa-solid fa-user-shield text-success me-1"></i> PII-Redacted Text Preview:</div>
+                            <div class="text-truncate">${an.redacted_preview.substring(0, 180)}...</div>
+                        </div>
+                    `;
+                }
+            }
+
+            card.innerHTML = `
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-2">
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-navy text-white rounded-circle" style="width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem;">${idx + 1}</span>
+                            <h6 class="fw-bold text-navy mb-0">${doc.name}</h6>
+                        </div>
+                        <div class="text-muted mt-1" style="font-size: 0.8rem;">${doc.help || ''}</div>
+                    </div>
+
+                    <!-- STATUS TOGGLE BUTTONS -->
+                    <div class="btn-group status-toggle-group" role="group">
+                        <button type="button" class="btn btn-outline-success ${state.status === 'available' ? 'active' : ''}" onclick="setDocStatus('${doc.id}', 'available')">
+                            <i class="fa-solid fa-check me-1"></i> Available
+                        </button>
+                        <button type="button" class="btn btn-outline-danger ${state.status === 'missing' ? 'active' : ''}" onclick="setDocStatus('${doc.id}', 'missing')">
+                            <i class="fa-solid fa-xmark me-1"></i> Missing
+                        </button>
+                        <button type="button" class="btn btn-outline-warning ${state.status === 'expired' ? 'active' : ''}" onclick="setDocStatus('${doc.id}', 'expired')">
+                            <i class="fa-solid fa-clock-rotate-left me-1"></i> Expired
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ACCEPTABLE ALTERNATIVES -->
+                <div class="mb-2">
+                    <span class="text-muted fw-semibold me-1" style="font-size: 0.76rem;">Accepted:</span>
+                    ${acceptablePills}
+                </div>
+
+                <!-- OCR UPLOAD DROPZONE -->
+                <div class="upload-dropzone mt-2" onclick="triggerFileInput('${doc.id}')">
+                    <input type="file" id="file_input_${doc.id}" style="display: none;" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp" onchange="handleFileUpload(event, '${doc.id}', '${doc.name}')">
+                    <div class="d-flex align-items-center justify-content-center gap-2 text-muted" style="font-size: 0.82rem;" id="upload_label_${doc.id}">
+                        <i class="fa-solid fa-cloud-arrow-up text-saffron"></i>
+                        <span>Upload document file (PDF, PNG, JPG, DOCX, TXT) to run instant OCR check</span>
+                    </div>
+                </div>
+
+                <!-- DIAGNOSTICS & WARNINGS CONTAINER -->
+                <div id="diagnostics_${doc.id}">
+                    ${diagnosticsHtml}
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+    }
+
+    function setDocStatus(docId, newStatus) {
+        if (!documentStates[docId]) return;
+        documentStates[docId].status = newStatus;
+        renderDocumentCards();
+        evaluateOverallReadiness();
+    }
+
+    function markAllDocuments(status) {
+        Object.keys(documentStates).forEach(k => {
+            documentStates[k].status = status;
+        });
+        renderDocumentCards();
+        evaluateOverallReadiness();
+    }
+
+    function triggerFileInput(docId) {
+        const input = document.getElementById(`file_input_${docId}`);
+        if (input) input.click();
+    }
+
+    async function handleFileUpload(e, docId, docName) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const label = document.getElementById(`upload_label_${docId}`);
+        const originalHtml = label.innerHTML;
+        label.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-saffron me-1"></i> Extracting & analyzing document text...`;
+
+        const applicantName = document.getElementById("inputApplicantName").value.trim();
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("doc_id", docId);
+        formData.append("doc_name", docName);
+        if (applicantName) formData.append("applicant_name", applicantName);
+
+        try {
+            const res = await fetch("/api/readiness/upload", {
+                method: "POST",
+                body: formData
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                alert(data.error || "Upload analysis failed.");
+                label.innerHTML = originalHtml;
+                return;
+            }
+
+            // Update doc state with OCR analysis
+            documentStates[docId].analysis = data.analysis;
+            if (data.analysis.is_expired) {
+                documentStates[docId].status = "expired";
+            } else if (data.analysis.is_unreadable) {
+                documentStates[docId].status = "missing";
+            } else {
+                documentStates[docId].status = "available";
+            }
+
+            label.innerHTML = `<i class="fa-solid fa-check text-success me-1"></i> File uploaded: <strong>${file.name}</strong> (${(file.size/1024).toFixed(1)} KB)`;
+            renderDocumentCards();
+            evaluateOverallReadiness();
+
+        } catch (err) {
+            alert("Error analyzing file: " + err.message);
+            label.innerHTML = originalHtml;
+        }
+    }
+
+    async function evaluateOverallReadiness() {
+        if (!currentServiceId) return;
+
+        const documentsPayload = Object.values(documentStates);
+        const applicantName = document.getElementById("inputApplicantName").value.trim();
+
+        try {
+            const res = await fetch("/api/readiness/evaluate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    service_id: currentServiceId,
+                    documents: documentsPayload,
+                    applicant_profile: { name: applicantName }
+                })
+            });
+            const data = await res.json();
+            if (data.success && data.evaluation) {
+                updateReadinessGauge(data.evaluation);
+            }
+        } catch (err) {
+            console.error("Evaluation error:", err);
+        }
+    }
+
+    function updateReadinessGauge(ev) {
+        const card = document.getElementById("readinessGaugeCard");
+        const badge = document.getElementById("readinessStatusBadge");
+        const score = document.getElementById("readinessScoreText");
+        const bar = document.getElementById("readinessProgressBar");
+        const summary = document.getElementById("readinessSummaryText");
+
+        card.className = "readiness-gauge-card h-100 d-flex flex-column justify-content-between";
+
+        if (ev.readiness_status === "Ready") {
+            card.classList.add("ready");
+            badge.className = "badge bg-success text-white rounded-pill px-3 py-1";
+            badge.textContent = ev.readiness_badge;
+            bar.className = "progress-bar bg-success";
+        } else if (ev.readiness_status === "Partially ready") {
+            card.classList.add("partially-ready");
+            badge.className = "badge bg-warning text-dark rounded-pill px-3 py-1";
+            badge.textContent = ev.readiness_badge;
+            bar.className = "progress-bar bg-warning";
+        } else {
+            card.classList.add("not-ready");
+            badge.className = "badge bg-danger text-white rounded-pill px-3 py-1";
+            badge.textContent = ev.readiness_badge;
+            bar.className = "progress-bar bg-danger";
+        }
+
+        score.textContent = `${ev.readiness_score}%`;
+        bar.style.width = `${ev.readiness_score}%`;
+        summary.textContent = ev.summary_text;
+
+        // Populate Next Steps
+        const nextStepsContainer = document.getElementById("nextStepsContainer");
+        const nextStepsList = document.getElementById("nextStepsList");
+        if (ev.actionable_next_steps && ev.actionable_next_steps.length > 0) {
+            nextStepsContainer.style.display = "block";
+            nextStepsList.innerHTML = ev.actionable_next_steps.map(step => `<li>${step}</li>`).join("");
+        } else {
+            nextStepsContainer.style.display = "none";
+        }
+    }
+</script>
+{% endblock %}
+

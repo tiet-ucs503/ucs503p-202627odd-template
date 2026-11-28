@@ -1,0 +1,566 @@
+
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{microtype}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue,
+    citecolor=black,
+    pdftitle={BharatAssist - Software Project Report},
+    pdfauthor={Lehar Arora and Aastha Mahajan}
+}
+
+\onehalfspacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{BharatAssist}
+\fancyhead[R]{UCS503P}
+\fancyfoot[C]{\thepage}
+
+\titleformat{\chapter}[display]
+  {\bfseries\Huge}
+  {\chaptername\ \thechapter}
+  {10pt}
+  {\Huge}
+
+\titleformat{\section}
+  {\bfseries\Large}
+  {\thesection}
+  {0.7em}
+  {}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    columns=fullflexible
+}
+
+\begin{document}
+
+%------------------------------------------------
+% Title Page
+%------------------------------------------------
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+
+    {\Large \textbf{THAPAR INSTITUTE OF ENGINEERING AND TECHNOLOGY}\par}
+    \vspace{0.5cm}
+    {\large \textbf{Department of Computer Science and Engineering}\par}
+
+    \vspace{1.5cm}
+
+    {\Huge \textbf{BHARATASSIST}\par}
+    \vspace{0.4cm}
+    {\Large \textbf{Simplifying Government for Every Citizen}\par}
+
+    \vspace{1.2cm}
+
+    {\Large \textbf{Software Project Report}\par}
+    \vspace{0.5cm}
+    {\large Course: UCS503P\par}
+
+    \vfill
+
+    \begin{tabular}{ll}
+        \textbf{Submitted To:} & Mr.\ Hardik \\[0.3cm]
+        \textbf{Submitted By:} & Lehar Arora \quad (1024030419) \\
+                               & Aastha Mahajan \quad (1024030424)
+    \end{tabular}
+
+    \vfill
+
+    {\large Academic Year 2026--27\par}
+\end{titlepage}
+
+%------------------------------------------------
+% Certificate
+%------------------------------------------------
+\chapter*{Certificate}
+\addcontentsline{toc}{chapter}{Certificate}
+
+This is to certify that the software project entitled \textbf{``BharatAssist: Simplifying Government for Every Citizen''} has been developed as part of the requirements of the course \textbf{UCS503P}. The project is intended to provide an AI-powered web platform for simplifying access to government services and improving the understanding of complex legal and government documents.
+
+\vspace{1.5cm}
+
+\begin{tabular}{p{6cm}p{6cm}}
+\textbf{Project Guide} & \textbf{Project Team} \\[1.2cm]
+Mr.\ Hardik & Lehar Arora \\
+              & Aastha Mahajan
+\end{tabular}
+
+%------------------------------------------------
+% Declaration
+%------------------------------------------------
+\chapter*{Declaration}
+\addcontentsline{toc}{chapter}{Declaration}
+
+We declare that this project report entitled \textbf{``BharatAssist: Simplifying Government for Every Citizen''} has been prepared for the academic requirements of UCS503P. The project focuses on designing and developing a citizen-centric software solution that combines government service navigation, legal document simplification, AI assistance, and a centralized knowledge base.
+
+%------------------------------------------------
+% Acknowledgement
+%------------------------------------------------
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+
+We would like to express our sincere gratitude to our project guide, Mr.\ Hardik, for his guidance and support throughout the development of this project. We also acknowledge Thapar Institute of Engineering and Technology for providing the academic environment and resources required to carry out this work.
+
+%------------------------------------------------
+% Abstract
+%------------------------------------------------
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+BharatAssist is an AI-powered web platform designed to simplify the process of accessing government services and understanding complex legal and government documents. Citizens frequently encounter fragmented information, complicated procedures, technical terminology, and uncertainty about eligibility, required documents, application steps, and processing requirements.
+
+The proposed system addresses these issues through a unified interface containing a Government Service Navigator, an AI-powered Legal Document Simplifier, an AI Assistant, and an administrative dashboard. The platform uses a Flask-based backend, MySQL database, a self-hosted Llama 3.1 8B language model served through Ollama, and a Retrieval-Augmented Generation (RAG) pipeline using ChromaDB and sentence-transformers. The RAG architecture is intended to ground generated responses in verified government service information and uploaded document content.
+
+The project emphasizes usability, privacy, rapid development, continuous testing, and deployability. The primary evaluation criterion is Information Retrieval Time (IRT), with a target average of no more than two minutes during the pilot phase.
+
+\textbf{Keywords:} Artificial Intelligence, Government Services, Legal Document Simplification, RAG, Flask, MySQL, Llama 3.1, Ollama, ChromaDB, Citizen Services
+
+%------------------------------------------------
+% TOC
+%------------------------------------------------
+\tableofcontents
+\listoftables
+\newpage
+
+%------------------------------------------------
+\chapter{Introduction}
+%------------------------------------------------
+
+\section{Background}
+
+Government services are essential for citizens, but the process of finding and understanding the correct information can be difficult. Government procedures, eligibility requirements, forms, required documents, fees, and service details may be distributed across multiple departments and websites. Legal and government documents may also contain technical terminology that is difficult for non-experts to interpret.
+
+BharatAssist is proposed as a unified, AI-powered platform that reduces this complexity by providing government service guidance and simplified explanations of legal and government documents through a citizen-centric web interface.
+
+\section{Higher-Order Goal}
+
+The higher-order goal of BharatAssist is to improve citizen access to public services by reducing the time, effort, and confusion involved in navigating government procedures and understanding legal documents. The broader objective is to support transparent, efficient, and citizen-centric access to public services.
+
+\section{Project Objectives}
+
+The major objectives of the project are:
+
+\begin{itemize}[leftmargin=*]
+    \item Provide step-by-step guidance for government services.
+    \item Present eligibility requirements and required documents clearly.
+    \item Provide information about procedures and applicable fees.
+    \item Simplify complex legal and government documents into understandable language.
+    \item Provide an AI assistant for government-service-related queries.
+    \item Ground AI responses using verified information through a RAG pipeline.
+    \item Provide authentication and user profile management.
+    \item Maintain basic search history for users.
+    \item Provide administrative functionality for managing service information and legal document resources.
+    \item Support automated testing and deployment through CI/CD.
+\end{itemize}
+
+\section{Time-to-Value}
+
+The project proposal targets a functional prototype within the first two weeks. The initial workflow is intended to allow users to search for government services, navigate application procedures, and simplify legal documents using AI. Development is planned around rapid iterations, weekly feature releases, automated testing, and deployment.
+
+%------------------------------------------------
+\chapter{Problem Statement}
+%------------------------------------------------
+
+Citizens in India may experience delays, confusion, and uncertainty when accessing government services and interpreting legal documents. The major problems addressed by BharatAssist are described below.
+
+\section{Information Fragmentation}
+
+Government procedures, forms, eligibility requirements, and service information can be distributed across multiple websites and departments. Citizens therefore have to spend significant time locating the relevant information.
+
+\section{Complex Legal Language}
+
+Legal notices, agreements, certificates, and government documents frequently contain technical and legal terminology. This makes them difficult for non-experts to understand and can increase the possibility of errors or misinterpretation.
+
+\section{Lack of Personalized Guidance}
+
+Citizens may not know which government office to approach, what sequence of steps to follow, or which documents are required for a particular service. This can result in repeated visits and application delays.
+
+\section{Limited Transparency}
+
+Users may have limited visibility into application procedures, expected processing times, and common reasons for rejection. This can create uncertainty regarding public service delivery.
+
+\section{Inefficient Access to Public Services}
+
+Traditional government portals may primarily present static information. BharatAssist proposes an intelligent interface that helps users search for information, understand documents, and receive guided assistance.
+
+%------------------------------------------------
+\chapter{Proposed Solution}
+%------------------------------------------------
+
+\section{System Overview}
+
+BharatAssist is designed as a web-based AI-powered Bureaucracy Navigator and Legal Document Simplifier. The proposed platform combines structured government service information with AI-based assistance.
+
+The main components are:
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Service Navigator}
+    \item \textbf{Legal Document Simplifier}
+    \item \textbf{AI Assistant}
+    \item \textbf{Admin Dashboard}
+\end{enumerate}
+
+\section{Service Navigator}
+
+The Service Navigator provides step-by-step guidance for government services. The information includes eligibility criteria, required documents, fees, and procedures. Government service information is intended to be sourced from official government portals and updated periodically.
+
+\section{Legal Document Simplifier}
+
+The Legal Document Simplifier processes complex legal and government documents and produces explanations in simpler, easier-to-understand language.
+
+\section{AI Assistant}
+
+The AI Assistant is intended to answer user queries and recommend relevant government services. The system uses a RAG pipeline so that responses can be grounded in retrieved verified information rather than relying only on the language model's internal knowledge.
+
+\section{Admin Dashboard}
+
+The administrative component is intended to support management of government service information and legal document resources.
+
+\section{Core Workflow}
+
+The proposed workflow is:
+
+\begin{enumerate}[leftmargin=*]
+    \item The user searches for a government service or uploads a legal/government document.
+    \item The system validates and processes the request.
+    \item Relevant information is retrieved from the knowledge base or uploaded document.
+    \item The AI model generates guidance or a simplified explanation using the retrieved context.
+    \item The system presents the response to the user.
+    \item The user receives relevant documents, application steps, and other available service information.
+    \item Users are encouraged to verify AI-generated guidance against official government sources.
+\end{enumerate}
+
+%------------------------------------------------
+\chapter{Requirements Analysis}
+%------------------------------------------------
+
+\section{Functional Requirements}
+
+\begin{longtable}{p{1.2cm}p{4.5cm}p{8cm}}
+\toprule
+\textbf{ID} & \textbf{Requirement} & \textbf{Description} \\
+\midrule
+FR1 & Service Search & Users should be able to search for relevant government services. \\
+FR2 & Service Guidance & The system should provide eligibility, required documents, fees, and procedural information. \\
+FR3 & Document Upload & Users should be able to upload legal or government documents for simplification. \\
+FR4 & Document Simplification & The system should generate an easier-to-understand explanation of uploaded documents. \\
+FR5 & AI Assistance & The system should answer government-service-related queries. \\
+FR6 & Authentication & The system should support secure user access through session/JWT-based authentication. \\
+FR7 & Profile Management & Users should be able to manage their profile information. \\
+FR8 & Search History & The system should provide basic search history functionality. \\
+FR9 & Administration & Administrators should be able to manage service and document resources. \\
+FR10 & AI Grounding & AI responses should be grounded using retrieved verified information. \\
+\bottomrule
+\end{longtable}
+
+\section{Non-Functional Requirements}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Usability:} The interface should be simple and citizen-friendly.
+    \item \textbf{Responsiveness:} The platform should work efficiently on low-to-mid range devices.
+    \item \textbf{Security:} User access and uploaded documents should be handled securely.
+    \item \textbf{Reliability:} The target system availability during testing is at least 99\%.
+    \item \textbf{Scalability:} The architecture should support increasing users and government services.
+    \item \textbf{Maintainability:} The system should use modular components and automated testing.
+    \item \textbf{Deployability:} The application should support cloud deployment and CI/CD.
+\end{itemize}
+
+%------------------------------------------------
+\chapter{System Architecture and Design}
+%------------------------------------------------
+
+\section{Three-Tier Web Architecture}
+
+The proposed architecture follows a three-tier web architecture consisting of the frontend, backend, and database.
+
+\begin{table}[H]
+\centering
+\caption{Major System Layers}
+\begin{tabular}{p{3.2cm}p{5cm}p{5cm}}
+\toprule
+\textbf{Layer} & \textbf{Technology} & \textbf{Responsibility} \\
+\midrule
+Frontend & HTML, CSS, Bootstrap, JavaScript & Responsive user interface, search, document upload, and AI interaction \\
+Backend & Flask (Python) & Authentication, APIs, AI requests, service recommendations, and document processing \\
+Database & MySQL & User profiles, government service information, legal document metadata, and history \\
+AI/RAG & Llama 3.1 8B, Ollama, ChromaDB, sentence-transformers & AI generation, retrieval, embeddings, and response grounding \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{AI and RAG Architecture}
+
+The project uses Retrieval-Augmented Generation to improve the grounding of AI responses. The intended pipeline is:
+
+\[
+\text{User Query/Document}
+\rightarrow
+\text{Embedding}
+\rightarrow
+\text{Vector Retrieval}
+\rightarrow
+\text{Relevant Context}
+\rightarrow
+\text{LLM}
+\rightarrow
+\text{Grounded Response}
+\]
+
+The sentence-transformers model \texttt{all-MiniLM-L6-v2} is used for embeddings, while ChromaDB is used as the vector database. Llama 3.1 8B is used as the self-hosted language model through Ollama.
+
+\section{Privacy-Oriented AI Design}
+
+The project proposal specifies a self-hosted open-source LLM. This design is intended to keep citizen data and uploaded legal documents within the project's own infrastructure rather than sending them to third-party AI APIs.
+
+%------------------------------------------------
+\chapter{Technology Stack}
+%------------------------------------------------
+
+\begin{table}[H]
+\centering
+\caption{Technology Stack}
+\begin{tabular}{p{4cm}p{8.5cm}}
+\toprule
+\textbf{Technology} & \textbf{Purpose} \\
+\midrule
+HTML & Structure of the web interface \\
+CSS & Interface styling \\
+Bootstrap & Responsive UI components \\
+JavaScript & Client-side interaction \\
+Python & Backend and AI integration \\
+Flask & Web backend and REST APIs \\
+MySQL & Relational data storage \\
+Llama 3.1 8B & Self-hosted language model \\
+Ollama & Local serving of the language model \\
+ChromaDB & Vector database for RAG \\
+sentence-transformers & Text embeddings using all-MiniLM-L6-v2 \\
+GitHub Actions & CI/CD, automated testing, and deployment \\
+Session/JWT & User authentication \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Development Approach}
+
+The project emphasizes rapid iterative development rather than developing new AI algorithms. Existing AI models and web technologies are used to implement the required functionality. Weekly feature releases, automated testing, and CI/CD are planned to support continuous improvement.
+
+%------------------------------------------------
+\chapter{Implementation Plan}
+%------------------------------------------------
+
+\section{Initial Implementation Scope}
+
+The initial project scope includes:
+
+\begin{itemize}[leftmargin=*]
+    \item Government service search.
+    \item Step-by-step service guidance.
+    \item AI-powered legal document simplification.
+    \item User authentication and profile management.
+    \item Responsive web interface.
+    \item Basic search history.
+    \item CI pipeline for automated build and testing.
+    \item Initial cloud deployment.
+\end{itemize}
+
+\section{Subsequent Features}
+
+The proposed subsequent deliverables include:
+
+\begin{itemize}[leftmargin=*]
+    \item AI chatbot.
+    \item RTI drafting.
+    \item Multilingual support.
+    \item Government scheme recommendations.
+    \item Document checklist generation.
+    \item Application tracking.
+\end{itemize}
+
+\section{Continuous Integration and Deployment}
+
+GitHub Actions is planned for automating the development pipeline. The CI/CD process is intended to:
+
+\begin{enumerate}[leftmargin=*]
+    \item Build the application automatically after code commits.
+    \item Execute automated tests.
+    \item Identify problems early in the development process.
+    \item Deploy updates through an automated pipeline.
+    \item Support frequent feature releases.
+\end{enumerate}
+
+%------------------------------------------------
+\chapter{Testing and Evaluation}
+%------------------------------------------------
+
+\section{Evaluation Strategy}
+
+The project evaluates success using accessibility, usability, information retrieval, and reliability metrics.
+
+\section{Primary Evaluation Metric}
+
+\textbf{Information Retrieval Time (IRT)} is the average time required by a user to find the required government service information or receive a simplified legal document.
+
+The target is:
+
+\[
+\boxed{\text{Average IRT} \leq 2\text{ minutes}}
+\]
+
+IRT can be measured using application logs from the search request to the display of the result.
+
+\section{Secondary Evaluation Metrics}
+
+\begin{table}[H]
+\centering
+\caption{Evaluation Metrics}
+\begin{tabular}{p{5cm}p{7cm}}
+\toprule
+\textbf{Metric} & \textbf{Target/Measurement} \\
+\midrule
+Document Comprehension Score & Average user rating of at least 4/5 \\
+Search Success Rate & Percentage of users finding the required information on the first attempt \\
+User Satisfaction & Average usability and guidance rating of at least 4/5 \\
+System Reliability & Application availability of at least 99\% during testing \\
+Information Retrieval Time & Average time of at most 2 minutes during the pilot phase \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Pilot Validation Plan}
+
+The proposed pilot involves approximately 10--20 students/citizens. Participants will test government service navigation and legal document simplification. Information retrieval time, user satisfaction, and document comprehension will be measured through surveys and application logs.
+
+%------------------------------------------------
+\chapter{Scalability}
+%------------------------------------------------
+
+\section{Technical Scalability}
+
+The proposed system can support increasing users and government services through:
+
+\begin{itemize}[leftmargin=*]
+    \item Separation of frontend, backend, and AI modules.
+    \item Efficient database indexing.
+    \item Caching.
+    \item A stateless API architecture.
+\end{itemize}
+
+\section{Operational Scalability}
+
+The platform is designed for deployment using common cloud technologies, including:
+
+\begin{itemize}[leftmargin=*]
+    \item Managed databases.
+    \item Containerized or cloud-based deployment.
+    \item Automated CI/CD pipelines.
+\end{itemize}
+
+%------------------------------------------------
+\chapter{Security, Privacy, and Risks}
+%------------------------------------------------
+
+\section{Data Privacy}
+
+The proposed use of a self-hosted private LLM is intended to prevent citizen data and uploaded legal documents from being sent to third-party AI APIs. Only essential user information should be stored, and uploaded documents should be handled securely.
+
+\section{AI Inaccuracy}
+
+AI-generated responses may contain inaccuracies. BharatAssist addresses this risk through RAG-based grounding using verified government service data and source-document content. Responses are presented as guidance, and users are encouraged to verify important information using official government sources.
+
+\section{Changing Government Policies}
+
+Government service requirements can change over time. Service information should therefore be updated regularly using official government portals.
+
+\section{Deployment and Testing}
+
+Automated testing and CI/CD pipelines are used to reduce deployment errors and improve reliability.
+
+%------------------------------------------------
+\chapter{Project Scope and Future Work}
+%------------------------------------------------
+
+\section{Current Scope}
+
+The project focuses on creating a unified AI-powered platform for government service navigation and legal document simplification. It emphasizes accessibility, workflow automation, usability, and reliable information retrieval.
+
+\section{Future Enhancements}
+
+Potential future extensions include:
+
+\begin{itemize}[leftmargin=*]
+    \item More comprehensive AI chatbot functionality.
+    \item RTI drafting assistance.
+    \item Multilingual interaction.
+    \item Personalized government scheme recommendations.
+    \item Automatic document checklist generation.
+    \item Application tracking.
+\end{itemize}
+
+%------------------------------------------------
+\chapter{Conclusion}
+%------------------------------------------------
+
+BharatAssist proposes a citizen-centric solution for simplifying access to government services and understanding complex legal and government documents. The platform combines a web-based service navigator, legal document simplification, AI assistance, an administrative interface, and a RAG-based knowledge retrieval architecture.
+
+The use of Flask, MySQL, a self-hosted Llama 3.1 8B model through Ollama, ChromaDB, sentence-transformers, and GitHub Actions provides a practical technology stack for building and deploying the proposed system. The focus on verified information, privacy, usability, measurable evaluation, and continuous deployment makes the project suitable for iterative development and future expansion.
+
+The central objective is to reduce the time and confusion citizens experience while accessing public services, while ensuring that AI-generated guidance remains grounded in relevant information and is verified against official government sources.
+
+%------------------------------------------------
+\chapter*{References}
+\addcontentsline{toc}{chapter}{References}
+
+\begin{enumerate}[leftmargin=*]
+    \item BharatAssist Project Proposal, UCS503P, Thapar Institute of Engineering and Technology.
+    \item BharatAssist GitHub Repository:
+    \url{https://github.com/lehararora2704/UCS503P-202627-BharatAssist}
+    \item Flask Documentation: \url{https://flask.palletsprojects.com/}
+    \item MySQL Documentation: \url{https://dev.mysql.com/doc/}
+    \item Ollama Documentation: \url{https://ollama.com/}
+    \item Chroma Documentation: \url{https://docs.trychroma.com/}
+    \item Sentence Transformers Documentation: \url{https://www.sbert.net/}
+    \item GitHub Actions Documentation: \url{https://docs.github.com/actions}
+\end{enumerate}
+
+%------------------------------------------------
+\appendix
+\chapter{Project Information}
+
+\section{Project Repository}
+
+The project repository provided for reference is:
+
+\url{https://github.com/lehararora2704/UCS503P-202627-BharatAssist}
+
+\section{Project Team}
+
+\begin{itemize}[leftmargin=*]
+    \item Lehar Arora -- 1024030419
+    \item Aastha Mahajan -- 1024030424
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,411 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ application.service_name if application else "Application Checklist" }} — BharatAssist
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checklist-container {
+        padding: 40px 0 70px;
+    }
+
+    .checklist-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 153, 51, 0.25);
+        box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.07);
+        overflow: hidden;
+    }
+
+    .section-title {
+        color: #000080;
+        font-weight: 700;
+        border-bottom: 2px solid rgba(255, 153, 51, 0.3);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .progress-hero-card {
+        background: linear-gradient(135deg, rgba(255, 153, 51, 0.08) 0%, rgba(19, 136, 8, 0.08) 100%);
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+    }
+
+    .progress-bar-custom {
+        height: 12px;
+        border-radius: 999px;
+        background: #E2E8F0;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--saffron) 0%, var(--green) 100%);
+        border-radius: 999px;
+        transition: width 0.4s ease;
+    }
+
+    /* Checkable item rows */
+    .checklist-item-row {
+        background: #ffffff;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 14px;
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .checklist-item-row:hover {
+        border-color: rgba(19, 136, 8, 0.4);
+        background: #FAFCF9;
+        transform: translateX(3px);
+    }
+
+    .checklist-item-row.completed {
+        background: rgba(19, 136, 8, 0.04);
+        border-color: rgba(19, 136, 8, 0.3);
+    }
+
+    .checklist-checkbox {
+        width: 24px;
+        height: 24px;
+        margin-top: 2px;
+        cursor: pointer;
+        accent-color: var(--green);
+        flex-shrink: 0;
+    }
+
+    .item-text {
+        color: #334155;
+        font-size: 0.96rem;
+        line-height: 1.5;
+        flex: 1;
+    }
+
+    .checklist-item-row.completed .item-text {
+        text-decoration: line-through;
+        color: #64748B;
+    }
+
+    .item-badge-pill {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 6px;
+        flex-shrink: 0;
+    }
+
+    .completion-banner {
+        background: linear-gradient(135deg, rgba(19, 136, 8, 0.12) 0%, rgba(19, 136, 8, 0.05) 100%);
+        border: 1.5px solid rgba(19, 136, 8, 0.35);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checklist-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="checklist-card">
+                    <div class="tricolor-ribbon"></div>
+
+                    {% if application %}
+                    <!-- Header -->
+                    <div class="p-4 border-bottom bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <a href="{{ url_for('my_applications') }}" class="text-decoration-none text-muted small">
+                                <i class="fa-solid fa-arrow-left me-1"></i> Back to My Applications
+                            </a>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-light text-navy border px-3 py-2 rounded-pill small">
+                                    {{ application.category }}
+                                </span>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-30 px-3 py-2 rounded-pill small">
+                                    <i class="fa-solid fa-shield-halved me-1"></i> Saved to Account
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                            <div>
+                                <h2 class="fw-bold mb-1" style="color: #000080;">
+                                    {{ application.service_name }}
+                                </h2>
+                                <p class="text-muted small mb-0">
+                                    <i class="fa-solid fa-location-dot me-1 text-saffron"></i> Coverage: {{ application.service_state or "All India" }}
+                                    {% if application.fees %} • <i class="fa-solid fa-indian-rupee-sign text-green ms-1"></i> Fees: {{ application.fees }}{% endif %}
+                                </p>
+                            </div>
+
+                            <!-- Status Dropdown -->
+                            <div class="d-flex align-items-center gap-2 bg-light p-2 rounded-3 border">
+                                <span class="small fw-bold text-navy">Application Status:</span>
+                                <select id="appStatusSelect" class="form-select form-select-sm fw-semibold" style="width: auto;" onchange="changeStatus(this.value)">
+                                    <option value="Not started" {% if application.status == 'Not started' %}selected{% endif %}>Not started</option>
+                                    <option value="In progress" {% if application.status == 'In progress' %}selected{% endif %}>In progress</option>
+                                    <option value="Submitted" {% if application.status == 'Submitted' %}selected{% endif %}>Submitted</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="p-4 bg-light">
+                        <!-- Alert Box -->
+                        <div id="checkAlert" class="alert d-none mb-4 shadow-sm" role="alert"></div>
+
+                        <!-- Progress Bar Hero Card -->
+                        <div class="progress-hero-card shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <span class="fw-bold text-navy fs-6">Overall Checklist Completion</span>
+                                    <div class="text-muted small">Check off documents you have and steps you complete</div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="fs-5 fw-extrabold text-navy" id="progressPercentageText">{{ application.progress_pct }}%</span>
+                                    <div class="text-muted small" id="progressFractionText">
+                                        {{ application.done_count }} of {{ application.total_items }} tasks completed
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="progress-bar-custom mt-2">
+                                <div class="progress-bar-fill" id="progressBarFill" style="width: {{ application.progress_pct }}%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- ALL STEPS COMPLETED BANNER -->
+                        <div id="allDoneBanner" class="completion-banner shadow-sm" style="{% if application.done_count == application.total_items and application.total_items > 0 %}display: block;{% endif %}">
+                            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-success text-white" style="width:48px;height:48px;font-size:1.4rem;">
+                                        <i class="fa-solid fa-trophy"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold text-success mb-1">All Checklist Steps & Documents Checked!</h5>
+                                        <p class="text-muted small mb-0">Have you finished submitting this application to the department?</p>
+                                    </div>
+                                </div>
+                                {% if application.status != 'Submitted' %}
+                                <button type="button" id="btnMarkSubmitted" class="btn btn-success fw-bold px-4 py-2" onclick="changeStatus('Submitted')">
+                                    <i class="fa-solid fa-circle-check me-2"></i> Mark Application as "Submitted"
+                                </button>
+                                {% else %}
+                                <span class="badge bg-success text-white px-3 py-2 fs-6">
+                                    <i class="fa-solid fa-circle-check me-1"></i> Already Marked as Submitted
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- 1. REQUIRED DOCUMENTS CHECKLIST -->
+                        <div class="bg-white p-4 rounded-3 border mb-4 shadow-sm">
+                            <h5 class="section-title">
+                                <i class="fa-solid fa-file-shield text-saffron"></i>
+                                Required Documents Checklist
+                            </h5>
+                            <p class="text-muted small mb-3">Ensure you have all the original and photocopied documents ready:</p>
+
+                            {% if application.documents_list %}
+                                <div class="checklist-items-group">
+                                    {% for doc in application.documents_list %}
+                                    {% set item_id = "doc_" ~ loop.index0 %}
+                                    {% set is_checked = application.progress_map.get(item_id, false) %}
+                                    <div class="checklist-item-row {% if is_checked %}completed{% endif %}" id="row-{{ item_id }}" onclick="handleRowClick(event, '{{ item_id }}', 'document')">
+                                        <input
+                                            type="checkbox"
+                                            class="checklist-checkbox"
+                                            id="cb-{{ item_id }}"
+                                            {% if is_checked %}checked{% endif %}
+                                            onclick="event.stopPropagation(); toggleStepProgress('{{ item_id }}', 'document', this.checked);"
+                                        >
+                                        <span class="item-badge-pill bg-light text-navy border">Doc {{ loop.index }}</span>
+                                        <div class="item-text">{{ doc }}</div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="p-3 bg-light rounded text-muted small">No specific documents listed for this service.</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 2. STEP-BY-STEP PROCEDURE CHECKLIST -->
+                        <div class="bg-white p-4 rounded-3 border mb-4 shadow-sm">
+                            <h5 class="section-title">
+                                <i class="fa-solid fa-list-ol text-green"></i>
+                                Step-by-Step Procedure Checklist
+                            </h5>
+                            <p class="text-muted small mb-3">Tick each milestone as you progress through the government workflow:</p>
+
+                            {% if application.steps_list %}
+                                <div class="checklist-items-group">
+                                    {% for step in application.steps_list %}
+                                    {% set item_id = "step_" ~ loop.index0 %}
+                                    {% set is_checked = application.progress_map.get(item_id, false) %}
+                                    <div class="checklist-item-row {% if is_checked %}completed{% endif %}" id="row-{{ item_id }}" onclick="handleRowClick(event, '{{ item_id }}', 'step')">
+                                        <input
+                                            type="checkbox"
+                                            class="checklist-checkbox"
+                                            id="cb-{{ item_id }}"
+                                            {% if is_checked %}checked{% endif %}
+                                            onclick="event.stopPropagation(); toggleStepProgress('{{ item_id }}', 'step', this.checked);"
+                                        >
+                                        <span class="item-badge-pill bg-warning-subtle text-dark border">Step {{ loop.index }}</span>
+                                        <div class="item-text">{{ step }}</div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="p-3 bg-light rounded text-muted small">No step procedure listed for this service.</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Portal & Assistant Footer -->
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 bg-white p-3 rounded-3 border">
+                            {% if application.source_url %}
+                            <a href="{{ application.source_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-success fw-semibold">
+                                <i class="fa-solid fa-arrow-up-right-from-square me-2"></i> Visit Official Government Portal
+                            </a>
+                            {% else %}
+                            <div></div>
+                            {% endif %}
+
+                            <a href="{{ url_for('assistant') }}" class="btn btn-tricolor fw-semibold">
+                                <i class="fa-solid fa-robot me-1"></i> Ask AI Assistant About This Service
+                            </a>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <!-- Not Found -->
+                    <div class="p-5 text-center">
+                        <h4 class="text-danger fw-bold mb-2">Application Not Found</h4>
+                        <p class="text-muted mb-4">{{ error or "The requested application does not exist or access was denied." }}</p>
+                        <a href="{{ url_for('my_applications') }}" class="btn btn-tricolor fw-semibold">
+                            Return to My Applications
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const APP_ID = {{ application.id if application else 'null' }};
+
+function showCheckAlert(msg, isSuccess = true) {
+    const alertBox = document.getElementById("checkAlert");
+    if (!alertBox) return;
+    alertBox.className = `alert ${isSuccess ? 'alert-success' : 'alert-danger'} shadow-sm`;
+    alertBox.innerHTML = `<i class="fa-solid ${isSuccess ? 'fa-circle-check text-success' : 'fa-circle-exclamation text-danger'} me-2"></i> ${msg}`;
+    alertBox.classList.remove("d-none");
+    setTimeout(() => {
+        alertBox.classList.add("d-none");
+    }, 4000);
+}
+
+function handleRowClick(event, itemId, itemType) {
+    const cb = document.getElementById(`cb-${itemId}`);
+    if (cb) {
+        cb.checked = !cb.checked;
+        toggleStepProgress(itemId, itemType, cb.checked);
+    }
+}
+
+async function toggleStepProgress(itemId, itemType, isCompleted) {
+    if (!APP_ID) return;
+
+    const row = document.getElementById(`row-${itemId}`);
+    if (row) {
+        if (isCompleted) row.classList.add("completed");
+        else row.classList.remove("completed");
+    }
+
+    try {
+        const resp = await fetch(`/api/applications/${APP_ID}/toggle-step`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                item_id: itemId,
+                item_type: itemType,
+                completed: isCompleted ? 1 : 0
+            })
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+            // Update progress displays
+            document.getElementById("progressPercentageText").textContent = `${data.progress_pct}%`;
+            document.getElementById("progressFractionText").textContent = `${data.done_count} of ${data.total_items} tasks completed`;
+            document.getElementById("progressBarFill").style.width = `${data.progress_pct}%`;
+
+            // Update app status dropdown if changed
+            const statusSelect = document.getElementById("appStatusSelect");
+            if (statusSelect && data.current_status) {
+                statusSelect.value = data.current_status;
+            }
+
+            // Show or hide completion celebration banner
+            const allDoneBanner = document.getElementById("allDoneBanner");
+            if (allDoneBanner) {
+                if (data.all_done) {
+                    allDoneBanner.style.display = "block";
+                    allDoneBanner.scrollIntoView({ behavior: "smooth", block: "center" });
+                } else {
+                    allDoneBanner.style.display = "none";
+                }
+            }
+        } else {
+            showCheckAlert(data.error || "Could not save progress.", false);
+        }
+    } catch (err) {
+        showCheckAlert("Connection error syncing step progress.", false);
+    }
+}
+
+async function changeStatus(newStatus) {
+    if (!APP_ID) return;
+    try {
+        const resp = await fetch(`/api/applications/${APP_ID}/status`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: newStatus })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            const select = document.getElementById("appStatusSelect");
+            if (select) select.value = newStatus;
+            showCheckAlert(`Application marked as "${newStatus}".`, true);
+            if (newStatus === "Submitted") {
+                const btn = document.getElementById("btnMarkSubmitted");
+                if (btn) {
+                    btn.outerHTML = '<span class="badge bg-success text-white px-3 py-2 fs-6"><i class="fa-solid fa-circle-check me-1"></i> Already Marked as Submitted</span>';
+                }
+            }
+        } else {
+            showCheckAlert(data.error || "Failed to update status.", false);
+        }
+    } catch (err) {
+        showCheckAlert("Network error updating status.", false);
+    }
+}
+</script>
+{% endblock %}
