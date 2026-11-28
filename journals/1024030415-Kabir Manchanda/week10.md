@@ -6,15 +6,15 @@
 | **Roll No.** | 1024030415 |
 | **Teammate** | Manbhav Kumar Terry (1024030427) |
 | **Project** | AgriConnect |
-| **Milestone** | Multi-Stage Dockerization, Zero-Downtime Cloud Deployment (Render + Supabase), IPv4 Networking & Full Production Launch |
-| **Period** | Mon 23 Nov → Fri 27 Nov 2026 |
-| **Hours** | ~28 |
+| **Milestone** | Multi-Stage Dockerization, Cloud Deployment (Render + Supabase), Real-Time WebRTC Call Signaling, Dynamic Socket Re-Authentication & Live Broadcast Engine |
+| **Period** | Mon 23 Nov → Sat 28 Nov 2026 |
+| **Hours** | ~36 |
 
 ---
 
 ## 1. Work Completed (Week 10)
 
-During Week 10, as Senior Technical & DevOps Lead (maintaining ~70% engineering weightage), I spearheaded the production containerization, cloud orchestration, network troubleshooting, and live platform deployment of AgriConnect. Following our successful quality assurance audit in Weeks 8–9, this week transitioned AgriConnect from a local/staging prototype into a 100% operational, high-availability public production system deployed across Render, Vercel, and Supabase.
+During Week 10, as Senior Technical & DevOps Lead (maintaining ~70% engineering weightage), I spearheaded the production containerization, cloud PaaS deployment, network troubleshooting, and real-time distributed communication architecture of AgriConnect. Following our quality assurance audit in Weeks 8–9, this week transitioned AgriConnect into a 100% operational, high-availability public production system deployed across Render, Vercel, and Supabase, followed by comprehensive engineering overhauls to our WebRTC signaling gateway, live push notifications, and realistic data seeding.
 
 My primary focus areas and contributions were:
 
@@ -37,16 +37,21 @@ My primary focus areas and contributions were:
   - Diagnosed subsequent TLS handshake failure: `Error opening a TLS connection: self-signed certificate in certificate chain` (`code: P1011`).
   - Identified that `pg-adapter.ts` previously skipped SSL mode relaxation when `NODE_ENV === 'production'`, causing Node's `pg` driver to enforce strict public CA verification against Supabase pooler proxy certificates.
   - Updated `createPrismaAdapter` in `src/config/pg-adapter.ts` (`1e9fa4b`) to automatically apply `relaxSslMode` across all non-local environments, preserving end-to-end TLS encryption in transit while accepting Supabase pooler TLS proxy certificates.
-- **Live Production Endpoints & Smoke Verification:**
-  - Added root HTTP routing (`GET /` and `HEAD /` in `src/app.ts` via commit `41e6385`) responding with `{ status: "ok", service: "agriconnect-backend" }` to support cloud PaaS health probes.
-  - Executed live production verification against `https://ucs503p-agriconnect.onrender.com`:
-    - `GET /` $\rightarrow$ `HTTP 200 OK`
-    - `GET /health` $\rightarrow$ `HTTP 200 OK`
-    - `GET /ready` $\rightarrow$ `HTTP 200 OK` (`{"status":"ready","database":"up"}`)
-  - Executed live remote smoke tests against the Render production backend:
-    - `smoke:antibypass` (contact guard phone/email/UPI blocking & escrow lifecycle) passed 100%.
-    - `smoke:calls` (WebRTC P2P signaling, privacy masking, ICE exchange) passed 100%.
-    - `smoke:bids` (40/40 B2B dynamic negotiation edge-cases) passed 100%.
+- **Dynamic Socket Re-Authentication & WebRTC Call Reliability:**
+  - Diagnosed a critical distributed session synchronization failure where buyers calling farmers experienced indefinite `● RINGING...` without the farmer receiving call invites.
+  - **Root Cause:** Sockets opened before user login connected anonymously (`token: null`). Upon login, the client did not re-handshake the open WebSocket. Consequently, `socket.data.user` remained `undefined` on the backend, preventing the socket from joining `user:${userId}` and blocking call signaling handlers from registering.
+  - Implemented dynamic socket re-authentication (`authenticate` event in `src/config/socket.ts`): the socket can dynamically verify JWT access tokens, assign user context, join personal rooms, and register WebRTC call handlers at runtime without teardown.
+  - Refactored `src/modules/calls/calls.gateway.ts` to dual-broadcast `call:incoming`, `call:accepted`, `call:declined`, and `call:ended` both to the order room (`order:${orderId}`) and directly to the recipient's personal user room (`user:${calleeId}`).
+- **Real-Time Call Alerts & Missed Call Notification Engine:**
+  - Connected `calls.gateway.ts` directly to `notification.service.ts`:
+    - On `call:invite`: Instantly generates an in-app database notification (`type: 'MESSAGE_RECEIVED'`, title: `Incoming Voice Call`, body: `${callerName} is calling you regarding Order #${orderId}`) and emits `notification:new`, updating the recipient's notification bell counter and displaying live in-app toast alerts.
+    - On Unanswered Timeout (45s) or Caller Hang-up: Automatically records a `Missed Voice Call` notification in the database for the callee.
+- **Real-Time Marketplace Listing Broadcast Engine:**
+  - Implemented real-time publish-subscribe broadcasting (`marketplace:listing:change` in `src/config/socket.ts` and `src/modules/listings/listings.service.ts`): whenever a farmer posts or updates a produce listing, all active buyers on `/marketplace` receive the newly listed produce instantly without refreshing.
+  - Integrated buyer crop-alert matching: when a published crop matches a buyer's saved crop alerts, a targeted push notification is immediately dispatched to that specific buyer.
+- **Comprehensive Realistic Seed Data Architecture:**
+  - Expanded `prisma/seed.ts` to populate **18 fully verified, realistic agricultural listings** spanning all 6 major categories (Grains, Pulses, Vegetables, Fruits, Spices, Oilseeds) across real Indian agricultural hubs (Sharbati Wheat in Sehore, Guntur Teja Chilli in Andhra Pradesh, Devgad Alphonso Mangoes, Nashik Red Onions, Unjha Cumin, Malabar Cardamom).
+  - Seeded multi-stage orders across all payment types (Cash on Delivery and Razorpay Escrow) with complete message threads, ratings, and delivery states.
 
 ---
 
@@ -60,73 +65,90 @@ The table below summarizes the live production status and test execution results
 | **API Liveness Probe** | `GET /health` | Container process health and memory status | **200 OK (`status: ok`)** |
 | **Database Readiness** | `GET /ready` | Supabase IPv4 Pooler live database query execution | **200 OK (`database: up`)** |
 | **CORS Handshake** | `OPTIONS /api/v1/listings` | Allowed origin verification for Vercel edge domain | **204 No Content (CORS Passed)** |
+| **Live Call Signaling Smoke** | `npx tsx scripts/smoke-call-signaling.ts` | E2E WebRTC handshake, caller masking, ICE relay, teardown | **13 / 13 Passed (100%)** |
 | **B2B Negotiation Suite** | `npx tsx scripts/smoke-bidding-edge-cases.ts` | 40 edge cases executed directly against live Render API | **40 / 40 Passed (100%)** |
 | **Anti-Bypass & Escrow** | `npm run smoke:antibypass` | Live contact evasion detection & escrow payment lifecycle | **100% Passed** |
-| **WebRTC Call Signaling** | `npm run smoke:calls` | Socket.io live caller masking, ICE relay, call cleanup | **100% Passed** |
-| **Backend Unit Tests** | `npm test` (`vitest run`) | Full backend test suite (17 test files) | **157 / 157 Passed (100%)** |
-| **TypeScript Typecheck** | `npm run typecheck` (`tsc --noEmit`) | Strict type checking across all backend modules | **0 Errors** |
+| **Backend Unit Tests** | `npm test` (`vitest run`) | Full backend test suite (**18 test files**) | **179 / 179 Passed (100%)** |
+| **TypeScript Typecheck** | `npm run typecheck` (`tsc --noEmit`) | Strict type checking across all backend modules | **0 Diagnostics** |
+| **Backend Code Quality** | `npm run lint` (`eslint .`) | Backend linting and strict import hygiene | **0 Errors, 0 Warnings** |
 
 ---
 
 ## 3. Technical Highlights & Code Implementations
 
-### A. Root Dockerfile for Cloud PaaS Deployment (`Dockerfile`)
-Multi-stage build engineered specifically for repository root context (`.`):
-
-```dockerfile
-# Stage 1: Builder
-FROM node:24-alpine AS builder
-WORKDIR /app
-RUN apk add --no-cache libc6-compat
-
-# Copy backend package manifests and install dependencies
-COPY code/AgriConnect/backend/package*.json ./
-RUN npm ci || npm install
-
-# Copy backend source code, generate Prisma Client, and build TypeScript
-COPY code/AgriConnect/backend/ ./
-RUN npm run prisma:generate && npm run build
-
-# Stage 2: Production Runner (Fast & Lightweight)
-FROM node:24-alpine AS runner
-WORKDIR /app
-
-RUN apk add --no-cache dumb-init libc6-compat openssl
-
-ENV NODE_ENV=production
-ENV PORT=5001
-
-COPY code/AgriConnect/backend/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
-
-USER node
-EXPOSE 5001
-
-HEALTHCHECK --interval=20s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:5001/health || exit 1
-
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["node", "dist/src/server.js"]
-```
-
-### B. Supabase Pooler TLS Relaxation (`src/config/pg-adapter.ts`)
-Ensured Prisma Pg adapter accepts Supabase pooler TLS proxy certificates across all environments:
+### A. Dynamic Socket Re-Authentication & Room Attachment (`src/config/socket.ts`)
+Enables persistent WebSockets to re-authenticate dynamically when users log in without dropping connections:
 
 ```typescript
-export function createPrismaAdapter(connectionString: string): PrismaPg {
-  const local = isLocalPostgres(connectionString);
-  // Relax SSL mode for cloud databases across all environments
-  const url = local ? connectionString : relaxSslMode(connectionString);
+io.on('connection', (socket) => {
+  const appSocket = socket as AppSocket;
 
-  const pool = new Pool({
-    connectionString: url,
-    max: 10,
-    ssl: local ? false : { rejectUnauthorized: false },
-  });
+  const attachUser = (authUser: SocketUser) => {
+    appSocket.data.user = authUser;
+    void appSocket.join(`user:${authUser.id}`);
+    registerCallHandlers(appSocket, authUser);
+    logger.info({ userId: authUser.id, role: authUser.role }, 'Socket authenticated');
+  };
 
-  return new PrismaPg(pool);
+  appSocket.on(
+    'authenticate',
+    (token: string, ack?: (result: { ok: boolean; error?: string }) => void) => {
+      if (typeof token !== 'string' || !token) {
+        ack?.({ ok: false, error: 'Token missing' });
+        return;
+      }
+      try {
+        const payload = verifyAccessToken(token);
+        const authUser: SocketUser = { id: payload.sub, role: payload.role };
+        attachUser(authUser);
+        ack?.({ ok: true });
+      } catch {
+        ack?.({ ok: false, error: 'Invalid token' });
+      }
+    },
+  );
+
+  if (appSocket.data.user) {
+    attachUser(appSocket.data.user);
+  }
+});
+```
+
+### B. Dual-Room WebRTC Call Signaling & In-App Notification Push (`src/modules/calls/calls.gateway.ts`)
+Dispatches calls to order rooms and recipient user rooms simultaneously while creating persistent database notifications:
+
+```typescript
+activeCalls.set(orderId, call);
+void socket.join(room(orderId));
+
+const incomingPayload = {
+  orderId,
+  callId: call.callId,
+  from: { id: permission.callerId, name: permission.callerName },
+};
+
+// Push in-app alert notification
+void createNotification({
+  userId: permission.calleeId,
+  type: 'MESSAGE_RECEIVED',
+  title: 'Incoming Voice Call',
+  body: `${permission.callerName} is calling you regarding Order #${orderId.slice(-6).toUpperCase()}`,
+  params: {
+    preview: `${permission.callerName} is calling you regarding Order #${orderId.slice(-6).toUpperCase()}`,
+  },
+  relatedEntityType: 'order',
+  relatedEntityId: orderId,
+}).catch((err) => {
+  logger.warn({ err }, 'Failed to create incoming call notification');
+});
+
+// Dual broadcast: order room + personal callee room
+socket.to(room(orderId)).emit('call:incoming', incomingPayload);
+const io = getSocketIO();
+if (io) {
+  io.to(`user:${permission.calleeId}`).emit('call:incoming', incomingPayload);
+} else {
+  socket.to(`user:${permission.calleeId}`).emit('call:incoming', incomingPayload);
 }
 ```
 
@@ -134,13 +156,14 @@ export function createPrismaAdapter(connectionString: string): PrismaPg {
 
 ## 4. Key Learnings & Engineering Reflections
 
-1. **Cloud PaaS Dual-Stack Networking Realities:** Direct connections to managed cloud databases (like Supabase) frequently resolve exclusively to IPv6 addresses on modern infrastructure. PaaS platforms like Render or Fly.io on free/starter tiers do not yet offer outbound IPv6 egress routing. Utilizing dedicated connection poolers that support IPv4 resolution is critical for production reliability.
-2. **Container Process Supervision:** Running Node.js directly as PID 1 in a container often leads to improper handling of `SIGTERM` signals and leaves zombie child processes. Utilizing `dumb-init` ensures proper signal forwarding, graceful shutdowns, and clean connection pool drainage.
-3. **Atomic Verification of Production State:** Having comprehensive smoke testing scripts (`smoke-antibypass`, `smoke-calls`, `smoke-bids`) capable of executing directly against the live production URL gave us 100% empirical certainty that our cloud deployment was fully operational before declaring the milestone complete.
+1. **Decoupled WebSocket Lifecycles vs. HTTP Auth State:** A common pitfall in single-page applications is assuming a WebSocket inherits authentication state changes that happen over HTTP REST endpoints (`/api/v1/auth/login`). Because WebSockets maintain persistent, long-lived TCP connections, logging in on the frontend does not re-run the initial HTTP handshake. Providing a dynamic `authenticate` event protocol bridges REST authentication with WebSocket state instantaneously.
+2. **Dual-Room Signaling Redundancy:** Relying exclusively on order-specific rooms (`order:${orderId}`) for call signaling fails whenever the callee is navigating elsewhere on the site (e.g. Dashboard or Mandi prices). Dual-broadcasting to `user:${calleeId}` guarantees that incoming calls reach the callee regardless of their active viewport.
+3. **Cloud PaaS Dual-Stack Networking Realities:** Direct connections to managed cloud databases (like Supabase) frequently resolve exclusively to IPv6 addresses on modern infrastructure. PaaS platforms like Render or Fly.io on free/starter tiers do not yet offer outbound IPv6 egress routing. Utilizing dedicated connection poolers that support IPv4 resolution is critical for production reliability.
+4. **Container Process Supervision:** Running Node.js directly as PID 1 in a container often leads to improper handling of `SIGTERM` signals and leaves zombie child processes. Utilizing `dumb-init` ensures proper signal forwarding, graceful shutdowns, and clean connection pool drainage.
 
 ---
 
 ## 5. Next Steps for Project Defense & Evaluation
 
-1. Deliver live demonstration to course instructor Mr. Hardik showcasing real-time trade, B2B bidding negotiations, and Grounded Kisan advisory on the live Vercel/Render URLs.
+1. Deliver live capstone demonstration to course instructor Mr. Hardik showcasing real-time trade, B2B bidding negotiations, P2P voice calling, and Grounded Kisan advisory on the live Vercel/Render URLs.
 2. Finalize capstone project report and presentation slides with production architecture diagrams and empirical QA test matrices.
