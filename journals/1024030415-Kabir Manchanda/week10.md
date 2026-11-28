@@ -15,7 +15,7 @@
 
 ## 1. Work Completed (Week 10)
 
-During Week 10, as Senior Technical & DevOps Lead (**maintaining 70% engineering weightage**; teammate Manbhav holding 30% frontend & UI integration weightage), I spearheaded the production containerization, cloud PaaS deployment, network troubleshooting, AI-powered produce photo verification, and real-time distributed communication architecture of AgriConnect. Following our quality assurance audit in Weeks 8–9, this week transitioned AgriConnect into a 100% operational, high-availability public production system deployed across Render, Vercel, and Supabase, followed by comprehensive engineering overhauls to our WebRTC signaling gateway, multimodal visual crop verification, and verified marketplace seed data.
+During Week 10, as Senior Technical & DevOps Lead (**maintaining 70% engineering weightage**), I spearheaded the production containerization, cloud PaaS deployment, network troubleshooting, AI-powered produce photo verification, and real-time distributed communication architecture of AgriConnect. Following our quality assurance audit in Weeks 8–9, this week transitioned AgriConnect into a 100% operational, high-availability public production system deployed across Render, Vercel, and Supabase, followed by comprehensive engineering overhauls to our WebRTC signaling gateway, multimodal visual crop verification, and verified marketplace seed data.
 
 My primary focus areas and contributions were:
 

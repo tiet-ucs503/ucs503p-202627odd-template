@@ -6,7 +6,6 @@
 | **Roll No.** | 1024030427 |
 | **Teammate** | Kabir Manchanda (1024030415) |
 | **Project** | AgriConnect |
-| **Contribution Weightage** | **30%** (Frontend & UI Integration Lead) — Teammate Kabir: **70%** (Senior Technical & DevOps Lead) |
 | **Milestone** | Vercel Edge Deployment, Visual Crop Photo Verification UI, Fast WebRTC Ringtone Architecture, Controlled Form Persistence & 13-Locale i18n Parity |
 | **Period** | Mon 23 Nov → Sat 28 Nov 2026 |
 | **Hours** | ~26 |
@@ -15,7 +14,7 @@
 
 ## 1. Work Completed (Week 10)
 
-During Week 10, my teammate Kabir (**holding 70% engineering weightage** as Senior Technical & DevOps Lead) and I (**holding 30% engineering weightage** as Frontend & UI Integration Lead) accomplished the full production deployment, live cloud launch, and advanced real-time user experience upgrades for AgriConnect. While Kabir took on the senior technical and DevOps weightage covering backend containerization, Render deployment triage, Supabase IPv4 networking, multimodal crop verification backend logic, and WebRTC call gateway enhancements, I focused on frontend edge deployment, Next.js standalone optimization, font compilation pipeline refactoring, visual crop verification UI, centralized ringtone management, controlled form persistence, frame-1 session hydration, and responsive e-commerce checkout workflows.
+During Week 10, my teammate Kabir and I accomplished the full production deployment, live cloud launch, and advanced real-time user experience upgrades for AgriConnect. While Kabir took on the senior technical and DevOps architecture covering backend containerization, Render deployment triage, Supabase IPv4 networking, multimodal crop verification backend logic, and WebRTC call gateway enhancements, I focused on frontend edge deployment, Next.js standalone optimization, font compilation pipeline refactoring, visual crop verification UI, centralized ringtone management, controlled form persistence, frame-1 session hydration, and responsive e-commerce checkout workflows.
 
 My primary focus areas and contributions were:
 

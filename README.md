@@ -41,7 +41,7 @@
 
 | | |
 |---|---|
-| **Team** | **Kabir Manchanda (1024030415)** — Senior Technical & DevOps Lead · **70% Engineering Weightage**<br/>**Manbhav Kumar Terry (1024030427)** — Frontend & UI Integration Lead · **30% Engineering Weightage** |
+| **Team** | **Kabir Manchanda (1024030415)** — Senior Technical & DevOps Lead (70% Weightage)<br/>**Manbhav Kumar Terry (1024030427)** — Frontend & UI Integration Lead |
 | **Course** | UCS503P · Submitted to Mr. Hardik |
 | **App code** | `code/AgriConnect/` |
 
