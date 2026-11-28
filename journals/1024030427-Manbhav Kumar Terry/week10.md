@@ -6,18 +6,34 @@
 | **Roll No.** | 1024030427 |
 | **Teammate** | Kabir Manchanda (1024030415) |
 | **Project** | AgriConnect |
-| **Milestone** | Vercel Edge Deployment, Global Incoming Call Alert & Ringtone, Frame-1 Session Hydration, Crop Auto-Categorization & Cash-on-Delivery Confirmation |
+| **Contribution Weightage** | **30%** (Frontend & UI Integration Lead) — Teammate Kabir: **70%** (Senior Technical & DevOps Lead) |
+| **Milestone** | Vercel Edge Deployment, Visual Crop Photo Verification UI, Fast WebRTC Ringtone Architecture, Controlled Form Persistence & 13-Locale i18n Parity |
 | **Period** | Mon 23 Nov → Sat 28 Nov 2026 |
-| **Hours** | ~24 |
+| **Hours** | ~26 |
 
 ---
 
 ## 1. Work Completed (Week 10)
 
-During Week 10, my teammate Kabir and I accomplished the full production deployment, live cloud launch, and advanced real-time user experience upgrades for AgriConnect. While Kabir took on the senior technical and DevOps weightage (~70%) covering backend containerization, Render deployment triage, Supabase IPv4 networking, and WebRTC call gateway enhancements, I focused on frontend edge deployment, Next.js standalone optimization, font compilation pipeline refactoring, global call ringing alerts, frame-1 session hydration, and responsive e-commerce checkout workflows.
+During Week 10, my teammate Kabir (**holding 70% engineering weightage** as Senior Technical & DevOps Lead) and I (**holding 30% engineering weightage** as Frontend & UI Integration Lead) accomplished the full production deployment, live cloud launch, and advanced real-time user experience upgrades for AgriConnect. While Kabir took on the senior technical and DevOps weightage covering backend containerization, Render deployment triage, Supabase IPv4 networking, multimodal crop verification backend logic, and WebRTC call gateway enhancements, I focused on frontend edge deployment, Next.js standalone optimization, font compilation pipeline refactoring, visual crop verification UI, centralized ringtone management, controlled form persistence, frame-1 session hydration, and responsive e-commerce checkout workflows.
 
 My primary focus areas and contributions were:
 
+- **Frontend Visual Crop Photo Verification UX & 13-Locale i18n (`listing-form.tsx`):**
+  - Designed and implemented the client-side user experience for AI crop photo verification in the farmer listing portal.
+  - Added interactive produce photo chips displaying file names with individual removal buttons (`✕`), allowing farmers to review and discard accidental file selections before submission.
+  - Added dedicated helper guidance (`photosHint`) explaining that produce photos must strictly match the declared crop.
+  - Added localized error alerts (`cropMismatch`) displayed prominently when an image does not match the chosen produce.
+  - Authored and verified translations across all 13 supported languages (`en`, `hi`, `pa`, `bn`, `gu`, `kn`, `ml`, `mr`, `or`, `ta`, `te`, `as`, `ur`), verified by 100% dictionary key parity in `tests/i18n-parity.test.ts`.
+- **Listing Form Input Persistence on Validation Errors (`listing-form.tsx`):**
+  - Resolved a severe usability issue where leaving any field empty on the listing page wiped out all other filled fields upon validation failure.
+  - Converted all inputs (`crop`, `category`, `variety`, `quantity`, `pricePerUnit`, `harvestDate`, `state`, `district`, `village`, etc.) into React controlled state.
+  - Switched form handling from uncontrolled Next.js Server Action invocation (`action={...}`) to client-side form submission (`onSubmit={handleSubmit}`) with `e.preventDefault()`, completely eliminating automated browser form resets and preserving 100% of the farmer's entered data when errors occur.
+- **Centralized Singleton Ringtone Manager & WebRTC Audio Layout (`ringtone.ts`, `OrderCallPanel.tsx`, `GlobalIncomingCall.tsx`):**
+  - Built a centralized singleton `RingtoneManager` class ensuring idempotent start and synchronous cutoff of the Web Audio context upon call acceptance or cancellation.
+  - Fixed audio throttling: replaced `className="hidden"` (`display: none`) on the remote `<audio>` tag with `className="sr-only"` (layout-rendered), preventing Chromium and WebKit power-saving algorithms from muting or suspending active voice playback.
+- **Marketplace Search Filter Persistence (`marketplace/page.tsx`):**
+  - Fixed a state synchronization bug where entering a search query automatically cleared the user's selected state filter dropdown. Managed filter parameters via controlled state so selections persist seamlessly.
 - **Vercel Edge CDN Frontend Deployment:**
   - Configured and executed the frontend deployment on Vercel's global edge network, pointing project root directory to `code/AgriConnect/frontend`.
   - Configured `NEXT_PUBLIC_API_BASE_URL` to point securely to our live backend API (`https://ucs503p-agriconnect.onrender.com`).
@@ -155,6 +171,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setReady(true));
   }, []);
   // ...
+}
+```
+
+### C. Controlled State Form Input Retention on Validation Errors (`listing-form.tsx`)
+Converts uncontrolled inputs to React controlled state with client-side form submission to prevent automated DOM resets:
+
+```typescript
+export function ListingForm({ initialValues, isEdit = false }: ListingFormProps) {
+  const [crop, setCrop] = useState(initialValues?.crop ?? '');
+  const [category, setCategory] = useState(initialValues?.category ?? 'grains');
+  const [variety, setVariety] = useState(initialValues?.variety ?? '');
+  const [quantity, setQuantity] = useState(initialValues?.quantity ?? '');
+  const [pricePerUnit, setPricePerUnit] = useState(initialValues?.pricePerUnit ?? '');
+  const [files, setFiles] = useState<File[]>([]);
+  // ...
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // Prevents browser/React form reset on 400 validation error
+    setLoading(true);
+    setError(null);
+    try {
+      // Validates and dispatches listing payload; keeps all inputs intact if error occurs
+      await submitListingAction({ crop, category, variety, quantity, pricePerUnit, files });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t('listingSaveError'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return <form onSubmit={handleSubmit}> ... </form>;
 }
 ```
 

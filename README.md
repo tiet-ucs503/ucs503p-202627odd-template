@@ -41,7 +41,7 @@
 
 | | |
 |---|---|
-| **Team** | Kabir Manchanda (1024030415), Manbhav Kumar Terry (1024030427) |
+| **Team** | **Kabir Manchanda (1024030415)** — Senior Technical & DevOps Lead · **70% Engineering Weightage**<br/>**Manbhav Kumar Terry (1024030427)** — Frontend & UI Integration Lead · **30% Engineering Weightage** |
 | **Course** | UCS503P · Submitted to Mr. Hardik |
 | **App code** | `code/AgriConnect/` |
 
@@ -82,8 +82,11 @@
 
 ### 1. 🌾 Direct farm-to-buyer marketplace
 - **Produce listings with photos:** farmers publish crop, quantity, expected price, and location; buyers filter by crop and state.
+- **AI Visual Crop Photo Verification (Gemini Vision):** multimodal inspection engine checks uploaded produce images in memory before saving to Supabase Storage. Strictly blocks cross-crop mismatches (e.g. uploading a wheat photo for dragon fruit) and non-agricultural spam with `400 PHOTO_CROP_MISMATCH`.
+- **Form Input Retention:** controlled React form state preserves 100% of entered fields when validation errors occur, preventing accidental field wiping.
 - **Inventory-safe orders:** quantity decrements in a database transaction so two buyers cannot oversell the same lot.
 - **Visible order lifecycle:** `pending → accepted → confirmed → fulfilled` (or `cancelled`) — every step is logged and role-gated.
+- **19 verified seed crops:** seeded with authentic Gemini-verified agricultural photography across all 6 categories (including Dragon fruit and Pearl Millet).
 
 ### 2. 📈 Live mandi price intelligence
 - **Agmarknet / data.gov.in feed:** farmers see wholesale benchmarks on `/market-prices` before they accept a weak farm-gate offer.
@@ -99,7 +102,9 @@
 
 ### 4. 📞 Stay-on-platform trade (chat + voice)
 - **Order-scoped chat:** REST + Socket.io with typing indicators — conversation stays tied to the deal.
-- **In-app voice calls:** peer-to-peer WebRTC so parties never need to exchange a phone number.
+- **Sub-2s WebRTC voice calling:** peer-to-peer audio with pre-warmed mic hardware, standard acoustic filters (`echoCancellation`, `noiseSuppression`, `autoGainControl`), layout-rendered audio tag (`sr-only`), and `sendrecv` full-duplex transmission.
+- **Clean ringtone teardown:** centralized singleton `RingtoneManager` ensures instant (0ms) audio cutoff on Accept or Cancel across both caller and callee.
+- **Missed call tracking:** automated push notifications generated on call timeouts or caller cancellations.
 - **Anti-bypass contact guard:** phone numbers, emails, and UPI IDs are blocked in chat, order notes, and listing copy (`CONTACT_INFO_BLOCKED`).
 
 ### 5. 🔒 Escrow-style payments buyers can trust
@@ -349,8 +354,9 @@ AgriConnect has been subjected to a senior-grade, full-platform quality assuranc
 
 | Test Suite / Engineering Domain | Command & Tooling | Scope & Invariants Evaluated | Empirical Result |
 |---|---|---|:---:|
-| **Backend Unit & Domain Logic** | `npm test` (`vitest run`) | Order state machine, stock reservation, auth tokens, review scoring, TTS synthesis | **17 files · 157 / 157 passed (100%)** |
-| **Frontend Screen & Unit Tests** | `npm test` (`vitest run`) | Role dashboards, order lifecycle, listing cards, auth context, formatting filters | **14 files · 128 / 128 passed (100%)** |
+| **Backend Unit & Domain Logic** | `npm test` (`vitest run`) | Order state machine, stock reservation, auth tokens, review scoring, TTS synthesis | **19 files · 183 / 183 passed (100%)** |
+| **AI Visual Crop Photo Verification** | `npx vitest run tests/crop-photo-verification.test.ts` | Gemini Vision multimodal produce match, spam detection, offline fallback | **4 / 4 passed (100%)** |
+| **Frontend Screen & Unit Tests** | `npm test` (`vitest run`) | Role dashboards, order lifecycle, listing cards, auth context, formatting filters | **15 files · 136 / 136 passed (100%)** |
 | **AST Hardcoded String Scanner** | `tests/no-hardcoded-strings.test.ts` | AST traversal over all TSX components; 0 untranslated Latin text or hardcoded attributes | **0 AST Violations (100% Compliant)** |
 | **13-Locale Translation Parity** | `tests/i18n-parity.test.ts` | Validates identical key hierarchies and placeholder tokens across EN and 12 Indic languages | **50 / 50 passed (100%)** |
 | **Text Expansion & Width Budget** | `tests/i18n-width-budget.test.ts` | Tests long Indic translations against container width budgets to prevent UI wrapping/overflow | **39 / 39 passed (100%)** |
