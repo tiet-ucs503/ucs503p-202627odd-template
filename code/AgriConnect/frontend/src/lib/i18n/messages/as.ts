@@ -464,6 +464,8 @@ export const assamese = withEnglishFallback({
       perishable: 'এই শস্য সোনকালে নষ্ট হয়',
       description: 'বিৱৰণ',
       photos: 'ফটো (JPEG, PNG বা WebP, সৰ্বাধিক 5)',
+      photosHint: 'আপলোড কৰা ফটোসমূহ আপোনাৰ নিৰ্বাচিত শস্যৰ ({crop}) সৈতে মিলিছে নে নাই সেয়া AI য়ে পৰীক্ষা কৰিব।',
+      cropMismatch: 'ফটোখন ঘোষণা কৰা শস্য {crop}ৰ সৈতে মিলা নাই। চিনাক্ত কৰা হৈছে: {detected}।',
       publishNow: 'এতিয়াই প্ৰকাশ কৰক (অন্ততঃ এখন ফটো লাগে)',
       keepPublished: 'প্ৰকাশিত কৰি ৰাখক (সক্ৰিয়)',
       create: 'তালিকা বনাওক',

@@ -461,6 +461,8 @@ export const gu = withEnglishFallback({
       perishable: 'આ પાક જલદી બગડે તેવો છે',
       description: 'વર્ણન',
       photos: 'ફોટા (JPEG, PNG કે WebP, વધુમાં વધુ 5)',
+      photosHint: 'અપલોડ કરેલા ફોટા તમારી પસંદ કરેલી પાક ({crop}) સાથે મેળ ખાય છે કે નહીં તે AI ચકાસશે.',
+      cropMismatch: 'ફોટો જાહેર કરેલ પાક {crop} સાથે મેળ ખાતો નથી. મળેલ પાક: {detected}.',
       publishNow: 'હમણાં પ્રકાશિત કરો (ઓછામાં ઓછો એક ફોટો જરૂરી)',
       keepPublished: 'પ્રકાશિત રાખો (ચાલુ)',
       create: 'યાદી બનાવો',

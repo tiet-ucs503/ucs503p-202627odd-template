@@ -459,6 +459,8 @@ export const en = {
       perishable: 'This crop is perishable',
       description: 'Description',
       photos: 'Photos (JPEG, PNG, or WebP, max 5)',
+      photosHint: 'AI verifies that uploaded photos match your selected crop ({crop}).',
+      cropMismatch: 'Photo does not match declared crop {crop}. Detected: {detected}.',
       publishNow: 'Publish now (needs at least one photo)',
       keepPublished: 'Keep published (active)',
       create: 'Create listing',

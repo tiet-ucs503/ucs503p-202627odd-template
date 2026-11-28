@@ -464,6 +464,8 @@ export const pa: MessageTree = {
       perishable: 'ਇਹ ਫਸਲ ਛੇਤੀ ਖਰਾਬ ਹੋਣ ਵਾਲੀ ਹੈ',
       description: 'ਵੇਰਵਾ',
       photos: 'ਫੋਟੋਆਂ (JPEG, PNG ਜਾਂ WebP, ਵੱਧ ਤੋਂ ਵੱਧ 5)',
+      photosHint: 'ਏਆਈ ਜਾਂਚ ਕਰੇਗਾ ਕਿ ਅੱਪਲੋਡ ਕੀਤੀਆਂ ਤਸਵੀਰਾਂ ਤੁਹਾਡੀ ਚੁਣੀ ਹੋਈ ਫ਼ਸਲ ({crop}) ਨਾਲ ਮੇਲ ਖਾਂਦੀਆਂ ਹਨ।',
+      cropMismatch: 'ਤਸਵੀਰ ਦੱਸੀ ਗਈ ਫ਼ਸਲ {crop} ਨਾਲ ਮੇਲ ਨਹੀਂ ਖਾਂਦੀ। ਪਛਾਣੀ ਗਈ ਫ਼ਸਲ: {detected}।',
       publishNow: 'ਹੁਣੇ ਪ੍ਰਕਾਸ਼ਿਤ ਕਰੋ (ਘੱਟੋ-ਘੱਟ ਇੱਕ ਫੋਟੋ ਜ਼ਰੂਰੀ)',
       keepPublished: 'ਪ੍ਰਕਾਸ਼ਿਤ ਰੱਖੋ (ਸਰਗਰਮ)',
       create: 'ਲਿਸਟਿੰਗ ਬਣਾਓ',

@@ -461,6 +461,8 @@ export const kn = withEnglishFallback({
       perishable: 'ಈ ಬೆಳೆ ಬೇಗ ಹಾಳಾಗುತ್ತದೆ',
       description: 'ವಿವರಣೆ',
       photos: 'ಫೋಟೋಗಳು (JPEG, PNG ಅಥವಾ WebP, ಗರಿಷ್ಠ 5)',
+      photosHint: 'ಅಪ್‌ಲೋಡ್ ಮಾಡಿದ ಫೋಟೋಗಳು ನೀವು ಆಯ್ಕೆಮಾಡಿದ ಬೆಳೆಗೆ ({crop}) ಹೊಂದಿಕೆಯಾಗುತ್ತವೆಯೇ ಎಂದು AI ಪರಿಶೀಲಿಸುತ್ತದೆ.',
+      cropMismatch: 'ಫೋಟೋ ಘೋಷಿತ ಬೆಳೆ {crop}ಗೆ ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ. ಪತ್ತೆಯಾಗಿದೆ: {detected}.',
       publishNow: 'ಈಗಲೇ ಪ್ರಕಟಿಸಿ (ಕನಿಷ್ಠ ಒಂದು ಫೋಟೋ ಬೇಕು)',
       keepPublished: 'ಪ್ರಕಟಿತವಾಗಿಯೇ ಇರಿಸಿ (ಸಕ್ರಿಯ)',
       create: 'ಲಿಸ್ಟಿಂಗ್ ರಚಿಸಿ',

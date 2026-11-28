@@ -13,6 +13,7 @@ import {
   listListings,
   updateListing,
 } from './listings.service.js';
+import { verifyCropPhoto } from './crop-photo-verifier.js';
 import type {
   CreateListingInput,
   ListListingsQuery,
@@ -58,6 +59,55 @@ export const listingPhotoUpload: RequestHandler = (request, response, next) => {
     next(new AppError(400, 'VALIDATION_ERROR', 'Invalid multipart photo upload'));
   });
 };
+
+export const singlePhotoVerifyUpload: RequestHandler = (request, response, next) => {
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 5 * 1024 * 1024,
+      files: 1,
+    },
+    fileFilter: (_request, file, callback) => {
+      if (!allowedMimeTypes.has(file.mimetype)) {
+        callback(
+          new AppError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Only JPEG, PNG, and WebP are allowed'),
+        );
+        return;
+      }
+      callback(null, true);
+    },
+  }).single('file');
+
+  upload(request, response, (error: unknown) => {
+    if (!(error instanceof MulterError)) {
+      next(error);
+      return;
+    }
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      next(new AppError(413, 'PAYLOAD_TOO_LARGE', 'Photo must be 5 MB or smaller'));
+      return;
+    }
+    next(new AppError(400, 'VALIDATION_ERROR', 'Invalid photo upload'));
+  });
+};
+
+export const verifyCropPhotoController = asyncHandler(async (request, response) => {
+  const file = request.file;
+  if (!file) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'A photo file is required');
+  }
+  const body = (request.body ?? {}) as Record<string, unknown>;
+  const crop = typeof body.crop === 'string' ? body.crop.trim() : '';
+  const category = typeof body.category === 'string' ? body.category.trim() : 'other';
+  const variety = typeof body.variety === 'string' && body.variety ? body.variety.trim() : null;
+
+  if (!crop) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Crop name is required');
+  }
+
+  const result = await verifyCropPhoto(crop, category, variety, file);
+  sendSuccess(response, result);
+});
 
 function authenticatedUser(request: Request) {
   if (!request.user) {

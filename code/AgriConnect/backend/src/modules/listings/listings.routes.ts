@@ -11,8 +11,10 @@ import {
   getListingController,
   listListingsController,
   listingPhotoUpload,
+  singlePhotoVerifyUpload,
   updateListingController,
   uploadListingPhotosController,
+  verifyCropPhotoController,
 } from './listings.controller.js';
 import {
   createListingBodySchema,
@@ -52,6 +54,15 @@ listingsRouter.patch(
   validate({ params: listingIdParamsSchema, body: updateListingBodySchema }),
   updateListingController,
 );
+listingsRouter.post(
+  '/verify-crop-photo',
+  requireAuth,
+  roleGuard('FARMER'),
+  requireActiveAccount,
+  singlePhotoVerifyUpload,
+  verifyCropPhotoController,
+);
+
 listingsRouter.delete(
   '/:id',
   requireAuth,

@@ -239,6 +239,29 @@ export function ListingForm({ listing }: { listing?: Listing }) {
               multiple
               onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
             />
+            <p className="mt-1.5 text-xs text-ink/65">
+              {t('listing.form.photosHint', { crop: crop || t('common.cropExample') })}
+            </p>
+            {files.length > 0 ? (
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {files.map((file, idx) => (
+                  <div
+                    key={`${file.name}-${idx}`}
+                    className="flex items-center gap-2 rounded-lg border border-forest/20 bg-paper/80 px-2.5 py-1 text-xs font-semibold text-forest shadow-xs"
+                  >
+                    <span className="max-w-[160px] truncate">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setFiles((current) => current.filter((_, i) => i !== idx))}
+                      className="font-bold text-ember hover:opacity-80"
+                      aria-label={t('common.remove')}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </Field>
         </div>
         <label className="flex items-center gap-3 text-base font-semibold text-forest md:col-span-2">

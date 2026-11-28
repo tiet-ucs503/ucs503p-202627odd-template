@@ -464,6 +464,8 @@ export const mr = withEnglishFallback({
       perishable: 'हे पीक लवकर खराब होते',
       description: 'तपशील',
       photos: 'फोटो (JPEG, PNG किंवा WebP, जास्तीत जास्त 5)',
+      photosHint: 'अपलोड केलेले फोटो तुम्ही निवडलेल्या पिकाशी ({crop}) जुळतात की नाही हे AI तपासेल.',
+      cropMismatch: 'फोटो घोषित पीक {crop} शी जुळत नाही. आढळलेले उत्पादन: {detected}.',
       publishNow: 'आता प्रकाशित करा (कमीत कमी एक फोटो आवश्यक)',
       keepPublished: 'प्रकाशित ठेवा (सुरू)',
       create: 'यादी तयार करा',

@@ -464,6 +464,8 @@ export const or = withEnglishFallback({
       perishable: 'ଏହି ଫସଲ ଶୀଘ୍ର ନଷ୍ଟ ହୁଏ',
       description: 'ବିବରଣୀ',
       photos: 'ଫଟୋ (JPEG, PNG କିମ୍ବା WebP, ସର୍ବାଧିକ 5)',
+      photosHint: 'ଅପଲୋଡ୍ ହୋଇଥିବା ଫଟୋଗୁଡ଼ିକ ଆପଣଙ୍କ ମନୋନୀତ ଫସଲ ({crop}) ସହିତ ମେଳ ଖାଉଛି କି ନାହିଁ ତାହା AI ଯାଞ୍ଚ କରିବ |',
+      cropMismatch: 'ଫଟୋ ଘୋଷିତ ଫସଲ {crop} ସହିତ ମେଳ ଖାଉ ନାହିଁ | ଚିହ୍ନଟ ହୋଇଛି: {detected} |',
       publishNow: 'ଏବେ ପ୍ରକାଶ କରନ୍ତୁ (ଅନ୍ତତଃ ଗୋଟିଏ ଫଟୋ ଦରକାର)',
       keepPublished: 'ପ୍ରକାଶିତ ରଖନ୍ତୁ (ସକ୍ରିୟ)',
       create: 'ତାଲିକା ତିଆରି କରନ୍ତୁ',

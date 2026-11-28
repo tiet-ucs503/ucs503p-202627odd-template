@@ -7,6 +7,7 @@ import {
   deleteListingPhotos,
   uploadListingPhoto,
 } from '../../services/storage.service.js';
+import { verifyCropPhotosMatchListing } from './crop-photo-verifier.js';
 import { notifyBuyersOfPublishedListing } from '../../services/listing-notifications.service.js';
 import { recordPriceTrend } from '../../services/price-trend.service.js';
 import {
@@ -354,6 +355,9 @@ export async function addListingPhotos(
   if (listing.photos.length + files.length > 5) {
     throw new AppError(400, 'INVALID_REQUEST', 'A listing may have at most 5 photos');
   }
+
+  // Ensure uploaded photos match the declared agricultural crop
+  await verifyCropPhotosMatchListing(listing, files);
 
   const uploaded = [];
   try {

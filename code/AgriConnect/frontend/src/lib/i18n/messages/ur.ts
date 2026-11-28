@@ -464,6 +464,8 @@ export const ur = withEnglishFallback({
       perishable: 'یہ فصل جلد خراب ہونے والی ہے',
       description: 'تفصیل',
       photos: 'تصویریں (JPEG، PNG یا WebP، زیادہ سے زیادہ 5)',
+      photosHint: 'اے آئی تصدیق کرے گا کہ اپ لوڈ کردہ تصاویر آپ کی منتخب کردہ فصل ({crop}) سے مطابقت رکھتی ہیں۔',
+      cropMismatch: 'تصویر اعلان کردہ فصل {crop} سے مطابقت نہیں رکھتی۔ شناخت شدہ: {detected}۔',
       publishNow: 'ابھی شائع کریں (کم از کم ایک تصویر ضروری)',
       keepPublished: 'شائع شدہ رکھیں (فعال)',
       create: 'فہرست بنائیں',

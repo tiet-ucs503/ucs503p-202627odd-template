@@ -464,6 +464,8 @@ export const bn = withEnglishFallback({
       perishable: 'এই ফসল পচনশীল',
       description: 'বিবরণ',
       photos: 'ছবি (JPEG, PNG বা WebP, সর্বোচ্চ 5)',
+      photosHint: 'এআই যাচাই করবে যে আপলোড করা ছবিগুলি আপনার নির্বাচিত ফসলের ({crop}) সাথে মেলে।',
+      cropMismatch: 'ছবিটি ঘোষিত ফসল {crop}-এর সাথে মিলছে না। সনাক্ত করা হয়েছে: {detected}।',
       publishNow: 'এখনই প্রকাশ করুন (অন্তত একটি ছবি লাগবে)',
       keepPublished: 'প্রকাশিত রাখুন (সক্রিয়)',
       create: 'তালিকা তৈরি করুন',

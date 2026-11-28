@@ -463,6 +463,8 @@ export const hi: MessageTree = {
       perishable: 'यह फसल जल्दी खराब होने वाली है',
       description: 'विवरण',
       photos: 'फोटो (JPEG, PNG या WebP, अधिकतम 5)',
+      photosHint: 'एआई सत्यापित करेगा कि अपलोड की गई तस्वीरें आपकी चुनी गई फसल ({crop}) से मेल खाती हैं।',
+      cropMismatch: 'तस्वीर घोषित फसल {crop} से मेल नहीं खाती। पाई गई उपज: {detected}।',
       publishNow: 'अभी प्रकाशित करें (कम से कम एक फोटो ज़रूरी)',
       keepPublished: 'प्रकाशित रखें (सक्रिय)',
       create: 'लिस्टिंग बनाएँ',

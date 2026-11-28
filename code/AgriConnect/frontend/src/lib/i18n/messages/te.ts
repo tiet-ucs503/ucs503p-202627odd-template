@@ -465,6 +465,8 @@ export const te = withEnglishFallback({
       perishable: 'ఈ పంట త్వరగా పాడవుతుంది',
       description: 'వివరణ',
       photos: 'ఫోటోలు (JPEG, PNG లేదా WebP, గరిష్ఠం 5)',
+      photosHint: 'అప్‌లోడ్ చేసిన ఫోటోలు మీరు ఎంచుకున్న పంటతో ({crop}) సరిపోలుతున్నాయని AI ధృవీకరిస్తుంది.',
+      cropMismatch: 'ఫోటో ప్రకటించిన పంట {crop}తో సరిపోలడం లేదు. గుర్తించబడింది: {detected}.',
       publishNow: 'ఇప్పుడే ప్రచురించు (కనీసం ఒక ఫోటో కావాలి)',
       keepPublished: 'ప్రచురితంగా ఉంచు (అందుబాటులో)',
       create: 'జాబితా తయారు చేయి',
