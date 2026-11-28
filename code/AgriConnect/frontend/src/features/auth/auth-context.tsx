@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getMe, login as loginRequest, logout as logoutRequest, registerAccount } from '@/lib/api/auth';
 import { refreshAccessToken } from '@/lib/api/client';
-import { tokenStore } from '@/lib/api/token-store';
+import { tokenStore, userStore } from '@/lib/api/token-store';
 import type { AuthUser } from '@/lib/api/types';
 import type { Locale } from '@/lib/i18n/locales';
 
@@ -52,15 +52,31 @@ async function loadSession(): Promise<AuthUser | null> {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [ready, setReady] = useState(false);
+  // Synchronously rehydrate user and ready state on client mount so there is zero flash of logged-out UI
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    return userStore.get();
+  });
+  const [ready, setReady] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return userStore.get() != null;
+  });
   const router = useRouter();
 
   useEffect(() => {
     void loadSession()
-      .then(setUser)
+      .then((sessionUser) => {
+        if (sessionUser) {
+          userStore.set(sessionUser);
+          setUser(sessionUser);
+        } else {
+          tokenStore.clear();
+          userStore.clear();
+          setUser(null);
+        }
+      })
       .catch(() => {
         tokenStore.clear();
+        userStore.clear();
         setUser(null);
       })
       .finally(() => setReady(true));
@@ -74,14 +90,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data } = await loginRequest({ email, password });
         tokenStore.set(data.accessToken);
         const me = await getMe();
+        userStore.set(me.data);
         setUser(me.data);
+        setReady(true);
         return me.data;
       },
       async register(input) {
         const { data } = await registerAccount(input);
         tokenStore.set(data.accessToken);
         const me = await getMe();
+        userStore.set(me.data);
         setUser(me.data);
+        setReady(true);
         return me.data;
       },
       async logout() {
@@ -89,12 +109,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await logoutRequest();
         } finally {
           tokenStore.clear();
+          userStore.clear();
           setUser(null);
           router.push('/');
         }
       },
       async refreshUser() {
         const me = await getMe();
+        userStore.set(me.data);
         setUser(me.data);
       },
     }),

@@ -18,7 +18,7 @@ const CATEGORIES = [
 
 export default function HomePage() {
   const { t } = useLocale();
-  const { user } = useAuth();
+  const { user, ready } = useAuth();
 
   return (
     <div className="space-y-12 sm:space-y-16">
@@ -63,7 +63,9 @@ export default function HomePage() {
                 {t('home.browseListings')}
               </Button>
             </Link>
-            {user ? (
+            {!ready && !user ? (
+              <div className="h-12 w-36 animate-pulse rounded-xl bg-paper/15" aria-hidden="true" />
+            ) : user ? (
               <Link href={dashboardPath(user.role)}>
                 <Button
                   variant="outline-light"

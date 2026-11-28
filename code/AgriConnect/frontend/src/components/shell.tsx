@@ -201,7 +201,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
             <HeaderWeather />
             <LanguageSwitcher />
-            {!user ? (
+            {!ready && !user ? (
+              <div className="flex items-center gap-2" aria-hidden="true">
+                <div className="h-8 w-16 animate-pulse rounded-lg bg-paper/10" />
+                <div className="h-8 w-20 animate-pulse rounded-xl bg-paper/10" />
+              </div>
+            ) : !user ? (
               <>
                 <NavLink href="/login">{t('nav.logIn')}</NavLink>
                 <Link
